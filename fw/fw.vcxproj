@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{9AE98C07-4A7B-46BE-B7CB-35F7C7AB067F}</ProjectGuid>
-    <RootNamespace>jsbuild</RootNamespace>
+    <ProjectGuid>{6EF2640D-20FE-4296-88B1-F1FFB6F99564}</ProjectGuid>
+    <RootNamespace>fw</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -39,7 +39,7 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
@@ -75,18 +75,15 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../fw</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./</AdditionalIncludeDirectories>
     </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>./</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -116,7 +113,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClInclude Include="base\Base64.h" />
+    <ClInclude Include="base\base_defs.h" />
+    <ClInclude Include="base\debug.h" />
+    <ClInclude Include="base\MemoryMgr.h" />
+    <ClInclude Include="base\Object.h" />
+    <ClInclude Include="base\PathInfo.h" />
+    <ClInclude Include="base\String.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="base\Base64.cpp" />
+    <ClCompile Include="base\debug.cpp" />
+    <ClCompile Include="base\MemoryMgr.cpp" />
+    <ClCompile Include="base\Object.cpp" />
+    <ClCompile Include="base\PathInfo.cpp" />
+    <ClCompile Include="base\String.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "base/PathInfo.h"
 
 class Source {
 	char name[256];
@@ -38,65 +39,6 @@ public:
 	size_t getFlag() { return this->flag; }
 	size_t setFlag(size_t flag) { return this->flag = flag; }
 };
-
-class Stack {
-	void** buffer;
-	size_t capacity;
-	size_t size;
-public:
-	Stack(size_t cap) {
-		this->buffer = new void*[cap];
-		this->capacity = cap;
-		this->size = 0;
-	}
-	~Stack(void) {
-		delete [] this->buffer;
-	}
-	void push(void* el) {
-		if (this->size < this->capacity) {
-			this->buffer[this->size] = el;
-			this->size++;
-		}
-	}
-	void* pop() {
-		void *el = NULL;
-		if (this->size > 0) {
-			this->size--;
-			el = this->buffer[this->size];
-		}
-		return el;
-	}
-	void* top() {
-		void *el = NULL;
-		if (this->size > 0) {
-			el = this->buffer[this->size-1];
-		}
-		return el;
-	}
-	bool isEmpty() {
-		return (size == 0);
-	}
-};
-
-char* strclone(const char* src, size_t start, size_t end) {
-	char *out = NULL;
-	size_t len = strlen(src); 
-	if (end <= 0) end += len;
-	if (start >= 0 && start < end) {
-		len = end - start;
-		out = new char[len + 1];
-		size_t j = 0;
-		for (size_t i = start; i < end; j++, i++) {
-			out[j] = src[i];
-		}
-		out[j] = '\0';
-	}
-	return out;
-}
-
-char* strclone(const char* src) {
-	return strclone(src, 0, 0);
-}
 
 char* declaresInclude(const char* line) {
 	char *include = NULL;
@@ -157,46 +99,6 @@ Source* findOrCreateSource(const char *name, Source** sources, size_t& sourceCou
 	}
 	return source;
 }
-
-class PathInfo {
-	char *buffer;
-	char *path;
-	char *fileName;
-	char *extension;
-public:
-	PathInfo(const char *fileName) {
-		this->buffer = strclone(fileName);
-		this->path = "";
-		this->fileName = "";
-		this->extension = "";
-		size_t len = strlen(fileName);
-		int step = 0;
-		while (--len > 0) {
-			if (step == 0 && this->buffer[len] == '.') {
-				this->buffer[len] = '\0';
-				this->extension = &this->buffer[len + 1];
-				step++;
-				continue;
-			}
-			if (step == 1 && this->buffer[len] == '\\') {
-				this->buffer[len] = '\0';
-				this->fileName = &this->buffer[len + 1];
-				this->path = this->buffer;
-				step++;
-				break;
-			}
-		}
-		if (step == 1) {
-			this->fileName = this->buffer;
-		}
-	}
-	~PathInfo() {
-		delete[] this->buffer;
-	}
-	char* getPath() { return this->path; }
-	char* getFileName() { return this->fileName; }
-	char* getExtension() { return this->extension; }
-};
 
 PathInfo *g_inputPathInfo;
 Source *g_sources[255];
@@ -305,7 +207,7 @@ int post(void* node) {
 void main(int argc, char **argv) {
 	int error = 1;
 	if (argc > 1) {
-		char *input = strclone(argv[1]);
+		char *input = _strdup(argv[1]);
 		error = 2;
 		if (input != NULL) {
 			char output[256];
