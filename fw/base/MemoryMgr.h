@@ -7,7 +7,6 @@
 NAMESPACE_FRMWRK_BEGIN
 
 #ifdef _DEBUG
-
 	typedef struct _MEM_DBG_INFO_ {
 		union {
 			_MEM_DBG_INFO_ *next;

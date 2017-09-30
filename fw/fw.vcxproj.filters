@@ -18,42 +18,42 @@
     <ClInclude Include="base\base_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="base\PathInfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="base\Object.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="base\Base64.h">
+    <ClInclude Include="base\Ref.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="base\MemoryMgr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="runtime.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base\Object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="consoleapp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="base\debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="base\String.h">
+    <ClInclude Include="base\str.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="base\Object.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="base\PathInfo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="base\Base64.cpp">
+    <ClCompile Include="base\Ref.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="base\MemoryMgr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="base\Object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="base\debug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="base\String.cpp">
+    <ClCompile Include="base\str.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
