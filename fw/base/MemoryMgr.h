@@ -2,7 +2,7 @@
 #define __MEMORYMGR_H
 
 #include "base_defs.h"
-//#include "Object.h"
+#include "Object.h"
 
 NAMESPACE_FRMWRK_BEGIN
 
@@ -24,10 +24,13 @@ NAMESPACE_FRMWRK_BEGIN
 	//static _MEM_DBG_ENTRY *_MEM_DBG_tail = NULL;
 
 	//#define DBGTRAIL _debug("\t%s\t%d\n", __FILE__, __LINE__)
-	#define NEW(T,v,...) { T *p = new T(__VA_ARGS__); v = *p; MemoryMgr::addMemDbgInfo(p, __FILE__, __LINE__); }
-	#define NEW_(T,p,...) p = new T(__VA_ARGS__); MemoryMgr::addMemDbgInfo(p, __FILE__, __LINE__);
-	#define NEWARR(T,v,s) v = new T[s]; MemoryMgr::addMemDbgInfo(v, __FILE__, __LINE__);
-	#define DEL(v) if (MemoryMgr::delMemDbgInfo(v.getPtr(), __FILE__, __LINE__)) { delete v; }
+	//#define NEW(T,v,...) { T *p = new T(__VA_ARGS__); v = *p; MemoryMgr::addMemDbgInfo(p, __FILE__, __LINE__); }
+	//#define NEW_(T,p,...) p = new T(__VA_ARGS__); MemoryMgr::addMemDbgInfo(p, __FILE__, __LINE__);
+	//#define NEWARR(T,v,s) v = new T[s]; MemoryMgr::addMemDbgInfo(v, __FILE__, __LINE__);	
+	#define NEW(T,...) *(T*)MemoryMgr::addMemDbgInfo(new T(__VA_ARGS__), __FILE__, __LINE__)
+	#define NEW_(T,...) (T*)MemoryMgr::addMemDbgInfo(new T(__VA_ARGS__), __FILE__, __LINE__)
+	#define NEWARR(T,s) (T*)MemoryMgr::addMemDbgInfo(new T[s], __FILE__, __LINE__)
+	#define DEL(v) if (MemoryMgr::delMemDbgInfo((Object&)v, __FILE__, __LINE__)) { delete v; }
 	#define DEL_(v) if (v != NULL && MemoryMgr::delMemDbgInfo((void*)v, __FILE__, __LINE__)) { delete v; }
 
 
@@ -56,7 +59,9 @@ class MemoryMgr {
 	static _MEM_DBG_INFO *nextFreeEntry_;
 	static void initialize_();
 public:
-	static void addMemDbgInfo(void *p, char *szFile, int iLine);
+	static bool isDebugOn;
+	static void* addMemDbgInfo(void *p, char *szFile, int iLine);
+	static int delMemDbgInfo(Object& obj, char *szFile, int iLine);
 	static int delMemDbgInfo(void *p, char *szFile, int iLine);
 	static void checkMemDbgInfo();
 #endif

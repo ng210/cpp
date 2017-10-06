@@ -5,61 +5,73 @@
 
 NAMESPACE_FRMWRK_BEGIN
 
+/*****************************************************************************
+* Object_ (structure)
+*****************************************************************************/
 class String;
-
 class String_ : public Object_ {
-friend class String;
+	friend class String;
+	String_(char *p);
+	String_(const char *p);
+	static const String_ emptyInstance_;
 protected:
-	const char *buffer_;
-	size_t iLength_;
+	char *buffer_;
+	size_t length_;
 public:
 	String_(void);
 	virtual ~String_(void);
 
-	void assign(char *szStr);
-	//void assign(const char *szStr);
-	//void assign(String_& str);
-	char* toCString();
-	int compareTo(const char* str);
+	String toString();
 
-	size_t length();
-
+	//char* toCString();
+	int compareTo(Object_* str);
 };
 
+/*****************************************************************************
+* Object (reference)
+*****************************************************************************/
+//class Array;
 class String : public Object {
+	friend class Object;
+	String(const String_*);
+	void empty_();
 public:
+	//static const String emptyInstance_;
+	static const String Empty;
+
 	String(void);
-	String(char *szStr);
-	String(const char *szStr);
+	String(String&);
+	String(char*);
+	String(const char*);
+	~String(void);
 
-	String& operator=(char *szStr);
-	DEFINE_COMMON_OPERATORS(String)
-	void assign(char *szStr);
+	//String operator=(String&);
+	String operator=(const String&);
+	String operator=(const Null&);
+	char operator[](int);
+	String operator+(String&);
+	String operator+(const char*);
+	bool startsWith(String&);
+	bool startsWith(char*);
+	long long indexOf(String&);
+	long long indexOf(char*);
+	long long lastIndexOf(String&);
+	long long lastIndexOf(char*);
+	bool endsWith(String&);
+	bool endsWith(char*);
+	//? match(RegExp&);
+	String replace(String&, String&);
+	//String replace(Array&, Array&);
+	String substr(long long, long long = 0);
+	String substring(long long, long long = 0);
+	//Array split(String&);
+	String toLowerCase();
+	String toUpperCase();
+	String trim();
 
-	// Inherited from Object
-	DEFINE_FUNC0(String, toCString, char*);
-	int compareTo(String& str);
-	DEFINE_FUNC0(String, length, size_t);
-
+	const char* toCString();
+	//void empty();
 };
-
-//class String : public Ref<String_> {
-//protected:
-//	void assign(char *szStr);
-//
-//public:
-//	String(void);
-//	String(char *szStr);
-//	String(const char *szStr);
-//	operator const char*();
-//
-////	String& operator=(char *szStr);
-////	String& operator=(const char *szStr);
-////	String& operator=(String str);
-//	String& operator=(const NullObject &ref);
-//
-//	size_t getLength();
-//};
 
 NAMESPACE_FRMWRK_END
 

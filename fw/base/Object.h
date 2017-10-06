@@ -2,36 +2,63 @@
 #define __OBJECT_H
 
 #include "base/base_defs.h"
-#include "base/Ref.h"
 
 NAMESPACE_FRMWRK_BEGIN
 
-class Object_;
-class Object : public Ref<Object_> {
-public:
-	Object(void);
-	virtual ~Object(void);
-
-	virtual char* toCString();
-	virtual int compareTo(Object& ref);
-	virtual bool operator==(Object& ref);
-	virtual operator const char*();
-};
-
-class Object_ : public Ref_ {
+/*****************************************************************************
+* Object_ (structure)
+*****************************************************************************/
+class String; 
+class Object;
+class Object_ {
 	friend class Object;
-	friend class Ref<Object_>;
+	//friend class String;
 
 	PROP_R(protected, long long, Hash, i);
+	int refCount_;
 
 protected:
+	int addRef_();
+	int delRef_();
+
 	Object_(void);
-	~Object_(void);
+	virtual ~Object_(void);
+
+	virtual String toString();
+	virtual int compareTo(Object_ *obj);
+};
+
+/*****************************************************************************
+* Object (reference)
+*****************************************************************************/
+class Null;
+class MemoryMgr;
+class Object {
+	friend class MemoryMgr;
+protected:
+	Object_* ptr_;
+
+	Object(void*);
+
+	void addRef_();
+	void delRef_();
+	void null_();
+
 public:
-	bool operator==(Object_ *obj);
-	operator const char*();
-	char* toCString();
-	int compareTo(Object_ *obj);
+	Object(void);
+	Object(Object&);
+	virtual ~Object(void);
+
+	Object& operator=(Object& ref);
+	Object& operator=(const Null& ref);
+
+#ifdef _DEBUG
+	static void dump(Object&, const char*);
+#endif
+
+	String toString();
+	int compareTo(Object& ref);
+	bool operator==(Object& ref);
 };
 
 NAMESPACE_FRMWRK_END

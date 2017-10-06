@@ -12,6 +12,8 @@ int MemoryMgr::nMemDbgInfos_ = 0;
 //bool MemoryMgr::_MEM_DBG = false;
 #endif
 
+bool MemoryMgr::isDebugOn = false;
+
 void MemoryMgr::initialize_() {
 	int iSize = sizeof(_MEM_DBG_INFO) * _MEM_DBG_SIZE;
 	_MEM_DBG_INFO* p = (_MEM_DBG_INFO*)malloc(iSize);
@@ -65,7 +67,7 @@ void operator delete(void *p) {
 //}
 
 #ifdef _DEBUG
-void MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine) {
+void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine) {
 	if (MemoryMgr::nMemDbgInfos_ < _MEM_DBG_SIZE) {
 		if (MemoryMgr::memDbgInfos_ == NULL) {
 			MemoryMgr::initialize_();
@@ -77,10 +79,17 @@ void MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine) {
 		mb.szFile = szFile;
 		MemoryMgr::nMemDbgInfos_++;
 	}
-//	if (MemoryMgr::_MEM_DBG) {
+	if (MemoryMgr::isDebugOn) {
 		_VS_debug("1>%s(%d) : Alloc at 0x%08X\n", szFile, iLine, p);
-//	}
+	}
+		return p;
 }
+
+int MemoryMgr::delMemDbgInfo(Object& obj, char *szFile, int iLine) {
+	return delMemDbgInfo(obj.ptr_, szFile, iLine);
+}
+
+
 
 int MemoryMgr::delMemDbgInfo(void *ptr, char *szFile, int iLine) {
 	int bFound = false;
@@ -95,9 +104,9 @@ int MemoryMgr::delMemDbgInfo(void *ptr, char *szFile, int iLine) {
 		}
 	}
 	if (bFound) {
-//		if (MemoryMgr::_MEM_DBG) {
+		if (MemoryMgr::isDebugOn) {
 			_VS_debug("1>%s(%d) : Free at 0x%08X\n", szFile, iLine, ptr);
-//		}
+		}
 	} else {
 		_VS_debug("1>%s(%d) : Attempt to free invalid block at 0x%08X\n", szFile, iLine, ptr);
 	}
