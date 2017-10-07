@@ -117,21 +117,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="base\Array.h" />
     <ClInclude Include="base\base_defs.h" />
     <ClInclude Include="base\debug.h" />
     <ClInclude Include="base\MemoryMgr.h" />
     <ClInclude Include="base\Object.h" />
-    <ClInclude Include="base\Ref.h" />
+    <ClInclude Include="base\String.h" />
     <ClInclude Include="consoleapp.h" />
+    <ClInclude Include="base\Null.h" />
     <ClInclude Include="runtime.h" />
     <ClInclude Include="base\str.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="base\Array.cpp" />
     <ClCompile Include="base\debug.cpp" />
     <ClCompile Include="base\MemoryMgr.cpp" />
     <ClCompile Include="base\Object.cpp" />
     <ClCompile Include="base\Ref.cpp" />
     <ClCompile Include="base\str.cpp" />
+    <ClCompile Include="base\String.cpp" />
+    <ClCompile Include="base\Null.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

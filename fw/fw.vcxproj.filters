@@ -18,9 +18,6 @@
     <ClInclude Include="base\base_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="base\Ref.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="base\MemoryMgr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -39,6 +36,15 @@
     <ClInclude Include="base\str.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="base\String.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base\Null.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base\Array.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\Ref.cpp">
@@ -54,6 +60,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="base\str.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base\String.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base\Null.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base\Array.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

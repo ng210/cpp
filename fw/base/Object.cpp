@@ -66,6 +66,10 @@ Object::Object(Object& ref) {
 	ptr_ = ref.ptr_;
 	addRef_();
 }
+Object::Object(const Null& ref) {
+	ptr_ = Null::instance_.ptr_;
+	addRef_();
+}
 Object::~Object(void) {
 	delRef_();
 }

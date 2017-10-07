@@ -22,10 +22,7 @@ Null::Null(void) : Object(NULL) {
 	ptr_ = (Object_*)&Null_::instance_;
 	addRef_();
 }
+Null::Null(Null& ref) : Object(ref) {
+}
 Null::~Null() {
 }
-
-//Null::operator Object() {
-//	null_();
-//	return (Null&)*this;
-//}

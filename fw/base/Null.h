@@ -20,12 +20,11 @@ class Null_ : public Object_ {
 class Null : public Object {
 protected:
 	Null(void);
-	~Null(void);
+	Null(Null&);
 public:
+	~Null(void);
+
 	static const Null instance_;
-
-	//operator Object();
-
 };
 #define null Null::instance_
 

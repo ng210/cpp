@@ -61,11 +61,6 @@ void operator delete(void *p) {
 	MemoryMgr::free(p);
 }
 
-// TODO: check this!
-//void operator delete[](void *p) {
-//	MemoryMgr::free(p);
-//}
-
 #ifdef _DEBUG
 void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine) {
 	if (MemoryMgr::nMemDbgInfos_ < _MEM_DBG_SIZE) {
@@ -88,8 +83,6 @@ void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine) {
 int MemoryMgr::delMemDbgInfo(Object& obj, char *szFile, int iLine) {
 	return delMemDbgInfo(obj.ptr_, szFile, iLine);
 }
-
-
 
 int MemoryMgr::delMemDbgInfo(void *ptr, char *szFile, int iLine) {
 	int bFound = false;

@@ -34,6 +34,7 @@ protected:
 class Null;
 class MemoryMgr;
 class Object {
+	//friend class Null;
 	friend class MemoryMgr;
 protected:
 	Object_* ptr_;
@@ -47,6 +48,7 @@ protected:
 public:
 	Object(void);
 	Object(Object&);
+	Object(const Null&);
 	virtual ~Object(void);
 
 	Object& operator=(Object& ref);

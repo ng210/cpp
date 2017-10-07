@@ -1,7 +1,8 @@
 #include "base/str.h"
 #include "base/String.h"
 #include "base/MemoryMgr.h"
-//#include "base/Array.h"
+#include "base/Null.h"
+#include "base/Array.h"
 
 #include <stdio.h>
 
@@ -51,6 +52,8 @@ String::String(String& ref) : Object(NULL) {
 	ptr_ = ref.ptr_;
 	addRef_();
 }
+String::String(const Null& ref) : Object(ref) {
+}
 String::String(char *str) : Object(NULL) {
 	ptr_ = NEW_(String_, str);
 }
@@ -80,10 +83,10 @@ String String::operator=(const String& ref) {
 //	addRef_();
 //	return *this;
 //}
-String String::operator=(const Null& ref) {
-	null_();
-	return *this;
-}
+//String String::operator=(const Null& ref) {
+//	null_();
+//	return *this;
+//}
 char String::operator[](int ix) {
 	char ch = '\0';
 	if (ix > 0 && ix < THIS.length_) {
@@ -111,7 +114,7 @@ bool String::startsWith(char* str) {
 long long String::indexOf(String& str) {
 	return indexOf(PTR(str).buffer_);
 }
-long long String::indexOf(char* str) {
+long long String::indexOf(const char* str) {
 	long long res = -1;
 	size_t len1 = THIS.length_;
 	for (size_t i = 0; i < len1; i++) {
@@ -132,6 +135,28 @@ long long String::indexOf(char* str) {
 	}
 	return res;
 }
+long long String::indexOf(const char* str, size_t offset) {
+	long long res = -1;
+	size_t len1 = THIS.length_;
+	for (size_t i = offset; i < len1; i++) {
+		char ch = THIS.buffer_[i];
+		if (ch == str[0]) {
+			bool found = true;
+			for (size_t j = 1; str[j] != '\0'; j++) {
+				if (THIS.buffer_[i + j] != str[j]) {
+					found = false;
+					break;
+				}
+			}
+			if (found) {
+				res = i;
+				break;
+			}
+		}
+	}
+	return res;
+}
+
 long long String::lastIndexOf(String& str) {
 	return lastIndexOf(PTR(str).buffer_);
 }
@@ -167,29 +192,39 @@ bool String::endsWith(char* str) {
 }
 //Array String::match(RegExp&);
 String String::replace(String& oldValue, String& newValue) {
+	return replace(PTR(oldValue).buffer_, PTR(newValue).buffer_);
+}
+String String::replace(const char* oldValue, const char* newValue) {
 	long long arr[128];
 	int count = 0;
 	long long len = 0;
 	size_t len1 = THIS.length_;
-	size_t len2 = PTR(oldValue).length_;
-	const char *p = PTR(oldValue).buffer_;
-	for (size_t i = 0; i < len1; i++) {
-		long long res = indexOf((char*)p);
+	size_t len2 = strlen(oldValue);
+	size_t len3 = strlen(newValue);
+	for (size_t i = 0; i < len1; ) {
+		long long res = indexOf(oldValue, i);
 		if (res == -1) {
-			len += len1 - (p - THIS.buffer_);
+			len += len1 - i;
 			break;
 		}
-		len += res + len2;
+		len += res - i + len3;
 		arr[count++] = res;
-		p += res + len2;
+		i = res + len2;
 	}
 	char *buffer = NEWARR(char, len + 1);
-	for (int i = 0; i < count; i++) {
 
-	}
 	buffer[0] = '\0';
-
-
+	size_t offs = 0;
+	char *p = buffer;
+	for (int i = 0; i < count; i++) {
+		len = arr[i] - offs;
+		strncpy(p, len, &THIS.buffer_[offs]);
+		p += len;
+		strncpy(p, len3, newValue);
+		p += len3;
+		offs = arr[i] + len2;
+	}
+	strncpy(p, len1 - offs, &THIS.buffer_[offs]);
 	return String(buffer);
 }
 //String String::replace(RegExp& old, String& new)
@@ -225,6 +260,18 @@ String String::substring(long long start, long long end) {
 	}
 	return substr(start, end - start);
 }
+Array String::split(String& str) {
+	return split(PTR(str).buffer_);
+}
+Array String::split(const char* str) {
+	Array arr;
+	size_t offs = 0;
+	long long res = indexOf(str, offs);
+	if (res == -1) {
+
+	}
+	return arr;
+}
 String String::toLowerCase() {
 	size_t len = THIS.length_;
 	char *buffer = NEWARR(char, len + 1);
@@ -243,7 +290,7 @@ String String::toUpperCase() {
 	char *buffer = NEWARR(char, len + 1);
 	for (size_t i = 0; i < len; i++) {
 		char ch = THIS.buffer_[i];
-		if (ch >= 'A' && ch <= 'Z') {
+		if (ch >= 'a' && ch <= 'zB') {
 			ch &= (0xff - 0x20);
 		}
 		buffer[i] = ch;
@@ -258,17 +305,14 @@ String String::trim() {
 	size_t i = 0;
 	char ch;
 	while ((ch = THIS.buffer_[i]) != '\0' && (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r')) i++;
-	size_t j = len - 1;
-	printf("i=%lld, j=%lld\n", i, j);
-	while (j > i) {
+	size_t j = len;
+	while (--j > i) {
 		ch = THIS.buffer_[j];
 		if (ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r') {
 			break;
 		}
-		j--;
 	}
-	printf("i=%lld, j=%lld\n", i, j);
-	if (i < j) {
+	if (i <= j) {
 		len = j - i + 1;
 		char *buffer = NEWARR(char, len + 1);
 		strncpy(buffer, len, &THIS.buffer_[i]);
