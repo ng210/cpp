@@ -5,6 +5,8 @@
 
 NAMESPACE_FRMWRK_BEGIN
 
+
+
 /*****************************************************************************
 * Object_ (structure)
 *****************************************************************************/
@@ -12,7 +14,6 @@ class String;
 class Object;
 class Object_ {
 	friend class Object;
-	//friend class String;
 
 	PROP_R(protected, long long, Hash, i);
 	int refCount_;
@@ -24,8 +25,14 @@ protected:
 	Object_(void);
 	virtual ~Object_(void);
 
+	virtual const char* getType();
 	virtual String toString();
 	virtual int compareTo(Object_ *obj);
+	virtual void* valueOf();
+
+#ifdef _DEBUG
+	void dump(const char* = NULL);
+#endif
 };
 
 /*****************************************************************************
@@ -33,9 +40,11 @@ protected:
 *****************************************************************************/
 class Null;
 class MemoryMgr;
+class Array_;
 class Object {
 	//friend class Null;
 	friend class MemoryMgr;
+	friend class Array_;
 protected:
 	Object_* ptr_;
 
@@ -53,15 +62,23 @@ public:
 
 	Object& operator=(Object& ref);
 	Object& operator=(const Null& ref);
+	String getType();
 
 #ifdef _DEBUG
-	static void dump(Object&, const char*);
+	void dump(const char* = NULL);
+	static bool isDebugOn;
 #endif
 
 	String toString();
 	int compareTo(Object& ref);
 	bool operator==(Object& ref);
+	void* valueOf();
 };
+
+//*********************************************************
+
+typedef Object Function(size_t, ...);
+
 
 NAMESPACE_FRMWRK_END
 

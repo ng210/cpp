@@ -9,8 +9,10 @@ NAMESPACE_FRMWRK_BEGIN
 * Object_ (structure)
 *****************************************************************************/
 class String;
+class Array_;
 class String_ : public Object_ {
 	friend class String;
+	friend class Array_;
 	String_(char *p);
 	String_(const char *p);
 	static const String_ emptyInstance_;
@@ -21,8 +23,10 @@ protected:
 	String_(void);
 	virtual ~String_(void);
 
+	const char* getType();
 	String toString();
 	int compareTo(Object_* str);
+	void* valueOf();
 };
 
 /*****************************************************************************
@@ -32,6 +36,7 @@ class Null;
 class Array;
 class String : public Object {
 	friend class Object;
+	friend class Array_;
 	String(const String_*);
 	void empty_();
 public:

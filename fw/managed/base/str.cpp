@@ -23,7 +23,7 @@ size_t strlen(const char *str) {
 //*********************************************************
 char* strdup(const char *src, size_t& len) {
 	len = strlen(src);
-	char* dst = NEWARR(char, len + 1);
+	char* dst = MALLOC(char, len + 1);
 	strncpy(dst, len, src);
 	return dst;
 }
@@ -39,4 +39,28 @@ int strncmp(const char *left, const char *right, size_t len) {
 		res = left[i] - right[i];
 	}
 	return res;
+}
+//*********************************************************
+void memcpy(char *dst, const char *src, size_t len) {
+	for (size_t i = 0; i < len; i++) {
+		dst[i] = src[i];
+	}
+}
+//*********************************************************
+void memset(void *dst, const char value, size_t len) {
+	for (size_t i = 0; i < len; i++) {
+		((char*)dst)[i] = value;
+	}
+}
+//*********************************************************
+void strnncpy(char*& dst, size_t& size, size_t start, const char* src, const size_t length, const size_t offset) {
+	if (start + length > size) {
+		size_t newSize = (size << 1);
+		char *tmp = MALLOC(char, newSize);
+		memcpy(tmp, dst, start);
+		size = newSize;
+		DEL_(dst);
+		dst = tmp;
+	}
+	strncpy(&dst[start], length, &src[offset]);
 }

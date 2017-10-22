@@ -1,9 +1,11 @@
-#include "MemoryMgr.h"
 #include <stdio.h>
-#include <string.h>
 #include <malloc.h>
+#include "base/MemoryMgr.h"
+#include "base/String.h"
+#include "base/str.h"
 
-NAMESPACE_FRMWRK_USE
+
+NS_FW_BASE_USE
 
 #ifdef _DEBUG
 _MEM_DBG_INFO *MemoryMgr::memDbgInfos_ = NULL;
@@ -28,27 +30,18 @@ void MemoryMgr::initialize_() {
 }
 
 void* MemoryMgr::alloc(size_t size) {
-	//void *p = NULL;
-	//// insert pointer into table
-	//if (nRefTable_ < MAXOBJREFCOUNT) {
-	//	// allocate memory for object + refTable pointer
-		void *p = malloc(size);
-	//	// get next free entry
-	//	OBJREF *r = MemoryMgr::nextFreeEntry_;
-	//	// set next free
-	//	MemoryMgr::nextFreeEntry_ = r->ptr.entry;
-	//	r->ptr.ref = (Object*)p;
-	//	nRefTable_++;
-	//}
-	//_VS_debug("alloc:%x\n", (int)p);
+	void *p = ::malloc(size);
 	return p;
+}
+void* MemoryMgr::realloc(void* p, size_t size) {
+	void *q = ::realloc(p, size);
+	return q;
 }
 
 void MemoryMgr::free(void *p) {
 	//_VS_debug("free:%x\n", (int)p);
 	::free(p);
 }
-
 void* operator new(size_t iSize) {
 	return MemoryMgr::alloc(iSize);
 }
@@ -62,26 +55,43 @@ void operator delete(void *p) {
 }
 
 #ifdef _DEBUG
-void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine) {
-	if (MemoryMgr::nMemDbgInfos_ < _MEM_DBG_SIZE) {
-		if (MemoryMgr::memDbgInfos_ == NULL) {
-			MemoryMgr::initialize_();
+void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine, bool isRealloc) {
+	if (isRealloc) {
+		bool found = false;
+		for (int i = 0; i < MemoryMgr::nMemDbgInfos_; i++) {
+			_MEM_DBG_INFO *mb = &MemoryMgr::memDbgInfos_[i];
+			if (mb->ptr.address == p) {
+				found = true;
+				mb->iLine = iLine;
+				mb->ptr.address = p;
+				mb->szFile = szFile;
+				break;
+			}
 		}
-		_MEM_DBG_INFO& mb = *MemoryMgr::nextFreeEntry_;
-		MemoryMgr::nextFreeEntry_ = mb.ptr.next;
-		mb.iLine = iLine;
-		mb.ptr.address = p;
-		mb.szFile = szFile;
-		MemoryMgr::nMemDbgInfos_++;
+		if (found) {
+			if (MemoryMgr::isDebugOn) {
+				_VS_debug("1>%s(%d) : Realloc at 0x%llX\n", szFile, iLine, p);
+			}
+		} else {
+			_VS_debug("1>%s(%d) : Bad realloc at 0x%llX\n", szFile, iLine, p);
+		}
+	} else {
+		if (MemoryMgr::nMemDbgInfos_ < _MEM_DBG_SIZE) {
+			if (MemoryMgr::memDbgInfos_ == NULL) {
+				MemoryMgr::initialize_();
+			}
+			_MEM_DBG_INFO& mb = *MemoryMgr::nextFreeEntry_;
+			MemoryMgr::nextFreeEntry_ = mb.ptr.next;
+			mb.iLine = iLine;
+			mb.ptr.address = p;
+			mb.szFile = szFile;
+			MemoryMgr::nMemDbgInfos_++;
+		}
+		if (MemoryMgr::isDebugOn) {
+			_VS_debug("1>%s(%d) : Alloc at 0x%llX\n", szFile, iLine, p);
+		}
 	}
-	if (MemoryMgr::isDebugOn) {
-		_VS_debug("1>%s(%d) : Alloc at 0x%08X\n", szFile, iLine, p);
-	}
-		return p;
-}
-
-int MemoryMgr::delMemDbgInfo(Object& obj, char *szFile, int iLine) {
-	return delMemDbgInfo(obj.ptr_, szFile, iLine);
+	return p;
 }
 
 int MemoryMgr::delMemDbgInfo(void *ptr, char *szFile, int iLine) {
@@ -98,10 +108,10 @@ int MemoryMgr::delMemDbgInfo(void *ptr, char *szFile, int iLine) {
 	}
 	if (bFound) {
 		if (MemoryMgr::isDebugOn) {
-			_VS_debug("1>%s(%d) : Free at 0x%08X\n", szFile, iLine, ptr);
+			_VS_debug("1>%s(%d) : Free at 0x%llX\n", szFile, iLine, ptr);
 		}
 	} else {
-		_VS_debug("1>%s(%d) : Attempt to free invalid block at 0x%08X\n", szFile, iLine, ptr);
+		_VS_debug("1>%s(%d) : Attempt to free invalid block at 0x%llX\n", szFile, iLine, ptr);
 	}
 	return bFound;
 }
@@ -111,7 +121,7 @@ void MemoryMgr::checkMemDbgInfo() {
 	for (int i=0; i<MemoryMgr::nMemDbgInfos_; i++) {
 		_MEM_DBG_INFO *mb = &MemoryMgr::memDbgInfos_[i];
 		if (mb->szFile != NULL) {
-			_VS_debug("1>%s(%d) : Memory leak at 0x%08X\n", mb->szFile, mb->iLine, mb->ptr.address);
+			_VS_debug("1>%s(%d) : Memory leak at 0x%llX\n", mb->szFile, mb->iLine, mb->ptr.address);
 			iFound++;
 		}
 	}

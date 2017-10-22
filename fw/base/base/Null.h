@@ -13,6 +13,7 @@ class Null_ : public Object_ {
 	Null_(void);
 	~Null_(void);
 	String toString();
+	const char* getType();
 };
 /*****************************************************************************
 * Null (reference)

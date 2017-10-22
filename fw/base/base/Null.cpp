@@ -1,4 +1,4 @@
-#include "Null.h"
+#include "base/Null.h"
 #include "base/MemoryMgr.h"
 #include "base/String.h"
 
@@ -14,6 +14,9 @@ Null_::Null_(void) {
 Null_::~Null_(void) {
 }
 
+const char* Null_::getType() {
+	return "null";
+}
 String Null_::toString() {
 	return String("null");
 }

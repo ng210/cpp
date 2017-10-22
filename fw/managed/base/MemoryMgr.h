@@ -25,12 +25,19 @@ NAMESPACE_FRMWRK_BEGIN
 	#define NEW_(T,...) (T*)MemoryMgr::addMemDbgInfo(new T(__VA_ARGS__), __FILE__, __LINE__)
 	#define NEWARR(T,s) (T*)MemoryMgr::addMemDbgInfo(new T[s], __FILE__, __LINE__)
 	#define DEL(v) if (MemoryMgr::delMemDbgInfo((Object&)v, __FILE__, __LINE__)) { delete v; }
+	#define DELARR(v) if (MemoryMgr::delMemDbgInfo(v, __FILE__, __LINE__)) { delete[] v; }
 	#define DEL_(v) if (v != NULL && MemoryMgr::delMemDbgInfo((void*)v, __FILE__, __LINE__)) { delete v; }
+	#define MALLOC(t, s) (t*)MemoryMgr::addMemDbgInfo(MemoryMgr::alloc(sizeof(t)*s), __FILE__, __LINE__)
+	#define REALLOC(p, t, s) (t*)MemoryMgr::addMemDbgInfo(MemoryMgr::realloc(p, sizeof(t)*s), __FILE__, __LINE__, true)
+	#define FREE(p) if (p != NULL && MemoryMgr::delMemDbgInfo((void*)p, __FILE__, __LINE__)) { MemoryMgr::free(p); }
 
 #else
 	#define NEW_(T,v,...) v = new T(__VA_ARGS__);
 	#define NEWARR(T,v,s) v = new T[s];
 	#define DEL(v) delete v;
+	#define MALLOC(t, s) (t*)MemoryMgr::alloc(sizeof(t)*s)
+	#define REALLOC(p, t, s) (t*)MemoryMgr::realloc(p, sizeof(t)*s)
+	#define FREE(p) MemoryMgr::free(p)
 #endif
 
 class MemoryMgr {
@@ -42,13 +49,14 @@ class MemoryMgr {
 	static void initialize_();
 public:
 	static bool isDebugOn;
-	static void* addMemDbgInfo(void *p, char *szFile, int iLine);
+	static void* addMemDbgInfo(void *p, char *szFile, int iLine, bool isRealloc = false);
 	static int delMemDbgInfo(Object& obj, char *szFile, int iLine);
 	static int delMemDbgInfo(void *p, char *szFile, int iLine);
 	static void checkMemDbgInfo();
 #endif
 public:
 	static void* alloc(size_t size);
+	static void* realloc(void* p, size_t size);
 	static void free(void *p);
 };
 

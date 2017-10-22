@@ -25,14 +25,20 @@ String_::String_(char *p) {
 	length_ = strlen(p);
 }
 String_::~String_(void) {
-	DEL_(buffer_);
+	FREE(buffer_);
 	//DELARR(buffer_);
 }
+const char* String_::getType() {
+	return "string";
+}
 String String_::toString() {
-	return String(this->buffer_);
+	return String((const char*)this->buffer_);
 }
 int String_::compareTo(Object_* str) {
 	return strncmp(buffer_, ((String_*)str)->buffer_, length_);
+}
+void* String_::valueOf() {
+	return buffer_;
 }
 
 #define THIS ((String_&)*ptr_)
@@ -96,7 +102,7 @@ char String::operator[](int ix) {
 }
 String String::operator+(String& str) {
 	size_t len = THIS.length_ + PTR(str).length_ ;
-	char* buffer = NEWARR(char, len + 1);
+	char* buffer = MALLOC (char, len + 1);
 	strncpy(buffer, THIS.length_, THIS.buffer_);
 	strncpy(&buffer[THIS.length_], PTR(str).length_, PTR(str).buffer_);
 	buffer[len] = '\0';
@@ -211,7 +217,7 @@ String String::replace(const char* oldValue, const char* newValue) {
 		arr[count++] = res;
 		i = res + len2;
 	}
-	char *buffer = NEWARR(char, len + 1);
+	char *buffer = MALLOC(char, len + 1);
 
 	buffer[0] = '\0';
 	size_t offs = 0;
@@ -244,7 +250,7 @@ String String::substr(long long start, long long length) {
 		if (len <= 0 || len > THIS.length_ - start) {
 			len = THIS.length_ - start;
 		}
-		char *buffer = NEWARR(char, len + 1);
+		char *buffer = MALLOC(char, len + 1);
 		strncpy(buffer, len, &THIS.buffer_[start]);
 		str = String(buffer);
 	}
@@ -274,7 +280,7 @@ Array String::split(const char* str) {
 }
 String String::toLowerCase() {
 	size_t len = THIS.length_;
-	char *buffer = NEWARR(char, len + 1);
+	char *buffer = MALLOC(char, len + 1);
 	for (size_t i = 0; i < len; i++) {
 		char ch = THIS.buffer_[i];
 		if (ch >= 'A' && ch <= 'Z') {
@@ -287,7 +293,7 @@ String String::toLowerCase() {
 }
 String String::toUpperCase() {
 	size_t len = THIS.length_;
-	char *buffer = NEWARR(char, len + 1);
+	char *buffer = MALLOC(char, len + 1);
 	for (size_t i = 0; i < len; i++) {
 		char ch = THIS.buffer_[i];
 		if (ch >= 'a' && ch <= 'zB') {
@@ -314,7 +320,7 @@ String String::trim() {
 	}
 	if (i <= j) {
 		len = j - i + 1;
-		char *buffer = NEWARR(char, len + 1);
+		char *buffer = MALLOC(char, len + 1);
 		strncpy(buffer, len, &THIS.buffer_[i]);
 		str = String(buffer);
 	} else {

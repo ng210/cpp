@@ -1,9 +1,8 @@
+#include <stdio.h>
 #include "base/Object.h"
 #include "base/Null.h"
-//#include "base/str.h"
 #include "base/String.h"
 #include "base/MemoryMgr.h"
-#include <stdio.h>
 
 NAMESPACE_FRMWRK_USE
 
@@ -18,23 +17,55 @@ Object_::~Object_(void) {
 
 }
 int Object_::addRef_() {
-	return ++refCount_;
+	refCount_++;
+#ifdef _DEBUG
+	dump("addRef");
+#endif
+	return refCount_;
 }
 int Object_::delRef_() {
-	return --refCount_;
+	refCount_--;
+#ifdef _DEBUG
+	dump("delRef");
+#endif
+	return refCount_;
+}
+const char* Object_::getType() {
+	return "object";
 }
 String Object_::toString() {
 	String str("[Object]");
 	return str;
+}
+void* Object_::valueOf() {
+	return this;
 }
 
 int Object_::compareTo(Object_* obj) {
 	return (this->iHash_ - obj->iHash_) & 0xFFFFFFFF;
 }
 
+#ifdef _DEBUG
+void Object_::dump(const char* label) {
+	if (Object::isDebugOn) {
+		if (label == NULL) {
+			printf(" *** (%s)%llX.refCount_ = %d\n", getType(), (long long)this, refCount_);
+		}
+		else {
+			printf(" *** %s: (%s)%llX.refCount_ = %d\n", label, getType(), (long long)this, refCount_);
+
+		}
+	}
+}
+#endif
+
 /*****************************************************************************
  * Object (reference)
  *****************************************************************************/
+#ifdef _DEBUG
+bool Object::isDebugOn = false;
+#endif
+
 Object::Object(void* ptr) {
 }
 void Object::addRef_() {
@@ -83,12 +114,14 @@ Object& Object::operator=(const Null& ref) {
 	null_();
 	return *this;
 }
+String Object::getType() {
+	return String(ptr_->getType());
+}
 int Object::compareTo(Object& obj) {
 	return ptr_->compareTo(obj.ptr_);
 }
 
 String Object::toString() {
-	String str("[Object]");
 	return ptr_->toString();
 }
 
@@ -96,13 +129,12 @@ bool Object::operator==(Object& ref) {
 	return (compareTo(ref) == 0);
 }
 
+void* Object::valueOf() {
+	return ptr_->valueOf();
+}
+
 #ifdef _DEBUG
-void Object::dump(Object& obj, const char* label) {
-	if (label == NULL) {
-		printf("%08llX.ref:%d\n", ((unsigned long long)obj.ptr_) & 0xffffffff, obj.ptr_->refCount_);
-	}
-	else {
-		printf("%s: %08llX.ref:%d\n", label, ((unsigned long long)obj.ptr_) & 0xffffffff, obj.ptr_->refCount_);
-	}
+void Object::dump(const char* label) {
+	ptr_->dump(label);
 }
 #endif

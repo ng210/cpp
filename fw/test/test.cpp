@@ -1,70 +1,176 @@
 #include <stdio.h>
 //#include <stdlib.h>
-#include "base/str.h"
-#include "consoleapp.h"
+#include "base/String.h"
+#include "collection/Array.h"
+//#include "base/consoleapp.h"
 #include "base/MemoryMgr.h"
 
-NAMESPACE_FRMWRK_USE
+//#include <stdarg.h>
 
-void test() {
-	String str0 = null;
-	str0 = null;
-	Object obj = null;
-	obj = null;
-	String str1 = "AbCdEf";
-	String str2 = "GhIjKl";
-	String str3 = "AbMnOpQr";
-	String str = str1 + "_" + str2 + " " + str3;
-	printf("1. str3=str1+\"_\"+str2+\" \"='%s'\n", str.toCString());
-	printf("2.1 str3.charAt(2)='%c'\n", str[2]);
-	printf("2.2 str.charAt(-1)='%c'\n", str[-1]);
-	printf("2.3 str.charAt(25)='%c'\n", str[25]);
-	printf("3.1 str.indexOf(str1)=%lld\n", str.indexOf(str1));
-	printf("3.2 str.indexOf(str2)=%lld\n", str.indexOf(str2));
-	printf("3.3 str.indexOf(str3)=%lld\n", str.indexOf(str3));
-	printf("3.4 str.indexOf('Ab', 5)=%lld\n", str.indexOf("Ab", 5));
-	printf("4.1 str.lastIndexOf(str1)=%lld\n", str.lastIndexOf(str1));
-	printf("4.2 str.lastIndexOf(str2)=%lld\n", str.lastIndexOf(str2));
-	printf("4.3 str.lastIndexOf(str3)=%lld\n", str.lastIndexOf(str3));
-	printf("4.4 str.lastIndexOf(\"Ef\")=%lld\n", str.lastIndexOf("Ef"));
-	printf("5. str.startsWith('str1')='%s'\n", str.startsWith(str1) ? "true" : "false");
-	printf("6. str.startsWith('str2')='%s'\n", str.startsWith(str2) ? "true" : "false");
-	printf("7. str.endsWith('str2')='%s'\n", str.endsWith(str2) ? "true" : "false");
-	printf("7. str.endsWith('str3')='%s'\n", str.endsWith(str3) ? "true" : "false");
-	printf("8.1 str.substring(2,6)='%s'\n", str.substring(2,6).toCString());
-	printf("8.2 str.substring(-2,6)='%s'\n", str.substring(-2, 6).toCString());
-	printf("8.3 str.substring(-22,6)='%s'\n", str.substring(-22, 6).toCString());
-	printf("8.4 str.substring(2,-6)='%s'\n", str.substring(2, -6).toCString());
-	printf("8.5 str.substring(2)='%s'\n", str.substring(2).toCString());
-	printf("9.1 str.substr(2,6)='%s'\n", str.substr(2, 6).toCString());
-	printf("9.2 str.substr(-2,6)='%s'\n", str.substr(-2, 6).toCString());
-	printf("9.3 str.substr(-22,6)='%s'\n", str.substr(-22, 6).toCString());
-	printf("9.4 str.substr(2,-6)='%s'\n", str.substr(2, -6).toCString());
-	printf("9.5 str.substr(2)='%s'\n", str.substr(2).toCString());
-	String str4 = "\t\n";
-	str = str4 + str + str4;
-	printf("10.1 str.trim()='%s'\n", str.trim().toCString());
-	printf("10.2 String(\"  a  \").trim()='%s'\n", String("  a  ").trim().toCString());
-	printf("10.3 String(\"  \").trim()='%s'\n", String("  ").trim().toCString());
-	str = "Is this the 1st test string?";
-	printf("11. str.toLowerCase()='%s'\n", str.toLowerCase().toCString());
-	printf("12. str.toUpperCase()='%s'\n", str.toUpperCase().toCString());
-	str = "A red fox jumps over Fred's red fence.";
-	String str5 = str.replace("red", "small");
-	printf("13.1 ('%s').replace('red', 'small')='%s'\n", str.toCString(), str5.toCString());
-	printf("13.2 ('%s').replace('red', 'silver')='%s'\n", str5.toCString(), str5.replace("red", "blue").toCString());
+NS_FW_BASE_USE
+
+int g_id = 1;
+
+#define STRINGIFY(x) #x
+#define STR(ix, expr) str[ix] = expr; printf("%02d. '%s'\n", g_id++, str[ix]->toString())
+#define STR2(dst, src, expr) str[dst] = str[src]->expr; printf("%02d. '%s'->" STRINGIFY(expr) "='%s'\n", g_id++, str[src]->toString(), str[dst]->##toString())
+#define STR3(src, fn, s, ix, f) printf("%02d. '%s'->" STRINGIFY(fn) "('%s')=" STRINGIFY(f) "\n", g_id++, str[src]->toString(), s[ix]->toString(), str[src]->##fn(s[ix]))
+
+#define STR20(dst, src, fn, c) str[dst] = str[src]->##fn(c); \
+printf("%02d. '%s'->" STRINGIFY(fn) "('" STRINGIFY(c) "')='%s'\n", g_id++, str[src]->toString(), str[dst]->##toString())
+#define STR21(dst, src, fn, s, ix) str[dst] = str[src]->##fn(s[ix]); \
+printf("%02d. '%s'->" STRINGIFY(fn) "('%s')='%s'\n", g_id++, str[src]->toString(), s[ix]->toString(), str[dst]->##toString())
+#define STR30(src, fn, c, f) printf("%02d. '%s'->" STRINGIFY(fn) "(" STRINGIFY(c) ")=" STRINGIFY(f) "\n", g_id++, str[src]->toString(), str[src]->##fn(c))
+
+void testStringPtr() {
+	String* str[50];
+	for (int i = 0; i < 50; i++) str[i] = NULL;
+	size_t i = 0;
+	STR(0, NEW_(String, "AbCdEf"));
+	STR20(1, 0, concat, "_");
+	STR(2, NEW_(String, "GhIjKl"));
+	STR21(3, 1, concat, str, 2);
+	STR(4, NEW_(String, "AbMnOpQr"));
+	STR20(5, 3, concat, " ");
+	STR(6, NEW_(String, "Baka"));
+	STR21(7, 5, concat, str, 4);
+	printf("%02d. '%s'[2]='%c'\n", g_id++, str[7]->toString(), (*str[7])[2]);
+	printf("%02d. '%s'[-1]='%c'\n", g_id++, str[7]->toString(), (*str[7])[-1]);
+	printf("%02d. '%s'[25]='%c'\n", g_id++, str[7]->toString(), (*str[7])[25]);
+	STR3(7, indexOf, str, 1, %lld);
+	STR3(7, indexOf, str, 2, %lld);
+	STR3(7, indexOf, str, 3, %lld);
+	STR3(7, indexOf, str, 6, %lld);
+	STR3(7, indexOf, str, 7, %lld);
+	STR30(7, indexOf, "Ab", %lld);
+	STR30(7, indexOf, "Ba", %lld);
+	STR3(7, lastIndexOf, str, 1, %lld);
+	STR3(7, lastIndexOf, str, 2, %lld);
+	STR3(7, lastIndexOf, str, 3, %lld);
+	STR3(7, lastIndexOf, str, 6, %lld);
+	STR3(7, lastIndexOf, str, 7, %lld);
+	STR30(7, lastIndexOf, "Ef", %lld);
+	STR30(7, lastIndexOf, "Ba", %lld);
+	STR3(7, startsWith, str, 1, %d);
+	STR3(7, startsWith, str, 2, %d);
+	STR3(7, endsWith, str, 2, %d);
+	STR3(7, endsWith, str, 4, %d);
+	STR2(8, 7, substring(2, 6));
+	STR2(9, 7, substring(-2, 6));
+	STR2(10, 7, substring(-22, 6));
+	STR2(11, 7, substring(2, -6));
+	STR2(12, 7, substring(2));
+	STR2(13, 7, substring(2, 6));
+	STR2(14, 7, substr(2, 6));
+	STR2(15, 7, substr(-2, 6));
+	STR2(16, 7, substr(-22, 6));
+	STR2(17, 7, substr(2, -6));
+	STR(18, NEW_(String, "\t\n"));
+	STR21(19, 18, concat, str, 7);
+	STR21(20, 19, concat, str ,17);
+	STR2(21, 20, trim());
+	STR(22, NEW_(String, "  a  "));
+	STR2(23, 22, trim());
+	STR(24, NEW_(String, "  "));
+	STR2(25, 24, trim());
+	STR(26, NEW_(String, "Is this the 1st test string?"));
+	STR2(27, 26, toLowerCase());
+	STR2(28, 26, toUpperCase());
+	STR(29, NEW_(String, "A red fox jumps over Fred's red fence."));
+	STR2(30, 29, replace("red", "small"));
+	STR2(31, 30, replace("red", "blue"));
+	STR2(32, 31, replace("small", "red"));
+
+	for (int i = 0; i < 50; i++) if (str[i] != NULL) DEL_(str[i]);
 }
+
+//Object myFilter1(size_t argc, ...) {
+//	va_list argv;
+//	va_start(argv, argc);
+//	Object* that = (argc > 1) ? va_arg(argv, Object*) : NULL;
+//	Object* item = (argc > 2) ? va_arg(argv, Object*) : NULL;
+//	size_t ix = (argc > 3) ? va_arg(argv, size_t) : -1;
+//	Array* arr = (argc > 3) ? va_arg(argv, Array*) : (Array*)&null;
+//	return null;
+//}
+
+
+#define ARR(ix, expr) arr[ix] = expr; { const char* __str = arr[ix]->join_(", "); printf("%02d. '%s'\n", g_id++, __str); FREE(__str); }
+#define ARR1(dst, src, fn, ix) arr[dst] = arr[src]->##fn(arr[ix]); { \
+	const char* __str1 = arr[src]->join_(", "); \
+	const char* __str2 = arr[ix]->join_(", "); \
+	const char* __str3 = arr[dst]->join_(", "); \
+	printf("%02d. '%s'->" STRINGIFY(fn) "('%s')='%s'\n", g_id++, __str1, __str2, __str3); FREE(__str1); FREE(__str2); FREE(__str3); }
+
+Object* cleanupArray(size_t count, ...) {
+	va_list args;
+	va_start(args, count);
+	Object* that = va_arg(args, Object*);
+	Object* item = va_arg(args, Object*);
+	size_t i = va_arg(args, size_t);
+	Array* arr = va_arg(args, Array*);
+	DEL_(item);
+	return NULL;
+}
+
+void testArray() {
+	Array* all = NULL;	// NEW_(Array);
+	Array* arr[50];
+	for (int i = 0; i < 50; i++) arr[i] = NULL;
+
+	ARR(0, NEW_(Array, 3, NEW_(String, "Red"), NEW_(String, "Green"), NEW_(String, "Blue")));
+	ARR(1, NEW_(Array, 3, NEW_(String, "Rose"), NEW_(String, "Grass"), NEW_(String, "Sky")));
+	ARR1(2, 0, concat, 1);
+	all = arr[2];
+
+	all->forEach(cleanupArray);
+
+	//printf("1. ([%s]) + ([%s])=[%s]\n", arr1.toString().toCString(), arr2.toString().toCString(), arr3.toString().toCString());
+	//printf("2. arr3[3]='%s'\n", arr3[3].toString().toCString());
+	//Array& fill(Object&, size_t = 0, size_t = 0);
+	//Array arr4 = arr3.filter(myFilter1, arr3);
+	//printf("3. arr4.filter(myFilter1)='%s'\n", arr4.toString().toCString());
+
+	//Object find(Function&, Object& = (Object&)null);
+	//long long findIndex(Function&, Object& = (Object&)null);
+	//void forEach(Function&, Object& = (Object&)null);
+	//long long indexOf(Object&, size_t = 0);
+
+	//String str = arr3.join(String(" - "));
+	//printf("9. arr.join='%s'\n", str.toCString());
+
+
+	//long long lastIndexOf(Object&, size_t = -1);
+	//Array map(Function&, Object& = (Object&)null);
+	//Object pop();
+	//void push(Object&);
+	//void push(size_t, ...);
+	//Array& reverse();
+	//Object shift();
+	//Array slice(long long = 0, long long = 0);
+	//Array& sort(Function&);
+	//Array splice(long long, size_t, size_t = 0, ...);
+	//size_t unshift(Object&);
+	//size_t unshift(size_t, ...);
+
+	for (int i = 0; i < 50; i++) if (arr[i] != NULL) DEL_(arr[i]);
+}
+
+//Object myCallback(size_t argc, ...) {
+//	return null;
+//}
 
 int main(int argc, char *argv[]) {
 	int error = 0;
 
 	//MemoryMgr::isDebugOn = true;
 
-	printf("\n\n***\n");
-	test();
+	printf("********\n");
+	//testStringPtr();
+	testArray();
+	printf("********\n\n");
 
 	MemoryMgr::checkMemDbgInfo();
-	printf("***\n\n\n");
 
 	return error;
 }
