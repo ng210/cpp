@@ -116,17 +116,26 @@ int MemoryMgr::delMemDbgInfo(void *ptr, char *szFile, int iLine) {
 	return bFound;
 }
 
-void MemoryMgr::checkMemDbgInfo() {
-	int iFound = 0;
+void MemoryMgr::checkMemDbgInfo(size_t count, void** exceptions) {
+	int found = 0;
 	for (int i=0; i<MemoryMgr::nMemDbgInfos_; i++) {
 		_MEM_DBG_INFO *mb = &MemoryMgr::memDbgInfos_[i];
 		if (mb->szFile != NULL) {
-			_VS_debug("1>%s(%d) : Memory leak at 0x%llX\n", mb->szFile, mb->iLine, mb->ptr.address);
-			iFound++;
+			bool isException = false;
+			for (size_t j = 0; j < count; j++) {
+				if (exceptions[j] == mb->ptr.address) {
+					isException = true;
+					break;						
+				}
+			}
+			if (!isException) {
+				_VS_debug("1>%s(%d) : Memory leak at 0x%llX\n", mb->szFile, mb->iLine, mb->ptr.address);
+				found++;
+			}
 		}
 	}
-	if (iFound > 0) {
-		_VS_debug("%d unallocated blocks found.\n", iFound);
+	if (found > 0) {
+		_VS_debug("%d unallocated blocks found.\n", found);
 	} else {
 		_VS_debug("No unallocated blocks found :)\n");
 	}

@@ -17,6 +17,8 @@ protected:
 	Object** data_;
 	PROP_R(protected, size_t, length, );
 	size_t capacity_;
+
+	char* join_(const char* sep);
 public:
 	Array();
 	Array(size_t, Object*, ...);
@@ -25,10 +27,11 @@ public:
 	void init(size_t);
 
 	const char* getType();
-	const char* toString();
+	char* toString();
 	int compareTo(Object* obj);
 	void* valueOf();
 
+	void cleanUp();
 	Array* concat(Array*);
 	Object* operator[](long long);
 	void fill(Object*, size_t = 0, size_t = 0);
@@ -39,7 +42,6 @@ public:
 	long long indexOf(Object*, size_t = 0);
 	String* join(String*);
 	String* join(const char*);
-	const char* join_(const char* sep);
 	long long lastIndexOf(Object*, size_t = -1);
 	Array* map(Function*, Object* = NULL);
 	Object* pop();

@@ -12,7 +12,7 @@ class String : public Object {
 	static const String emptyInstance_;
 protected:
 	char *buffer_;
-	size_t length_;
+	PROP_R(protected, size_t, length, );
 public:
 	String(void);
 	String(char *p);
@@ -20,8 +20,11 @@ public:
 	String(String&);
 	virtual ~String(void);
 
+	static const char* empty();
+
 	const char* getType();
-	const char* toString();
+	char* toString();
+	int strcmp(const char*);
 	int compareTo(Object* obj);
 	void* valueOf();
 
@@ -38,6 +41,8 @@ public:
 	long long lastIndexOf(char*);
 	bool endsWith(String*);
 	bool endsWith(char*);
+	static String* join(String**, String*);
+	static String* join(String**, const char* = NULL, size_t length = 0);
 	//? match(RegExp&);
 	String* replace(String*, String*);
 	String* replace(const char*, const char*);

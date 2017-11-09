@@ -9,13 +9,17 @@ NS_FW_BASE_BEGIN
 * Object
 *****************************************************************************/
 class Object {
+	static Object nullInstance_;
 	PROP_R(protected, long long, Hash, i);
 public:
 	Object(void);
 	virtual ~Object(void);
 
+	static Object* null();
+
+	virtual int strcmp(const char*);
 	virtual const char* getType();
-	virtual const char* toString();
+	virtual char* toString();
 	virtual int compareTo(Object*);
 	virtual void* valueOf();
 

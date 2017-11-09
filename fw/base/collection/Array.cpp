@@ -50,8 +50,8 @@ const char* Array::getType() {
 int Array::compareTo(Object* obj) {
 	throw "Not implemented!";
 }
-const char* Array::toString() {
-	return join("")->toString();
+char* Array::toString() {
+	return join_(",");
 }
 void* Array::valueOf() {
 	return data_;
@@ -70,6 +70,12 @@ Object* Array::operator[](long long index) {
 
 	return item;
 }
+void Array::cleanUp() {
+	for (int i = 0; i < length_; i++) {
+		DEL_(data_[i]);
+	}
+	length_ = 0;
+}
 Array* Array::concat(Array* arr) {
 	Array* res = NEW_(Array, length_ + arr->length_);
 	// add items of this
@@ -80,7 +86,7 @@ Array* Array::concat(Array* arr) {
 }
 void Array::fill(Object* obj, size_t start, size_t end) {
 	if (start < length_) {
-		if (end == 0) {
+		if (end == 0 || end > length_) {
 			end = length_;
 		}
 		for (size_t i = start; i < end; i++) {
@@ -145,18 +151,19 @@ String* Array::join(String* str) {
 	return join(str->toString());
 }
 String* Array::join(const char* sep) {
-	return NEW_(String, join_(sep));
+	return NEW_(String, (char*)join_(sep));
 }
-const char* Array::join_(const char* sep) {
+char* Array::join_(const char* sep) {
 	size_t size = 65536;
 	char *buffer = MALLOC(char, size);
 	size_t sepLen = strlen(sep);
 	size_t offset = 0;
 	for (size_t i = 0; i < length_; i++) {
 		Object* o = data_[i];
-		const char* item = o->toString();
+		char* item = o->toString();
 		size_t len = strlen(item);
 		strnncpy(buffer, size, offset, item, len);
+		FREE(item);
 		offset += len;
 		if (i < length_ - 1) {
 			strnncpy(buffer, size, offset, sep, sepLen);

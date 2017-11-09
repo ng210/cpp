@@ -50,7 +50,7 @@ public:
 	static bool isDebugOn;
 	static void* addMemDbgInfo(void *p, char *szFile, int iLine, bool isRealloc = false);
 	static int delMemDbgInfo(void *p, char *szFile, int iLine);
-	static void checkMemDbgInfo();
+	static void checkMemDbgInfo(size_t, void**);
 #endif
 public:
 	static void* alloc(size_t size);

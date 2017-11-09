@@ -28,17 +28,28 @@ String::String(String& str) {
 String::~String(void) {
 	FREE(buffer_);
 }
+
+const char* String::empty() {
+	return String::emptyInstance_.buffer_;
+}
+
 /*****************************************************************************
 * Object
 *****************************************************************************/
 const char* String::getType() {
 	return "string";
 }
-const char* String::toString() {
-	return this->buffer_;
+char* String::toString() {
+	return strdup(buffer_, length_);
+}
+int String::strcmp(const char* str) {
+	return strncmp(buffer_, str, length_);
 }
 int String::compareTo(Object* str) {
-	return strncmp(buffer_, str->toString(), length_);
+	char* buf = str->toString();
+	int res = strncmp(buffer_, buf, length_);
+	FREE(buf);
+	return res;
 }
 void* String::valueOf() {
 	return buffer_;
@@ -145,6 +156,36 @@ long long String::lastIndexOf(char* str) {
 	}
 	return res;
 }
+String* String::join(String** arr, String* sep) {
+	return String::join(arr, sep->buffer_, sep->length_);
+}
+String* String::join(String** arr, const char* sep, size_t sepLength) {
+	if (sepLength == 0 && sep != NULL) {
+		sepLength = strlen(sep);
+	}
+	size_t len = 0;
+	size_t i = 0;
+	String* str;
+	while ((str = arr[i++]) != NULL) {
+		len += str->length_;
+		len += sepLength;
+	}
+	i--;
+	len -= sepLength;
+	char* buffer = MALLOC(char, len+1);
+	size_t start = 0;
+	for (size_t j=0; j<i; j++) {
+		str = arr[j];
+		len = str->length_;
+		strncpy(&buffer[start], len, str->buffer_);
+		start += len;
+		if (sepLength > 0 && j < i - 1) {
+			strncpy(&buffer[start], sepLength, sep);
+			start += sepLength;
+		}
+	}
+	return NEW_(String, buffer);
+}
 //Array String::match(RegExp&);
 String* String::replace(String* oldValue, String* newValue) {
 	return replace(oldValue->buffer_, newValue->buffer_);
@@ -185,7 +226,7 @@ String* String::replace(const char* oldValue, const char* newValue) {
 //String String::replace(RegExp& old, String& new)
 //String String::replace(Array&, Array&);
 String* String::substr(long long start, long long length) {
-	String* str;
+	String* str = NULL;
 	size_t len = length;
 	if (start > (long long)length_) {
 		str = NEW_(String, "");
@@ -228,11 +269,10 @@ String** String::split(const char* str) {
 		if (ix == -1) {
 			ix = length_;
 		}
-		arr[count] = NEW_(String);
-		arr[count]->buffer_ = NS_FW_BASE::substr(buffer_, i, ix - i);
-		count++;
-		i += ix + len;
+		arr[count++] = NEW_(String, NS_FW_BASE::substr(buffer_, i, ix - i));
+		i = ix + len;
 	}
+	arr[count++] = NULL;
 	String** res = (String**)MALLOC(String*, count);
 	memcpy((char*)res, (char*)arr, count * sizeof(String*));
 	return res;

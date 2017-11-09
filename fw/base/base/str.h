@@ -5,11 +5,11 @@
 
 NS_FW_BASE_BEGIN
 
-size_t strlen(const char *str);
-char* strncpy(char *dst, size_t len, const char *src);
+char* substr(char *szStr, size_t start, size_t length);
 char* strdup(const char *szStr, size_t& length);
 char* strdup(const char *szStr);
-char* substr(char *szStr, size_t start, size_t length);
+size_t strlen(const char *str);
+char* strncpy(char *dst, size_t len, const char *src);
 int strncmp(const char *left, const char *right, size_t len);
 void memcpy(char *dst, const char *src, size_t len);
 void memset(void *dst, const char value, size_t len);

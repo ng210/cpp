@@ -1,3 +1,4 @@
+#include "base/str.h"
 #include "base/Object.h"
 #include "base/String.h"
 #include "base/MemoryMgr.h"
@@ -7,6 +8,12 @@
 #endif
 
 NS_FW_BASE_BEGIN
+
+Object Object::nullInstance_;
+
+Object* Object::null() {
+	return &Object::nullInstance_;
+}
 
 /*****************************************************************************
 * Object
@@ -19,13 +26,18 @@ Object::~Object(void) {
 const char* Object::getType() {
 	return "object";
 }
-const char* Object::toString() {
-	return "[Object]";
+char* Object::toString() {
+	return strdup("[Object]");
 }
 void* Object::valueOf() {
 	return this;
 }
-
+int Object::strcmp(const char* str) {
+	char* buf = toString();
+	int res = strncmp(buf, str, -1);
+	FREE(buf);
+	return res;
+}
 int Object::compareTo(Object* obj) {
 	return (this->iHash_ - obj->iHash_) & 0xFFFFFFFF;
 }

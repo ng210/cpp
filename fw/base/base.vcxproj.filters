@@ -39,6 +39,12 @@
     <ClInclude Include="base\Function.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="consoleapp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="runtime.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\debug.cpp">
@@ -60,6 +66,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="base\Function.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="consoleapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
