@@ -5,14 +5,20 @@
 
 NS_FW_BASE_BEGIN
 
+#define TYPE_STRING (String::classType()->code())
+
 /*****************************************************************************
 * String
 *****************************************************************************/
 class String : public Object {
-	static const String emptyInstance_;
+	friend class RunTime;
+	DECL_TYPE(String);
+	static const String* emptyInstance_;
+	static void initialize();
+	static void shutDown();
 protected:
-	char *buffer_;
-	PROP_R(protected, size_t, length, );
+	char *value_;
+	PROP_R(size_t, length);
 public:
 	String(void);
 	String(char *p);
@@ -22,7 +28,6 @@ public:
 
 	static const char* empty();
 
-	const char* getType();
 	char* toString();
 	int strcmp(const char*);
 	int compareTo(Object* obj);

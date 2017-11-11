@@ -3,14 +3,28 @@
 
 #include "base/Object.h"
 
-NAMESPACE_FRMWRK_BEGIN
+#define TYPE_BOOLEAN ((Type*)Boolean::classType())->code()
 
+NS_FW_BASE_BEGIN
+
+class RunTime;
 class Boolean : public Object {
+	friend class RunTime;
+	DECL_TYPE(Boolean);
+	static void initialize();
+	static void shutDown();
+	static Boolean* trueInstance_;
+	static Boolean* falseInstance_;
+	bool value_;
 public:
 	Boolean();
+	Boolean(bool);
 	virtual ~Boolean();
 };
 
-NAMESPACE_FRMWRK_END
+#define True Boolean::trueInstance_
+#define False Boolean::falseInstance_
+
+NS_FW_BASE_END
 
 #endif

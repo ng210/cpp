@@ -8,14 +8,20 @@
 
 NS_FW_BASE_BEGIN
 
+#define TYPE_ARRAY (Array::classType()->code())
+
 /*****************************************************************************
 * Object_ (structure)
 *****************************************************************************/
 class Array : public Object {
+	friend class RunTime;
+	DECL_TYPE(Array);
 	Array(size_t);
+	static void initialize();
+	static void shutDown();
 protected:
 	Object** data_;
-	PROP_R(protected, size_t, length, );
+	PROP_R(size_t, length);
 	size_t capacity_;
 
 	char* join_(const char* sep);
@@ -26,7 +32,6 @@ public:
 	virtual ~Array();
 	void init(size_t);
 
-	const char* getType();
 	char* toString();
 	int compareTo(Object* obj);
 	void* valueOf();

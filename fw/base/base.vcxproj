@@ -20,25 +20,34 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="base\base_defs.h" />
+    <ClInclude Include="base\Boolean.h" />
     <ClInclude Include="base\debug.h" />
     <ClInclude Include="base\Function.h" />
     <ClInclude Include="base\MemoryMgr.h" />
+    <ClInclude Include="base\Integer.h" />
+    <ClInclude Include="base\Number.h" />
     <ClInclude Include="base\Object.h" />
     <ClInclude Include="base\str.h" />
     <ClInclude Include="base\String.h" />
     <ClInclude Include="collection\Array.h" />
     <ClInclude Include="consoleapp.h" />
     <ClInclude Include="runtime.h" />
+    <ClInclude Include="base\Type.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="base\Boolean.cpp" />
     <ClCompile Include="base\debug.cpp" />
     <ClCompile Include="base\Function.cpp" />
     <ClCompile Include="base\MemoryMgr.cpp" />
+    <ClCompile Include="base\Number.cpp" />
     <ClCompile Include="base\Object.cpp" />
+    <ClCompile Include="base\runtime.cpp" />
     <ClCompile Include="base\str.cpp" />
     <ClCompile Include="base\String.cpp" />
+    <ClCompile Include="base\Type.cpp" />
     <ClCompile Include="collection\Array.cpp" />
     <ClCompile Include="consoleapp.cpp" />
+    <ClCompile Include="base\Integer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

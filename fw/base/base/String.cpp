@@ -6,53 +6,61 @@
 
 NS_FW_BASE_BEGIN
 
-const String String::emptyInstance_("");
+const String* String::emptyInstance_ = NULL;
+const Type* String::classType_;
+
+void String::initialize() {
+	// add singleton empty instance
+	String::emptyInstance_ = NEW_(String, "");
+	// add type entry
+	classType_ = Type::add(STRINGIFY(NS_FW_BASE)"::string");
+}
+void String::shutDown() {
+	DEL_(String::emptyInstance_);
+}
 
 /*****************************************************************************
 * String (structure)
 *****************************************************************************/
 String::String(void) {
-	buffer_ = NULL;
+	value_ = NULL;
 	length_ = 0;
 }
 String::String(char *p) {
-	buffer_ = (char*)p;
+	value_ = (char*)p;
 	length_ = strlen(p);
 }
 String::String(const char *p) {
-	buffer_ = strdup(p, length_);
+	value_ = strdup(p, length_);
 }
 String::String(String& str) {
-	buffer_ = strdup(str.buffer_, length_);
+	value_ = strdup(str.value_, length_);
 }
 String::~String(void) {
-	FREE(buffer_);
+	FREE(value_);
 }
 
 const char* String::empty() {
-	return String::emptyInstance_.buffer_;
+	return String::emptyInstance_->value_;
 }
 
 /*****************************************************************************
 * Object
 *****************************************************************************/
-const char* String::getType() {
-	return "string";
-}
 char* String::toString() {
-	return strdup(buffer_, length_);
+	return strdup(value_, length_);
 }
 int String::strcmp(const char* str) {
-	return strncmp(buffer_, str, length_);
+	return strncmp(value_, str, length_);
 }
 int String::compareTo(Object* str) {
 	char* buf = str->toString();
-	int res = strncmp(buffer_, buf, length_);
+	int res = strncmp(value_, buf, length_);
 	FREE(buf);
 	return res;
 }
 void* String::valueOf() {
-	return buffer_;
+	return value_;
 }
 /*****************************************************************************
 * Methods
@@ -75,15 +83,15 @@ void* String::valueOf() {
 char String::operator[](int ix) {
 	char ch = '\0';
 	if (ix > 0 && ix < length_) {
-		ch = buffer_[ix];
+		ch = value_[ix];
 	}
 	return ch;
 }
 String* String::concat(String* str) {
 	size_t len = length_ + str->length_ ;
 	char* buffer = MALLOC (char, len + 1);
-	strncpy(buffer, length_, buffer_);
-	strncpy(&buffer[length_], str->length_, str->buffer_);
+	strncpy(buffer, length_, value_);
+	strncpy(&buffer[length_], str->length_, str->value_);
 	buffer[len] = '\0';
 	return NEW_(String, buffer);
 }
@@ -91,20 +99,20 @@ String* String::concat(const char* str) {
 	size_t len2 = strlen(str);
 	size_t len = length_ + len2;
 	char* buffer = MALLOC(char, len + 1);
-	strncpy(buffer, length_, buffer_);
+	strncpy(buffer, length_, value_);
 	strncpy(&buffer[length_], len2, str);
 	buffer[len] = '\0';
 	return NEW_(String, buffer);
 }
 bool String::endsWith(String* str) {
-	return endsWith(str->buffer_);
+	return endsWith(str->value_);
 }
 bool String::endsWith(char* str) {
 	size_t offs = length_ - strlen(str);
 	return (lastIndexOf(str) == offs);
 }
 long long String::indexOf(String* str) {
-	return indexOf(str->buffer_);
+	return indexOf(str->value_);
 }
 long long String::indexOf(const char* str) {
 	return indexOf(str, 0);
@@ -113,11 +121,11 @@ long long String::indexOf(const char* str, size_t offset) {
 	long long res = -1;
 	size_t len1 = length_;
 	for (size_t i = offset; i < len1; i++) {
-		char ch = buffer_[i];
+		char ch = value_[i];
 		if (ch == str[0]) {
 			bool found = true;
 			for (size_t j = 1; str[j] != '\0'; j++) {
-				if (buffer_[i + j] != str[j]) {
+				if (value_[i + j] != str[j]) {
 					found = false;
 					break;
 				}
@@ -131,7 +139,7 @@ long long String::indexOf(const char* str, size_t offset) {
 	return res;
 }
 long long String::lastIndexOf(String* str) {
-	return lastIndexOf(str->buffer_);
+	return lastIndexOf(str->value_);
 }
 long long String::lastIndexOf(char* str) {
 	long long res = -1;
@@ -139,11 +147,11 @@ long long String::lastIndexOf(char* str) {
 	size_t len2 = strlen(str);
 	long long len = (long long)(len1 - len2);
 	for (long long i = len; i >= 0; i--) {
-		char ch = buffer_[i];
+		char ch = value_[i];
 		if (ch == str[0]) {
 			bool found = true;
 			for (size_t j = 1; str[j] != '\0'; j++) {
-				if (buffer_[i + j] != str[j]) {
+				if (value_[i + j] != str[j]) {
 					found = false;
 					break;
 				}
@@ -157,7 +165,7 @@ long long String::lastIndexOf(char* str) {
 	return res;
 }
 String* String::join(String** arr, String* sep) {
-	return String::join(arr, sep->buffer_, sep->length_);
+	return String::join(arr, sep->value_, sep->length_);
 }
 String* String::join(String** arr, const char* sep, size_t sepLength) {
 	if (sepLength == 0 && sep != NULL) {
@@ -177,7 +185,7 @@ String* String::join(String** arr, const char* sep, size_t sepLength) {
 	for (size_t j=0; j<i; j++) {
 		str = arr[j];
 		len = str->length_;
-		strncpy(&buffer[start], len, str->buffer_);
+		strncpy(&buffer[start], len, str->value_);
 		start += len;
 		if (sepLength > 0 && j < i - 1) {
 			strncpy(&buffer[start], sepLength, sep);
@@ -188,7 +196,7 @@ String* String::join(String** arr, const char* sep, size_t sepLength) {
 }
 //Array String::match(RegExp&);
 String* String::replace(String* oldValue, String* newValue) {
-	return replace(oldValue->buffer_, newValue->buffer_);
+	return replace(oldValue->value_, newValue->value_);
 }
 String* String::replace(const char* oldValue, const char* newValue) {
 	long long arr[128];
@@ -214,13 +222,13 @@ String* String::replace(const char* oldValue, const char* newValue) {
 	char *p = buffer;
 	for (int i = 0; i < count; i++) {
 		len = arr[i] - offs;
-		strncpy(p, len, &buffer_[offs]);
+		strncpy(p, len, &value_[offs]);
 		p += len;
 		strncpy(p, len3, newValue);
 		p += len3;
 		offs = arr[i] + len2;
 	}
-	strncpy(p, len1 - offs, &buffer_[offs]);
+	strncpy(p, len1 - offs, &value_[offs]);
 	return NEW_(String, buffer);
 }
 //String String::replace(RegExp& old, String& new)
@@ -241,7 +249,7 @@ String* String::substr(long long start, long long length) {
 			len = length_ - start;
 		}
 		char *buffer = MALLOC(char, len + 1);
-		strncpy(buffer, len, &buffer_[start]);
+		strncpy(buffer, len, &value_[start]);
 		str = NEW_(String, buffer);
 	}
 	return str;
@@ -257,7 +265,7 @@ String* String::substring(long long start, long long end) {
 	return substr(start, end - start);
 }
 String** String::split(String* str) {
-	return split(str->buffer_);
+	return split(str->value_);
 }
 String** String::split(const char* str) {
 	String* arr[128];
@@ -269,7 +277,7 @@ String** String::split(const char* str) {
 		if (ix == -1) {
 			ix = length_;
 		}
-		arr[count++] = NEW_(String, NS_FW_BASE::substr(buffer_, i, ix - i));
+		arr[count++] = NEW_(String, NS_FW_BASE::substr(value_, i, ix - i));
 		i = ix + len;
 	}
 	arr[count++] = NULL;
@@ -278,7 +286,7 @@ String** String::split(const char* str) {
 	return res;
 }
 bool String::startsWith(String* str) {
-	return startsWith(str->buffer_);
+	return startsWith(str->value_);
 }
 bool String::startsWith(char* str) {
 	return (indexOf(str) == 0);
@@ -287,7 +295,7 @@ String* String::toLowerCase() {
 	size_t len = length_;
 	char *buffer = MALLOC(char, len + 1);
 	for (size_t i = 0; i < len; i++) {
-		char ch = buffer_[i];
+		char ch = value_[i];
 		if (ch >= 'A' && ch <= 'Z') {
 			ch |= 0x20;
 		}
@@ -300,7 +308,7 @@ String* String::toUpperCase() {
 	size_t len = length_;
 	char *buffer = MALLOC(char, len + 1);
 	for (size_t i = 0; i < len; i++) {
-		char ch = buffer_[i];
+		char ch = value_[i];
 		if (ch >= 'a' && ch <= 'zB') {
 			ch &= (0xff - 0x20);
 		}
@@ -315,10 +323,10 @@ String* String::trim() {
 	// skip leading whitespaces
 	size_t i = 0;
 	char ch;
-	while ((ch = buffer_[i]) != '\0' && (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r')) i++;
+	while ((ch = value_[i]) != '\0' && (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r')) i++;
 	size_t j = len;
 	while (--j > i) {
-		ch = buffer_[j];
+		ch = value_[j];
 		if (ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r') {
 			break;
 		}
@@ -326,7 +334,7 @@ String* String::trim() {
 	if (i <= j) {
 		len = j - i + 1;
 		char *buffer = MALLOC(char, len + 1);
-		strncpy(buffer, len, &buffer_[i]);
+		strncpy(buffer, len, &value_[i]);
 		str = NEW_(String, buffer);
 	} else {
 		str = NEW_(String, "");

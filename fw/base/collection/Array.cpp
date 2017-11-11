@@ -8,6 +8,15 @@ NS_FW_BASE_BEGIN
 
 #define ARRAY_BLOCK_SIZE 16
 
+const Type* Array::classType_;
+
+void Array::initialize() {
+	// add type entry
+	classType_ = Type::add(STRINGIFY(NS_FW_BASE)"::array");
+}
+void Array::shutDown() {
+}
+
 /*****************************************************************************
 * Array
 *****************************************************************************/
@@ -44,9 +53,6 @@ void Array::init(size_t count) {
 /*****************************************************************************
 * Object
 *****************************************************************************/
-const char* Array::getType() {
-	return "array";
-}
 int Array::compareTo(Object* obj) {
 	throw "Not implemented!";
 }
@@ -99,7 +105,7 @@ Array* Array::filter(Function* callback, Object* that) {
 	Array* arr = NEW_(Array);
 	for (size_t i = 0; i < length_; i++) {
 		// bool callback(currentValue, index, arr)
-		if (*(bool*)(callback(4, that, data_[i], i, *this)->valueOf()) == true) {
+		if (callback(4, that, data_[i], i, *this)->toBool()) {
 			arr->push(data_[i]);
 		}
 	}

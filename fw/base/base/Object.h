@@ -2,26 +2,45 @@
 #define __OBJECT_H
 
 #include "base/base_defs.h"
+#include "base/Type.h"
 
 NS_FW_BASE_BEGIN
+
+#define TYPE_OBJECT (Object::classType()->code())
+
+#define DECL_TYPE(t) \
+private: static const Type* classType_; \
+public: virtual const Type* getType() { return t::classType(); } \
+public: static const Type* classType() { return t::classType_; }
 
 /*****************************************************************************
 * Object
 *****************************************************************************/
+class Number;
 class Object {
-	static Object nullInstance_;
-	PROP_R(protected, long long, Hash, i);
+	friend class RunTime;
+	DECL_TYPE(Object);
+	//static const Type* classType_;
+	static Object* nullInstance_;
+	static void initialize();
+	static void shutDown();
+protected: PROP_R(long long, hash);
+//protected: PROP_R(const Type*, type);
+
 public:
 	Object(void);
 	virtual ~Object(void);
 
+	//static const Type* classType();
 	static Object* null();
 
 	virtual int strcmp(const char*);
-	virtual const char* getType();
 	virtual char* toString();
+	virtual bool toBool();
+	virtual Number* toNumber();
 	virtual int compareTo(Object*);
 	virtual void* valueOf();
+	//virtual const Type* getType();
 
 #ifdef _DEBUG
 	static bool isDebugOn;

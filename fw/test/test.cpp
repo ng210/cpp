@@ -1,6 +1,9 @@
 #include <stdio.h>
 //#include <stdlib.h>
 //#include "base/str.h"
+
+#define MEM_DEBUG
+
 #include "consoleapp.h"
 
 //#include <stdarg.h>
@@ -116,16 +119,18 @@ void testStringPtr() {
 	printf("%d/%d=%.02f%%\n", passed, (passed+failed), (100.0f*passed)/(passed+failed));
 }
 
-//Object myFilter1(size_t argc, ...) {
-//	va_list argv;
-//	va_start(argv, argc);
-//	Object* that = (argc > 1) ? va_arg(argv, Object*) : NULL;
-//	Object* item = (argc > 2) ? va_arg(argv, Object*) : NULL;
-//	size_t ix = (argc > 3) ? va_arg(argv, size_t) : -1;
-//	Array* arr = (argc > 3) ? va_arg(argv, Array*) : (Array*)&null;
-//	return null;
-//}
-
+Object* filterNames(size_t argc, ...) {
+	va_list argv;
+	va_start(argv, argc);
+	Object* that = (argc > 1) ? va_arg(argv, Object*) : NULL;
+	Object* item = (argc > 2) ? va_arg(argv, Object*) : NULL;
+	size_t ix = (argc > 3) ? va_arg(argv, size_t) : -1;
+	Array* arr = (argc > 3) ? va_arg(argv, Array*) : (Array*)NULL;
+	char* buf = item->toString();
+	int result = strncmp(buf, "Michael", strlen(buf));
+	FREE(buf);
+	return result < 0 ? True : False;
+}
 
 //#define ARR(ix, expr) arr[ix] = expr; { const char* __str = arr[ix]->join_(", "); printf("%02d. '%s'\n", g_id++, __str); FREE(__str); }
 //#define ARR1(dst, src, fn, ix) arr[dst] = arr[src]->##fn(arr[ix]); { \
@@ -151,15 +156,17 @@ void testArray() {
 	int failed = 0;
 	for (int i = 0; i < 50; i++) arr[i] = NULL;
 	Array* array = NULL;
-	String* str = NULL;
+	String* str1 = NULL;
+	String* str2 = NULL;
+
 
 	array = ADD(arr, 0, Array, 3, NEW_(String, "Red"), NEW_(String, "Green"), NEW_(String, "Blue"));
 	char* buf = arr[0]->toString();
 	ASSERT("toString/join_(', ')", strncmp(buf, "Red,Green,Blue", strlen(buf)) == 0);
 	FREE(buf);
-	str = arr[0]->join("");
-	ASSERT("join('')", str->strcmp("RedGreenBlue") == 0);
-	DEL_(str);
+	str1 = arr[0]->join("");
+	ASSERT("join('')", str1->strcmp("RedGreenBlue") == 0);
+	DEL_(str1);
 
 	ADD(arr, 1, Array, 3, NEW_(String, "Rose"), NEW_(String, "Grass"), NEW_(String, "Sky"));
 	array = SET(arr, 2, 0, concat, arr[1]);
@@ -176,10 +183,18 @@ void testArray() {
 	array->cleanUp();
 
 	//void fill(Object*, size_t = 0, size_t = 0);
-	str = NEW_(String, "Dummy");
-	ADD(arr, 3, Array, 3, str, str, str);
-	array->fill(Object::null(), 2,5);
-	DEL_(str);
+	str1 = NEW_(String, "Dummy");
+	str2 = NEW_(String, "Bakka");
+	array = ADD(arr, 3, Array, 3, str1, str1, str1);
+	array->fill(str2, 2,5);
+	buf = array->toString();
+	ASSERT("fill('Bakka', 2, 5) == 'Dummy, Dummy, Bakka'", strncmp(buf, "Dummy,Dummy,Bakka", strlen(buf)) == 0);
+	FREE(buf);
+	DEL_(str1);
+	DEL_(str2);
+	array = ADD(arr, 4, Array, 5, NEW_(String, "Adam"), NEW_(String, "John"), NEW_(String, "Mike"), NEW_(String, "Oscar"), NEW_(String, "Thomas"));
+	SET(arr, 5, 4, filter, filterNames);
+	array->cleanUp();
 	//Array* filter(Function*, Object* = NULL);
 	//Object* find(Function*, Object* = NULL);
 	//long long findIndex(Function*, Object* = NULL);
@@ -215,9 +230,11 @@ void testArray() {
 
 int _main(NS_FW_BASE::Array* args) {
 	int error = 0;
+
 	printf("*** String tests\n");
 	testStringPtr();
 	printf("\n*** Array tests\n");
 	testArray();
+
 	return error;
 }

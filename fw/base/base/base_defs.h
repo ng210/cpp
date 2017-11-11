@@ -40,6 +40,8 @@
 #endif
 #endif
 
+#define STRINGIFY(str) #str
+
 //*********************************************************
 #define NS_FW_BASE fmw
 #define NS_FW_BASE_BEGIN namespace NS_FW_BASE {
@@ -48,17 +50,17 @@
 
 //*********************************************************
 // declare a field with inline getter and setter
-// arguments: scope, type, name, prefix
-#define PROP(s, t, n, p) \
-	s: t p##n##_; \
-	public: inline t n() { return p##n##_; };\
-			inline void n(t v) { p##n##_ = v; };
+// arguments: type, name
+#define PROP(t, n) \
+	t n##_; \
+	public: inline t n() { return n##_; };\
+			inline void n(t v) { n##_ = v; };
 
 //*********************************************************
 // declare a readonly field with getter only
-#define PROP_R(s, t, n, p)\
-	s: t p##n##_;\
-	public: inline t n() { return p##n##_; };
+#define PROP_R(t, n)\
+	t n##_;\
+	public: inline t n() { return n##_; };
 
 #endif
 
