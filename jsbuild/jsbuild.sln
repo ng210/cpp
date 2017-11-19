@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26430.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jsbuild", "jsbuild.vcxproj", "{9AE98C07-4A7B-46BE-B7CB-35F7C7AB067F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fw", "..\fw\fw.vcxproj", "{6EF2640D-20FE-4296-88B1-F1FFB6F99564}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{9AE98C07-4A7B-46BE-B7CB-35F7C7AB067F}.Release|x64.Build.0 = Release|x64
 		{9AE98C07-4A7B-46BE-B7CB-35F7C7AB067F}.Release|x86.ActiveCfg = Release|Win32
 		{9AE98C07-4A7B-46BE-B7CB-35F7C7AB067F}.Release|x86.Build.0 = Release|Win32
+		{6EF2640D-20FE-4296-88B1-F1FFB6F99564}.Debug|x64.ActiveCfg = Debug|x64
+		{6EF2640D-20FE-4296-88B1-F1FFB6F99564}.Debug|x64.Build.0 = Debug|x64
+		{6EF2640D-20FE-4296-88B1-F1FFB6F99564}.Debug|x86.ActiveCfg = Debug|Win32
+		{6EF2640D-20FE-4296-88B1-F1FFB6F99564}.Debug|x86.Build.0 = Debug|Win32
+		{6EF2640D-20FE-4296-88B1-F1FFB6F99564}.Release|x64.ActiveCfg = Release|x64
+		{6EF2640D-20FE-4296-88B1-F1FFB6F99564}.Release|x64.Build.0 = Release|x64
+		{6EF2640D-20FE-4296-88B1-F1FFB6F99564}.Release|x86.ActiveCfg = Release|Win32
+		{6EF2640D-20FE-4296-88B1-F1FFB6F99564}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

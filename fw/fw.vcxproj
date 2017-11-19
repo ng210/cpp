@@ -123,6 +123,8 @@
     <ClInclude Include="base\base\str.h" />
     <ClInclude Include="base\base\String.h" />
     <ClInclude Include="base\collection\Array.h" />
+    <ClInclude Include="base\utils\PathInfo.h" />
+    <ClInclude Include="base\utils\utils.h" />
     <ClInclude Include="managed\base\base_defs.h" />
     <ClInclude Include="managed\base\debug.h" />
     <ClInclude Include="managed\base\MemoryMgr.h" />
@@ -136,6 +138,8 @@
     <ClCompile Include="base\base\str.cpp" />
     <ClCompile Include="base\base\String.cpp" />
     <ClCompile Include="base\collection\Array.cpp" />
+    <ClCompile Include="base\utils\PathInfo.cpp" />
+    <ClCompile Include="base\utils\utils.cpp" />
     <ClCompile Include="managed\base\debug.cpp" />
     <ClCompile Include="managed\base\MemoryMgr.cpp" />
     <ClCompile Include="managed\base\str.cpp" />

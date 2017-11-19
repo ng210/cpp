@@ -23,6 +23,9 @@
     <Filter Include="managed\collection">
       <UniqueIdentifier>{1da44bb5-48ad-4d71-8473-404f14729fdb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="base\utils">
+      <UniqueIdentifier>{ca34c738-9706-4c30-8d61-aad69b5c6b47}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="base\base\str.h">
@@ -61,6 +64,12 @@
     <ClInclude Include="managed\collection\Array.h">
       <Filter>managed\collection</Filter>
     </ClInclude>
+    <ClInclude Include="base\utils\PathInfo.h">
+      <Filter>base\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="base\utils\utils.h">
+      <Filter>base\utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\base\str.cpp">
@@ -92,6 +101,12 @@
     </ClCompile>
     <ClCompile Include="managed\collection\Array.cpp">
       <Filter>managed\collection</Filter>
+    </ClCompile>
+    <ClCompile Include="base\utils\PathInfo.cpp">
+      <Filter>base\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="base\utils\utils.cpp">
+      <Filter>base\utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

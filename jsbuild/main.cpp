@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "base/PathInfo.h"
+#include "utils/PathInfo.h"
 
 class Source {
 	char name[256];
