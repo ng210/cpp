@@ -33,7 +33,8 @@
     <ClInclude Include="consoleapp.h" />
     <ClInclude Include="runtime.h" />
     <ClInclude Include="base\Type.h" />
-    <ClInclude Include="base\utils.h" />
+    <ClInclude Include="utils\PathInfo.h" />
+    <ClInclude Include="utils\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\Boolean.cpp" />
@@ -46,10 +47,11 @@
     <ClCompile Include="base\str.cpp" />
     <ClCompile Include="base\String.cpp" />
     <ClCompile Include="base\Type.cpp" />
-    <ClCompile Include="base\utils.cpp" />
     <ClCompile Include="collection\Array.cpp" />
     <ClCompile Include="consoleapp.cpp" />
     <ClCompile Include="base\Integer.cpp" />
+    <ClCompile Include="utils\PathInfo.cpp" />
+    <ClCompile Include="utils\utils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
