@@ -17,7 +17,7 @@ const Type* Object::classType_;
 
 void Object::initialize() {
 	Object::nullInstance_ = NEW_(Object);
-	Object::classType_ = Type::add(STRINGIFY(NS_FW_BASE)"::object");
+	Object::classType_ = ADD_TYPE(Object);
 }
 void Object::shutDown() {
 	DEL_(Object::nullInstance_);
@@ -42,50 +42,11 @@ Object::~Object(void) {
 char* Object::toString() {
 	return strdup("[Object]");
 }
-Number* Object::toNumber() {
-	return NULL;
-}
 bool Object::toBool() {
-	bool res = false;
-	const Type* t = getType();
-	while (true) {
-		if (t->code() == TYPE_OBJECT) {
-			res = this == Object::null();
-			break;
-		}
-		if (t->code() == TYPE_STRING) {
-			res = ((String*)this)->length() == 0;
-			break;
-		}
-		if (t->code() == TYPE_BOOLEAN) {
-			res = (bool)this->valueOf();
-			break;
-		}
-		if (t->instanceOf(TYPE_NUMBER)) {
-			Number* n = (Number*)this;
-			res = !Number::isNaN(n) && n->toLong() != 0;
-			break;
-		}
-
-		//if (code == TYPE_INTEGER) {
-		//	res = Number::isNaN(obj) && (int)obj->valueof() != 0;
-		//	break;
-		//}
-		//if (code == TYPE_LONG) {
-		//	res = Number::isNaN(obj) && (long long)obj->valueof() != 0;
-		//	break;
-		//}
-		//if (code == TYPE_FLOAT) {
-		//	res = Number::isNaN(obj) && (float)obj->valueof() != 0.0f;
-		//	break;
-		//}
-		//if (code == TYPE_DOUBLE) {
-		//	res = Number::isNaN(obj) && (double)obj->valueof() != 0.0;
-		//	break;
-		//}
-		break;
-	}
-	return res;
+	return this != Object::nullInstance_;
+}
+Number* Object::toNumber() {
+	return NEW_(Number);
 }
 void* Object::valueOf() {
 	return this;

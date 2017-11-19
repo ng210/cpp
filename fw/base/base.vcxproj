@@ -29,8 +29,11 @@
     <ClInclude Include="base\Object.h" />
     <ClInclude Include="base\str.h" />
     <ClInclude Include="base\String.h" />
+    <ClInclude Include="base\Float.h" />
+    <ClInclude Include="utils\Buffer.h" />
     <ClInclude Include="collection\Array.h" />
     <ClInclude Include="consoleapp.h" />
+    <ClInclude Include="utils\File.h" />
     <ClInclude Include="runtime.h" />
     <ClInclude Include="base\Type.h" />
     <ClInclude Include="utils\PathInfo.h" />
@@ -47,9 +50,12 @@
     <ClCompile Include="base\str.cpp" />
     <ClCompile Include="base\String.cpp" />
     <ClCompile Include="base\Type.cpp" />
+    <ClCompile Include="base\Float.cpp" />
+    <ClCompile Include="utils\Buffer.cpp" />
     <ClCompile Include="collection\Array.cpp" />
     <ClCompile Include="consoleapp.cpp" />
     <ClCompile Include="base\Integer.cpp" />
+    <ClCompile Include="utils\File.cpp" />
     <ClCompile Include="utils\PathInfo.cpp" />
     <ClCompile Include="utils\utils.cpp" />
   </ItemGroup>

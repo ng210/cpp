@@ -1,25 +1,25 @@
-#ifndef __INTEGER_H
-#define __INTEGER_H
+#ifndef __FLOAT_H
+#define __FLOAT_H
 
 #include "base/Number.h"
 
 NS_FW_BASE_BEGIN
 
-//#define TYPE_INTEGER GET_TYPE(Integer)
+//#define TYPE_FLOAT GET_TYPE(Float)
 
 /*****************************************************************************
-* Integer
+* Float
 *****************************************************************************/
-class Integer : public Number {
+class Float : public Number {
 	friend class RunTime;
-	DECL_TYPE(Integer);
+	DECL_TYPE(Float);
 	static void initialize();
 	static void shutDown();
 public:
 
-	Integer();
-	Integer(int);
-	virtual ~Integer();
+	Float();
+	Float(float);
+	virtual ~Float();
 
 	virtual char* toString();
 	virtual int compareTo(Object*);

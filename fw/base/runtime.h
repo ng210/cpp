@@ -8,10 +8,14 @@
 #include "base/Boolean.h"
 #include "base/Number.h"
 #include "base/Integer.h"
+#include "base/Float.h"
 #include "collection/Array.h"
 //#include "rt/Date.h"
 //#include "rt/Boolean.h"
 //#include "rt/RegEx.h"
+#include "utils/PathInfo.h"
+#include "utils/Buffer.h"
+#include "utils/File.h"
 
 NS_FW_BASE_BEGIN
 

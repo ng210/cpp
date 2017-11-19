@@ -12,12 +12,15 @@ void RunTime::initialize() {
 	Boolean::initialize();
 	Number::initialize();
 	Integer::initialize();
+	Float::initialize();
 
 	Array::initialize();
 }
 void RunTime::shutDown() {
 	// shutdown classes
 	Array::shutDown();
+
+	Float::shutDown();
 	Integer::shutDown();
 	Number::shutDown();
 	Boolean::shutDown();

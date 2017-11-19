@@ -3,9 +3,9 @@
 
 #include "base/Object.h"
 
-#define TYPE_BOOLEAN ((Type*)Boolean::classType())->code()
-
 NS_FW_BASE_BEGIN
+
+#define TYPE_BOOLEAN GET_TYPE(Boolean)
 
 class RunTime;
 class Boolean : public Object {
@@ -21,6 +21,7 @@ public:
 	Boolean(bool);
 	virtual ~Boolean();
 
+	bool toBool();
 	void* valueOf();
 };
 

@@ -5,7 +5,7 @@
 
 NS_FW_BASE_BEGIN
 
-#define TYPE_STRING (String::classType()->code())
+#define TYPE_STRING GET_TYPE(String)
 
 /*****************************************************************************
 * String
@@ -28,9 +28,11 @@ public:
 
 	static const char* empty();
 
-	char* toString();
 	int strcmp(const char*);
-	int compareTo(Object* obj);
+	char* toString();
+	bool toBool();
+	Number* toNumber();
+	int compareTo(Object*);
 	void* valueOf();
 
 	//String* operator=(const String*);

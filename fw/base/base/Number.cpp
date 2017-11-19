@@ -9,7 +9,7 @@ bool Number::isNaN(Number* n) {
 }
 
 void Number::initialize() {
-	Number::classType_ = Type::add(STRINGIFY(NS_FW_BASE)"::number");
+	Number::classType_ = ADD_TYPE(Number);	// Type::add(STRINGIFY(NS_FW_BASE)"::number");
 }
 void Number::shutDown() {
 }

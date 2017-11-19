@@ -1,6 +1,7 @@
 #include "base/str.h"
 #include "base/String.h"
 #include "base/MemoryMgr.h"
+#include "base/Number.h"
 
 #include <stdio.h>
 
@@ -13,7 +14,7 @@ void String::initialize() {
 	// add singleton empty instance
 	String::emptyInstance_ = NEW_(String, "");
 	// add type entry
-	classType_ = Type::add(STRINGIFY(NS_FW_BASE)"::string");
+	classType_ = ADD_TYPE(String);	// Type::add(STRINGIFY(NS_FW_BASE)"::string");
 }
 void String::shutDown() {
 	DEL_(String::emptyInstance_);
@@ -49,6 +50,13 @@ const char* String::empty() {
 *****************************************************************************/
 char* String::toString() {
 	return strdup(value_, length_);
+}
+bool String::toBool() {
+	return length_ != 0;
+}
+Number* String::toNumber() {
+	// parseDouble
+	return NEW_(Number);
 }
 int String::strcmp(const char* str) {
 	return strncmp(value_, str, length_);

@@ -13,7 +13,7 @@ const Type* Array::classType_;
 
 void Array::initialize() {
 	// add type entry
-	classType_ = Type::add(STRINGIFY(NS_FW_BASE)"::array");
+	classType_ = ADD_TYPE(Array);	// Type::add(STRINGIFY(NS_FW_BASE)"::array");
 }
 void Array::shutDown() {
 }

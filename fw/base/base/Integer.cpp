@@ -8,7 +8,7 @@ NS_FW_BASE_BEGIN
 const Type* Integer::classType_;
 
 void Integer::initialize() {
-	Integer::classType_ = Type::add(STRINGIFY(NS_FW_BASE)"::integer");
+	Integer::classType_ = ADD_TYPE(Integer);	// Type::add(STRINGIFY(NS_FW_BASE)"::integer");
 }
 void Integer::shutDown() {
 }

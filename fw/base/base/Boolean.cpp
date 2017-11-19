@@ -9,7 +9,7 @@ const Type* Boolean::classType_;
 void Boolean::initialize() {
 	Boolean::trueInstance_ = new Boolean(true);
 	Boolean::falseInstance_ = new Boolean(false);
-	Boolean::classType_ = Type::add(STRINGIFY(NS_FW_BASE)"::bool");
+	Boolean::classType_ = ADD_TYPE(Boolean);	// Type::add(STRINGIFY(NS_FW_BASE)"::bool");
 }
 
 void Boolean::shutDown() {
@@ -25,6 +25,10 @@ Boolean::Boolean(bool v) {
 }
 Boolean::~Boolean() {
 
+}
+
+bool Boolean::toBool() {
+	return value_;
 }
 
 void* Boolean::valueOf() {

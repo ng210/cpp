@@ -354,34 +354,19 @@ int _main(NS_FW_BASE::Array* args) {
 
 	//findPrime(0x9FFFFFFFFFFFFFULL);
 
-	//printf("\n*** Object tests\n");
-	//testObjectPtr();
-	//printf("*** String tests\n");
-	//testStringPtr();
-	//printf("\n*** Array tests\n");
-	//testArrayPtr();
+	printf("\n*** Object tests\n");
+	testObjectPtr();
+	printf("*** String tests\n");
+	testStringPtr();
+	printf("\n*** Array tests\n");
+	testArrayPtr();
 
-	const size_t length = 60 * 48000;
-	//short *buffer1 = NEWARR(short, length);
-	//float *buffer2 = NEWARR(float, length);
-	float *buffer3 = NEWARR(float, length);
-	for (int i = 0; i < length; i++) {
-		//buffer1[i] = (short)(Utils::random(0xFFFFULL) - 0x8000U);
-		//buffer2[i] = (float)Utils::randomSigned();
-		buffer3[i] = (float)Utils::random();
-	}
-	//FILE* fp1 = fopen("samplei.smp", "wb");
-	//FILE* fp2 = fopen("sampled.smp", "wb");
-	FILE* fp3 = fopen("sampleud.smp", "wb");
-	//fwrite(buffer1, sizeof(short), length, fp1);
-	//fwrite(buffer2, sizeof(float), length, fp2);
-	fwrite(buffer3, sizeof(float), length, fp3);
-	//fclose(fp1);
-	//fclose(fp2);
-	fclose(fp3);
-	//DEL_(buffer1);
-	//DEL_(buffer2);
-	DEL_(buffer3);
-
+	//const size_t length = 60 * 48000;
+	//Buffer buffer(TYPE_FLOAT, length);
+	//for (int i = 0; i < length; i++) {
+	//	float rnd = (float)Utils::randomSigned();
+	//	buffer.push(rnd);
+	//}
+	//File::write("samplesb.smp", buffer);
 	return error;
 }

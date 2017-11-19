@@ -5,7 +5,7 @@
 
 NS_FW_BASE_BEGIN
 
-#define TYPE_NUMBER (Number::classType()->code())
+#define TYPE_NUMBER GET_TYPE(Number)
 
 /*****************************************************************************
 * Integer

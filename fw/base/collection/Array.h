@@ -8,7 +8,7 @@
 
 NS_FW_BASE_BEGIN
 
-#define TYPE_ARRAY (Array::classType()->code())
+#define TYPE_ARRAY GET_TYPE(Array)
 
 typedef int Compare(Object*, Object*);
 

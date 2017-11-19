@@ -6,12 +6,13 @@
 
 NS_FW_BASE_BEGIN
 
-#define TYPE_OBJECT (Object::classType()->code())
-
 #define DECL_TYPE(t) \
 private: static const Type* classType_; \
 public: virtual const Type* getType() { return t::classType(); } \
 public: static const Type* classType() { return t::classType_; }
+
+#define TYPE_OBJECT GET_TYPE(Object)
+
 
 /*****************************************************************************
 * Object
@@ -40,7 +41,6 @@ public:
 	virtual Number* toNumber();
 	virtual int compareTo(Object*);
 	virtual void* valueOf();
-	//virtual const Type* getType();
 
 #ifdef _DEBUG
 	static bool isDebugOn;
