@@ -1,46 +1,40 @@
-#ifndef __PATHINFO_H
-#define __PATHINFO_H
+#include "utils/PathInfo.h"
+#include "base/str.h"
 
-#include <string.h>
+NS_FW_BASE_BEGIN
 
-class PathInfo {
-	char *buffer;
-	char *path;
-	char *fileName;
-	char *extension;
-public:
-	PathInfo(const char *fileName) {
-		this->buffer = _strdup(fileName);
-		this->path = "";
-		this->fileName = "";
-		this->extension = "";
-		size_t len = strlen(fileName);
-		int step = 0;
-		while (--len > 0) {
-			if (step == 0 && this->buffer[len] == '.') {
-				this->buffer[len] = '\0';
-				this->extension = &this->buffer[len + 1];
-				step++;
-				continue;
-			}
-			if (step == 1 && this->buffer[len] == '\\') {
-				this->buffer[len] = '\0';
-				this->fileName = &this->buffer[len + 1];
-				this->path = this->buffer;
-				step++;
-				break;
-			}
+PathInfo::PathInfo(const char* fileName) {
+	buffer_ = strdup(fileName);
+	path_ = "";
+	fileName = "";
+	extension_ = "";
+	size_t len = strlen(fileName);
+	int step = 0;
+	while (--len > 0) {
+		if (step == 0 && buffer_[len] == '.') {
+			buffer_[len] = '\0';
+			extension_ = &buffer_[len + 1];
+			step++;
+			continue;
 		}
-		if (step == 1) {
-			this->fileName = this->buffer;
+		if (step == 1 && buffer_[len] == '\\') {
+			buffer_[len] = '\0';
+			fileName = &buffer_[len + 1];
+			path_ = buffer_;
+			step++;
+			break;
 		}
 	}
-	~PathInfo() {
-		delete[] this->buffer;
+	if (step == 1) {
+		fileName = buffer_;
 	}
-	char* getPath() { return this->path; }
-	char* getFileName() { return this->fileName; }
-	char* getExtension() { return this->extension; }
-};
+}
+PathInfo::~PathInfo() {
+	delete[] buffer_;
+}
 
-#endif
+char* PathInfo::getPath() { return path_; }
+char* PathInfo::getFileName() { return fileName_; }
+char* PathInfo::getExtension() { return extension_; }
+
+NS_FW_BASE_END

@@ -1,46 +1,23 @@
 #ifndef __PATHINFO_H
 #define __PATHINFO_H
 
-#include <string.h>
+#include "base/base_defs.h"
+
+NS_FW_BASE_BEGIN
 
 class PathInfo {
-	char *buffer;
-	char *path;
-	char *fileName;
-	char *extension;
+	char *buffer_;
+	char *path_;
+	char *fileName_;
+	char *extension_;
 public:
-	PathInfo(const char *fileName) {
-		this->buffer = _strdup(fileName);
-		this->path = "";
-		this->fileName = "";
-		this->extension = "";
-		size_t len = strlen(fileName);
-		int step = 0;
-		while (--len > 0) {
-			if (step == 0 && this->buffer[len] == '.') {
-				this->buffer[len] = '\0';
-				this->extension = &this->buffer[len + 1];
-				step++;
-				continue;
-			}
-			if (step == 1 && this->buffer[len] == '\\') {
-				this->buffer[len] = '\0';
-				this->fileName = &this->buffer[len + 1];
-				this->path = this->buffer;
-				step++;
-				break;
-			}
-		}
-		if (step == 1) {
-			this->fileName = this->buffer;
-		}
-	}
-	~PathInfo() {
-		delete[] this->buffer;
-	}
-	char* getPath() { return this->path; }
-	char* getFileName() { return this->fileName; }
-	char* getExtension() { return this->extension; }
+	PathInfo(const char *fileName);
+	~PathInfo();
+	char* getPath();
+	char* getFileName();
+	char* getExtension();
 };
+
+NS_FW_BASE_END
 
 #endif
