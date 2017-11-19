@@ -49,6 +49,8 @@ public:
 	//*********************************************************
 };
 
+#define Null Object::null()
+
 NS_FW_BASE_END
 
 #endif

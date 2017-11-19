@@ -55,12 +55,12 @@ void operator delete(void *p) {
 }
 
 #ifdef _DEBUG
-void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine, bool isRealloc) {
-	if (isRealloc) {
+void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine, void *old) {
+	if (old != NULL) {
 		bool found = false;
 		for (int i = 0; i < MemoryMgr::nMemDbgInfos_; i++) {
 			_MEM_DBG_INFO *mb = &MemoryMgr::memDbgInfos_[i];
-			if (mb->ptr.address == p) {
+			if (mb->ptr.address == old) {
 				found = true;
 				mb->iLine = iLine;
 				mb->ptr.address = p;
@@ -70,10 +70,10 @@ void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine, bool isRealloc)
 		}
 		if (found) {
 			if (MemoryMgr::isDebugOn) {
-				_VS_debug("1>%s(%d) : Realloc at 0x%llX\n", szFile, iLine, p);
+				_VS_debug("1>%s(%d) : Realloc at 0x%llX=>0x%llX\n", szFile, iLine, old, p);
 			}
 		} else {
-			_VS_debug("1>%s(%d) : Bad realloc at 0x%llX\n", szFile, iLine, p);
+			_VS_debug("1>%s(%d) : Bad realloc at 0x%llX\n", szFile, iLine, old);
 		}
 	} else {
 		if (MemoryMgr::nMemDbgInfos_ < _MEM_DBG_SIZE) {

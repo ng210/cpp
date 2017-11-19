@@ -27,4 +27,8 @@ Boolean::~Boolean() {
 
 }
 
+void* Boolean::valueOf() {
+	return (void*)value_;
+}
+
 NS_FW_BASE_END

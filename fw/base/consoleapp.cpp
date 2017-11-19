@@ -6,7 +6,7 @@ NS_FW_BASE_USE
 int main(int argc, char** argv) {
 	int error = 0;
 #ifdef _DEBUG
-	MemoryMgr::isDebugOn = true;
+	//MemoryMgr::isDebugOn = true;
 #endif
 	RunTime::initialize();
 	Array* args = NEW_(Array);

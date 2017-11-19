@@ -10,6 +10,8 @@ NS_FW_BASE_BEGIN
 
 #define TYPE_ARRAY (Array::classType()->code())
 
+typedef int Compare(Object*, Object*);
+
 /*****************************************************************************
 * Object_ (structure)
 *****************************************************************************/
@@ -25,12 +27,13 @@ protected:
 	size_t capacity_;
 
 	char* join_(const char* sep);
+	void sort(long long, long long, Compare*);
+	static int compare(Object*, Object*);
 public:
 	Array();
 	Array(size_t, Object*, ...);
-	//Array(size_t, Object**);
 	virtual ~Array();
-	void init(size_t);
+	void init(size_t, va_list = NULL);
 
 	char* toString();
 	int compareTo(Object* obj);
@@ -44,19 +47,19 @@ public:
 	Object* find(Function*, Object* = NULL);
 	long long findIndex(Function*, Object* = NULL);
 	void forEach(Function*, Object* = NULL);
-	long long indexOf(Object*, size_t = 0);
+	long long indexOf(Object*, long long = 0);
 	String* join(String*);
 	String* join(const char*);
-	long long lastIndexOf(Object*, size_t = -1);
+	long long lastIndexOf(Object*, long long = -1);
 	Array* map(Function*, Object* = NULL);
 	Object* pop();
 	size_t push(Object*);
 	size_t push(size_t, ...);
-	size_t push(size_t, va_list);
+	size_t push_(size_t, va_list);
 	Array* reverse();
 	Object* shift();
-	Array* slice(long long = 0, long long = 0);
-	void sort(Function*);
+	Array* slice(long long = 0, long long = -1);
+	void sort(Compare* = Array::compare);
 	Array* splice(long long, size_t, size_t = 0, ...);
 	Array* splice(long long, size_t, size_t, va_list);
 	size_t unshift(Object*);

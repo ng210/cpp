@@ -35,6 +35,7 @@ public:
 
 	//String* operator=(const String*);
 	char operator[](int);
+	String& operator=(String&);
 	String* concat(String*);
 	String* concat(const char*);
 	bool startsWith(String*);
@@ -52,7 +53,7 @@ public:
 	String* replace(String*, String*);
 	String* replace(const char*, const char*);
 	//String replace(Array&, Array&);
-	String* substr(long long, long long = 0);
+	String* substr(long long, size_t = 0);
 	String* substring(long long, long long = 0);
 	String** split(String*);
 	String** split(const char*);

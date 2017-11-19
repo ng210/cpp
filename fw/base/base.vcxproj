@@ -33,6 +33,7 @@
     <ClInclude Include="consoleapp.h" />
     <ClInclude Include="runtime.h" />
     <ClInclude Include="base\Type.h" />
+    <ClInclude Include="base\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\Boolean.cpp" />
@@ -45,6 +46,7 @@
     <ClCompile Include="base\str.cpp" />
     <ClCompile Include="base\String.cpp" />
     <ClCompile Include="base\Type.cpp" />
+    <ClCompile Include="base\utils.cpp" />
     <ClCompile Include="collection\Array.cpp" />
     <ClCompile Include="consoleapp.cpp" />
     <ClCompile Include="base\Integer.cpp" />

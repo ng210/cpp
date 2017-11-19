@@ -27,7 +27,7 @@ NS_FW_BASE_BEGIN
 	#define DELARR(v) if (MemoryMgr::delMemDbgInfo(v, __FILE__, __LINE__)) { delete[] v; }
 	#define DEL_(v) if (v != NULL && MemoryMgr::delMemDbgInfo((void*)v, __FILE__, __LINE__)) { delete v; }
 	#define MALLOC(t, s) (t*)MemoryMgr::addMemDbgInfo(MemoryMgr::alloc(sizeof(t)*s), __FILE__, __LINE__)
-	#define REALLOC(p, t, s) (t*)MemoryMgr::addMemDbgInfo(MemoryMgr::realloc(p, sizeof(t)*s), __FILE__, __LINE__, true)
+	#define REALLOC(p, t, s) (t*)MemoryMgr::addMemDbgInfo(MemoryMgr::realloc(p, sizeof(t)*s), __FILE__, __LINE__, p)
 	#define FREE(p) if (p != NULL && MemoryMgr::delMemDbgInfo((void*)p, __FILE__, __LINE__)) { MemoryMgr::free((void*)p); }
 
 #else
@@ -48,7 +48,7 @@ class MemoryMgr {
 	static void initialize_();
 public:
 	static bool isDebugOn;
-	static void* addMemDbgInfo(void *p, char *szFile, int iLine, bool isRealloc = false);
+	static void* addMemDbgInfo(void *p, char *szFile, int iLine, void *o = NULL);
 	static int delMemDbgInfo(void *p, char *szFile, int iLine);
 	static void checkMemDbgInfo(size_t, void**);
 #endif

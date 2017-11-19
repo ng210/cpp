@@ -20,6 +20,8 @@ public:
 	Boolean();
 	Boolean(bool);
 	virtual ~Boolean();
+
+	void* valueOf();
 };
 
 #define True Boolean::trueInstance_

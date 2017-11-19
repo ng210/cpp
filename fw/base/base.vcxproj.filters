@@ -57,6 +57,9 @@
     <ClInclude Include="base\Number.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="base\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\debug.cpp">
@@ -96,6 +99,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="base\Number.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

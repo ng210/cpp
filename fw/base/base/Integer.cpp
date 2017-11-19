@@ -35,7 +35,7 @@ int Integer::compareTo(Object* obj) {
 }
 
 void* Integer::valueOf() {
-	return value_.v;
+	return (void*)(long long)value_.i;
 }
 
 NS_FW_BASE_END

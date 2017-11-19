@@ -22,7 +22,6 @@ public:
 		long long l;
 		float f;
 		double d;
-		void* v;
 	} value_;
 
 	Number();

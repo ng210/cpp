@@ -87,6 +87,12 @@ char String::operator[](int ix) {
 	}
 	return ch;
 }
+String& String::operator=(String& str) {
+	DEL_(value_);
+	value_ = strdup(str.value_);
+	length_ = str.length_;
+	return *this;
+}
 String* String::concat(String* str) {
 	size_t len = length_ + str->length_ ;
 	char* buffer = MALLOC (char, len + 1);
@@ -233,24 +239,23 @@ String* String::replace(const char* oldValue, const char* newValue) {
 }
 //String String::replace(RegExp& old, String& new)
 //String String::replace(Array&, Array&);
-String* String::substr(long long start, long long length) {
+String* String::substr(long long start, size_t length) {
 	String* str = NULL;
-	size_t len = length;
-	if (start > (long long)length_) {
-		str = NEW_(String, "");
-	} else {
+	if (start < 0) {
+		start += length_;
 		if (start < 0) {
-			start += length_;
-			if (start < 0) {
-				start = 0;
-			}
+			start = 0;
 		}
-		if (len <= 0 || len > length_ - start) {
-			len = length_ - start;
-		}
-		char *buffer = MALLOC(char, len + 1);
-		strncpy(buffer, len, &value_[start]);
+	}
+	size_t st = start;
+	if (st < length_) {
+		size_t remains = length_ - start;
+		if (remains > length) remains = length;
+		char *buffer = MALLOC(char, remains + 1);
+		strncpy(buffer, remains, &value_[start]);
 		str = NEW_(String, buffer);
+	} else {
+		str = NEW_(String, "");
 	}
 	return str;
 }
