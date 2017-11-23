@@ -61,6 +61,10 @@ int Object::compareTo(Object* obj) {
 	return (this->hash_ - obj->hash_) & 0xFFFFFFFF;
 }
 
+Object::operator String*() {
+	return NEW_(String, this->toString());
+}
+
 #ifdef _DEBUG
 bool Object::isDebugOn = false;
 void Object::dump(const char* label) {

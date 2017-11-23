@@ -7,6 +7,7 @@ NS_FW_BASE_BEGIN
 
 #define TYPE_STRING GET_TYPE(String)
 
+class Array;
 /*****************************************************************************
 * String
 *****************************************************************************/
@@ -37,7 +38,9 @@ public:
 
 	//String* operator=(const String*);
 	char operator[](int);
+	bool operator==(Object&);
 	String& operator=(String&);
+	String& operator=(const char*);
 	String* concat(String*);
 	String* concat(const char*);
 	bool startsWith(String*);
@@ -57,8 +60,10 @@ public:
 	//String replace(Array&, Array&);
 	String* substr(long long, size_t = 0);
 	String* substring(long long, long long = 0);
-	String** split(String*);
-	String** split(const char*);
+	String** split_(String*);
+	String** split_(const char*);
+	Array* split(String*);
+	Array* split(const char*);
 	String* toLowerCase();
 	String* toUpperCase();
 	String* trim();

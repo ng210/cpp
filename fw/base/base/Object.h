@@ -17,6 +17,7 @@ public: static const Type* classType() { return t::classType_; }
 /*****************************************************************************
 * Object
 *****************************************************************************/
+class String;
 class Number;
 class Object {
 	friend class RunTime;
@@ -41,6 +42,8 @@ public:
 	virtual Number* toNumber();
 	virtual int compareTo(Object*);
 	virtual void* valueOf();
+
+	operator String*();
 
 #ifdef _DEBUG
 	static bool isDebugOn;

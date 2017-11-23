@@ -234,6 +234,9 @@ size_t Array::push(Object* item) {
 	data_[length_++] = item;
 	return length_;
 }
+size_t Array::push(const char* str) {
+	return push(NEW_(String, str));
+}
 size_t Array::push(size_t count, ...) {
 	va_list args;
 	va_start(args, count);

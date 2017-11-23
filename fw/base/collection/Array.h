@@ -54,6 +54,7 @@ public:
 	Array* map(Function*, Object* = NULL);
 	Object* pop();
 	size_t push(Object*);
+	size_t push(const char*);
 	size_t push(size_t, ...);
 	size_t push_(size_t, va_list);
 	Array* reverse();

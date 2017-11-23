@@ -90,7 +90,7 @@ void testStringPtr() {
 	str = SET(arr, 22, 8, substr, 2, -7);
 	ASSERT("Substr(2, -7)", str->strcmp("red fox jumps over Fred's red fence.") == 0);
 
-	String** tokens = arr[8]->split(" ");
+	String** tokens = arr[8]->split_(" ");
 	str = arr[23] = String::join(tokens, " ");
 	ASSERT("Split(' ') & Join(\" \")", str->compareTo(arr[8]) == 0);
 	str = arr[24] = String::join(tokens);
@@ -324,6 +324,59 @@ void testArrayPtr() {
 	printf("\n%d/%d=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
 }
 
+void testPathInfo() {
+	size_t passed = 0;
+	size_t failed = 0;
+
+	#define path "c:\\dir\\subdir\\sub.subdir"
+	#define filename "file"
+	#define extension "ext"
+	#define fullpath "" path "\\" filename "." extension
+	PathInfo* pathInfo = NEW_(PathInfo, fullpath);
+	ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp(path) == 0);
+	ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
+	ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp(extension) == 0);
+	DEL_(pathInfo);
+
+	#undef fullpath
+	#define fullpath "" path "\\" filename
+	pathInfo = NEW_(PathInfo, fullpath);
+	ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp(path) == 0);
+	ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
+	ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp("") == 0);
+	DEL_(pathInfo);
+
+	#undef fullpath
+	#define fullpath "" filename "." extension
+	pathInfo = NEW_(PathInfo, fullpath);
+	ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp("") == 0);
+	ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
+	ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp(extension) == 0);
+	DEL_(pathInfo);
+
+	#undef fullpath
+	#define fullpath "" filename
+	pathInfo = NEW_(PathInfo, fullpath);
+	ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp("") == 0);
+	ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
+	ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp("") == 0);
+	DEL_(pathInfo);
+
+	#undef path
+	#undef fullpath
+	#define path "/dir/subdir/sub.subdir"
+	#define filename "file"
+	#define extension "ext"
+	#define fullpath "" path "/" filename "." extension
+	pathInfo = NEW_(PathInfo, fullpath);
+	ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp(path) == 0);
+	ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
+	ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp(extension) == 0);
+	DEL_(pathInfo);
+
+
+	printf("\n%lld/%lld=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
+}
 size_t primeTest(size_t n) {
 	size_t divider = 0;
 	size_t root = (size_t)sqrt((double)n);
@@ -354,12 +407,15 @@ int _main(NS_FW_BASE::Array* args) {
 
 	//findPrime(0x9FFFFFFFFFFFFFULL);
 
-	printf("\n*** Object tests\n");
-	testObjectPtr();
-	printf("*** String tests\n");
-	testStringPtr();
-	printf("\n*** Array tests\n");
-	testArrayPtr();
+	//printf("\n*** Object tests\n");
+	//testObjectPtr();
+	//printf("*** String tests\n");
+	//testStringPtr();
+	//printf("\n*** Array tests\n");
+	//testArrayPtr();
+
+	printf("\n*** PathInfo tests\n");
+	testPathInfo();
 
 	//const size_t length = 60 * 48000;
 	//Buffer buffer(TYPE_FLOAT, length);

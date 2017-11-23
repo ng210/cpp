@@ -1,43 +1,63 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
+#include "consoleapp.h"
 #include "utils/PathInfo.h"
 
-class Source {
-	char name[256];
-	Source *includes[100];
-	size_t includeCount;
-	size_t flag;
+NS_FW_BASE_USE
+
+typedef int callback(void*);
+
+PathInfo *g_inputPathInfo;
+Array* g_sources = NULL;
+FILE *g_fout = NULL;
+Array* g_out = NULL;
+
+
+class Source : Object {
+	String* name_;
+	Array includes_;
+	size_t flag_;
+	Array* content_;
 public:
 	Source(void) {
-		init("");
+		init(NEW_(String));
 	}
-	Source(const char* name) {
+	Source(String* name) {
 		init(name);
 	}
-	void init(const char *name) {
-		memset(this->name, 0, 256);
-		strncpy(this->name, name, 255);
-		this->includeCount = 0;
-		this->flag = 0;
+	~Source(void) {
+		for (size_t i = 0; i < includes_.length(); i++) {
+			Source* source = (Source*)includes_[i];
+			if (--source->flag_ == 0) {
+				DEL_(source);
+			}
+		}
+		content_->cleanUp();
+		DEL_(content_);
+		DEL_(name_);
+	}
+	void init(String* name) {
+		name_ = NEW_(String, *name);
+		flag_ = 0;
+		char* fileName = name_->toString();
+		char* buf = File::read(fileName);
+		FREE(fileName);
+		String* str = NEW_(String, buf);
+		content_ = str->split("\n");
+		DEL_(str);
 	}
 	void addInclude(Source *inc) {
-		if (this->includeCount < 100) {
-			this->includes[this->includeCount++] = inc;
-		}
+		includes_.push(inc);
 	}
-	char* getName() { return this->name;  }
-	size_t hasIncludes() { return this->includeCount; }
+	String* getName() { return name_; }
+	size_t hasIncludes() { return includes_.length(); }
 	Source* getInclude(size_t ix) {
-		Source *source = NULL;
-		if (ix >= 0 && ix < this->includeCount) {
-			source = this->includes[ix];
-		}
-		return source;
+		return (Source*)includes_[ix];
 	}
-	size_t getFlag() { return this->flag; }
-	size_t setFlag(size_t flag) { return this->flag = flag; }
+	size_t getFlag() { return flag_; }
+	size_t setFlag(size_t flag) { return flag_ = flag; }
+	Array* getContent() { return content_;  }
 };
 
 char* declaresInclude(const char* line) {
@@ -48,7 +68,7 @@ char* declaresInclude(const char* line) {
 	size_t len = strspn(pos, " \t");
 	pos += len;
 	//include
-	if (strncmp(pos, "include", 7) == 0) {
+	if (NS_FW_BASE::strncmp(pos, "include", 7) == 0) {
 		// \s*
 		pos += 7;
 		size_t len = strspn(pos, " \t");
@@ -68,12 +88,8 @@ char* declaresInclude(const char* line) {
 				pos = strchr(pos, quote);
 				if (pos != NULL) {
 					len = pos - start;
-					include = new char[len + 1];
-					size_t i = 0;
-					for (; i < len; i++) {
-						include[i] = start[i];
-					}
-					include[i] = '\0';
+					include = MALLOC(char, len + 1);
+					strncpy(include, len, start);
 				}
 			}
 		}
@@ -81,35 +97,28 @@ char* declaresInclude(const char* line) {
 	return include;
 }
 
-Source* findOrCreateSource(const char *name, Source** sources, size_t& sourceCount) {
+Source* findOrCreateSource(String* name, Array& sources) {
 	size_t found = -1;
-	for (size_t i = 0; i < sourceCount; i++) {
-		if (strcmp(sources[i]->getName(), name) == 0) {
+	for (size_t i = 0; i < sources.length(); i++) {
+		Source* source = (Source*)sources[i];
+		if (name->compareTo(source->getName()) == 0) {
 			found = i;
 			break;
 		}
 	}
 	Source *source = NULL;
 	if (found == -1) {
-		source = new Source(name);
-		sources[sourceCount++] = source;
+		source = NEW_(Source, name);
+		sources.push((Object*)source);
 	}
 	else {
-		source = sources[found];
+		source = (Source*)sources[found];
 	}
 	return source;
 }
 
-PathInfo *g_inputPathInfo;
-Source *g_sources[255];
-size_t g_sourceCount = 0;
-
-FILE *g_fout = NULL;
-
-typedef int callback(void*);
-
 Source* traverseDFS(Source *node, callback pre, callback post) {
-	node->setFlag(1);
+	node->setFlag(node->getFlag() + 1);
 	Source *res = NULL;
 	if (!pre(node)) {
 		for (size_t i = 0; i < node->hasIncludes(); i++) {
@@ -135,125 +144,151 @@ int pre(void* node) {
 	int res = 0;
 	Source *source = (Source*)node;
 	// Process file and get includes
-	const char *file = source->getName();
-	printf("Processing %s\n", file);
-	// Try to open file
-	FILE *fin = fopen(file, "r");
-	if (fin != NULL) {
-		// read file content
-		char line[1024];
-		while (!feof(fin)) {
-			if (fgets(line, 1024, fin) != NULL) {
-				// check line for having a declaration for an include
-				char *include = declaresInclude(line);
-				if (include != NULL) {
-					// Create full path of include
-					PathInfo includePathInfo(include);
-					char tmpIncludeName[255] = "";
-					if (strlen(includePathInfo.getPath()) == 0 && strlen(g_inputPathInfo->getPath()) > 0) {
-						strcpy(tmpIncludeName, g_inputPathInfo->getPath());
-						strcat(tmpIncludeName, "\\");
-					}
-					strcat(tmpIncludeName, include);
-					printf(" - includes '%s'\n", include);
-					// Add include dependency to source
-					source->addInclude(findOrCreateSource(tmpIncludeName, g_sources, g_sourceCount));
+	char* fileName = source->getName()->toString();
+	printf("Processing %s\n", fileName);
+	Array* sourceContent = source->getContent();
+	if (sourceContent != NULL) {
+		char line[] = "/* ***************************************************************************/";
+		size_t len = NS_FW_BASE::strlen(fileName);
+		memcpy(&line[3], fileName, len);
+		//size_t i = 0;
+		//for (; i < len; i++) {
+		//	line[3 + i] = fileName[i];
+		//}
+		line[3 + len] = ' ';
+		sourceContent->unshift(NEW_(String, (const char*)&line));
+		//Array newContent;
+		for (size_t i = 0; i < sourceContent->length(); i++) {
+			String* str = (String*)(*sourceContent)[i];
+			char* buf = str->toString();
+			char *include = declaresInclude(buf);
+			if (include != NULL) {
+				PathInfo includePathInfo(include);
+				Array arr;
+				if (includePathInfo.getPath()->length() == 0 && g_inputPathInfo->getPath()->length() > 0) {
+					arr.push(g_inputPathInfo->getPath());
+					arr.push('\\');
 				}
+				arr.push(NEW_(String, include));
+				printf(" - includes '%s'\n", include);
+
+				// Add include dependency to source
+				String* tmpIncludeName = arr.join("");
+				arr.cleanUp();
+				source->addInclude(findOrCreateSource(tmpIncludeName, *g_sources));
+
+				DEL_(tmpIncludeName);
+				(*str) = "";
 			}
+			FREE(buf);
 		}
-		fclose(fin);
+		//input->cleanUp();
 	} else {
-		printf("Could not open '%s'\n", file);
+		printf("Could not open '%s'\n", fileName);
 		res = 1;
 	}
+	FREE(fileName);
 	return res;
 }
 
 int post(void* node) {
 	int res = 0;
 	Source *source = (Source*)node;
-	// Copy file content except includes to the output
-	const char *file = source->getName();
-	FILE *fin = fopen(file, "r");
-	if (fin != NULL) {
-		char line[1024];
-		strncpy(line, "/* ***************************************************************************/\n", 255);
-		size_t i = 0;
-		for (; i < strlen(file); i++) {
-			line[3 + i] = file[i];
-		}
-		line[3 + i] = ' ';
-		fputs(line, g_fout);
-		// read file content
-		while (!feof(fin)) {
-			if (fgets(line, 1024, fin) != NULL) {
-				// check line for having a declaration for an include
-				char *include = declaresInclude(line);
-				if (include == NULL) {
-					fputs(line, g_fout);
-				}
-			}
-		}
-		fputs("\n\n", g_fout);
-		fclose(fin);
-	} else {
-		printf("Could not open '%s'\n", file);
-		res = 1;
-	}
+	//// Copy file content except includes to the output
+	char *file = source->getName()->toString();
+	Array* arr = g_out->concat(source->getContent());
+	DEL_(g_out);
+	g_out = arr;
+	//size_t len = source->getName().length();
+	////FILE *fin = fopen(file, "r");
+	////if (fin != NULL) {
+	//	char line[1024];
+	//	strncpy(line, "/* ***************************************************************************/\n", 255);
+	//	size_t i = 0;
+	//	for (; i < len; i++) {
+	//		line[3 + i] = file[i];
+	//	}
+	//	line[3 + i] = ' ';
+	//	g_out.push(line);
+	//	//fputs(line, g_fout);
+	//	// read file content
+	//	while (!feof(fin)) {
+	//		if (fgets(line, 1024, fin) != NULL) {
+	//			// check line for having a declaration for an include
+	//			char *include = declaresInclude(line);
+	//			if (include == NULL) {
+	//				fputs(line, g_fout);
+	//			}
+	//		}
+	//	}
+	//	fputs("\n\n", g_fout);
+	//	fclose(fin);
+	//} else {
+	//	printf("Could not open '%s'\n", file);
+	//	res = 1;
+	//}
 	printf("%s added\n", file);
+	FREE(file);
+	//DEL_(source);
 	return res;
 }
 
-void main(int argc, char **argv) {
+int _main(NS_FW_BASE::Array* args) {
 	int error = 1;
+	g_sources = NEW_(Array);
+	g_out = NEW_(Array);
+	//MemoryMgr::isDebugOn = true;
+	char* buf = NULL;
+	size_t argc = args->length();
 	if (argc > 1) {
-		char *input = _strdup(argv[1]);
+		String *input = (String*)(*args)[1];
 		error = 2;
 		if (input != NULL) {
-			char output[256];
+			g_inputPathInfo = NEW_(PathInfo, input);
+			buf = g_inputPathInfo->getPath()->toString();
+			printf("Base dir: %s\n", buf);
+			FREE(buf);
+			char* output;
 			if (argc > 2) {
-				strncpy(output, argv[2], 255);
+				output = (*args)[1]->toString();
 			}
 			else {
-				char fileName[256];
-				strncpy(fileName, input, 255);
-				// "cut off" the extension
-				char *pos = strrchr(fileName, '.');
-				if (pos != NULL) {
-					*pos = '\0';
+				Array arr;
+				if (g_inputPathInfo->getPath()->length() > 0) {
+					arr.push(NEW_(String, *g_inputPathInfo->getPath()));
+					arr.push(NEW_(String, "\\"));
 				}
-				size_t len = strlen(fileName);
-				if (len > 255 - 9) {
-					pos = &fileName[255 - 9];
-				}
-				len = snprintf(output, 255, "%s.build.js", fileName);
-				output[len] = '\0';
+				arr.push(2, NEW_(String, *g_inputPathInfo->getFileName()), NEW_(String, ".out.js"));
+				String* str = arr.join("");
+				output = str->toString();
+				DEL_(str);
+				arr.cleanUp();
 			}
-			g_inputPathInfo = new PathInfo(input);
-			printf("Base dir: %s\n", g_inputPathInfo->getPath());
-
-			char outName[256];
-			strncpy(outName, g_inputPathInfo->getPath(), 247);
-			strncat(outName, "\\", 248);
-			strncat(outName, g_inputPathInfo->getFileName(), 248);
-			strncat(outName, ".out.js", 255);
-			g_fout = fopen(outName, "w");
-			if (g_fout != NULL) {
-				printf("Output: %s\n", outName);
-				Source *source = findOrCreateSource(input, g_sources, g_sourceCount);
-				source = traverseDFS(source, pre, post);
-				if (source != NULL) {
-					printf("Error at '%s'\n", source->getName());
-				}
-				error = 0;
-				fclose(g_fout);
-			} else {
-				printf("Could not open '%s'\n", outName);
+			printf("Output: %s\n", output);
+			Source *source = findOrCreateSource(input, *g_sources);
+			Source *lastSource = traverseDFS(source, pre, post);
+			if (lastSource != NULL) {
+				buf = source->getName()->toString();
+				printf("Error at '%s'\n", buf);
+				FREE(buf);
 				error = 1;
+			} else {
+				error = 0;
+				String* out = g_out->join("\n");
+				buf = out->toString();
+				File::write(output, buf, out->length());
+				DEL_(out);
+				FREE(buf);
 			}
+			DEL_(source);
+			DEL_(output);
+			DEL_(g_inputPathInfo);
 		}
 	}
 	if (error != 0) {
-		printf("Error #%d", error);
+		printf("Error #%d\n", error);
 	}
+	DEL_(g_sources);
+	DEL_(g_out);
+	return error;
 }

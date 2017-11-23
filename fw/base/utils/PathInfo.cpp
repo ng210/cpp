@@ -1,40 +1,59 @@
 #include "utils/PathInfo.h"
+#include "base/MemoryMgr.h"
+#include "collection/Array.h"
 #include "base/str.h"
 
 NS_FW_BASE_BEGIN
 
+PathInfo::PathInfo(String* fileName) {
+	char* buffer = fileName->toString();
+	init(buffer);
+	FREE(buffer);
+}
 PathInfo::PathInfo(const char* fileName) {
-	buffer_ = strdup(fileName);
-	path_ = "";
-	fileName = "";
-	extension_ = "";
+	init(fileName);
+}
+
+void PathInfo::init(const char* fileName) {
+	char* buffer = strdup(fileName);
 	size_t len = strlen(fileName);
-	int step = 0;
+	extension_ = NULL;
+	fileName_ = NULL;
+	path_ = NULL;
+
 	while (--len > 0) {
-		if (step == 0 && buffer_[len] == '.') {
-			buffer_[len] = '\0';
-			extension_ = &buffer_[len + 1];
-			step++;
+		if (extension_ == NULL && buffer[len] == '.') {
+			buffer[len] = '\0';
+			extension_ = NEW_(String, (const char*)&buffer[len + 1]);
 			continue;
 		}
-		if (step == 1 && buffer_[len] == '\\') {
-			buffer_[len] = '\0';
-			fileName = &buffer_[len + 1];
-			path_ = buffer_;
-			step++;
+		if (buffer[len] == '\\' || buffer[len] == '/') {
+			if (extension_ == NULL) {
+				extension_ = NEW_(String, "");
+			}
+			buffer[len] = '\0';
+			fileName_ = NEW_(String, (const char*)&buffer[len + 1]);
+			path_ = NEW_(String, (const char*)buffer);
 			break;
 		}
 	}
-	if (step == 1) {
-		fileName = buffer_;
+	if (fileName_ == NULL) {
+		fileName_ = NEW_(String, (const char*)buffer);
+		path_ = NEW_(String, "");
+		if (extension_ == NULL) {
+			extension_ = NEW_(String, "");
+		}
 	}
+	FREE(buffer);
 }
 PathInfo::~PathInfo() {
-	delete[] buffer_;
+	DEL_(path_);
+	DEL_(fileName_);
+	DEL_(extension_);
 }
 
-char* PathInfo::getPath() { return path_; }
-char* PathInfo::getFileName() { return fileName_; }
-char* PathInfo::getExtension() { return extension_; }
+String* PathInfo::getPath() { return path_; }
+String* PathInfo::getFileName() { return fileName_; }
+String* PathInfo::getExtension() { return extension_; }
 
 NS_FW_BASE_END

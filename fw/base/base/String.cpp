@@ -1,6 +1,7 @@
 #include "base/str.h"
 #include "base/String.h"
 #include "base/MemoryMgr.h"
+#include "collection/Array.h"
 #include "base/Number.h"
 
 #include <stdio.h>
@@ -95,10 +96,19 @@ char String::operator[](int ix) {
 	}
 	return ch;
 }
+bool String::operator==(Object& o) {
+	return this->strcmp((const char*)o.toString());
+}
 String& String::operator=(String& str) {
 	DEL_(value_);
 	value_ = strdup(str.value_);
 	length_ = str.length_;
+	return *this;
+}
+String& String::operator=(const char* str) {
+	DEL_(value_);
+	value_ = strdup(str);
+	length_ = strlen(str);
 	return *this;
 }
 String* String::concat(String* str) {
@@ -277,10 +287,10 @@ String* String::substring(long long start, long long end) {
 	}
 	return substr(start, end - start);
 }
-String** String::split(String* str) {
-	return split(str->value_);
+String** String::split_(String* str) {
+	return split_(str->value_);
 }
-String** String::split(const char* str) {
+String** String::split_(const char* str) {
 	String* arr[128];
 	size_t count = 0;
 	size_t offs = 0;
@@ -297,6 +307,24 @@ String** String::split(const char* str) {
 	String** res = (String**)MALLOC(String*, count);
 	memcpy((char*)res, (char*)arr, count * sizeof(String*));
 	return res;
+}
+Array* String::split(String* str) {
+	return split(str->value_);
+}
+Array* String::split(const char* str) {
+	Array* arr = NEW_(Array);
+	size_t count = 0;
+	size_t offs = 0;
+	size_t len = strlen(str);
+	for (size_t i = 0; i < length_; ) {
+		long long ix = indexOf(str, i);
+		if (ix == -1) {
+			ix = length_;
+		}
+		arr->push(NEW_(String, NS_FW_BASE::substr(value_, i, ix - i)));
+		i = ix + len;
+	}
+	return arr;
 }
 bool String::startsWith(String* str) {
 	return startsWith(str->value_);

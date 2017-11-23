@@ -40,7 +40,7 @@ char* substr(char *str, size_t start, size_t length) {
 }
 //*********************************************************
 int strncmp(const char *left, const char *right, size_t len) {
-	int res = 0;
+	int res = left[0] - right[0];
 	for (size_t i = 0; i < len && res == 0; i++) {
 		res = left[i] - right[i];
 		if (left[i] == '\0' || right[i] == '\0') break;

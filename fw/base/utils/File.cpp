@@ -6,14 +6,15 @@ NS_FW_BASE_BEGIN
 
 char* File::read(const char* path) {
 	char* buffer = NULL;
-	FILE* fp = fopen(path, "r");
+	FILE* fp = fopen(path, "rb");
 	if (fp != NULL) {
 		fseek(fp, 0, SEEK_END);
 		size_t length = ftell(fp);
-		buffer = NEWARR(char, length);
+		buffer = MALLOC(char, length + 1);
 		fseek(fp, 0, SEEK_SET);
 		size_t byteCount = fread(buffer, sizeof(char), length, fp);
 		fclose(fp);
+		buffer[byteCount] = '\0';
 	}
 	return buffer;
 }
