@@ -20,10 +20,10 @@ NS_FW_BASE_BEGIN
 	#define _MEM_DBG_SIZE (1<<_MEM_DBG_SIZE_BITS)
 	#define _MEM_DBG_SIZE_MASK (_MEM_DBG_SIZE-1)
 
-	#define NEW(T,...) *(T*)MemoryMgr::addMemDbgInfo(new T(__VA_ARGS__), __FILE__, __LINE__)
+	//#define NEW(T,...) *(T*)MemoryMgr::addMemDbgInfo(new T(__VA_ARGS__), __FILE__, __LINE__)
 	#define NEW_(T,...) (T*)MemoryMgr::addMemDbgInfo(new T(__VA_ARGS__), __FILE__, __LINE__)
 	#define NEWARR(T,s) (T*)MemoryMgr::addMemDbgInfo(new T[s], __FILE__, __LINE__)
-	#define DEL(v) if (MemoryMgr::delMemDbgInfo((Object&)v, __FILE__, __LINE__)) { delete v; }
+	//#define DEL(v) if (MemoryMgr::delMemDbgInfo((Object&)v, __FILE__, __LINE__)) { delete v; }
 	#define DELARR(v) if (MemoryMgr::delMemDbgInfo(v, __FILE__, __LINE__)) { delete[] v; }
 	#define DEL_(v) if (v != NULL && MemoryMgr::delMemDbgInfo((void*)v, __FILE__, __LINE__)) { delete v; }
 	#define MALLOC(t, s) (t*)MemoryMgr::addMemDbgInfo(MemoryMgr::alloc(sizeof(t)*s), __FILE__, __LINE__)
@@ -31,21 +31,21 @@ NS_FW_BASE_BEGIN
 	#define FREE(p) if (p != NULL && MemoryMgr::delMemDbgInfo((void*)p, __FILE__, __LINE__)) { MemoryMgr::free((void*)p); }
 
 #else
-	#define NEW_(T,v,...) v = new T(__VA_ARGS__);
-	#define NEWARR(T,v,s) v = new T[s];
-	#define DEL(v) delete v;
+	#define NEW_(T,...) new T(__VA_ARGS__)
+	#define NEWARR(T,s) new T[s]
+	#define DEL_(v) delete v;
 	#define MALLOC(t, s) (t*)MemoryMgr::alloc(sizeof(t)*s)
 	#define REALLOC(p, t, s) (t*)MemoryMgr::realloc(p, sizeof(t)*s)
 	#define FREE(p) MemoryMgr::free(p)
 #endif
 
 class MemoryMgr {
+	static void initialize_();
 #ifdef _DEBUG
 	static _MEM_DBG_INFO *memDbgInfos_;
 	static int nMemDbgInfos_;
 	static _MEM_DBG_INFO *refTable_;
 	static _MEM_DBG_INFO *nextFreeEntry_;
-	static void initialize_();
 public:
 	static bool isDebugOn;
 	static void* addMemDbgInfo(void *p, char *szFile, int iLine, void *o = NULL);

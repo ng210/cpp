@@ -7,28 +7,6 @@
 
 NS_FW_BASE_USE
 
-#ifdef _DEBUG
-_MEM_DBG_INFO *MemoryMgr::memDbgInfos_ = NULL;
-_MEM_DBG_INFO *MemoryMgr::nextFreeEntry_ = NULL;
-int MemoryMgr::nMemDbgInfos_ = 0;
-//bool MemoryMgr::_MEM_DBG = false;
-#endif
-
-bool MemoryMgr::isDebugOn = false;
-
-void MemoryMgr::initialize_() {
-	int iSize = sizeof(_MEM_DBG_INFO) * _MEM_DBG_SIZE;
-	_MEM_DBG_INFO* p = (_MEM_DBG_INFO*)malloc(iSize);
-	memset(p, 0, iSize);
-	int i = 0;
-	for (; i<_MEM_DBG_SIZE-1; i++) {
-		p[i].ptr.next = &p[i+1];
-	}
-	p[i].ptr.next = NULL;
-	MemoryMgr::nextFreeEntry_ = p;
-	MemoryMgr::memDbgInfos_ = p;
-}
-
 void* MemoryMgr::alloc(size_t size) {
 	void *p = ::malloc(size);
 	return p;
@@ -55,6 +33,25 @@ void operator delete(void *p) {
 }
 
 #ifdef _DEBUG
+_MEM_DBG_INFO *MemoryMgr::memDbgInfos_ = NULL;
+_MEM_DBG_INFO *MemoryMgr::nextFreeEntry_ = NULL;
+int MemoryMgr::nMemDbgInfos_ = 0;
+
+bool MemoryMgr::isDebugOn = false;
+
+void MemoryMgr::initialize_() {
+	int iSize = sizeof(_MEM_DBG_INFO) * _MEM_DBG_SIZE;
+	_MEM_DBG_INFO* p = (_MEM_DBG_INFO*)malloc(iSize);
+	memset(p, 0, iSize);
+	int i = 0;
+	for (; i<_MEM_DBG_SIZE - 1; i++) {
+		p[i].ptr.next = &p[i + 1];
+	}
+	p[i].ptr.next = NULL;
+	MemoryMgr::nextFreeEntry_ = p;
+	MemoryMgr::memDbgInfos_ = p;
+}
+
 void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine, void *old) {
 	if (old != NULL) {
 		bool found = false;
@@ -141,4 +138,7 @@ void MemoryMgr::checkMemDbgInfo(size_t count, void** exceptions) {
 	}
 }
 //*********************************************************
+#else
+void MemoryMgr::initialize_() {
+}
 #endif
