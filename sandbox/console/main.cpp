@@ -46,7 +46,9 @@ int main(int argc, char *argv[]) {
 		list[i] = i;
 	}
 	for (int i = 0; i < 1024 * 1024; i++) {
-		sum += _binSearch(list, SIZE - 1, 0, 1024);
+		for (int j = 0; j < SIZE; j++) {
+			sum += _binSearch(list, j, 0, SIZE);
+		}
 	}
 	printf("%lld\n", sum);
 	free(list);
@@ -58,7 +60,9 @@ int main(int argc, char *argv[]) {
 
 	sum = 0;
 	for (int i = 0; i < 1024 * 1024; i++) {
-		sum += _linearSearch(list, SIZE, SIZE - 1);
+		for (int j = 0; j < SIZE; j++) {
+			sum += _linearSearch(list, SIZE, j);
+		}
 	}
 	printf("%lld\n", sum);
 	free(list);
