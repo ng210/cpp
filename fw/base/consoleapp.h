@@ -3,7 +3,7 @@
 
 #include "runtime.h"
 
-extern int _main(NS_FW_BASE::Array*);
+extern int _main(NS_FW_BASE::Map*);
 
 int main(int, char**);
 

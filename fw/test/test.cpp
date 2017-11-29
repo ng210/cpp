@@ -6,7 +6,6 @@
 
 #define MEM_DEBUG
 
-
 NS_FW_BASE_USE
 
 #define ASSERT(label, expr) printf(" - " label " "); if (expr) { passed++; printf("passed\n"); } else { failed++; printf("failed\n"); };
@@ -182,8 +181,8 @@ void testArrayPtr() {
 	char* buf = arr[0]->toString();
 	ASSERT("toString/join_(', ')", strncmp(buf, "Red,Green,Blue", strlen(buf)) == 0);
 	FREE(buf);
-	str1 = arr[0]->join("");
-	ASSERT("join('')", str1->strcmp("RedGreenBlue") == 0);
+	str1 = arr[0]->join(",");
+	ASSERT("join('')", str1->strcmp("Red,Green,Blue") == 0);
 	DEL_(str1);
 
 	ADD(arr, 1, Array, 3, NEW_(String, "Rose"), NEW_(String, "Grass"), NEW_(String, "Sky"));
@@ -236,27 +235,27 @@ void testArrayPtr() {
 	ASSERT("lastIndexOf('Mike', -10) == -1", array->lastIndexOf(str1, -10) == -1);
 	//Array* map(Function*, Object* = NULL);
 	SET(arr, 6, 4, map, transformNames);
-	buf = arr[6]->join_("");
-	ASSERT("map(transformNames)", strncmp(buf, "adamjohnmikeoscarthomasmikewalter") == 0);
+	buf = arr[6]->toString();
+	ASSERT("map(transformNames)", strncmp(buf, "adam,john,mike,oscar,thomas,mike,walter") == 0);
 	FREE(buf);
 	arr[6]->cleanUp();
 	str1 = (String*)array->pop();
 	str2 = (String*)array->pop();
 	DEL_(str2);
-	buf = array->join_("");
-	ASSERT("pop()", strncmp(buf, "AdamJohnMikeOscarThomas") == 0);
+	buf = array->toString();
+	ASSERT("pop()", strncmp(buf, "Adam,John,Mike,Oscar,Thomas") == 0);
 	FREE(buf);
 	array->push(str1);
-	buf = array->join_("");
-	ASSERT("push('Walter')", strncmp(buf, "AdamJohnMikeOscarThomasWalter") == 0);
+	buf = array->toString();
+	ASSERT("push('Walter')", strncmp(buf, "Adam,John,Mike,Oscar,Thomas,Walter") == 0);
 	FREE(buf);
 	ASSERT("push(3, ...) == 9)", array->push(3, NEW_(String, "Zelda"), NEW_(String, "Zimba"), NEW_(String, "Zork")) == 9);
-	buf = array->join_("");
-	ASSERT("push(3, 'Zelda', 'Zimba', 'Zork')", strncmp(buf, "AdamJohnMikeOscarThomasWalterZeldaZimbaZork", strlen(buf)) == 0);
+	buf = array->toString();
+	ASSERT("push(3, 'Zelda', 'Zimba', 'Zork')", strncmp(buf, "Adam,John,Mike,Oscar,Thomas,Walter,Zelda,Zimba,Zork", strlen(buf)) == 0);
 	FREE(buf);
 	array->reverse();
-	buf = array->join_("");
-	ASSERT("reverse()", strncmp(buf, "ZorkZimbaZeldaWalterThomasOscarMikeJohnAdam", strlen(buf)) == 0);
+	buf = array->toString();
+	ASSERT("reverse()", strncmp(buf, "Zork,Zimba,Zelda,Walter,Thomas,Oscar,Mike,John,Adam", strlen(buf)) == 0);
 	FREE(buf);
 	str1 = (String*)array->shift();
 	buf = str1->toString();
@@ -264,57 +263,75 @@ void testArrayPtr() {
 	FREE(buf);
 	DEL_(str1);
 	SET(arr, 7, 4, slice);
-	buf = arr[7]->join_("");
-	ASSERT("slice()", strncmp(buf, "ZimbaZeldaWalterThomasOscarMikeJohnAdam") == 0);
+	buf = arr[7]->toString();
+	ASSERT("slice()", strncmp(buf, "Zimba,Zelda,Walter,Thomas,Oscar,Mike,John,Adam") == 0);
 	FREE(buf);
 	SET(arr, 8, 4, slice, 0, 1);
-	buf = arr[8]->join_("");
-	ASSERT("slice(0, 2)", strncmp(buf, "ZimbaZelda") == 0);
+	buf = arr[8]->toString();
+	ASSERT("slice(0, 2)", strncmp(buf, "Zimba,Zelda") == 0);
 	FREE(buf);
 	SET(arr, 9, 4, slice, 2, 3);
-	buf = arr[9]->join_("");
-	ASSERT("slice(2, 4)", strncmp(buf, "WalterThomas") == 0);
+	buf = arr[9]->toString();
+	ASSERT("slice(2, 4)", strncmp(buf, "Walter,Thomas") == 0);
 	FREE(buf);
 	SET(arr, 10, 4, slice, -5, -3);
-	buf = arr[10]->join_("");
-	ASSERT("slice(-5, -3)", strncmp(buf, "ThomasOscarMike") == 0);
+	buf = arr[10]->toString();
+	ASSERT("slice(-5, -3)", strncmp(buf, "Thomas,Oscar,Mike") == 0);
 	FREE(buf);
 	buf = (*array)[2]->toString();
 	array->push(NEW_(String, buf));
 	array->push(NEW_(String, "George"));
 	array->sort();
-	buf = arr[4]->join_("");
-	ASSERT("sort()", strncmp(buf, "AdamGeorgeJohnMikeOscarThomasWalterWalterZeldaZimba") == 0);
+	buf = arr[4]->toString();
+	ASSERT("sort()", strncmp(buf, "Adam,George,John,Mike,Oscar,Thomas,Walter,Walter,Zelda,Zimba") == 0);
 	FREE(buf);
 	array->sort(reverseCompare);
-	buf = array->join_("");
-	ASSERT("sort(reverseCompare)", strncmp(buf, "ZimbaZeldaWalterWalterThomasOscarMikeJohnGeorgeAdam") == 0);
+	buf = array->toString();
+	ASSERT("sort(reverseCompare)", strncmp(buf, "Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
 	FREE(buf);
 	SET(arr, 11, 4, splice, 2, 2);
-	buf = arr[11]->join_("");
-	ASSERT("splice(2,2)", strncmp(buf, "WalterWalter") == 0);
+	buf = arr[11]->toString();
+	ASSERT("splice(2,2)", strncmp(buf, "Walter,Walter") == 0);
 	FREE(buf);
-	buf = array->join_("");
-	ASSERT("...", strncmp(buf, "ZimbaZeldaThomasOscarMikeJohnGeorgeAdam") == 0);
+	buf = array->toString();
+	ASSERT("...", strncmp(buf, "Zimba,Zelda,Thomas,Oscar,Mike,John,George,Adam") == 0);
 	FREE(buf);
 	SET(arr, 12, 4, splice, 2, 0, 2, (*arr[11])[0], (*arr[11])[1]);
-	buf = arr[12]->join_("");
+	buf = arr[12]->toString();
 	ASSERT("splice(2,0,...)", strncmp(buf, "") == 0);
 	FREE(buf);
-	buf = array->join_("");
-	ASSERT("...", strncmp(buf, "ZimbaZeldaWalterWalterThomasOscarMikeJohnGeorgeAdam") == 0);
+	buf = array->toString();
+	ASSERT("...", strncmp(buf, "Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
 	FREE(buf);
 	array->unshift(NEW_(String, "Zork"));
-	buf = array->join_("");
-	ASSERT("unshift('Zork')", strncmp(buf, "ZorkZimbaZeldaWalterWalterThomasOscarMikeJohnGeorgeAdam") == 0);
+	buf = array->toString();
+	ASSERT("unshift('Zork')", strncmp(buf, "Zork,Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
 	FREE(buf);
 	array->unshift(3, NEW_(String, "3XZ-01d"), NEW_(String, "486Cd"), NEW_(String, "900Td"));
-	buf = array->join_("");
-	ASSERT("unshift(3, '3XZ-01d', '486Cd', '900Td')", strncmp(buf, "900Td486Cd3XZ-01dZorkZimbaZeldaWalterWalterThomasOscarMikeJohnGeorgeAdam") == 0);
+	buf = array->toString();
+	ASSERT("unshift(3, '3XZ-01d', '486Cd', '900Td')", strncmp(buf, "900Td,486Cd,3XZ-01d,Zork,Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
 	FREE(buf);
-	//size_t unshift(size_t, va_list);
+	array->sort();
+	buf = array->toString();
+	printf("%s\n", buf);
+	FREE(buf);
+	str1 = NEW_(String, "900Td");
+	long long ix = array->search(str1);
+	ASSERT("search('900Td')", ix == 2);
+	DEL_(str1);
+	str1 = NEW_(String, "Peter");
+	ix = array->search(str1);
+	ASSERT("search('Peter')", ix == -9);
+	SET(arr, 13, 4, splice, -ix, 0, 1, str1);
+	str1 = NEW_(String, "Robert");
+	ix = array->search(str1);
+	ASSERT("search('Robert')", ix == -11);
+	DEL_(str1);
 
+	//size_t unshift(size_t, va_list);
 	array->cleanUp();
+	//array = ADD(arr, 13, Array, );
+
 
 	for (int i = 0; i < 50; i++) {
 		if (arr[i] != NULL) {
@@ -359,24 +376,134 @@ void testPathInfo() {
 	pathInfo = NEW_(PathInfo, fullpath);
 	ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp("") == 0);
 	ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
-	ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp("") == 0);
-	DEL_(pathInfo);
+ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp("") == 0);
+DEL_(pathInfo);
 
-	#undef path
-	#undef fullpath
-	#define path "/dir/subdir/sub.subdir"
-	#define filename "file"
-	#define extension "ext"
-	#define fullpath "" path "/" filename "." extension
-	pathInfo = NEW_(PathInfo, fullpath);
-	ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp(path) == 0);
-	ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
-	ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp(extension) == 0);
-	DEL_(pathInfo);
+#undef path
+#undef fullpath
+#define path "/dir/subdir/sub.subdir"
+#define filename "file"
+#define extension "ext"
+#define fullpath "" path "/" filename "." extension
+pathInfo = NEW_(PathInfo, fullpath);
+ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp(path) == 0);
+ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
+ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp(extension) == 0);
+DEL_(pathInfo);
 
 
-	printf("\n%lld/%lld=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
+printf("\n%lld/%lld=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
 }
+
+void testMapPtr() {
+	int passed = 0;
+	int failed = 0;
+
+	Map* map = NULL;
+	Array* keys = NEW_(Array, 3, NEW_(String, "k1"), NEW_(String, "k2"), NEW_(String, "k3"));
+	Array* values = NEW_(Array, 3, NEW_(String, "v1"), NEW_(String, "v2"), NEW_(String, "v3"));
+	char* buf = NULL;
+
+	map = NEW_(Map);
+	map->put(keys->get(0), values->get(0));
+	map->put(keys->get(1), values->get(1));
+	map->put(keys->get(2), values->get(2));
+	buf = map->get(keys->get(0))->toString();
+	ASSERT("put(k1, v1) / get(k1)", values->get(0)->strcmp(buf) == 0);
+	FREE(buf);
+	buf = map->get(keys->get(1))->toString();
+	ASSERT("put(k2, v2) / get(k2)", values->get(1)->strcmp(buf) == 0);
+	FREE(buf);
+	buf = map->get(keys->get(2))->toString();
+	ASSERT("put(k3, v3) / get(k3)", values->get(2)->strcmp(buf) == 0);
+	FREE(buf);
+	map->put(keys->get(1), values->get(2));
+	buf = map->get(keys->get(1))->toString();
+	ASSERT("put(k2, v3) / get(k2)", values->get(2)->strcmp(buf) == 0);
+	FREE(buf);
+	buf = map->keys()->toString();
+	ASSERT("keys = [k1,k2,k3]", strncmp(buf, "k1,k2,k3") == 0);
+	FREE(buf);
+	buf = map->values()->toString();
+	ASSERT("values = [v1,V3,v3]", strncmp(buf, "v1,v3,v3") == 0);
+	FREE(buf);
+	map->cleanUp();
+	DEL_(map);
+	keys->cleanUp();
+	values->cleanUp();
+	DEL_(keys);
+	DEL_(values);
+
+	Array* arr = NEW_(Array, 4, NEW_(String, "k1=v1"), NEW_(String, "k2=v2"), NEW_(String, "k3=v3"), NEW_(String, "k4"));
+	String* sep = NEW_(String, "=");
+	map = NEW_(Map, arr, sep);
+	DEL_(sep);
+	arr->cleanUp();
+	DEL_(arr);
+	map->keys()->cleanUp();
+	map->values()->cleanUp();
+	map->cleanUp();
+	DEL_(map);
+
+	printf("\n%d/%d=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
+
+}
+
+Object* testTreePre(size_t count, ...) {
+	va_list args;
+	va_start(args, count);
+	Node* node = va_arg(args, Node*);
+	Array* output = va_arg(args, Array*);
+	output->push(NEW_(String, node->value()->toString()));
+	return NULL;
+}
+Object* testTreeIn(size_t count, ...) {
+	va_list args;
+	va_start(args, count);
+	Edge* edge = va_arg(args, Edge*);
+	Array* output = va_arg(args, Array*);
+	output->push(NEW_(String, "-["));
+	output->push(NEW_(String, edge->value()->toString()));
+	output->push(NEW_(String, "]->"));
+	return NULL;
+}
+Object* testTreePost(size_t count, ...) {
+	va_list args;
+	va_start(args, count);
+	Node* node = va_arg(args, Node*);
+	Array* output = va_arg(args, Array*);
+	if (node->edges()->size() == 0) {
+		output->push(NEW_(String, "\n"));
+	}
+	return NULL;
+}
+
+void testTreePtr() {
+	int passed = 0;
+	int failed = 0;
+
+	Tree* tree = NEW_(Tree);
+	tree->addNode(NULL, NEW_(String, "Sándor"));
+	Node* node = tree->addNode(tree->root(), NEW_(String, "Gabor"), NEW_(String, "child"));
+	tree->addNode(node, NEW_(String, "Gergöke"), NEW_(String, "child"));
+	node = tree->addNode(tree->root(), NEW_(String, "Adri"), NEW_(String, "child"));
+	tree->addNode(node, NEW_(String, "Klárika"), NEW_(String, "child"));
+	tree->addNode(node, NEW_(String, "Jancsika"), NEW_(String, "child"));
+	Array* output = NEW_(Array);
+	tree->traverseDFS(testTreePre, testTreeIn, testTreePost, output);
+	String* str = output->join("");
+	char* buf = str->toString();
+	printf("%s\n", buf);
+	FREE(buf);
+	DEL_(str);
+	output->cleanUp();
+	DEL_(output);
+	tree->cleanUp();
+	DEL_(tree);
+
+	printf("\n%d/%d=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
+}
+
 size_t primeTest(size_t n) {
 	size_t divider = 0;
 	size_t root = (size_t)sqrt((double)n);
@@ -402,8 +529,15 @@ void findPrime(size_t n) {
 	}
 }
 
-int _main(NS_FW_BASE::Array* args) {
+int _main(NS_FW_BASE::Map* args) {
 	int error = 0;
+	for (int i = 0; i < args->keys()->length(); i++) {
+		char* key = args->keys()->get(i)->toString();
+		char* value = args->values()->get(i)->toString();
+		printf("%s = %s\n", key, value);
+		DEL_(key);
+		DEL_(value);
+	}
 
 	//findPrime(0x9FFFFFFFFFFFFFULL);
 
@@ -411,11 +545,18 @@ int _main(NS_FW_BASE::Array* args) {
 	//testObjectPtr();
 	//printf("*** String tests\n");
 	//testStringPtr();
+
 	//printf("\n*** Array tests\n");
 	//testArrayPtr();
 
-	printf("\n*** PathInfo tests\n");
-	testPathInfo();
+	//printf("\n*** Map tests\n");
+	//testMapPtr();
+
+	printf("\n*** Tree tests\n");
+	testTreePtr();
+
+	//printf("\n*** PathInfo tests\n");
+	//testPathInfo();
 
 	//const size_t length = 60 * 48000;
 	//Buffer buffer(TYPE_FLOAT, length);

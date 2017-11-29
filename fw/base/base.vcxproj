@@ -30,6 +30,8 @@
     <ClInclude Include="base\str.h" />
     <ClInclude Include="base\String.h" />
     <ClInclude Include="base\Float.h" />
+    <ClInclude Include="collection\Map.h" />
+    <ClInclude Include="collection\Tree.h" />
     <ClInclude Include="utils\Buffer.h" />
     <ClInclude Include="collection\Array.h" />
     <ClInclude Include="consoleapp.h" />
@@ -51,6 +53,8 @@
     <ClCompile Include="base\String.cpp" />
     <ClCompile Include="base\Type.cpp" />
     <ClCompile Include="base\Float.cpp" />
+    <ClCompile Include="collection\Map.cpp" />
+    <ClCompile Include="collection\Tree.cpp" />
     <ClCompile Include="utils\Buffer.cpp" />
     <ClCompile Include="collection\Array.cpp" />
     <ClCompile Include="consoleapp.cpp" />
@@ -186,6 +190,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

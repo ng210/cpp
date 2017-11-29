@@ -9,12 +9,18 @@ int main(int argc, char** argv) {
 	//MemoryMgr::isDebugOn = true;
 #endif
 	RunTime::initialize();
-	Array* args = NEW_(Array);
+	Array* arr = NEW_(Array);
 	for (int i = 0; i < argc; i++) {
-		args->push(NEW_(String, (const char*)argv[i]));
+		arr->push(NEW_(String, (const char*)argv[i]));
 	}
+	String* argSeparator = NEW_(String, "=");
+	Map* args = NEW_(Map, arr, argSeparator);
+	DEL_(argSeparator);
+	arr->cleanUp();
+	DEL_(arr);
 	error = _main(args);
-
+	args->keys()->cleanUp();
+	args->values()->cleanUp();
 	args->cleanUp();
 	DEL_(args);
 

@@ -15,9 +15,11 @@ void RunTime::initialize() {
 	Float::initialize();
 
 	Array::initialize();
+	Map::initialize();
 }
 void RunTime::shutDown() {
 	// shutdown classes
+	Map::shutDown();
 	Array::shutDown();
 
 	Float::shutDown();

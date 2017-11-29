@@ -10,6 +10,8 @@
 #include "base/Integer.h"
 #include "base/Float.h"
 #include "collection/Array.h"
+#include "collection/Map.h"
+#include "collection/Tree.h"
 //#include "rt/Date.h"
 //#include "rt/Boolean.h"
 //#include "rt/RegEx.h"
