@@ -20,17 +20,18 @@ void MemoryMgr::free(void *p) {
 	//_VS_debug("free:%x\n", (int)p);
 	::free(p);
 }
-void* operator new(size_t iSize) {
-	return MemoryMgr::alloc(iSize);
-}
+
+//void* operator new(size_t iSize) {
+//	return MemoryMgr::alloc(iSize);
+//}
 
 //void* operator new[](size_t iSize) {
 //	return MemoryMgr::alloc(iSize);
 //}
 
-void operator delete(void *p) {
-	MemoryMgr::free(p);
-}
+//void operator delete(void *p) {
+//	MemoryMgr::free(p);
+//}
 
 #ifdef _DEBUG
 _MEM_DBG_INFO *MemoryMgr::memDbgInfos_ = NULL;

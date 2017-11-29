@@ -60,11 +60,11 @@ public:
 
 NS_FW_BASE_END
 
-void* operator new(size_t iSize);
+//void* operator new(size_t iSize);
 //void* operator new[](size_t iSize);
 //void* operator new(size_t iSize, void* p);
 
-void operator delete(void *p);
+//void operator delete(void *p);
 //void operator delete[](void *p);
 
 #endif
