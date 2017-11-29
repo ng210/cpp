@@ -20,6 +20,30 @@ void Array::shutDown() {
 int Array::compare(Object* a, Object* b) {
 	return a->compareTo(b);
 }
+long long Array::binSearch(Object* key, size_t min, size_t max, Compare* compare) {
+	long long res = 0;
+	// the search range gets halved each iteration
+	while (min < max) {
+		// mid = min + (max - min)/2 = min/2 + max/2
+		size_t mid = (min + max) >> 1;
+		// compare item with middle item
+		int i = compare(key, this->get(mid));
+
+		if (i == 0) {
+			// on equation the middle item was the searched item
+			return mid;
+		}
+		if (i < 0) {
+			// item was less, continue with the first half-range: [min, mid]
+			max = mid;
+		} else {
+			// item was greater, continue with the second half-range: [mid+1, max]
+			min = mid + 1;
+		}
+	}
+	// item not found, negative index marks the place where the item should be.
+	return -(long long)max-1;
+}
 /*****************************************************************************
 * Array
 *****************************************************************************/
@@ -31,13 +55,13 @@ Array::Array(size_t count) {
 	data_ = NULL;
 	init(count);
 }
-Array::Array(size_t count, Object* obj, ...) {
+Array::Array(int count, ...) {
 	data_ = NULL;
-	init(count);
 	va_list items;
 	va_start(items, count);
-	memcpy((char*)data_, (char*)items, count*sizeof(Object*));
-	length_ += count;
+	init(count, items);
+	//memcpy((char*)data_, (char*)items, count*sizeof(Object*));
+	//length_ += count;
 }
 //Array::Array(size_t count, Object** items) {
 //	init(count);
@@ -52,9 +76,7 @@ Array::~Array(void) {
 }
 void Array::init(size_t count, va_list items) {
 	length_ = 0;
-	size_t mod = count / ARRAY_BLOCK_SIZE;
-	capacity_ = ARRAY_BLOCK_SIZE * (mod+1);
-	//data_ = (Object**)
+	capacity_ = ALIGN(count, ARRAY_BLOCK_SIZE);
 	data_ = REALLOC(data_, Object*, capacity_);
 	if (items != NULL) {
 		for (size_t i = 0; i < count; i++) {
@@ -78,16 +100,18 @@ void* Array::valueOf() {
 /*****************************************************************************
 * Methods
 *****************************************************************************/
-Object* Array::operator[](long long index) {
-	Object* item = NULL;
-	if (index < 0) {
-		index += length_;
+Object* Array::operator[](long long ix) {
+	Object* res = NULL;
+	if (ix < 0) {
+		ix += length_;
 	}
-	if (index < (long long)length_) {
-		item = data_[index];
+	if (ix >= 0) {
+		for (size_t i = length_; i < (size_t)ix; i++) {
+			push(NEW_(Object));
+		}
+		res = data_[ix];
 	}
-
-	return item;
+	return res;
 }
 void Array::cleanUp() {
 	for (int i = 0; i < length_; i++) {
@@ -151,6 +175,12 @@ void Array::forEach(Function* callback, Object* that) {
 		// bool callback(currentValue, index, arr)
 		callback(4, that, data_[i], i, this);
 	}
+}
+Object* Array::get(size_t ix) {
+	for (long long i = (long long)length_; i < (long long)ix - 1; i++) {
+		push(NEW_(Object));
+	}
+	return data_[ix];
 }
 long long Array::indexOf(Object* obj, long long start) {
 	long long res = -1;
@@ -256,6 +286,17 @@ size_t Array::push_(size_t count, va_list args) {
 	}
 	return length_;
 }
+Object* Array::put(size_t ix, Object* obj) {
+	if (ix < length_) {
+		data_[ix] = obj;
+	} else {
+		for (long long i = (long long)length_; i < (long long)ix - 1; i++) {
+			push(NEW_(Object));
+		}
+		push(obj);
+	}
+	return obj;
+}
 Array* Array::reverse() {
 	size_t i = 0, j = length_ - 1;
 	while (i < j) {
@@ -266,6 +307,9 @@ Array* Array::reverse() {
 		i++; j--;
 	}
 	return this;
+}
+long long Array::search(Object* key, Compare* compare) {
+	return length_ > 0 ? binSearch(key, 0, length_, compare) : -1;
 }
 Object* Array::shift() {
 	Object* res = Null;
@@ -329,33 +373,30 @@ Array* Array::splice(long long index, size_t count1, size_t count2, ...) {
 }
 Array* Array::splice(long long index, size_t count1, size_t count2, va_list args) {
 	Array* arr = NULL;
-	if (index < 0) {
-		index += length_;
+	long long len = (long long)length_;
+	size_t ix = (index < 0) ? index + length_ : index;
+	if (ix > length_) {
+		ix = length_;
 	}
-	size_t ix = (size_t)index;
-	if (ix < length_) {
-		// remove old entries
-		arr = NEW_(Array, count1);
-		memcpy((char*)arr->data_, (char*)&data_[ix], count1*sizeof(Object*));
-		arr->length_ = count1;
+	if (count1 > length_ - ix) {
+		count1 = length_ - ix;
+	}
+	// remove old entries
+	arr = NEW_(Array, count1);
+	memcpy((char*)arr->data_, (char*)&data_[ix], count1*sizeof(Object*));
+	arr->length_ = count1;
 
-		if (count2 > count1) {
-			size_t diff = count2 - count1;
-			// make room for new entries
-			if (length_ + diff > capacity_) {
-				capacity_ += ARRAY_BLOCK_SIZE;
-				data_ = REALLOC(data_, Object*, capacity_);
-			}
-			for (size_t i = length_ - 1; i >= ix + count1; i--) {
-				data_[i + diff] = data_[i];
-			}
+	if (count2 > count1) {
+		size_t diff = count2 - count1;
+		// make room for new entries
+		if (length_ + diff > capacity_) {
+			capacity_ += ARRAY_BLOCK_SIZE;
+			data_ = REALLOC(data_, Object*, capacity_);
 		}
-		// add new entries
-		for (size_t i = 0; i < count2; i++) {
-			data_[i + ix] = va_arg(args, Object*);
-			length_++;
+		for (long long i = (long long)length_ - 1; i >= (long long)(ix + count1); i--) {
+			data_[i + diff] = data_[i];
 		}
-		
+	} else
 		if (count1 > count2) {
 			size_t diff = count1 - count2;
 			// shift old elements down
@@ -368,7 +409,12 @@ Array* Array::splice(long long index, size_t count1, size_t count2, va_list args
 				data_ = REALLOC(data_, Object*, capacity_);
 			}
 		}
+	// add new entries
+	for (size_t i = 0; i < count2; i++) {
+		data_[i + ix] = va_arg(args, Object*);
+		length_++;
 	}
+		
 	return arr;
 }
 size_t Array::unshift(Object* item) {

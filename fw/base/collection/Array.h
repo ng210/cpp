@@ -24,16 +24,18 @@ class Array : public Object {
 protected:
 	Object** data_;
 	PROP_R(size_t, length);
+protected:
 	size_t capacity_;
 
 	char* join_(const char* sep);
+	long long binSearch(Object*, size_t, size_t, Compare*);
 	void sort(long long, long long, Compare*);
 	static int compare(Object*, Object*);
+	void init(size_t, va_list = NULL);
 public:
 	Array();
-	Array(size_t, Object*, ...);
+	Array(int, ...);
 	virtual ~Array();
-	void init(size_t, va_list = NULL);
 
 	char* toString();
 	int compareTo(Object* obj);
@@ -47,6 +49,7 @@ public:
 	Object* find(Function*, Object* = NULL);
 	long long findIndex(Function*, Object* = NULL);
 	void forEach(Function*, Object* = NULL);
+	Object* get(size_t);
 	long long indexOf(Object*, long long = 0);
 	String* join(String*);
 	String* join(const char*);
@@ -57,7 +60,9 @@ public:
 	size_t push(const char*);
 	size_t push(size_t, ...);
 	size_t push_(size_t, va_list);
+	Object* put(size_t, Object*);
 	Array* reverse();
+	long long search(Object* key, Compare* compare = Array::compare);
 	Object* shift();
 	Array* slice(long long = 0, long long = -1);
 	void sort(Compare* = Array::compare);
