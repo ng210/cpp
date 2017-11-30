@@ -40,7 +40,7 @@ Object::Object(void) {
 Object::~Object(void) {
 }
 char* Object::toString() {
-	return strdup("[Object]");
+	return (this != Null) ? strdup("[Object]") : strdup("Null");
 }
 bool Object::toBool() {
 	return this != Object::nullInstance_;

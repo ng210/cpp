@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "utils/File.h"
 #include "base/MemoryMgr.h"
+#include "base/String.h"
 
 NS_FW_BASE_BEGIN
 
@@ -18,6 +19,13 @@ char* File::read(const char* path) {
 	}
 	return buffer;
 }
+char* File::read(String* path) {
+	char* buf = path->toString();
+	char* res = File::read(buf);
+	DEL_(buf);
+	return res;
+}
+
 size_t File::write(const char* path, char* buffer, size_t length) {
 	size_t byteCount = 0;
 	FILE* fp = fopen(path, "wb");
@@ -27,6 +35,13 @@ size_t File::write(const char* path, char* buffer, size_t length) {
 	}
 	return byteCount;
 }
+size_t File::write(String* path, char* buffer, size_t length) {
+	char* buf = path->toString();
+	size_t res = File::write(buf, buffer, length);
+	DEL_(buf);
+	return res;
+}
+
 size_t File::write(const char* path, Buffer& buffer) {
 	size_t byteCount = 0;
 	FILE* fp = fopen(path, "wb");

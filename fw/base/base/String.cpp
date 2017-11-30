@@ -324,6 +324,9 @@ Array* String::split(const char* str) {
 		arr->push(NEW_(String, NS_FW_BASE::substr(value_, i, ix - i)));
 		i = ix + len;
 	}
+	if (arr->length() == 0) {
+		arr->push(this);
+	}
 	return arr;
 }
 bool String::startsWith(String* str) {
