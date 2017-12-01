@@ -63,6 +63,9 @@ class JsBuild {
 	int error_;
 	PathInfo* inputPathInfo_;
 	String* basePath_;
+	String* input_;
+	String* output_;
+	bool verbose_;
 	Tree* sources_;
 	FILE* fout_;
 	Array* out_;
@@ -153,7 +156,7 @@ public:
 		Source *source = (Source*)node->value();
 		// Process file and get includes
 		char* fileName = source->getName()->toString();
-		printf(" processing %s\n", fileName);
+		if (app->verbose_) printf(" processing %s\n", fileName);
 		Array* sourceContent = source->getContent();
 		if (sourceContent != NULL) {
 			char line[] = "/* ***************************************************************************/";
@@ -175,8 +178,8 @@ public:
 					PathInfo includePathInfo(includeNameBuf);
 					Array arr(1, NEW_(String, app->basePath_->toString()));
 					if (includePathInfo.getPath()->length() == 0 && app->inputPathInfo_->getPath()->length() > 0) {
-						arr.push(app->inputPathInfo_->getPath());
-						arr.push('\\');
+						arr.push(NEW_(String, *app->inputPathInfo_->getPath()));
+						arr.push("\\");
 					}
 					String* tmp = NEW_(String, includeNameBuf);
 					arr.push(tmp->replace("/", "\\"));
@@ -185,7 +188,7 @@ public:
 					String* includeName = arr.join("");
 					//FREE(includeNameBuf);
 					buf = includeName->toString();
-					printf(" includes '%s'\n", buf);
+					if (app->verbose_) printf(" includes '%s'\n", buf);
 					DEL_(buf);
 					arr.cleanUp();
 					Node* include = app->findSource(includeName);
@@ -222,62 +225,71 @@ public:
 		Array* arr = app->out_->concat(source->getContent());
 		DEL_(app->out_);
 		app->out_ = arr;
-		printf(" added %s\n", file);
+		if (app->verbose_) printf(" added %s\n", file);
 		FREE(file);
 		return NULL;
 	}
 
-	int main(Map* args) {
+	void processArguments(Map* args) {
 		String argBase("base");
 		String argInput("in");
 		String argOutput("out");
+		String argVerbose("v");
 		basePath_ = (String*)args->get(&argBase);
 		String* inputFile = (String*)args->get(&argInput);
 		String* outputFile = ((String*)args->get(&argOutput));
-		char* buf = NULL;
+		bool verbose_ = args->get(&argVerbose) != Null;
 
-		while (true) {
-			if (basePath_ == Null || basePath_->length() == 0) {
-				printf("No base path defined.\n");
-				basePath_ = NEW_(String, "");
+		if (basePath_ == Null || basePath_->length() == 0) {
+			if (verbose_) printf("No base path defined.\n");
+			basePath_ = NEW_(String, "");
+		} else {
+			String* tmp = basePath_->replace("/", "\\");
+			if (!tmp->endsWith("\\")) {
+				basePath_ = tmp->concat("\\");
+				DEL_(tmp);
 			} else {
-				String* tmp = basePath_->replace("/", "\\");
-				if (!tmp->endsWith("\\")) {
-					basePath_ = tmp->concat("\\");
-					DEL_(tmp);
-				} else {
-					basePath_ = tmp;
-				}
-				buf = basePath_->toString();
-				printf("Base dir: %s\n", buf);
+				basePath_ = tmp;
+			}
+		}
+		
+		if (inputFile == Null || inputFile->length() == 0) {
+			error_ = 2;
+		} else {
+			input_ = basePath_->concat(inputFile);
+			inputPathInfo_ = NEW_(PathInfo, input_);
+		}
+
+		if (outputFile == Null || outputFile->length() == 0) {
+			Array arr;
+			arr.push(NEW_(String, *inputPathInfo_->getPath()));
+			arr.push(NEW_(String, "\\"));
+			arr.push(2, NEW_(String, *inputPathInfo_->getFileName()), NEW_(String, ".out.js"));
+			String* tmp = arr.join("");
+			output_ = tmp->replace("/", "\\");
+			DEL_(tmp);
+			arr.cleanUp();
+		} else {
+			output_ = outputFile->replace("/", "\\");
+		}
+	}
+
+	int main(Map* args) {
+		processArguments(args);
+		if (error_ == 0) {
+			if (verbose_) {
+				char* buf = basePath_->toString();
+				printf("Base path: %s\n", buf);
+				FREE(buf);
+				buf = input_->toString();
+				printf("Input: %s\n", buf);
+				FREE(buf);
+				buf = output_->toString();
+				printf("Output: %s\n", buf);
 				FREE(buf);
 			}
-			if (inputFile == Null || inputFile->length() == 0) {
-				error_ = 2;
-				break;
-			}
-			String* input = basePath_->concat(inputFile);
-			inputPathInfo_ = NEW_(PathInfo, input);
-
-			String* output = NULL;
-			if (outputFile == Null || outputFile->length() == 0) {
-				Array arr;
-				arr.push(NEW_(String, *inputPathInfo_->getPath()));
-				arr.push(NEW_(String, "\\"));
-				arr.push(2, NEW_(String, *inputPathInfo_->getFileName()), NEW_(String, ".out.js"));
-				String* tmp = arr.join("");
-				output = tmp->replace("/", "\\");
-				DEL_(tmp);
-				arr.cleanUp();
-			} else {
-				output = outputFile->replace("/", "\\");
-			}
-			buf = output->toString();
-			printf("Output: %s\n", buf);
-			FREE(buf);
-
-			Source *source = createSource(input);
-			DEL_(input);
+			char* buf = NULL;
+			Source *source = createSource(input_);
 			if (source != NULL) {
 				sources_->addNode(NULL, (Object*)source);
 				Node *lastSource = sources_->traverseDFS(JsBuild::pre, NULL, JsBuild::post, (Object*)this);
@@ -291,14 +303,14 @@ public:
 					error_ = 0;
 					String* out = out_->join("\n");
 					buf = out->toString();
-					File::write(output, buf, out->length());
+					File::write(output_, buf, out->length());
 					DEL_(out);
 					FREE(buf);
 				}
 			}
-			DEL_(output);
-			break;
 		}
+		DEL_(output_);
+		DEL_(input_);
 		return error_;
 	}
 };
