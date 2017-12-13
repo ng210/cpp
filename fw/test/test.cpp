@@ -445,7 +445,7 @@ void testMapPtr() {
 	map->cleanUp();
 	DEL_(map);
 
-	printf("\n%d/%d=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
+printf("\n%d/%d=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
 
 }
 
@@ -539,6 +539,18 @@ int _main(NS_FW_BASE::Map* args) {
 		DEL_(value);
 	}
 
+	size_t bitmask = 256;
+	for (int i = 8; i < 64; i++) {
+		size_t t = bitmask - 1;
+		bitmask <<= 1;
+		for (size_t j = t; j < bitmask - 1; j++) {
+			if ((j - 3) % 4 == 0 && primeTest(j) == 0) {
+				printf("%2.d bits: %16.lld 0x%016llX\n", i, j, j);
+				break;
+			}
+		}
+	}
+
 	//findPrime(0x9FFFFFFFFFFFFFULL);
 
 	//printf("\n*** Object tests\n");
@@ -552,8 +564,8 @@ int _main(NS_FW_BASE::Map* args) {
 	//printf("\n*** Map tests\n");
 	//testMapPtr();
 
-	printf("\n*** Tree tests\n");
-	testTreePtr();
+	//printf("\n*** Tree tests\n");
+	//testTreePtr();
 
 	//printf("\n*** PathInfo tests\n");
 	//testPathInfo();

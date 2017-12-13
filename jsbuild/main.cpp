@@ -146,6 +146,34 @@ public:
 		return include;
 	}
 
+	static const char* declaresExports(char* line) {
+		const char *res = NULL;
+		// if line is ^\s*module.exports\s*=\s*(.+)
+		const char *pos = line;
+		// ^\s*
+		size_t len = strspn(pos, " \t");
+		pos += len;
+		// module.exports
+		if (NS_FW_BASE::strncmp(pos, "module.exports", 14) == 0) {
+			pos += 14;
+			// \s*
+			len = strspn(pos, " \t");
+			pos += len;
+			// =
+			if (*pos == '=') {
+				pos++;
+				// \s*
+				len = strspn(pos, " \t");
+				pos += len;
+				// (.+) => $1
+				res = pos;
+				pos = strchr(pos, ';');
+				*(char*)pos = '\0';
+			}
+		}
+		return res;
+	}
+
 	static Object* pre(size_t count, ...) {
 		va_list args;
 		va_start(args, count);
@@ -172,6 +200,24 @@ public:
 			for (size_t i = 0; i < sourceContent->length(); i++) {
 				String* str = (String*)(*sourceContent)[i];
 				char* buf = str->toString();
+				const char* exports = declaresExports(buf);
+				if (exports != NULL) {
+					const char* format = "module['%s']=%s;";
+					size_t length = 20 + NS_FW_BASE::strlen(exports);
+					String* ref1 = NEW_(String, (const char*)&fileName[app->basePath_->length()-1]);
+					String* ref2 = ref1->replace("\\", "/");
+					DEL_(ref1);
+					char* moduleRef = ref2->toString();
+					length += ref2->length();
+					DEL_(ref2);
+					char* newLine = MALLOC(char, length);
+					// change into module[<moduleRef>]=<exports>
+					snprintf(newLine, length-1, format, moduleRef, exports);
+					if (app->verbose_) printf(" export '%s'\n", newLine);
+					(*str) = (const char*)newLine;
+					FREE(moduleRef);
+					FREE(newLine);
+				}
 				char *includeNameBuf = declaresInclude(buf);
 				FREE(buf);
 				if (includeNameBuf != NULL) {
@@ -203,7 +249,11 @@ public:
 						app->sources_->addEdge(node, include, NULL);
 					}
 					DEL_(includeName);
-					(*str) = "";
+					Array* removed = sourceContent->splice(i, 1);
+					DEL_(removed);
+					DEL_(str);
+					i--;
+					//(*str) = "";
 				}
 			}
 			//input->cleanUp();
@@ -238,7 +288,7 @@ public:
 		basePath_ = (String*)args->get(&argBase);
 		String* inputFile = (String*)args->get(&argInput);
 		String* outputFile = ((String*)args->get(&argOutput));
-		bool verbose_ = args->get(&argVerbose) != Null;
+		verbose_ = args->get(&argVerbose) != Null;
 
 		if (basePath_ == Null || basePath_->length() == 0) {
 			if (verbose_) printf("No base path defined.\n");
