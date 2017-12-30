@@ -167,8 +167,8 @@ public:
 				pos += len;
 				// (.+) => $1
 				res = pos;
-				pos = strchr(pos, ';');
-				*(char*)pos = '\0';
+				//pos = strchr(pos, ';');
+				//*(char*)pos = '\0';
 			}
 		}
 		return res;
@@ -202,7 +202,7 @@ public:
 				char* buf = str->toString();
 				const char* exports = declaresExports(buf);
 				if (exports != NULL) {
-					const char* format = "module['%s']=%s;";
+					const char* format = "module['%s']=%s";
 					size_t length = 20 + NS_FW_BASE::strlen(exports);
 					String* ref1 = NEW_(String, (const char*)&fileName[app->basePath_->length()-1]);
 					String* ref2 = ref1->replace("\\", "/");
@@ -306,7 +306,12 @@ public:
 		if (inputFile == Null || inputFile->length() == 0) {
 			error_ = 2;
 		} else {
-			input_ = basePath_->concat(inputFile);
+			if (!inputFile->startsWith(basePath_)) {
+				input_ = basePath_->concat(inputFile);
+			}
+			else {
+				input_ = *inputFile;
+			}
 			inputPathInfo_ = NEW_(PathInfo, input_);
 		}
 
