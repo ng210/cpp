@@ -16,7 +16,7 @@ NS_FW_BASE_BEGIN
 		void *padding;
 	} _MEM_DBG_INFO;
 
-	#define _MEM_DBG_SIZE_BITS 12	// 512 entries
+	#define _MEM_DBG_SIZE_BITS 16	// 64k entries
 	#define _MEM_DBG_SIZE (1<<_MEM_DBG_SIZE_BITS)
 	#define _MEM_DBG_SIZE_MASK (_MEM_DBG_SIZE-1)
 

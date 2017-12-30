@@ -16,12 +16,12 @@ PathInfo::PathInfo(const char* fileName) {
 
 void PathInfo::init(const char* fileName) {
 	char* buffer = strdup(fileName);
-	size_t len = strlen(fileName);
+	long long len = strlen(fileName);
 	extension_ = NULL;
 	fileName_ = NULL;
 	path_ = NULL;
 
-	while (--len > 0) {
+	while (--len >= 0) {
 		if (extension_ == NULL && buffer[len] == '.') {
 			buffer[len] = '\0';
 			extension_ = NEW_(String, (const char*)&buffer[len + 1]);
@@ -31,8 +31,20 @@ void PathInfo::init(const char* fileName) {
 			if (extension_ == NULL) {
 				extension_ = NEW_(String, "");
 			}
-			buffer[len] = '\0';
 			fileName_ = NEW_(String, (const char*)&buffer[len + 1]);
+			if (buffer[len-1] == '\\' || buffer[len-1] == '/') {
+				len--;
+			}
+			buffer[len] = '\0';
+			size_t length = len;
+			while (--len >= 0) {
+				if (buffer[len] == '/') {
+					buffer[len] = '\\';
+				}
+				if (buffer[len] == '\\' && buffer[len + 1] == '\\') {
+					NS_FW_BASE::strncpy(&buffer[len], length, &buffer[len + 1]);
+				}
+			}
 			path_ = NEW_(String, (const char*)buffer);
 			break;
 		}

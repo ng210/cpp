@@ -84,6 +84,8 @@ void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine, void *old) {
 			mb.ptr.address = p;
 			mb.szFile = szFile;
 			MemoryMgr::nMemDbgInfos_++;
+		} else {
+			;
 		}
 		if (MemoryMgr::isDebugOn) {
 			_VS_debug("1>%s(%d) : Alloc at 0x%llX\n", szFile, iLine, p);

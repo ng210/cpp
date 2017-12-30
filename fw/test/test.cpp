@@ -350,6 +350,9 @@ void testPathInfo() {
 	#define extension "ext"
 	#define fullpath "" path "\\" filename "." extension
 	PathInfo* pathInfo = NEW_(PathInfo, fullpath);
+	char* buf = pathInfo->getPath()->toString();
+	printf("%s", buf);
+	FREE(buf);
 	ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp(path) == 0);
 	ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
 	ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp(extension) == 0);
@@ -376,23 +379,26 @@ void testPathInfo() {
 	pathInfo = NEW_(PathInfo, fullpath);
 	ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp("") == 0);
 	ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
-ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp("") == 0);
-DEL_(pathInfo);
+	ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp("") == 0);
+	DEL_(pathInfo);
 
-#undef path
-#undef fullpath
-#define path "/dir/subdir/sub.subdir"
-#define filename "file"
-#define extension "ext"
-#define fullpath "" path "/" filename "." extension
-pathInfo = NEW_(PathInfo, fullpath);
-ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp(path) == 0);
-ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
-ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp(extension) == 0);
-DEL_(pathInfo);
+	#undef path
+	#undef fullpath
+	#define path "/dir/subdir/sub.subdir"
+	#define filename "file"
+	#define extension "ext"
+	#define fullpath "" path "/" filename "." extension
+	pathInfo = NEW_(PathInfo, fullpath);
+	ASSERT("PathInfo('" fullpath "').path", pathInfo->getPath()->strcmp("\\dir\\subdir\\sub.subdir") == 0);
+	ASSERT("PathInfo('" fullpath "').fileName", pathInfo->getFileName()->strcmp(filename) == 0);
+	ASSERT("PathInfo('" fullpath "').extension", pathInfo->getExtension()->strcmp(extension) == 0);
+	DEL_(pathInfo);
 
+	pathInfo = NEW_(PathInfo, "c:\\\\dir//subdir1\\\\//file.ext");
+	ASSERT("PathInfo('c:\\\\dir//subdir1\\\\//file.ext').path", pathInfo->getPath()->strcmp("c:\\dir\\subdir1\\file.ext") == 0);
+	DEL_(pathInfo);
 
-printf("\n%lld/%lld=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
+	printf("\n%lld/%lld=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
 }
 
 void testMapPtr() {
@@ -529,27 +535,29 @@ void findPrime(size_t n) {
 	}
 }
 
+
+
 int _main(NS_FW_BASE::Map* args) {
 	int error = 0;
-	for (int i = 0; i < args->keys()->length(); i++) {
-		char* key = args->keys()->get(i)->toString();
-		char* value = args->values()->get(i)->toString();
-		printf("%s = %s\n", key, value);
-		DEL_(key);
-		DEL_(value);
-	}
+	//for (int i = 0; i < args->keys()->length(); i++) {
+	//	char* key = args->keys()->get(i)->toString();
+	//	char* value = args->values()->get(i)->toString();
+	//	printf("%s = %s\n", key, value);
+	//	DEL_(key);
+	//	DEL_(value);
+	//}
 
-	size_t bitmask = 256;
-	for (int i = 8; i < 64; i++) {
-		size_t t = bitmask - 1;
-		bitmask <<= 1;
-		for (size_t j = t; j < bitmask - 1; j++) {
-			if ((j - 3) % 4 == 0 && primeTest(j) == 0) {
-				printf("%2.d bits: %16.lld 0x%016llX\n", i, j, j);
-				break;
-			}
-		}
-	}
+	//size_t bitmask = 256;
+	//for (int i = 8; i < 64; i++) {
+	//	size_t t = bitmask - 1;
+	//	bitmask <<= 1;
+	//	for (size_t j = t; j < bitmask - 1; j++) {
+	//		if ((j - 3) % 4 == 0 && primeTest(j) == 0) {
+	//			printf("%2.d bits: %16.lld 0x%016llX\n", i, j, j);
+	//			break;
+	//		}
+	//	}
+	//}
 
 	//findPrime(0x9FFFFFFFFFFFFFULL);
 
@@ -569,6 +577,8 @@ int _main(NS_FW_BASE::Map* args) {
 
 	//printf("\n*** PathInfo tests\n");
 	//testPathInfo();
+
+	envelopeTest();
 
 	//const size_t length = 60 * 48000;
 	//Buffer buffer(TYPE_FLOAT, length);
