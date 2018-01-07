@@ -23,62 +23,37 @@ bool SoundPlayer::isTerminating_ = false;
 bool SoundPlayer::isPlaying_ = false;
 FeedSample SoundPlayer::callback_ = NULL;
 
-#ifndef USE_LATENCY
+
 DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
 	SoundPlayer::isPlaying_ = true;
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-	DWORD writePosition = 256;
+	DWORD writePosition = 2048;
 	DWORD playPosition = 0;
+	DWORD sampleCount = SoundPlayer::bufferSize_ >> 2;
+	DWORD mask = sampleCount - 1;
 	while (!SoundPlayer::isTerminating_) {
 		SoundPlayer::secondaryBuffer_->GetCurrentPosition(&playPosition, 0);
 		playPosition >>= 2;
-		if (writePosition - playPosition > 256) {
+		DWORD aheadPosition = playPosition + SoundPlayer::latency_;
+		if (playPosition > writePosition) {
+			writePosition += sampleCount;
+		}
+		while (aheadPosition > writePosition) {
+		//if (writePosition - playPosition < LATENCY) {
 			// update next chunk
-			writePosition &= (SoundPlayer::bufferSize_>>2) -1;
-			printf("%d - %d\n", playPosition, writePosition);
-			SoundPlayer::callback_(&((short*)SoundPlayer::sampleBuffer_)[writePosition*2], 256);
+			//writePosition &= (SoundPlayer::bufferSize_>>2) -1;
+			DWORD ix = writePosition & mask;
+			//printf("%d - %d - %d\n", aheadPosition, writePosition, ix);
+			SoundPlayer::callback_(&((short*)SoundPlayer::sampleBuffer_)[ix*2], 256);
 			writePosition += 256;
 		}
-		Sleep(4);
+		writePosition &= mask;
+		Sleep(6);
 	}
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 	SoundPlayer::isPlaying_ = false;
 	return 0;
 }
-#else
-DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
-	short* callbackBuffer = MALLOC(short, 256 * 2);
-	SoundPlayer::isPlaying_ = true;
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-	DWORD playPosition = 0;
-	DWORD writePosition = SoundPlayer::latency_;
-	DWORD aheadPosition = 0;
-
-	while (!SoundPlayer::isTerminating_) {
-		SoundPlayer::secondaryBuffer_->GetCurrentPosition(&playPosition, 0);
-		aheadPosition = (playPosition >> 2) + SoundPlayer::latency_;
-		while (aheadPosition > writePosition) {
-			SoundPlayer::callback_(callbackBuffer, 256);
-			//memset(SoundPlayer::sampleBuffer_, 16382, 256 * 4);
-			for (int i = 0; i < 256; i++) {
-				short smp = callbackBuffer[i];
-				DWORD ix = writePosition & ((SoundPlayer::bufferSize_ >> 2) - 1);
-				((short*)SoundPlayer::sampleBuffer_)[2*ix] = smp;
-				((short*)SoundPlayer::sampleBuffer_)[2*ix+1] = smp;
-				writePosition++;
-			}
-		}
-		writePosition &= (SoundPlayer::bufferSize_ >> 2) - 1;
-		Sleep(20);
-	}
-
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
-	FREE(callbackBuffer);
-	SoundPlayer::isPlaying_ = false;
-	return 0;
-}
-#endif
-
 
 HRESULT SoundPlayer::start(int sampleRate, int channels, FeedSample callback) {
 	HRESULT res = DS_OK;

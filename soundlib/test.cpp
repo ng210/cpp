@@ -21,13 +21,15 @@ int _main(NS_FW_BASE::Map* args) {
 
 float theta = 2 * 3.1415926535898f/48000;
 int timer = 0;
+float f = 1.0f;
 void soundCallback(LPVOID pBuffer, int iSamples) {
 	for (int i = 0; i < iSamples; i++) {
-		float amp = (float)40.0f * sin(0.05 * theta * timer);
+		float amp = (float)(2.0f * sin(27.75f * theta * timer));
 		float fm1 = (float)(amp * sin(55.1f * theta * timer));
-		float fm2 = (float)(amp * sin(54.9f * theta * timer));
-		((short*)pBuffer)[2*i] = (short)floor(12000 * sin(fm1 +440.0f * theta * timer));
-		((short*)pBuffer)[2*i + 1] = (short)floor(12000 * sin(fm2 + 110.0f * theta * timer));
+		float fm2 = (float)(amp * sin(55.2f * theta * timer));
+		((short*)pBuffer)[2*i] = (short)floor(12000 * sin(fm1 + f*110.0f * theta * timer));
+		((short*)pBuffer)[2*i + 1] = (short)floor(12000 * sin(fm2 + f*110.0f * theta * timer));
 		timer++;
+		f *= 1.000004f;
 	}
 }
