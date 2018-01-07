@@ -13,7 +13,6 @@
 //#define USE_DOUBLE_BUFFER
 
 typedef void (*FeedSample)(LPVOID, int);
-typedef HRESULT (WINAPI *LPDIRECTSOUNDCREATE8)(LPCGUID, LPDIRECTSOUND8*, LPUNKNOWN);
 
 class SoundPlayer {
 private:
@@ -28,7 +27,8 @@ private:
 	static LPVOID callbackBuffer_;
 
 	static LPDIRECTSOUND8 device_;
-	static LPDIRECTSOUNDBUFFER8 buffer_;
+	static LPDIRECTSOUNDBUFFER primaryBuffer_;
+	static LPDIRECTSOUNDBUFFER8 secondaryBuffer_;
 
 	static FeedSample callback_;
 

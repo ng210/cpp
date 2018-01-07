@@ -13,15 +13,39 @@ const int SoundPlayer::bufferSize_ = 65536;
 DWORD SoundPlayer::sampleRate_ = 48000;
 
 LPDIRECTSOUND8 SoundPlayer::device_ = NULL;
-LPDIRECTSOUNDBUFFER8 SoundPlayer::buffer_ = NULL;
+LPDIRECTSOUNDBUFFER SoundPlayer::primaryBuffer_ = NULL;
+LPDIRECTSOUNDBUFFER8 SoundPlayer::secondaryBuffer_ = NULL;
 
 LPVOID SoundPlayer::sampleBuffer_ = NULL;
-DWORD SoundPlayer::latency_ = 40;
+DWORD SoundPlayer::latency_ = 20;
 
 bool SoundPlayer::isTerminating_ = false;
 bool SoundPlayer::isPlaying_ = false;
 FeedSample SoundPlayer::callback_ = NULL;
 
+#ifndef USE_LATENCY
+DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
+	SoundPlayer::isPlaying_ = true;
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+	DWORD writePosition = 256;
+	DWORD playPosition = 0;
+	while (!SoundPlayer::isTerminating_) {
+		SoundPlayer::secondaryBuffer_->GetCurrentPosition(&playPosition, 0);
+		playPosition >>= 2;
+		if (writePosition - playPosition > 256) {
+			// update next chunk
+			writePosition &= (SoundPlayer::bufferSize_>>2) -1;
+			printf("%d - %d\n", playPosition, writePosition);
+			SoundPlayer::callback_(&((short*)SoundPlayer::sampleBuffer_)[writePosition*2], 256);
+			writePosition += 256;
+		}
+		Sleep(4);
+	}
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+	SoundPlayer::isPlaying_ = false;
+	return 0;
+}
+#else
 DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
 	short* callbackBuffer = MALLOC(short, 256 * 2);
 	SoundPlayer::isPlaying_ = true;
@@ -31,7 +55,7 @@ DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
 	DWORD aheadPosition = 0;
 
 	while (!SoundPlayer::isTerminating_) {
-		SoundPlayer::buffer_->GetCurrentPosition(&playPosition, 0);
+		SoundPlayer::secondaryBuffer_->GetCurrentPosition(&playPosition, 0);
 		aheadPosition = (playPosition >> 2) + SoundPlayer::latency_;
 		while (aheadPosition > writePosition) {
 			SoundPlayer::callback_(callbackBuffer, 256);
@@ -45,7 +69,7 @@ DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
 			}
 		}
 		writePosition &= (SoundPlayer::bufferSize_ >> 2) - 1;
-		Sleep(4);
+		Sleep(20);
 	}
 
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
@@ -53,14 +77,14 @@ DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
 	SoundPlayer::isPlaying_ = false;
 	return 0;
 }
+#endif
 
 
 HRESULT SoundPlayer::start(int sampleRate, int channels, FeedSample callback) {
 	HRESULT res = DS_OK;
-	LPDIRECTSOUNDBUFFER8 &buffer = SoundPlayer::buffer_;
+	LPDIRECTSOUNDBUFFER8 &buffer = SoundPlayer::secondaryBuffer_;
 	buffer = NULL;
 	while (true) {
-		HRESULT res = DS_OK;
 		// load dll
 		HMODULE dll = LoadLibraryA("dsound.dll");
 		if (dll == NULL) {
@@ -89,14 +113,24 @@ HRESULT SoundPlayer::start(int sampleRate, int channels, FeedSample callback) {
 		wfx.nAvgBytesPerSec = sampleRate * wfx.nBlockAlign;
 		// set up DSBUFFERDESC structure
 		DSBUFFERDESC dsbdesc;
-		dsbdesc.lpwfxFormat = &wfx;
 		dsbdesc.dwSize = sizeof(DSBUFFERDESC);
-		dsbdesc.dwFlags = DSBCAPS_LOCSOFTWARE | DSBCAPS_GLOBALFOCUS;
 		dsbdesc.guid3DAlgorithm = GUID_NULL;
-		dsbdesc.dwBufferBytes = SoundPlayer::bufferSize_;
 		dsbdesc.dwReserved = 0;
-		// create buffer
+		// create primary buffer
 		LPDIRECTSOUNDBUFFER tmpBuffer;
+		//dsbdesc.dwBufferBytes = 0;
+		//dsbdesc.lpwfxFormat = NULL;
+		//dsbdesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
+		//if ((res = SoundPlayer::device_->CreateSoundBuffer(&dsbdesc, &SoundPlayer::primaryBuffer_, 0)) != DS_OK) {
+		//	break;
+		//}
+		//if ((res = SoundPlayer::primaryBuffer_->SetFormat(&wfx)) != DS_OK) {
+		//	break;
+		//}
+		// create secondary buffer
+		dsbdesc.dwBufferBytes = SoundPlayer::bufferSize_;
+		dsbdesc.lpwfxFormat = &wfx;
+		dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
 		if ((res = SoundPlayer::device_->CreateSoundBuffer(&dsbdesc, &tmpBuffer, 0)) != DS_OK) {
 			break;
 		}
@@ -138,9 +172,9 @@ HRESULT SoundPlayer::stop(void) {
 	while (SoundPlayer::isPlaying_) {
 		Sleep(1);
 	}
-	res = SoundPlayer::buffer_->Stop();
+	res = SoundPlayer::secondaryBuffer_->Stop();
 
-	SoundPlayer::buffer_->Release();
+	SoundPlayer::secondaryBuffer_->Release();
 	SoundPlayer::device_->Release();
 	return res;
 }
