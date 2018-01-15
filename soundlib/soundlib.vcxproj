@@ -96,6 +96,14 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug_CRT|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug_CRT|Win32'">$(Configuration)\</IntDir>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)</IntDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -240,12 +248,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="SoundPlayer.cpp" />
-    <ClCompile Include="wav.cpp" />
+    <ClCompile Include="WavFmt.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dsound.h" />
     <ClInclude Include="SoundPlayer.h" />
-    <ClInclude Include="wav.h" />
+    <ClInclude Include="WavFmt.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />

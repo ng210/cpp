@@ -41,42 +41,5 @@ public:
 	static HRESULT start(int sampleRate, int channels, FeedSample callback);
 	static HRESULT stop();
 	static void setLatency(int ms);
-
-//	static DWORD iBufferSize_;
-//	static DWORD iSamplingRate_;
-//	//static DWORD iBytesPerSecond_;
-//
-//	static HMODULE hDSoundDll_;
-//	//static LPDIRECTSOUNDCREATE8 pDirectSoundCreate_;
-//
-//	IDirectSound8* pDevice_;
-//	IDirectSoundBuffer8* pBuffer_;
-//
-//	bool isThreadTerminated_;
-//
-//	DWORD iThreadId_;
-//	HANDLE hThread_;
-//
-//	FeedSample pCallBack_;
-//
-//	HRESULT createBuffer(int iSamplingRate, int iChannels, int iBitsPerSample, int iBufferSize, LPDIRECTSOUNDBUFFER8* ppDsb8);
-//
-//public:
-//	static DWORD WINAPI threadProc(LPVOID lpParameter);
-//	int iError_;
-//	int isRunning_;
-//	DWORD iLatency_;
-//
-//	SoundPlayer(void);
-//	~SoundPlayer(void);
-//
-//	HRESULT init(int iSamplingRate, int iChannels, int iBitsPerSample, int iLatency, FeedSample callBack, HWND hWnd);
-//
-//	void reset();
-//	void start();
-//	int pause();
-//	void restart();
-//	void stop();
-//	void clear();
 };
 #endif
