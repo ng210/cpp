@@ -1,8 +1,8 @@
+#include "consoleapp.h"
+#include "utils/utils.h"
+
 #include <stdio.h>
 #include <math.h>
-
-#include "utils/utils.h"
-#include "consoleapp.h"
 
 #define MEM_DEBUG
 
@@ -125,7 +125,7 @@ Object* filterNames(size_t argc, ...) {
 	size_t ix = (argc > 3) ? va_arg(argv, size_t) : -1;
 	Array* arr = (argc > 3) ? va_arg(argv, Array*) : (Array*)NULL;
 	char* buf = item->toString();
-	int result = strncmp(buf, "Mike");
+	int result = NS_FW_BASE::strncmp(buf, "Mike");
 	FREE(buf);
 	return result < 0 ? True : False;
 }
@@ -138,7 +138,7 @@ Object* findName(size_t argc, ...) {
 	size_t ix = (argc > 3) ? va_arg(argv, size_t) : -1;
 	Array* arr = (argc > 3) ? va_arg(argv, Array*) : (Array*)NULL;
 	char* buf = item->toString();
-	int result = strncmp(buf, "Mike");
+	int result = NS_FW_BASE::strncmp(buf, "Mike");
 	FREE(buf);
 	return result == 0 ? True : False;
 }
@@ -179,7 +179,7 @@ void testArrayPtr() {
 
 	array = ADD(arr, 0, Array, 3, NEW_(String, "Red"), NEW_(String, "Green"), NEW_(String, "Blue"));
 	char* buf = arr[0]->toString();
-	ASSERT("toString/join_(', ')", strncmp(buf, "Red,Green,Blue", strlen(buf)) == 0);
+	ASSERT("toString/join_(', ')", NS_FW_BASE::strncmp(buf, "Red,Green,Blue", NS_FW_BASE::strlen(buf)) == 0);
 	FREE(buf);
 	str1 = arr[0]->join(",");
 	ASSERT("join('')", str1->strcmp("Red,Green,Blue") == 0);
@@ -188,13 +188,13 @@ void testArrayPtr() {
 	ADD(arr, 1, Array, 3, NEW_(String, "Rose"), NEW_(String, "Grass"), NEW_(String, "Sky"));
 	array = SET(arr, 2, 0, concat, arr[1]);
 	buf = array->toString();
-	ASSERT("concat()", strncmp(buf, "Red,Green,Blue,Rose,Grass,Sky", strlen(buf)) == 0);
+	ASSERT("concat()", NS_FW_BASE::strncmp(buf, "Red,Green,Blue,Rose,Grass,Sky", NS_FW_BASE::strlen(buf)) == 0);
 	FREE(buf);
 	buf = (*array)[0]->toString();
-	ASSERT("array[0] == 'Red'", strncmp(buf, "Red", strlen(buf)) == 0);
+	ASSERT("array[0] == 'Red'", NS_FW_BASE::strncmp(buf, "Red", NS_FW_BASE::strlen(buf)) == 0);
 	FREE(buf);
 	buf = (*array)[4]->toString();
-	ASSERT("array[4] == 'Grass'", strncmp(buf, "Grass", strlen(buf)) == 0);
+	ASSERT("array[4] == 'Grass'", NS_FW_BASE::strncmp(buf, "Grass", NS_FW_BASE::strlen(buf)) == 0);
 	FREE(buf);
 	array->cleanUp();
 
@@ -203,7 +203,7 @@ void testArrayPtr() {
 	array = ADD(arr, 3, Array, 3, str1, str1, str1);
 	array->fill(str2, 2, 5);
 	buf = array->toString();
-	ASSERT("fill('Bakka', 2, 5) == 'Dummy, Dummy, Bakka'", strncmp(buf, "Dummy,Dummy,Bakka", strlen(buf)) == 0);
+	ASSERT("fill('Bakka', 2, 5) == 'Dummy, Dummy, Bakka'", NS_FW_BASE::strncmp(buf, "Dummy,Dummy,Bakka", NS_FW_BASE::strlen(buf)) == 0);
 	FREE(buf);
 	DEL_(str1);
 	DEL_(str2);
@@ -211,13 +211,13 @@ void testArrayPtr() {
 	SET(arr, 5, 4, filter, filterNames);
 	str1 = (String*)array->find(findName);
 	buf = str1->toString();
-	ASSERT("find('Mike')", strncmp(buf, "Mike") == 0);
+	ASSERT("find('Mike')", NS_FW_BASE::strncmp(buf, "Mike") == 0);
 	FREE(buf);
 	ASSERT("findIndex('Mike') == 2", array->findIndex(findName) == 2);
 	str2 = NEW_(String, "");
 	array->forEach(getNames, str2);
 	buf = str2->toString();
-	ASSERT("forEach(getName)", strncmp(buf, "AdamJohnMikeOscarThomasMikeWalter") == 0);
+	ASSERT("forEach(getName)", NS_FW_BASE::strncmp(buf, "AdamJohnMikeOscarThomasMikeWalter") == 0);
 	FREE(buf);
 	DEL_(str2);
 	ASSERT("indexOf('Mike') == 2", array->indexOf(str1) == 2);
@@ -236,80 +236,80 @@ void testArrayPtr() {
 	//Array* map(Function*, Object* = NULL);
 	SET(arr, 6, 4, map, transformNames);
 	buf = arr[6]->toString();
-	ASSERT("map(transformNames)", strncmp(buf, "adam,john,mike,oscar,thomas,mike,walter") == 0);
+	ASSERT("map(transformNames)", NS_FW_BASE::strncmp(buf, "adam,john,mike,oscar,thomas,mike,walter") == 0);
 	FREE(buf);
 	arr[6]->cleanUp();
 	str1 = (String*)array->pop();
 	str2 = (String*)array->pop();
 	DEL_(str2);
 	buf = array->toString();
-	ASSERT("pop()", strncmp(buf, "Adam,John,Mike,Oscar,Thomas") == 0);
+	ASSERT("pop()", NS_FW_BASE::strncmp(buf, "Adam,John,Mike,Oscar,Thomas") == 0);
 	FREE(buf);
 	array->push(str1);
 	buf = array->toString();
-	ASSERT("push('Walter')", strncmp(buf, "Adam,John,Mike,Oscar,Thomas,Walter") == 0);
+	ASSERT("push('Walter')", NS_FW_BASE::strncmp(buf, "Adam,John,Mike,Oscar,Thomas,Walter") == 0);
 	FREE(buf);
 	ASSERT("push(3, ...) == 9)", array->push(3, NEW_(String, "Zelda"), NEW_(String, "Zimba"), NEW_(String, "Zork")) == 9);
 	buf = array->toString();
-	ASSERT("push(3, 'Zelda', 'Zimba', 'Zork')", strncmp(buf, "Adam,John,Mike,Oscar,Thomas,Walter,Zelda,Zimba,Zork", strlen(buf)) == 0);
+	ASSERT("push(3, 'Zelda', 'Zimba', 'Zork')", NS_FW_BASE::strncmp(buf, "Adam,John,Mike,Oscar,Thomas,Walter,Zelda,Zimba,Zork", NS_FW_BASE::strlen(buf)) == 0);
 	FREE(buf);
 	array->reverse();
 	buf = array->toString();
-	ASSERT("reverse()", strncmp(buf, "Zork,Zimba,Zelda,Walter,Thomas,Oscar,Mike,John,Adam", strlen(buf)) == 0);
+	ASSERT("reverse()", NS_FW_BASE::strncmp(buf, "Zork,Zimba,Zelda,Walter,Thomas,Oscar,Mike,John,Adam", NS_FW_BASE::strlen(buf)) == 0);
 	FREE(buf);
 	str1 = (String*)array->shift();
 	buf = str1->toString();
-	ASSERT("shift() == 'Zork'", strncmp(buf, "Zork") == 0);
+	ASSERT("shift() == 'Zork'", NS_FW_BASE::strncmp(buf, "Zork") == 0);
 	FREE(buf);
 	DEL_(str1);
 	SET(arr, 7, 4, slice);
 	buf = arr[7]->toString();
-	ASSERT("slice()", strncmp(buf, "Zimba,Zelda,Walter,Thomas,Oscar,Mike,John,Adam") == 0);
+	ASSERT("slice()", NS_FW_BASE::strncmp(buf, "Zimba,Zelda,Walter,Thomas,Oscar,Mike,John,Adam") == 0);
 	FREE(buf);
 	SET(arr, 8, 4, slice, 0, 1);
 	buf = arr[8]->toString();
-	ASSERT("slice(0, 2)", strncmp(buf, "Zimba,Zelda") == 0);
+	ASSERT("slice(0, 2)", NS_FW_BASE::strncmp(buf, "Zimba,Zelda") == 0);
 	FREE(buf);
 	SET(arr, 9, 4, slice, 2, 3);
 	buf = arr[9]->toString();
-	ASSERT("slice(2, 4)", strncmp(buf, "Walter,Thomas") == 0);
+	ASSERT("slice(2, 4)", NS_FW_BASE::strncmp(buf, "Walter,Thomas") == 0);
 	FREE(buf);
 	SET(arr, 10, 4, slice, -5, -3);
 	buf = arr[10]->toString();
-	ASSERT("slice(-5, -3)", strncmp(buf, "Thomas,Oscar,Mike") == 0);
+	ASSERT("slice(-5, -3)", NS_FW_BASE::strncmp(buf, "Thomas,Oscar,Mike") == 0);
 	FREE(buf);
 	buf = (*array)[2]->toString();
 	array->push(NEW_(String, buf));
 	array->push(NEW_(String, "George"));
 	array->sort();
 	buf = arr[4]->toString();
-	ASSERT("sort()", strncmp(buf, "Adam,George,John,Mike,Oscar,Thomas,Walter,Walter,Zelda,Zimba") == 0);
+	ASSERT("sort()", NS_FW_BASE::strncmp(buf, "Adam,George,John,Mike,Oscar,Thomas,Walter,Walter,Zelda,Zimba") == 0);
 	FREE(buf);
 	array->sort(reverseCompare);
 	buf = array->toString();
-	ASSERT("sort(reverseCompare)", strncmp(buf, "Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
+	ASSERT("sort(reverseCompare)", NS_FW_BASE::strncmp(buf, "Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
 	FREE(buf);
 	SET(arr, 11, 4, splice, 2, 2);
 	buf = arr[11]->toString();
-	ASSERT("splice(2,2)", strncmp(buf, "Walter,Walter") == 0);
+	ASSERT("splice(2,2)", NS_FW_BASE::strncmp(buf, "Walter,Walter") == 0);
 	FREE(buf);
 	buf = array->toString();
-	ASSERT("...", strncmp(buf, "Zimba,Zelda,Thomas,Oscar,Mike,John,George,Adam") == 0);
+	ASSERT("...", NS_FW_BASE::strncmp(buf, "Zimba,Zelda,Thomas,Oscar,Mike,John,George,Adam") == 0);
 	FREE(buf);
 	SET(arr, 12, 4, splice, 2, 0, 2, (*arr[11])[0], (*arr[11])[1]);
 	buf = arr[12]->toString();
-	ASSERT("splice(2,0,...)", strncmp(buf, "") == 0);
+	ASSERT("splice(2,0,...)", NS_FW_BASE::strncmp(buf, "") == 0);
 	FREE(buf);
 	buf = array->toString();
-	ASSERT("...", strncmp(buf, "Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
+	ASSERT("...", NS_FW_BASE::strncmp(buf, "Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
 	FREE(buf);
 	array->unshift(NEW_(String, "Zork"));
 	buf = array->toString();
-	ASSERT("unshift('Zork')", strncmp(buf, "Zork,Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
+	ASSERT("unshift('Zork')", NS_FW_BASE::strncmp(buf, "Zork,Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
 	FREE(buf);
 	array->unshift(3, NEW_(String, "3XZ-01d"), NEW_(String, "486Cd"), NEW_(String, "900Td"));
 	buf = array->toString();
-	ASSERT("unshift(3, '3XZ-01d', '486Cd', '900Td')", strncmp(buf, "900Td,486Cd,3XZ-01d,Zork,Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
+	ASSERT("unshift(3, '3XZ-01d', '486Cd', '900Td')", NS_FW_BASE::strncmp(buf, "900Td,486Cd,3XZ-01d,Zork,Zimba,Zelda,Walter,Walter,Thomas,Oscar,Mike,John,George,Adam") == 0);
 	FREE(buf);
 	array->sort();
 	buf = array->toString();
@@ -428,10 +428,10 @@ void testMapPtr() {
 	ASSERT("put(k2, v3) / get(k2)", values->get(2)->strcmp(buf) == 0);
 	FREE(buf);
 	buf = map->keys()->toString();
-	ASSERT("keys = [k1,k2,k3]", strncmp(buf, "k1,k2,k3") == 0);
+	ASSERT("keys = [k1,k2,k3]", NS_FW_BASE::strncmp(buf, "k1,k2,k3") == 0);
 	FREE(buf);
 	buf = map->values()->toString();
-	ASSERT("values = [v1,V3,v3]", strncmp(buf, "v1,v3,v3") == 0);
+	ASSERT("values = [v1,V3,v3]", NS_FW_BASE::strncmp(buf, "v1,v3,v3") == 0);
 	FREE(buf);
 	map->cleanUp();
 	DEL_(map);
@@ -483,25 +483,40 @@ Object* testTreePost(size_t count, ...) {
 	}
 	return NULL;
 }
-
 void testTreePtr() {
 	int passed = 0;
 	int failed = 0;
 
+	Node *root, *node1, *node2;
+	Edge* edge;
+	String * str;
+	String* child = NEW_(String, "child");
+
 	Tree* tree = NEW_(Tree);
-	tree->addNode(NULL, NEW_(String, "Sándor"));
-	Node* node = tree->addNode(tree->root(), NEW_(String, "Gabor"), NEW_(String, "child"));
-	tree->addNode(node, NEW_(String, "Gergöke"), NEW_(String, "child"));
-	node = tree->addNode(tree->root(), NEW_(String, "Adri"), NEW_(String, "child"));
-	tree->addNode(node, NEW_(String, "Klárika"), NEW_(String, "child"));
-	tree->addNode(node, NEW_(String, "Jancsika"), NEW_(String, "child"));
+	root = tree->addNode(NULL, NEW_(String, "Sándor"));
+	ASSERT("Root is 'Sándor'", tree->root()->value()->strcmp("Sándor") == 0);
+	node1 = tree->addNode(root, NEW_(String, "Gábor"), child);
+	edge = (Edge*)root->edges()->get(node1);
+	ASSERT("'Sándor' has child 'Gábor'", edge != Null);
+	ASSERT("'Sándor' -> 'Gábor'", edge->b() == node1);
+	ASSERT("'Gábor'->'Sándor'", edge->a() == root);
+
+	node2 = tree->addNode(node1, NEW_(String, "Gergöke"), child);
+	edge = (Edge*)node1->edges()->get(node2);
+	ASSERT("'Gábor' has child 'Gergöke'", edge != Null);
+	ASSERT("'Gábor' -> 'Gergöke'", edge->b() == node2);
+	ASSERT("'Gergöke'->'Gábor'", edge->a() == node1);
+	node1 = tree->addNode(root, NEW_(String, "Adri"), child);
+	tree->addNode(node1, NEW_(String, "Klárika"), child);
+	tree->addNode(node1, NEW_(String, "Jancsika"), child);
 	Array* output = NEW_(Array);
 	tree->traverseDFS(testTreePre, testTreeIn, testTreePost, output);
-	String* str = output->join("");
+	str = output->join("");
 	char* buf = str->toString();
 	printf("%s\n", buf);
 	FREE(buf);
 	DEL_(str);
+	DEL_(child);
 	output->cleanUp();
 	DEL_(output);
 	tree->cleanUp();
@@ -509,6 +524,26 @@ void testTreePtr() {
 
 	printf("\n%d/%d=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
 }
+
+void testBufferPtr() {
+	int passed = 0;
+	int failed = 0;
+
+	Buffer *buf = NEW_(Buffer, Type::getChar());
+	char* str = "Hello World";
+	buf->append(str, NS_FW_BASE::strlen(str));
+	buf->append("-", 1);
+	buf->append(str, NS_FW_BASE::strlen(str), 6);
+	buf->append("\0", 1);
+	char* buffer = buf->getBuffer<char>();
+	printf("%s\n", buffer);
+	ASSERT("Buffer contains 'Hello World-World'", NS_FW_BASE::strncmp(buffer, "Hello World-World", 17) == 0);
+	FREE(buffer);
+	DEL_(buf);
+
+	printf("\n%d/%d=%.02f%%\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
+}
+
 
 size_t primeTest(size_t n) {
 	size_t divider = 0;
@@ -578,7 +613,8 @@ int _main(NS_FW_BASE::Map* args) {
 	//printf("\n*** PathInfo tests\n");
 	//testPathInfo();
 
-	envelopeTest();
+	printf("\n*** Buffer tests\n");
+	testBufferPtr();
 
 	//const size_t length = 60 * 48000;
 	//Buffer buffer(TYPE_FLOAT, length);
