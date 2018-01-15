@@ -1,7 +1,6 @@
 #include "collection/Tree.h"
 #include "base/MemoryMgr.h"
 
-
 NS_FW_BASE_BEGIN
 
 const Type* Edge::classType_;
@@ -24,14 +23,17 @@ Node::Node(void) {
 Node::Node(Object* value) {
 	init(NULL, value);
 }
+Node::Node(Tree* tree, Object* value) {
+	init(tree, value);
+}
 Node::~Node() {
 	edges_->cleanUp();
 	DEL_(edges_);
 }
 
-void Node::init(Tree* parent, Object* value) {
+void Node::init(Tree* tree, Object* value) {
 	flag_ = 0;
-	parent_ = parent;
+	tree_ = tree;
 	value_ = value;
 	edges_ = NEW_(Map);
 	edges_->compare(Edge::compare);
@@ -46,12 +48,10 @@ int Edge::compare(Object* a, Object* b) {
 Tree::Tree() {
 	init();
 }
-
 Tree::~Tree() {
 	DEL_(nodes_);
 	DEL_(edges_);
 }
-
 
 void Tree::init() {
 	nodes_ = NEW_(Array);
@@ -59,19 +59,20 @@ void Tree::init() {
 	edges_->compare(Edge::compare);
 	root_ = NULL;
 }
-
 Node* Tree::addNode(Node* parentNode, Object* nodeValue, Object* edgeValue) {
-	Node* node = NEW_(Node, nodeValue);
-	nodes_->push(node);
-	if (parentNode == NULL) {
+	Node* node = NEW_(Node, this, nodeValue);
+	Node* childNode = node;
+	if (parentNode == NULL || root_ == NULL) {
+		childNode = root_;
 		parentNode = node;
-		node = root_;
-		root_ = parentNode;
+		root_ = node;
 	}
-	addEdge(parentNode, node, edgeValue);
+	nodes_->push(node);
+	if (childNode != NULL) {
+		addEdge(parentNode, childNode, edgeValue);
+	}
 	return node;
 }
-
 Edge* Tree::addEdge(Node* a, Node* b, Object* edgeValue) {
 	Edge* edge = NULL;
 	if (a != NULL && b != NULL) {
@@ -86,9 +87,9 @@ void Tree::cleanUp() {
 		DEL_(((Node*)nodes_->get(i))->value());
 	}
 	nodes_->cleanUp();
-	for (size_t i = 0; i < edges_->keys()->length(); i++) {
-		DEL_(((Edge*)edges_->keys()->get(i))->value());
-	}
+	//for (size_t i = 0; i < edges_->keys()->length(); i++) {
+	//	DEL_(((Edge*)edges_->keys()->get(i))->value());
+	//}
 	edges_->keys()->cleanUp();
 	edges_->cleanUp();
 }

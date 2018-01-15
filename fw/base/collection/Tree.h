@@ -26,13 +26,14 @@ public:
 class Node : public Object {
 	friend class RunTime;
 	DECL_TYPE(Node);
-	PROP(Tree*, parent);
+	PROP(Tree*, tree);
 	PROP(Object*, value);
 	PROP(size_t, flag);
 	PROP_R(Map*, edges);
 public:
 	Node(void);
 	Node(Object*);
+	Node(Tree*, Object*);
 	void init(Tree*, Object*);
 	~Node();
 };

@@ -52,14 +52,14 @@
 // declare a field with inline getter and setter
 // arguments: type, name
 #define PROP(t, n) \
-	t n##_; \
+	public: t n##_; \
 	public: inline t n() { return n##_; };\
 			inline void n(t v) { n##_ = v; };
 
 //*********************************************************
 // declare a readonly field with getter only
 #define PROP_R(t, n)\
-	t n##_;\
+	private: t n##_;\
 	public: inline t n() { return n##_; };
 
 #endif

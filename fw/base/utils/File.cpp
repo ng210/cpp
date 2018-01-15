@@ -19,8 +19,8 @@ char* File::read(const char* path) {
 	}
 	return buffer;
 }
-char* File::read(String* path) {
-	char* buf = path->toString();
+char* File::read(String& path) {
+	char* buf = path.toString();
 	char* res = File::read(buf);
 	DEL_(buf);
 	return res;
@@ -35,22 +35,30 @@ size_t File::write(const char* path, char* buffer, size_t length) {
 	}
 	return byteCount;
 }
-size_t File::write(String* path, char* buffer, size_t length) {
-	char* buf = path->toString();
-	size_t res = File::write(buf, buffer, length);
-	DEL_(buf);
-	return res;
+size_t File::write(String& path, char* buffer, size_t length) {
+	char* buf = path.toString();
+	size_t byteCount = File::write(buf, buffer, length);
+	FREE(buf);
+	return byteCount;
 }
 
 size_t File::write(const char* path, Buffer& buffer) {
 	size_t byteCount = 0;
 	FILE* fp = fopen(path, "wb");
 	if (fp != NULL) {
-		byteCount = fwrite(buffer.buffer(), buffer.type()->size(), buffer.length(), fp);
+		for (size_t i = 0; i < buffer.chunks_.length(); i++) {
+			BufferChunk& chunk = *(BufferChunk*)buffer.chunks_[i];
+			fwrite(chunk.buffer(), sizeof(char), chunk.byteCount(), fp);
+		}
 		fclose(fp);
 	}
 	return byteCount;
 }
-
+size_t File::write(String& path, Buffer& buffer) {
+	char* str = path.toString();
+	size_t byteCount = write(str, buffer);
+	FREE(str);
+	return byteCount;
+}
 
 NS_FW_BASE_END

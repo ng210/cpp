@@ -12,7 +12,8 @@ NS_FW_BASE_BEGIN
 
 #define TYPE_CHAR (Type::getChar())
 #define TYPE_BOOL (Type::getBool())
-#define TYPE_INT (Type::getInt))
+#define TYPE_SHORT (Type::getShort())
+#define TYPE_INT (Type::getInt())
 #define TYPE_SIZE_T (Type::getSize_t())
 #define TYPE_FLOAT (Type::getFloat())
 #define TYPE_DOUBLE (Type::getDouble())
@@ -32,6 +33,7 @@ class Type {
 
 	static const Type* char_;
 	static const Type* bool_;
+	static const Type* short_;
 	static const Type* int_;
 	static const Type* size_t_;
 	static const Type* float_;
@@ -57,6 +59,7 @@ public:
 
 	static const Type* getChar();
 	static const Type* getBool();
+	static const Type* getShort();
 	static const Type* getInt();
 	static const Type* getSize_t();
 	static const Type* getFloat();

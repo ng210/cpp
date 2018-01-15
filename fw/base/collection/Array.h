@@ -23,9 +23,8 @@ class Array : public Object {
 	static void shutDown();
 protected:
 	Object** data_;
-	PROP_R(size_t, length);
-protected:
-	size_t capacity_;
+protected: PROP_R(size_t, length);
+protected: PROP_R(size_t, capacity);
 
 	char* join_(const char* sep);
 	long long binSearch(Object*, size_t, size_t, Compare*);

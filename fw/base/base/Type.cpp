@@ -13,6 +13,7 @@ Type Type::types_[1024];
 
 const Type* Type::char_ = NULL;
 const Type* Type::bool_ = NULL;
+const Type* Type::short_ = NULL;
 const Type* Type::int_ = NULL;
 const Type* Type::size_t_ = NULL;
 const Type* Type::float_ = NULL;
@@ -24,6 +25,7 @@ void Type::initialize() {
 	memset(types_, 0, sizeof(Type) * MAX_TYPE_COUNT);
 	Type::char_ = ADD_TYPE_(char);
 	Type::bool_ = ADD_TYPE_(bool);
+	Type::short_ = ADD_TYPE_(short);
 	Type::int_ = ADD_TYPE_(int);
 	Type::size_t_ = ADD_TYPE_(size_t);
 	Type::float_ = ADD_TYPE_(float);
@@ -90,6 +92,9 @@ const Type* Type::getChar() {
 }
 const Type* Type::getBool() {
 	return Type::bool_;
+}
+const Type* Type::getShort() {
+	return Type::short_;
 }
 const Type* Type::getInt() {
 	return Type::int_;
