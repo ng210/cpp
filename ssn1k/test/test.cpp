@@ -10,6 +10,8 @@
 NS_FW_BASE_USE
 NS_SSN1K_USE
 
+//#define ENV_ONLY
+
 void soundCallback(LPVOID pBuffer, int iSamples);
 void saveSamples(const char* path, int ms);
 EnvCtrls ctrls;
@@ -28,7 +30,7 @@ int _main(NS_FW_BASE::Map* args) {
 	env.setCtrls((Ctrl*)&ctrls);
 	SSN1K::setSampleRate((float)sampleRate);
 	SSN1K::interpolate = SSN1K::smoothstep;
-	SSN1K::interpolate = SSN1K::sinusoid;
+	//SSN1K::interpolate = SSN1K::sinusoid;
 
 	//if (SoundPlayer::start(sampleRate, 1, soundCallback) == 0) {
 	//	Sleep(4000);
@@ -53,14 +55,17 @@ void soundCallback(LPVOID pBuffer, int iSamples) {
 			env.slopeDown();
 		}
 		//env.run(0);
-		float amp = (float)(sin(27.0f * theta * timer))*env.run(0.0);
+		float amp = (float)(sin(27.0f * theta * timer))*env.run(0.0f);
 		float fm1 = (float)(sin(54.0f * theta * timer));
 		float fm2 = (float)(sin(56.0f * theta * timer));
-		//amp = env.run(0.0f);
-		//((short*)pBuffer)[2 * i] = (short)(32767 * amp);
-		//((short*)pBuffer)[2 * i + 1] = (short)(32767 * amp);
-		((short*)pBuffer)[2 * i] = (short)(amp * floor(32767 * sin(fm1 + f*110.0f * theta * timer)));
-		((short*)pBuffer)[2 * i + 1] = (short)(amp * floor(32767 * sin(fm2 + f*110.0f * theta * timer)));
+#ifdef ENV_ONLY
+		amp = env.run(0.0f);
+		((short*)pBuffer)[2 * i] = (short)(32767 * amp);
+		((short*)pBuffer)[2 * i + 1] = (short)(32767 * amp);
+#else
+		((short*)pBuffer)[2 * i] = (short)floor(32767.0f * amp * sin(fm1 + f*110.0f * theta * timer));
+		((short*)pBuffer)[2 * i + 1] = (short)floor(32767.0f * amp * sin(fm2 + f*110.0f * theta * timer));
+#endif
 		timer++;
 		f *= 1.000008f;
 	}

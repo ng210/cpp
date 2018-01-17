@@ -44,12 +44,10 @@ float Env::run(float in) {
 		timer_ = 0.0f;
 		phase_ = SSN1K_ENV_ATTACK;
 		velocity_ = ctrls->gate.get().f;
-		printf("atk\n");
 	} else
 	if (ctrls->gate.slopeDown()) {
 		timer_ = ctrls->sus.get().f;
 		phase_ = SSN1K_ENV_RELEASE;
-		printf("rel\n");
 	}
 	ctrls->gate.update();
 
@@ -59,6 +57,7 @@ float Env::run(float in) {
 		//fValue *= fValue;
 		//float fRate;
 		float sustain = ctrls->sus.get().f + 0.00000001f;
+		float invSustain = 1.0f - sustain;
 		switch (phase_) {
 			case SSN1K_ENV_ATTACK: // attack
 				// 0.0 : 0.005s -> 1/(0*3.995 + 0.005)/smpRate = 200/smpRate
@@ -70,7 +69,6 @@ float Env::run(float in) {
 				if (timer_ >= 1.0f) {
 					phase_ = SSN1K_ENV_DECAY;
 					timer_ = 1.0f;
-					printf("dec\n");
 				}
 				smp_ = SSN1K::interpolate(timer_);
 				break;
@@ -84,9 +82,8 @@ float Env::run(float in) {
 				if (timer_ <= sustain) {
 					timer_ = sustain;
 					phase_ = SSN1K_ENV_SUSTAIN;
-					printf("sus\n");
 				}
-				smp_ = SSN1K::interpolate(timer_);
+				smp_ = invSustain*SSN1K::interpolate((timer_-sustain) / invSustain) + sustain;
 				// todo smp = (1-fSustain)*smooth((fTimer-fSustain)/(1-fSustain)) + fSustain;
 				break;
 			case SSN1K_ENV_SUSTAIN:
@@ -102,9 +99,8 @@ float Env::run(float in) {
 				if (timer_ <= 0.0f) {
 					phase_ = SSN1K_ENV_IDLE;
 					timer_ = 0.0f;
-					printf("idle\n");
 				}
-				smp_ = SSN1K::interpolate(timer_);
+				smp_ = sustain*SSN1K::interpolate(timer_/ sustain);
 				break;
 		}
 		//overlayCounter_--;
