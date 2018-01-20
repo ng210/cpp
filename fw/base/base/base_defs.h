@@ -52,7 +52,7 @@
 // declare a field with inline getter and setter
 // arguments: type, name
 #define PROP(t, n) \
-	public: t n##_; \
+	private: t n##_; \
 	public: inline t n() { return n##_; };\
 			inline void n(t v) { n##_ = v; };
 
