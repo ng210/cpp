@@ -59,7 +59,7 @@
 //*********************************************************
 // declare a readonly field with getter only
 #define PROP_R(t, n)\
-	private: t n##_;\
+	t n##_;\
 	public: inline t n() { return n##_; };
 
 #endif
