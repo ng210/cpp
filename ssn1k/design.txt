@@ -1,0 +1,38 @@
+modulok
+ - ctrl[]
+ - osc()
+ - env()
+ - flt()
+ - dly()
+
+csatorna
+ - ctrl[]
+ - modulok[]
+
+struct Channel
+{
+	float ctrl[16];		// 16 controllers
+	byte* flow;		// processing description
+};
+
+
+mdl = *(flowPtr & 7)
+smp = (*procFunction[mdl])(smp);
+
+
+szinti
+ctrl[] = { fre1,amp1,psw1,wav1, fre2,amp2,psw2,wav2, a1,d1,s1,r1,dc1,amp3, a2,d2,s2,r2,dc2,amp4, res1 }
+
+float env() {
+}
+float osc() {
+}
+float flt() {
+}
+float synth() {
+	smp = osc1(fre1, 0.0);
+	smp += osc2(fre2, smp);
+	smp = env1(a1, smp);
+	env2(a2, 1.0);
+	smp = flt(cut1, smp)
+}
