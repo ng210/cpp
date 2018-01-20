@@ -18,7 +18,7 @@
     <ClCompile Include="SoundPlayer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="wav.cpp">
+    <ClCompile Include="WavFmt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -26,10 +26,10 @@
     <ClInclude Include="SoundPlayer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="wav.h">
+    <ClInclude Include="dsound.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dsound.h">
+    <ClInclude Include="WavFmt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
