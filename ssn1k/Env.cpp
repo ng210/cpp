@@ -11,11 +11,13 @@ NS_SSN1K_USE
 NS_SSN1K_BEGIN
 
 Env::Env(void) {
-	timer_ = 0;
+	bpm(60);
 	phase_ = 0;
-	velocity_ = 0;
-	overlayCounter_ = 0;
-	smp_ = 0;
+	timer_ = 0.0f;
+	rate_ = 0.0f;
+	velocity_ = 0.0f;
+	//overlayCounter_ = 0;
+	smp_ = 0.0f;
 }
 
 int Env::isActive() {
@@ -35,40 +37,34 @@ float Env::run(float in) {
 #ifdef _PROFILE
 	SSN1K_PROFILER.enter(1);
 #endif
-
 	EnvCtrls* ctrls = (EnvCtrls*)ctrls_;
+	float sustain = ctrls->sus.get().f + 0.00000001f;
+	float invSustain = 1.0f - sustain;
+
 	if (ctrls->gate.slopeUp()) {
-		//if (phase_ != SSN1K_ENV_IDLE) {
-		//	overlayCounter_ = OVERLAY_LENGTH;
-		//}
 		timer_ = 0.0f;
 		phase_ = SSN1K_ENV_ATTACK;
 		velocity_ = ctrls->gate.get().f;
+		float value = ctrls->atk.get().f;
+		rate_ = tickPerSample_ / value;
 	} else
 	if (ctrls->gate.slopeDown()) {
 		timer_ = ctrls->sus.get().f;
 		phase_ = SSN1K_ENV_RELEASE;
+		float value = ctrls->rel.get().f;
+		rate_ = tickPerSample_ / value * sustain;
 	}
 	ctrls->gate.update();
 
 	if (phase_ > 0)	{
-		float value;	// = ((Ctrl*)ctrls)[this->phase_ + sizeof(MdlCtrls) / sizeof(Ctrl) - 1].get().fValue;
-		float rate;
-		//fValue *= fValue;
-		//float fRate;
-		float sustain = ctrls->sus.get().f + 0.00000001f;
-		float invSustain = 1.0f - sustain;
 		switch (phase_) {
 			case SSN1K_ENV_ATTACK: // attack
-				// 0.0 : 0.005s -> 1/(0*3.995 + 0.005)/smpRate = 200/smpRate
-				// 1.0 : 4.0s -> 1/(1*3.995 + 0.005)/smpRate
-				//   X : Xs -> 1/(3.995*X + 0.005)/smpRate
-				value = ctrls->atk.get().f;
-				rate = SSN1K::getSampleRateR() / (3.995f * value + 0.005f);
-				timer_ += rate;
+				timer_ += rate_;
 				if (timer_ >= 1.0f) {
 					phase_ = SSN1K_ENV_DECAY;
 					timer_ = 1.0f;
+					float value = ctrls->dec.get().f;
+					rate_ = tickPerSample_ / value * invSustain;
 				}
 				smp_ = SSN1K::interpolate(timer_);
 				break;
@@ -76,26 +72,17 @@ float Env::run(float in) {
 				// 0.0 : 0.005s -> 1/(0*3.995 + 0.005)/smpRate = 200/smpRate
 				// 1.0 : 4.0s -> 1/(1*3.995 + 0.005)/smpRate
 				//   X : Xs -> 1/(3.995*X + 0.005)/smpRate
-				value = ctrls->dec.get().f;
-				rate = SSN1K::getSampleRateR() / (3.995f * value + 0.005f);
-				timer_ -= rate;
+				timer_ -= rate_;
 				if (timer_ <= sustain) {
 					timer_ = sustain;
-					phase_ = SSN1K_ENV_SUSTAIN;
+					smp_ = sustain;
+					//phase_ = SSN1K_ENV_SUSTAIN;
+				} else {
+					smp_ = invSustain*SSN1K::interpolate((timer_ - sustain) / invSustain) + sustain;
 				}
-				smp_ = invSustain*SSN1K::interpolate((timer_-sustain) / invSustain) + sustain;
-				// todo smp = (1-fSustain)*smooth((fTimer-fSustain)/(1-fSustain)) + fSustain;
-				break;
-			case SSN1K_ENV_SUSTAIN:
-				smp_ = sustain;
 				break;
 			case SSN1K_ENV_RELEASE: // release
-				// 0.0 :  0.005s -> 1/(0*9.995 + 0.005)/smpRate = 200/smpRate
-				// 1.0 : 10.0s -> 1/(1*9.995 + 0.005)/smpRate
-				//   X :  Xs -> 1/(9.995*X + 0.005)/smpRate
-				value = ctrls->rel.get().f;
-				rate = SSN1K::getSampleRateR() / (9.995f * value + 0.005f);
-				timer_ -= rate;
+				timer_ -= rate_;
 				if (timer_ <= 0.0f) {
 					phase_ = SSN1K_ENV_IDLE;
 					timer_ = 0.0f;
@@ -103,7 +90,6 @@ float Env::run(float in) {
 				smp_ = sustain*SSN1K::interpolate(timer_/ sustain);
 				break;
 		}
-		//overlayCounter_--;
 	}
 #ifdef _PROFILE
 	SSN1K_PROFILER.leave(1);
@@ -111,6 +97,11 @@ float Env::run(float in) {
 
 	return Mdl::run(smp_, in);
 }
+void Env::bpm(float v) {
+	bpm_ = v;
+	tickPerSample_ = v * SSN1K::getSampleRateR() / 60;
+}
+
 /*
 float Env::run(EnvCtrls& ctrls, float in)
 {

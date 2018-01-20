@@ -8,6 +8,7 @@
 #define _USE_LINEAR_CURVES
 
 #include "Mdl.h"
+#include "base/base_defs.h"
 
 #define OVERLAY_LENGTH 48
 
@@ -33,12 +34,16 @@ class Env : public Mdl {
 	float timer_;
 	int phase_;
 	//float fDelta;
+	float rate_;
 	float velocity_;
+	float tickPerSample_;
 public:
 	Env(void);
-	int overlayCounter_;
+	PROP_R(float, bpm);
+	//int overlayCounter_;
 	int isActive();
 	float run(float);
+	void bpm(float);
 	void slopeUp();
 	void slopeDown();
 };
