@@ -10,69 +10,78 @@
 NS_FW_BASE_USE
 NS_SSN1K_USE
 
-//#define ENV_ONLY
-
 void soundCallback(LPVOID pBuffer, int iSamples);
 void saveSamples(const char* path, int ms);
 EnvCtrls ctrls;
 Env env;
 const int sampleRate = 48000;
+const float bpm = 4*60.0f;	// => bpm/60=bps
+
+float theta = 2 * 3.1415926535898f / 48000;
+int timer = 0;
+float f = 1.0f;
+float samplePerBeat = sampleRate * 60.0f / bpm;
+float pitch = 0.0f;
 
 int _main(NS_FW_BASE::Map* args) {
 	printf("SoundPlayer test\n");
 	ctrls.amp.set(0.7f);
 	ctrls.dc.set(0.0f);
-	ctrls.atk.set(0.01f);
-	ctrls.dec.set(0.03f);
+	ctrls.atk.set(0.1f);
+	ctrls.dec.set(0.3f);
 	ctrls.sus.set(0.5f);
-	ctrls.rel.set(0.02f);
+	ctrls.rel.set(0.5f);
 
 	env.setCtrls((Ctrl*)&ctrls);
+	env.bpm(bpm);
 	SSN1K::setSampleRate((float)sampleRate);
-	SSN1K::interpolate = SSN1K::smoothstep;
+	//SSN1K::interpolate = SSN1K::smoothstep;
 	//SSN1K::interpolate = SSN1K::sinusoid;
 
 	//if (SoundPlayer::start(sampleRate, 1, soundCallback) == 0) {
-	//	Sleep(4000);
+	//	Sleep((int)floor(1000 * 60 / bpm * 4));
 	//	SoundPlayer::stop();
 	//}
 
-	saveSamples("sample.wav", 4000);
+	saveSamples("sample.wav", (int)floor(1000*60/bpm*4));
 
 	return 0;
 }
 
-float theta = 2 * 3.1415926535898f / 48000;
-int timer = 0;
-float f = 1.0f;
-int beat = sampleRate / 8;
+
 void soundCallback(LPVOID pBuffer, int iSamples) {
 	for (int i = 0; i < iSamples; i++) {
+		int beat = (int)samplePerBeat;
 		if (timer % beat == 0) {
 			env.slopeUp();
 		}
-		if (timer % beat == (beat/2)) {
+		if (timer % beat == (beat>>1)) {
 			env.slopeDown();
 		}
-		//env.run(0);
-		float amp = (float)(sin(27.0f * theta * timer))*env.run(0.0f);
-		float fm1 = (float)(sin(54.0f * theta * timer));
-		float fm2 = (float)(sin(56.0f * theta * timer));
-#ifdef ENV_ONLY
-		amp = env.run(0.0f);
-		((short*)pBuffer)[2 * i] = (short)(32767 * amp);
-		((short*)pBuffer)[2 * i + 1] = (short)(32767 * amp);
-#else
-		((short*)pBuffer)[2 * i] = (short)floor(32767.0f * amp * sin(fm1 + f*110.0f * theta * timer));
-		((short*)pBuffer)[2 * i + 1] = (short)floor(32767.0f * amp * sin(fm2 + f*110.0f * theta * timer));
-#endif
+		if (timer % (2 * beat) == 0) {
+			pitch = 110.0f;
+		} else {
+			if (timer % (2 * beat) == beat) {
+				pitch = 220.0;
+			}
+		}
+		float envOut = env.run(0);
+		float amp = (float)(sin(27.0f * theta * timer)) * envOut;
+		float fm1 = (float)(2*sin(54.0f * theta * timer));
+		float fm2 = (float)(2*sin(56.0f * theta * timer + 0.001));
+		((short*)pBuffer)[2 * i] = (short)floor(32767.0f * envOut * sin(f*fm1 + pitch * theta * timer));
+		((short*)pBuffer)[2 * i + 1] = (short)floor(32767.0f * envOut * sin(f*fm2 + pitch * theta * timer));
+		//((short*)pBuffer)[2 * i] = (short)floor(32767.0f * envOut);
+		//((short*)pBuffer)[2 * i + 1] = (short)floor(32767.0f * envOut);
+
 		timer++;
 		f *= 1.000008f;
 	}
 }
 
 void saveSamples(const char* path, int ms) {
-	int length = sampleRate * ms / 1000;
+	int length = (int)floor(sampleRate * ms / 1000.0f);
+	printf("length:%d\n", length);
 	char* buffer = MALLOC(char, 2*sizeof(short)*(length + 1));
 	soundCallback(buffer, length);
 	File::write("sample.raw", buffer, 4*length);
