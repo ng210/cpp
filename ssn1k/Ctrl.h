@@ -18,13 +18,21 @@ extern _Profiler SSN1K_PROFILER;
 void SSN1K_ProfileInit();
 #endif
 
-typedef union __CtrlValue {
+union CtrlValue {
 		float f;
 		int i;
-} CtrlValue;
+		CtrlValue() : i(0) {}
+		CtrlValue(int v) : i(v) {}
+		CtrlValue(float v) : f(v) {}
+};
+
+typedef struct CtrlSetting_ {
+	int id;
+	CtrlValue value;
+} CtrlSetting;
 
 class Ctrl {
-	CtrlValue value_[2];
+	CtrlValue value_;
 	CtrlValue min_;
 	CtrlValue max_;
 
@@ -33,13 +41,11 @@ class Ctrl {
 
 public:
 	CtrlValue get();
-	void update();
-	int slopeUp();
-	int slopeDown();
 
 	bool change();
 	bool change(float);
-	void set(int);
+	//void set(int);
+	void set(CtrlValue);
 	bool set(float);
 	bool set(float, bool);
 	void set(float, float, float);

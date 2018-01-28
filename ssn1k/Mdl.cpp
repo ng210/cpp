@@ -3,14 +3,15 @@
 //*****************************************************************************
 
 #include "Mdl.h"
+#include "base/MemoryMgr.h"
 
 //double SSN1K_THETA = 2*M_PI;
 
+NS_FW_BASE_USE
 NS_SSN1K_BEGIN
 
 float Mdl::run(float in1, float in2) {
-	MdlCtrls* ctrls = (MdlCtrls*)ctrls_;
-	switch (ctrls->mix.get().i) {
+	switch (mix_->get().i) {
 		case SSN1K_MM_ADD:
 			smp_ = in1 + in2;
 			break;
@@ -25,20 +26,13 @@ float Mdl::run(float in1, float in2) {
 			smp_ = in1;
 			break;
 	}
-	smp_ = ctrls->amp.get().f * smp_ + ctrls->dc.get().f;
+	smp_ = amp_->get().f * smp_ + dc_->get().f;
 	return smp_;
 }
-void Mdl::setCtrls(Ctrl* ctrls) {
-	ctrls_ = ctrls;
-}
-float sinusoid(float x) {
-	return (float)(1.0f - cos(x * M_PI)) / 2;
-}
-float smoothstep(float x) {
-	return x*x*(3 - 2*x);
-}
-float flat(float x) {
-	return x;
+void Mdl::setControls(MdlCtrls* controls) {
+	mix_ = controls->mix;
+	amp_ = controls->amp;
+	dc_ = controls->dc;
 }
 
 NS_SSN1K_END

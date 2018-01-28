@@ -17,7 +17,7 @@ LPDIRECTSOUNDBUFFER SoundPlayer::primaryBuffer_ = NULL;
 LPDIRECTSOUNDBUFFER8 SoundPlayer::secondaryBuffer_ = NULL;
 
 LPVOID SoundPlayer::sampleBuffer_ = NULL;
-DWORD SoundPlayer::latency_ = 20;
+DWORD SoundPlayer::latency_ = 80;
 
 bool SoundPlayer::isTerminating_ = false;
 bool SoundPlayer::isPlaying_ = false;
@@ -39,11 +39,7 @@ DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
 			writePosition += sampleCount;
 		}
 		while (aheadPosition > writePosition) {
-		//if (writePosition - playPosition < LATENCY) {
-			// update next chunk
-			//writePosition &= (SoundPlayer::bufferSize_>>2) -1;
 			DWORD ix = writePosition & mask;
-			//printf("%d - %d - %d\n", aheadPosition, writePosition, ix);
 			SoundPlayer::callback_(&((short*)SoundPlayer::sampleBuffer_)[ix*2], 256);
 			writePosition += 256;
 		}

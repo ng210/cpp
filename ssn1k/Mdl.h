@@ -6,19 +6,20 @@
 #define __MDL_H
 
 #define _USE_MATH_DEFINES
-#include <math.h>
 
+#include "base/base_defs.h"
 #include "ssn1k.h"
 #include "Ctrl.h"
+#include <stdio.h>
 
 //extern double SSN1K_THETA;
 
 NS_SSN1K_BEGIN
 
 struct MdlCtrls {
-	Ctrl mix;
-	Ctrl amp;
-	Ctrl dc;
+	Ctrl* mix;
+	Ctrl* amp;
+	Ctrl* dc;
 };
 
 enum SSN1K_MixMode {
@@ -31,11 +32,15 @@ enum SSN1K_MixMode {
 };
 
 class Mdl {
-protected:
-	Ctrl* ctrls_;
-	float run(float, float);
+//private: PROP_R(MdlCtrls*, controls);
+protected: PROP_R(Ctrl*, mix);
+protected: PROP_R(Ctrl*, amp);
+protected: PROP_R(Ctrl*, dc);
+
+protected: float run(float, float);
 public:
-	void setCtrls(Ctrl*);
+	//virtual void setControls(Ctrl** controls);
+	void setControls(MdlCtrls*);
 	float smp_;
 };
 

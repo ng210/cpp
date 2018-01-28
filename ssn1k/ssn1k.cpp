@@ -2,20 +2,24 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include "utils/utils.h"
 
+NS_FW_BASE_USE
 NS_SSN1K_BEGIN
 
 const float SSN1K::referenceFrequency = 20.60172230705f;
 float SSN1K::sampleRate = 48000.0f;
 float SSN1K::sampleRateR = 1.0f/48000.0f;
-float SSN1K::PI_sampleRateR = (float)(M_PI / 48000.0f);
+float SSN1K::theta = (float)(2*M_PI / 48000.0f);
 INTERPOLATE* SSN1K::interpolate = SSN1K::flat;
+float SSN1K::_2PI = 0.0f;
 
 
 void SSN1K::setSampleRate(float value) {
 	SSN1K::sampleRate = value;
 	SSN1K::sampleRateR = 1.0f / value;
-	SSN1K::PI_sampleRateR = (float)M_PI / value;
+	SSN1K::theta = (float)(2*M_PI / value);
+	SSN1K::_2PI = (float)(2.0 * M_PI);
 }
 float SSN1K::getSampleRate() {
 	return SSN1K::sampleRate;
@@ -33,6 +37,12 @@ float SSN1K::p2f(float pitch) {
 	SSN1K_PROFILER.leave(4);
 #endif
 	return f;
+}
+float SSN1K::getTheta() {
+	return SSN1K::theta;
+}
+float SSN1K::get2PI() {
+	return SSN1K::_2PI;
 }
 
 float SSN1K::sinusoid(float x) {
@@ -65,7 +75,7 @@ __declspec(naked) float SSN1K::rnd() {
 #else
 
 float SSN1K::rnd() {
-	return (float)(rand() - (RAND_MAX >> 1)) / RAND_MAX;
+	return (float)Utils::randomSigned();
 };
 #endif
 

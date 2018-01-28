@@ -24,7 +24,7 @@
     <ClInclude Include="Channel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="playerlib.h">
+    <ClInclude Include="player_def.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -33,6 +33,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AbstractAdapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

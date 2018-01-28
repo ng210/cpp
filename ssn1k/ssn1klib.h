@@ -2,3 +2,5 @@
 #include "Ctrl.h"
 #include "Mdl.h"
 #include "Env.h"
+#include "Synth.h"
+#include "SynthAdapter.h"

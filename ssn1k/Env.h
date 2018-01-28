@@ -10,7 +10,7 @@
 #include "Mdl.h"
 #include "base/base_defs.h"
 
-#define OVERLAY_LENGTH 48
+//#define OVERLAY_LENGTH 48
 
 NS_SSN1K_BEGIN
 
@@ -23,29 +23,35 @@ enum SSN1K_ENV_PHASE {
 };
 
 struct EnvCtrls : public MdlCtrls {
-	Ctrl atk;
-	Ctrl dec;
-	Ctrl sus;
-	Ctrl rel;
-	Ctrl gate;
+	Ctrl* atk;
+	Ctrl* dec;
+	Ctrl* sus;
+	Ctrl* rel;
 };
 
 class Env : public Mdl {
+protected: PROP_R(Ctrl*, atk);
+protected: PROP_R(Ctrl*, dec);
+protected: PROP_R(Ctrl*, sus);
+protected: PROP_R(Ctrl*, rel);
+private: 
 	float timer_;
 	int phase_;
+	int gate_;
 	//float fDelta;
 	float rate_;
 	float velocity_;
 	float tickPerSample_;
 public:
 	Env(void);
+
 	PROP_R(float, bpm);
 	//int overlayCounter_;
 	int isActive();
-	float run(float);
-	void bpm(float);
-	void slopeUp();
-	void slopeDown();
+	float run(float in);
+	void bpm(float bpm);
+	void setGate(float velocity);
+	void setControls(EnvCtrls* controls);
 };
 
 NS_SSN1K_END

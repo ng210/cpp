@@ -1,10 +1,12 @@
 #include "base/MemoryMgr.h"
 #include "Channel.h"
+#include "Player.h"
 
 NS_PLAYER_BEGIN
 
 Player::Player() {
-	targets_ = NEW_(Array);				// Array<Object>
+	Target* target = NEW_(Target, this, this);
+	targets_ = NEW_(Array, 1, target);	// Array<Target>
 	channels_ = NEW_(Array);			// Array<Channel>
 	masterChannel_ = NULL;
 	sequences_ = NEW_(Array);			// Array<Array<PlayerCommand>>
@@ -16,6 +18,7 @@ Player::~Player() {
 	DEL_(targets_);
 	channels_->cleanUp();
 	DEL_(channels_);
+	sequences_->cleanUp();
 	DEL_(sequences_);
 }
 
@@ -23,18 +26,47 @@ void Player::addTarget(void* object, AbstractAdapter* adapter) {
 	targets_->push(NEW_(Target, object, adapter));
 	adapter->prepareObject(object);
 }
-void Player::addSequence(Array* sequence) {
+//void Player::addSequence(Array* sequence) {
+//	sequences_->push(sequence);
+//	if (sequences_->length() == 1) {
+//		// the very first sequence is assigned to the master channel
+//		Target* target = NEW_(Target, this, this);
+//		targets_->push(target);
+//		masterChannel_ = NEW_(Channel, this, target, sequence);
+//		masterChannel_->id_ = "master";
+//		masterChannel_->setActive();
+//		masterChannel_->setLooping();
+//		channels_->push(masterChannel_);
+//	}
+//
+//}
+void Player::addSequence(unsigned char* stream) {
+	// create sequence as Array
+	Array* sequence = NEW_(Array);
+	unsigned short delta = 0;
+	int cmd = 0;
+	unsigned char* args = NULL;
+	size_t i = 0;
+	PLAYER_COMMAND_U ptr;
+	ptr.p = stream;
+	while (true) {
+		sequence->push((Object*)ptr.p);
+		cmd = ptr.s->code;
+		if (cmd == (unsigned char)Player_Cmd_end) {
+			break;
+		}
+		ptr.p += offsetof(PLAYER_COMMAND, args) + ptr.s->argc;
+	}
 	sequences_->push(sequence);
 
 	if (sequences_->length() == 1) {
 		// the very first sequence is assigned to the master channel
-		masterChannel_ = NEW_(Channel, this, NEW_(Target, this, this), sequence);
-		masterChannel_->id_ = "master";
+		Target* target = (Target*)targets_->get(0);
+		masterChannel_ = NEW_(Channel, this, 0, target, sequence);
 		masterChannel_->setActive();
 		masterChannel_->setLooping();
 		channels_->push(masterChannel_);
 	}
-
 }
 void Player::run(size_t ticks) {
 	// run master channel
@@ -56,18 +88,19 @@ int Player::prepareObject(void* object) {
 	return 0;
 }
 
-int Player::processCommand(void* object, PlayerCommand* command) {
+int Player::processCommand(void* object, PLAYER_COMMAND* command) {
 	Player* player = (Player*)object;
-	switch (command->cmd) {
+	unsigned char* args = &command->args;
+	switch (command->code) {
 	case Player_Cmd_setTempo:
-		player->framesPerSecond_ = (size_t)command->args->get(0);
-		player->ticksPerFrame_ = (size_t)command->args->get(1);
-		//player->refreshRate_ = player->framesPerSecond_ * player->ticksPerFrame_;
+		player->framesPerSecond_ = args[0];
+		player->ticksPerFrame_ = args[1];
+		player->refreshRate_ = player->framesPerSecond_ * player->ticksPerFrame_;
 		break;
 	case Player_Cmd_assign:
-		Target* target = (Target*)player->targets_->get((size_t)command->args->get(0));
-		Array* sequence = (Array*)player->targets_->get((size_t)command->args->get(1));
-		size_t status = (size_t)command->args->get(2);
+		Target* target = (Target*)player->targets_->get(args[0]);
+		Array* sequence = (Array*)player->sequences_->get(args[1]);
+		size_t status = args[2];
 		Channel* chn = NULL;
 		// get an inactive channel
 		size_t ix = -1;
@@ -81,17 +114,20 @@ int Player::processCommand(void* object, PlayerCommand* command) {
 		if (ix == -1) {
 			// create new channel
 			ix = player->channels_->length();
-			chn = NEW_(Channel);
+			chn = NEW_(Channel, this, ix, target, sequence);
 			//chn->id_ = NEW_(String, ix);
 			player->channels_->push(chn);
 		}
 		// assign channel
-		chn->set(player, target, sequence, status);
+		chn->set(player, ix, target, sequence, status);
 		break;
 	}
 	return 0;
 }
 
+size_t Player::getCurrentFrame() {
+	return masterChannel_->tick();
+}
 NS_PLAYER_END
 
 //#include "Base/mem.h"

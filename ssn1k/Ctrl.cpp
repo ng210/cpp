@@ -18,20 +18,14 @@ void SSN1K_ProfileInit() {
 #endif
 
 CtrlValue Ctrl::get() {
-	return value_[0];
+	return value_;
 }
-void Ctrl::update() {
-	value_[1] = value_[0];
+void Ctrl::set(CtrlValue value) {
+	value_ = value;
 }
-int Ctrl::slopeUp() {
-	return value_[1].i <= 0 && value_[0].i > 0;
-}
-int Ctrl::slopeDown() {
-	return value_[0].i <= 0 && value_[1].i > 0;
-}
-void Ctrl::set(int value) {
-	value_[0].i = value;
-}
+//void Ctrl::set(int value) {
+//	value_.i = value;
+//}
 bool Ctrl::set(float value) {
 	set(0.0f, 0.0f, 1.0f);
 	return set(value, true);
@@ -52,14 +46,14 @@ bool Ctrl::set(float value, bool check) {
 			if (!isValid) value = max_.f;
 		}
 	}
-	value_[0].f = value;
+	value_.f = value;
 	return isValid;
 }
 bool Ctrl::change() {
-	return set(value_[0].f + delta_, true);
+	return set(value_.f + delta_, true);
 }
 bool Ctrl::change(float value) {
-	return set(value_[0].f + value, true);
+	return set(value_.f + value, true);
 }
 
 NS_SSN1K_END

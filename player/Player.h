@@ -6,12 +6,13 @@
 
 NS_FW_BASE_USE
 
+#include "AbstractAdapter.h"
+#include "Channel.h"
 
 #define NS_PLAYER ply
 #define NS_PLAYER_BEGIN namespace NS_PLAYER {
 #define NS_PLAYER_END }
-
-#include "AbstractAdapter.h"
+#define NS_PLAYER_USE using namespace NS_PLAYER;
 
 NS_PLAYER_BEGIN
 
@@ -24,7 +25,7 @@ enum PlayerCommands {
 
 	Player_Cmd_Count
 };
-#define Player_Cmd_End -1
+#define Player_Cmd_end -1
 
 /******************************************************************************
  * Track control flags
@@ -41,16 +42,15 @@ class Channel;
 * Base player class
 *****************************************************************************/
 class Player : public AbstractAdapter {
-protected:
-	AbstractAdapter* adapter_;
-	PROP_R(Array*, targets);			// Array<Target>
-	PROP_R(Array*, channels);			// Array<Channel>
-	PROP_R(Channel*, masterChannel);
-	PROP_R(Array*, sequences);			// Array<Array<PlayerCommand>>
-	size_t framesPerSecond_;
-	size_t ticksPerFrame_;
+protected:	AbstractAdapter* adapter_;
+protected:	PROP_R(Array*, targets);			// Array<Target>
+protected:	PROP_R(Array*, channels);			// Array<Channel>
+protected:	PROP_R(Channel*, masterChannel);
+protected:	PROP_R(Array*, sequences);			// Array<Array<PlayerCommand>>
+protected:	size_t framesPerSecond_;
+protected:	size_t ticksPerFrame_;
+protected:	PROP_R(size_t, refreshRate);
 
-	////refreshRate_ = 25;
 	//// number of cycles per second
 	//int m_iCyclesPerSecond;
 	//// number of cycles per frame
@@ -70,12 +70,14 @@ public:
 	virtual ~Player();
 
 	void addTarget(void* target, AbstractAdapter* adapter);
-	void addSequence(Array* sequence);
+	//void addSequence(Array* sequence);
+	void addSequence(unsigned char* stream);
 	void run(size_t ticks);
 
 	// AbstractAdapter interface
 	int prepareObject(void* object);
-	int processCommand(void* object, PlayerCommand* cmd);
+	int processCommand(void* object, PLAYER_COMMAND* cmd);
+	size_t getCurrentFrame();
 
 	//// return status of player
 	//inline int getStatus() { return m_pMasterChannel->m_status; }
