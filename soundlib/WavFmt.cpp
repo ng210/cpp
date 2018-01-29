@@ -61,12 +61,12 @@ size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bi
 	size_t length = sizeof(WAVEHEADER) + byteCount;
 
 	char* buffer = MALLOC(char, length);
-	size_t i = 0, j = 0;
+	size_t i = 0;
 	for (; i < sizeof(WAVEHEADER); i++) {
 		buffer[i] = ((char*)header)[i];
 	}
-	for (; i < byteCount; i++) {
-		buffer[i] = data[j++];
+	for (size_t j=0; j < byteCount; j++) {
+		buffer[i + j] = data[j];
 	}
 	File::write(path, buffer, length);
 	FREE(buffer);
