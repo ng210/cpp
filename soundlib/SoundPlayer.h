@@ -12,7 +12,7 @@
 
 //#define USE_DOUBLE_BUFFER
 
-typedef void (*FeedSample)(LPVOID, int);
+typedef void (*FeedSample)(short*, int);
 
 class SoundPlayer {
 private:
@@ -23,8 +23,8 @@ private:
 	static DWORD sampleRate_;
 	static DWORD latency_;
 
-	static LPVOID sampleBuffer_;
-	static LPVOID callbackBuffer_;
+	static short* sampleBuffer_;
+	//static LPVOID callbackBuffer_;
 
 	static LPDIRECTSOUND8 device_;
 	static LPDIRECTSOUNDBUFFER primaryBuffer_;

@@ -16,7 +16,8 @@ LPDIRECTSOUND8 SoundPlayer::device_ = NULL;
 LPDIRECTSOUNDBUFFER SoundPlayer::primaryBuffer_ = NULL;
 LPDIRECTSOUNDBUFFER8 SoundPlayer::secondaryBuffer_ = NULL;
 
-LPVOID SoundPlayer::sampleBuffer_ = NULL;
+short* SoundPlayer::sampleBuffer_ = NULL;
+//float* SoundPlayer::callbackBuffer_ = NULL;
 DWORD SoundPlayer::latency_ = 80;
 
 bool SoundPlayer::isTerminating_ = false;
@@ -111,7 +112,7 @@ HRESULT SoundPlayer::start(int sampleRate, int channels, FeedSample callback) {
 		}
 		// get buffer address
 		DWORD tmp;
-		if ((res = buffer->Lock(0, SoundPlayer::bufferSize_, &sampleBuffer_, &tmp, 0, 0, 0)) != DS_OK) {
+		if ((res = buffer->Lock(0, SoundPlayer::bufferSize_, (LPVOID*)&sampleBuffer_, &tmp, 0, 0, 0)) != DS_OK) {
 			break;
 		}
 		if ((res = buffer->Unlock(sampleBuffer_, SoundPlayer::bufferSize_, 0, 0)) != DS_OK) {
