@@ -42,7 +42,8 @@ void Channel::run(size_t ticks) {
 				target_->adapter->processCommand(target_->object, command);
 			} else {
 				tick_ = 0;
-				if (status_ & Player_Flg_Looping) {
+				if (loopCount_ != 0) {
+				//if (status_ & Player_Flg_Looping) {
 					if (this == player_->masterChannel()) {
 						// reset
 						for (size_t i = 1; i < player_->channels()->length(); i++) {
@@ -52,6 +53,7 @@ void Channel::run(size_t ticks) {
 					// restart sequence
 					cursor_ = 0;
 					currentTick_ = 0;
+					loopCount_--;
 					restart = true;
 					break;
 				} else {
@@ -80,8 +82,8 @@ void Channel::setActive(bool flag) {
 	flag ? status_ |= Player_Flg_Active : status_ &= ~Player_Flg_Active;
 }
 
-void Channel::setLooping(bool flag) {
-	flag ? status_ |= Player_Flg_Looping : status_ &= ~Player_Flg_Looping;
+void Channel::setLooping(size_t count) {
+	loopCount_ = count;
 }
 
 bool Channel::isActive() {

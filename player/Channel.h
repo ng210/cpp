@@ -17,6 +17,7 @@ protected: PROP_R(size_t, cursor);
 protected: PROP_R(size_t, status);
 protected: PROP_R(size_t, currentTick);
 protected: PROP_R(size_t, tick);
+protected: PROP_R(size_t, loopCount);
 public:
 	Channel() {};
 	Channel(Player* player, size_t id, Target* target, Array* sequence);
@@ -26,7 +27,7 @@ public:
 	void run(size_t ticks);
 
 	void setActive(bool flag = true);
-	void setLooping(bool flag = true);
+	void setLooping(size_t count = 0);
 	bool isActive();
 
 	size_t id_;

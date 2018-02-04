@@ -31,10 +31,10 @@ enum PlayerCommands {
  * Track control flags
  *****************************************************************************/
 enum Player_Flags {
-	Player_Flg_Active	= 0x01,
-	Player_Flg_Looping	= 0x02,
-	Player_Flg_Unused1	= 0x04,
-	Player_Flg_Unused2	= 0x08
+	Player_Flg_Active	= 0x80,
+	Player_Flg_Unused1	= 0x40,
+	Player_Flg_Unused2	= 0x20,
+	Player_Flg_Unused3	= 0x10
 };
 
 class Channel;

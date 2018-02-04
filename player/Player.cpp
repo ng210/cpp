@@ -119,7 +119,8 @@ int Player::processCommand(void* object, PLAYER_COMMAND* command) {
 			player->channels_->push(chn);
 		}
 		// assign channel
-		chn->set(player, ix, target, sequence, status);
+		chn->set(player, ix, target, sequence, status & 0x80);
+		chn->setLooping(status & 0x7f);
 		break;
 	}
 	return 0;
