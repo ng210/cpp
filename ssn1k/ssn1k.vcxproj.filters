@@ -28,6 +28,7 @@
     <ClCompile Include="SynthAdapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Mixer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ssn1k.h">
@@ -60,6 +61,7 @@
     <ClInclude Include="SynthAdapter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Mixer.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

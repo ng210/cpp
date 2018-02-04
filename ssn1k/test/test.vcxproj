@@ -113,6 +113,8 @@
       <SubSystem>Console</SubSystem>
       <AdditionalLibraryDirectories>C:\code\git\cpp\ssn1k\bin\$(PlatformName)\$(Configuration);C:\code\git\cpp\soundlib\bin\$(PlatformName)\$(Configuration);C:\code\git\cpp\fw\bin\$(PlatformName)\$(Configuration);C:\code\git\cpp\player\bin\$(PlatformName)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>base.lib;ssn1k.lib;soundlib.lib;player.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <MapFileName>$(OutDir)$(ProjectName).map</MapFileName>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -154,6 +156,9 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>base.lib;ssn1k.lib;soundlib.lib;player.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\code\git\cpp\ssn1k\bin\$(PlatformName)\$(Configuration);C:\code\git\cpp\soundlib\bin\$(PlatformName)\$(Configuration);C:\code\git\cpp\fw\bin\$(PlatformName)\$(Configuration);C:\code\git\cpp\player\bin\$(PlatformName)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>$(OutDir)$(ProjectName).map</MapFileName>
+      <MapExports>true</MapExports>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

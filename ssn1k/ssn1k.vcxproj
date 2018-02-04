@@ -297,6 +297,7 @@
     <ClCompile Include="Env.cpp" />
     <ClCompile Include="Flt.cpp" />
     <ClCompile Include="Mdl.cpp" />
+    <ClCompile Include="Mixer.cpp" />
     <ClCompile Include="Osc.cpp" />
     <ClCompile Include="ssn1k.cpp" />
     <ClCompile Include="Synth.cpp" />
@@ -308,6 +309,7 @@
     <ClInclude Include="Env.h" />
     <ClInclude Include="Flt.h" />
     <ClInclude Include="Mdl.h" />
+    <ClInclude Include="Mixer.h" />
     <ClInclude Include="Osc.h" />
     <ClInclude Include="ssn1k.h" />
     <ClInclude Include="ssn1klib.h" />

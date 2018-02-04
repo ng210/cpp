@@ -10,7 +10,7 @@
 #define offsetof(t, f) ((int)&((t*)0)->f)
 #endif
 
-#define DWtoDB(w) w & 0xff, w>>8 & 0xff
+#define DWtoDB(w) (w & 0xff), (w>>8 & 0xff)
 
 NS_SSN1K_BEGIN
 

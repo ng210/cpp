@@ -3,4 +3,5 @@
 #include "Mdl.h"
 #include "Env.h"
 #include "Synth.h"
+#include "Mixer.h"
 #include "SynthAdapter.h"
