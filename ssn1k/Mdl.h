@@ -32,16 +32,18 @@ enum SSN1K_MixMode {
 };
 
 class Mdl {
-//private: PROP_R(MdlCtrls*, controls);
-protected: PROP_R(Ctrl*, mix);
-protected: PROP_R(Ctrl*, amp);
-protected: PROP_R(Ctrl*, dc);
-
-protected: float run(float, float);
-public:
-	//virtual void setControls(Ctrl** controls);
-	void setControls(MdlCtrls*);
+protected:
 	float smp_;
+	float mix(float in1, float in2);
+	void createControls(int count);
+public:
+	Ctrl** controls_;
+	void setup(CtrlSetting* data);
+	Ctrl* getControl(size_t id);
+	//virtual float run(...) = 0;
+	//virtual void setControls(Ctrl** controls);
+	//void setControls(MdlCtrls*);
+
 };
 
 NS_SSN1K_END

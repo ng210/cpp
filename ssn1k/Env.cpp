@@ -25,6 +25,7 @@ int Env::isActive() {
 	return phase_ != SSN1K_ENV_IDLE;
 }
 void Env::setGate(float v) {
+	EnvCtrls* ctrls = (EnvCtrls*)controls_;
 	if (gate_ == 0) {
 		if (v > 0.0f) {
 			// slope up: retrigger envelope
@@ -32,17 +33,17 @@ void Env::setGate(float v) {
 			timer_ = 0.0f;
 			phase_ = SSN1K_ENV_ATTACK;
 			velocity_ = v;
-			float value = atk_->get().f + SSN1K::getSampleRateR();
+			float value = ctrls->atk->get().f + SSN1K::getSampleRateR();
 			rate_ = tickPerSample_ / value;
 		}
 	} else {
 		if (v <= 0.0f) {
 			// slope down: start release phase
 			gate_ = 0;
-			timer_ = sus_->get().f + SSN1K::getSampleRateR();
+			timer_ = ctrls->sus->get().f + SSN1K::getSampleRateR();
 			phase_ = SSN1K_ENV_RELEASE;
-			float value = rel_->get().f;
-			rate_ = tickPerSample_ / value * (sus_->get().f + SSN1K::getSampleRateR());
+			float value = ctrls->rel->get().f;
+			rate_ = tickPerSample_ / value * (ctrls->sus->get().f + SSN1K::getSampleRateR());
 		}
 	}
 };
@@ -50,7 +51,9 @@ float Env::run(float in) {
 #ifdef _PROFILE
 	SSN1K_PROFILER.enter(1);
 #endif
-	float sustain = sus_->get().f + SSN1K::getSampleRateR();
+	EnvCtrls* ctrls = (EnvCtrls*)controls_;
+
+	float sustain = ctrls->sus->get().f + SSN1K::getSampleRateR();
 	float invSustain = 1.0f - sustain;
 
 	if (phase_ > 0)	{
@@ -60,7 +63,7 @@ float Env::run(float in) {
 				if (timer_ >= 1.0f) {
 					phase_ = SSN1K_ENV_DECAY;
 					timer_ = 1.0f;
-					float value = dec_->get().f + SSN1K::getSampleRateR();
+					float value = ctrls->dec->get().f + SSN1K::getSampleRateR();
 					rate_ = tickPerSample_ / value * invSustain;
 				}
 				smp_ = SSN1K::interpolate(timer_);
@@ -91,19 +94,13 @@ float Env::run(float in) {
 #ifdef _PROFILE
 	SSN1K_PROFILER.leave(1);
 #endif
-	return Mdl::run(velocity_*smp_, in);
+	return Mdl::mix(velocity_ * smp_, in);
 }
 void Env::bpm(float v) {
 	bpm_ = v;
 	tickPerSample_ = v * SSN1K::getSampleRateR() / 60;
 }
-void Env::setControls(EnvCtrls* controls) {
-	Mdl::setControls(controls);
-	atk_ = controls->atk;
-	dec_ = controls->dec;
-	sus_ = controls->sus;
-	rel_ = controls->rel;
-}
+
 /*
 float Env::run(EnvCtrls& ctrls, float in)
 {

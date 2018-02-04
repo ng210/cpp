@@ -21,7 +21,8 @@ struct FltCtrls : public MdlCtrls {
 	Ctrl* mode;
 };
 
-class Flt : public Mdl{
+class Flt : public Mdl {
+private:
 	float ai[3];
 	float bi[3];
 	float ci[3];
@@ -29,12 +30,9 @@ class Flt : public Mdl{
 	float vi[2];
 	float lp[2];
 	float hp[2];
-protected: PROP_R(Ctrl*, res);
-protected: PROP_R(Ctrl*, mode);
 public:
 	Flt();
-	float run(float in, float FCutMod);
-	void setControls(FltCtrls*);
+	float run(float in, float cut);
 };
 
 #endif

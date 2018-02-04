@@ -28,18 +28,12 @@ struct OscCtrls : public MdlCtrls {
 };
 
 class Osc : public Mdl {
-	protected: PROP(Ctrl*, note);
-	protected: PROP_R(Ctrl*, tune);
-	protected: PROP_R(Ctrl*, fre);
-	protected: PROP_R(Ctrl*, psw);
-	protected: PROP_R(Ctrl*, wav);
-
+private:
 	float timer_;
 	float noiseTimer_;
 public:
 	Osc(void);
-	float run(float am, float fm, float pm);
-	void setControls(OscCtrls* controls);
+	float run(float amp, float tune, float freq, float phase);
 };
 
 NS_SSN1K_END

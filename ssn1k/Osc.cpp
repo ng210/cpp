@@ -13,19 +13,21 @@ Osc::Osc(void) {
 	//fDelta = 0;
 }
 
-float Osc::run(float am, float fm, float pm) {
+float Osc::run(float amp, float tune, float freq, float phase) {
+	OscCtrls* ctrls = (OscCtrls*)controls_;
+
 #ifdef _PROFILE
 	SSN1K_PROFILER.enter(2);
 #endif
 
-	float pitch = (float)(note_->get().f + tune_->get().f);
-	float delta = (fm + fre_->get().f + SSN1K::p2f(pitch)) * SSN1K::getSampleRateR();
+	float pitch = (float)(tune + ctrls->note->get().f + ctrls->tune->get().f);
+	float delta = (freq + ctrls->fre->get().f + SSN1K::p2f(pitch)) * SSN1K::getSampleRateR();
 	if (delta >= 1.0f) {
 		delta = 0.99999999f;
 	}
-	float psw = pm + psw_->get().f;
+	float psw = phase + ctrls->psw->get().f;
 	float out = 0.0f;
-	int waveForm = wav_->get().i & 0x1F;
+	int waveForm = ctrls->wav->get().i & 0x1F;
 	int waveFormCount = 0;
 	if (waveForm & SSN1K_WF_TRI) {
 		float tmp = (timer_ < psw) ? timer_/psw : (1.0f - timer_)/(1.0f - psw);
@@ -66,16 +68,7 @@ float Osc::run(float am, float fm, float pm) {
 	SSN1K_PROFILER.leave(2);
 #endif
 
-	return Mdl::run(out, am);
-}
-
-void Osc::setControls(OscCtrls* controls) {
-	Mdl::setControls(controls);
-	note_ = controls->note;
-	tune_ = controls->tune;
-	fre_ = controls->fre;
-	psw_ = controls->psw;
-	wav_ = controls->wav;
+	return Mdl::mix(out, amp);
 }
 
 NS_SSN1K_END

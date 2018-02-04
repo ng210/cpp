@@ -17,17 +17,14 @@ float Flt::run(float in, float cut) {
 #ifdef _PROFILE
 	SSN1K_PROFILER.enter(3);
 #endif
-
-	int mode = mode_->get().i;
+	FltCtrls* ctrls = (FltCtrls*)controls_;
+	int mode = ctrls->mode->get().i;
 	float out = in;
 	if (mode != 0) {
 		// Update filter coefficients
-		//float cut = this->env.run(ctrls->env, 0.0)*SSN1K_MIXING_RATE/8;
-		//float cut = 10.0f + (SSN1K_smpRate - 10) * fCutMod;
-		//fCutMod = 100/SSN1K_smpRate;
-		//float cut = fCutMod*fCutMod/4/4 + 10*SSN1K::getSampleRateR();
-		float res = (res_->get().i == 0) ? 1.0f : 1.0f - res_->get().f;
-		float e = (float)tan(cut*SSN1K::getTheta());
+		float res = (ctrls->res->get().i == 0) ? 1.0f : 1.0f - ctrls->res->get().f;
+		float e = cut * SSN1K::getTheta();
+		//float e = (float)tan(cut*SSN1K::getTheta());
 		float g = (float)(-/*M_SQRT2 **/ res * e);
 		float b0 = e*e;
 		this->bi[0] = this->bi[1] = b0; this->bi[2] = 2*b0;
@@ -61,12 +58,6 @@ float Flt::run(float in, float cut) {
 	SSN1K_PROFILER.leave(3);
 #endif
 	return out;
-}
-
-void Flt::setControls(FltCtrls* controls) {
-	Mdl::setControls(controls);
-	res_ = controls->res;
-	mode_ = controls->mode;
 }
 
 NS_SSN1K_END

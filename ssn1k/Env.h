@@ -30,10 +30,6 @@ struct EnvCtrls : public MdlCtrls {
 };
 
 class Env : public Mdl {
-protected: PROP_R(Ctrl*, atk);
-protected: PROP_R(Ctrl*, dec);
-protected: PROP_R(Ctrl*, sus);
-protected: PROP_R(Ctrl*, rel);
 private: 
 	float timer_;
 	int phase_;
@@ -51,7 +47,6 @@ public:
 	float run(float in);
 	void bpm(float bpm);
 	void setGate(float velocity);
-	void setControls(EnvCtrls* controls);
 };
 
 NS_SSN1K_END
