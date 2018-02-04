@@ -24,7 +24,12 @@ int SynthAdapter::processCommand(void* target, PLAYER_COMMAND* command) {
 			break;
 		case Synth_Cmd_setControl:
 			int ctrlId = args[0];
-			synth->getControl(ctrlId)->set(args[1] / 127.0f);
+			if (ctrlId != SSN1K_CI_Tune) {
+				synth->getControl(ctrlId)->set(args[1]/127.0f);
+			} else {
+				//printf("Tune: %d\n", args[1]);
+				synth->getControl(ctrlId)->set((float)args[1], false);
+			}
 			break;
 	}
 	return 1;
