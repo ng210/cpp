@@ -44,7 +44,7 @@ public:
 	PROP_R(float, bpm);
 	//int overlayCounter_;
 	int isActive();
-	float run(float in);
+	float run();
 	void bpm(float bpm);
 	void setGate(float velocity);
 };

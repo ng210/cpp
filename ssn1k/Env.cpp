@@ -47,7 +47,7 @@ void Env::setGate(float v) {
 		}
 	}
 };
-float Env::run(float in) {
+float Env::run() {
 #ifdef _PROFILE
 	SSN1K_PROFILER.enter(1);
 #endif
@@ -94,7 +94,9 @@ float Env::run(float in) {
 #ifdef _PROFILE
 	SSN1K_PROFILER.leave(1);
 #endif
-	return Mdl::mix(velocity_ * smp_, in);
+	//1 - mod + mod * velocity
+	float mod = ctrls->mix->get().f;
+	return Mdl::mix(smp_ * (1.0f - mod + mod * velocity_), 0.0f);
 }
 void Env::bpm(float v) {
 	bpm_ = v;

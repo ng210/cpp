@@ -13,7 +13,7 @@ Osc::Osc(void) {
 	//fDelta = 0;
 }
 
-float Osc::run(float amp, float tune, float freq, float phase) {
+float Osc::run(float amp, float tune, float freq, float phase, float in) {
 	OscCtrls* ctrls = (OscCtrls*)controls_;
 
 #ifdef _PROFILE
@@ -68,7 +68,7 @@ float Osc::run(float amp, float tune, float freq, float phase) {
 	SSN1K_PROFILER.leave(2);
 #endif
 
-	return Mdl::mix(out, amp);
+	return Mdl::mix(amp*out, in);
 }
 
 NS_SSN1K_END

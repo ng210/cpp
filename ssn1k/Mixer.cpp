@@ -36,9 +36,10 @@ float Mixer::run(void* buffer, size_t start, size_t end) {
 		MixCtrls* ctrls = (MixCtrls*)controls_;
 		for (size_t j = 0; j < inputCount_; j++) {
 			float smp = input_[j]->run() * ctrls->volume[j]->get().f;
-			float balance = ctrls->balance[j]->get().f * input_[j]->getControl(SSN1K_CI_SynthBal)->get().f;
-			left += smp * balance;
-			right += smp * (1.0f - balance);
+			float balance = (ctrls->balance[j]->get().f + input_[j]->getControl(SSN1K_CI_SynthBal)->get().f) / 2.0f;
+			float lSmp = smp * balance;
+			left += lSmp;
+			right += smp - lSmp;
 		}
 		short* ptr = &((short*)buffer)[2 * i];
 		writeSample(ptr, left);

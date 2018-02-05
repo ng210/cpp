@@ -17,11 +17,12 @@ NS_PLAYER_USE
 //#define SAVE_MODE
 
 #define TPS (14*4)	// ticks per second
-#define TICKS 4*128
+#define TICKS 1*128
 
 const int sampleRate = 48000;
 
 size_t frameCounter = 0;
+size_t frames = 0;
 Player* player = NULL;
 Synth* synths[16];
 Mixer* mixer;
@@ -29,7 +30,7 @@ SynthAdapter* synthAdapter;
 
 unsigned char mainSequence[] = {
 	DWtoDB(0),  Player_Cmd_setTempo, 2, TPS, 1,			// set fps to 4, tpf to 4 (makes 5 tps)
-	DWtoDB(0),  Player_Cmd_assign,	 3, 1, 1, 0x83,		// connect target #1 with sequence #1 with status active
+	//DWtoDB(0),  Player_Cmd_assign,	 3, 1, 1, 0x83,		// connect target #1 with sequence #1 with status active
 	DWtoDB(0),  Player_Cmd_assign,	 3, 2, 5, 0x83,		// connect target #2 with sequence #1 with status active
 	DWtoDB(0),  Player_Cmd_assign,	 3, 2, 6, 0x80,		// connect target #2 with sequence #3 with status active
 	DWtoDB(0),  Player_Cmd_assign,	 3, 3, 7, 0x83,		// connect target #3 with sequence #4 with status active
@@ -77,12 +78,12 @@ unsigned char sequence5[] = {
 	DWtoDB( 0),	Synth_Cmd_setNote, 3, E(1), 8, 0x50,	// 0
 	DWtoDB(16), Synth_Cmd_setNote, 3, E(2), 6, 0x70,
 	DWtoDB( 8), Synth_Cmd_setNote, 3, E(1), 6, 0x60,
-	DWtoDB( 8), Synth_Cmd_setNote, 3, E(0), 8, 0x80,	// 2
+	DWtoDB( 8), Synth_Cmd_setNote, 3, E(0), 8, 0x7F,	// 2
 	DWtoDB(16), Synth_Cmd_setNote, 3, E(1), 6, 0x60,
-	DWtoDB( 8), Synth_Cmd_setNote, 3, E(0), 6, 0x60,
+	DWtoDB( 8), Synth_Cmd_setNote, 3, E(0), 6, 0x7F,
 	DWtoDB( 8), Synth_Cmd_setNote, 3, E(2), 8, 0x40,	// 4
 	DWtoDB(16), Synth_Cmd_setNote, 3, E(1), 6, 0x60,
-	DWtoDB(16), Synth_Cmd_setNote, 3, E(0), 6, 0x80,	// 6
+	DWtoDB(16), Synth_Cmd_setNote, 3, E(0), 6, 0x7F,	// 6
 	DWtoDB( 8), Synth_Cmd_setNote, 3, E(1), 6, 0x70,
 	DWtoDB( 8), Synth_Cmd_setNote, 3, E(2), 6, 0x60,
 	DWtoDB( 8), Synth_Cmd_setNote, 3, E(1), 6, 0x50,
@@ -98,22 +99,42 @@ unsigned char sequence6[] = {
 };
 unsigned char sequence7[] = {
 	DWtoDB(0), Synth_Cmd_setNote, 3, E(0), 2, 0x7F,
-		DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x00,
-		DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x40,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Env1Rel, 0x20,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc1Amp, 0x7F,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x00,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x40,
+
 	DWtoDB(16), Synth_Cmd_setNote, 3, E(0), 2, 0x60,
-	DWtoDB(16), Synth_Cmd_setNote, 3, C(2), 1, 0x60,
-		DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x18,
-		DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x20,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Env1Rel, 0x12,
+
+	DWtoDB(16), Synth_Cmd_setNote, 3, E(3), 1, 0x60,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Env1Rel, 0x12,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc1Amp, 0x40,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x20,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x20,
+
+
 	DWtoDB(40),Synth_Cmd_setNote, 3, E(0), 2, 0x80,
-		DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x00,
-		DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x20,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Env1Rel, 0x12,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc1Amp, 0x7F,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x00,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x40,
+
 	DWtoDB(8), Synth_Cmd_setNote, 3, E(0), 2, 0x7F,
-	DWtoDB(16), Synth_Cmd_setNote, 3, C(2), 1, 0x60,
-		DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x18,
-		DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x60,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Env1Rel, 0x18,
+
+	DWtoDB(16), Synth_Cmd_setNote, 3, E(3), 2, 0x60,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Env1Rel, 0x12,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc1Amp, 0x40,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x20,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x60,
+
 	DWtoDB(24), Synth_Cmd_setNote, 3, E(0), 2, 0x60,
-		DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x00,
-		DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x40,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Env1Rel, 0x12,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc1Amp, 0x7F,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x00,
+	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x40,
+
 	DWtoDB(8), Player_Cmd_end
 };
 
@@ -155,7 +176,7 @@ CtrlSetting synth1Settings[] = {
 	//{ SSN1K_CI_Env4Rel, 0.0f },
 	//{ SSN1K_CI_Env4Gate, 0.0f },
 
-	{ SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_MUL) },
+	{ SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_OVR) },
 	{ SSN1K_CI_Osc1Amp, 1.0f },
 	//{ SSN1K_CI_Osc1DC, 0.0f },
 	//{ SSN1K_CI_Osc1Note, 0.0f },
@@ -164,7 +185,7 @@ CtrlSetting synth1Settings[] = {
 	{ SSN1K_CI_Osc1Psw, 0.5f },
 	{ SSN1K_CI_Osc1Wav, CtrlValue(SSN1K_WF_PSAW) },
 
-	{ SSN1K_CI_Osc2Mix, CtrlValue(SSN1K_MM_MUL) },
+	//{ SSN1K_CI_Osc2Mix, CtrlValue(SSN1K_MM_MUL) },
 	{ SSN1K_CI_Osc2Amp, 0.8f },
 	//{ SSN1K_CI_Osc2DC, 0.0f },
 	//{ SSN1K_CI_Osc2Note, 0.0f },
@@ -203,7 +224,7 @@ CtrlSetting synth2Settings[] = {
 	{ SSN1K_CI_SynthAmp, 1.0f },
 	{ SSN1K_CI_SynthBal, 0.5f },		// = dc
 
-	{ SSN1K_CI_Env1Mix, CtrlValue(SSN1K_MM_MUL) },
+	{ SSN1K_CI_Env1Mix, 0.9f },
 	{ SSN1K_CI_Env1Amp, 1.0f },
 	//{ SSN1K_CI_Env1DC, 0.0f },
 	{ SSN1K_CI_Env1Atk, 0.01f },
@@ -219,12 +240,12 @@ CtrlSetting synth2Settings[] = {
 	{ SSN1K_CI_Env2Sus, 0.3f },
 	{ SSN1K_CI_Env2Rel, 0.2f },
 
-	//{ SSN1K_CI_Env3Mix, 0.0f },
+	{ SSN1K_CI_Env3Mix, 0.8f },
 	{ SSN1K_CI_Env3Amp, 200.0f },
-	{ SSN1K_CI_Env3DC, 60.0f },
-	{ SSN1K_CI_Env3Atk, 0.02f },
+	{ SSN1K_CI_Env3DC, 20.0f },
+	{ SSN1K_CI_Env3Atk, 0.003f },
 	{ SSN1K_CI_Env3Dec, 0.1f },
-	{ SSN1K_CI_Env3Sus, 0.2f },
+	{ SSN1K_CI_Env3Sus, 0.4f },
 	{ SSN1K_CI_Env3Rel, 0.2f },
 
 	//{ SSN1K_CI_Env4Mix, 0.0f },
@@ -235,17 +256,17 @@ CtrlSetting synth2Settings[] = {
 	//{ SSN1K_CI_Env4Sus, 0.5f },
 	//{ SSN1K_CI_Env4Rel, 0.2f },
 
-	{ SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_MUL) },
-	{ SSN1K_CI_Osc1Amp, 0.8f },
+	//{ SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_MUL) },
+	{ SSN1K_CI_Osc1Amp, 1.0f },
 	//{ SSN1K_CI_Osc1DC, 0.0f },
 	//{ SSN1K_CI_Osc1Note, 0.0f },
 	{ SSN1K_CI_Osc1Tune, 0.0f },
 	{ SSN1K_CI_Osc1Fre, 0.0f },
 	{ SSN1K_CI_Osc1Psw, 0.2f },
-	{ SSN1K_CI_Osc1Wav, CtrlValue(SSN1K_WF_TRI) },
+	{ SSN1K_CI_Osc1Wav, CtrlValue(SSN1K_WF_PSAW) },
 
 	{ SSN1K_CI_Osc2Mix, CtrlValue(SSN1K_MM_ADD) },
-	{ SSN1K_CI_Osc2Amp, 1.0f },
+	{ SSN1K_CI_Osc2Amp, 0.6f },
 	//{ SSN1K_CI_Osc2DC, 0.0f },
 	//{ SSN1K_CI_Osc2Note, 0.0f },
 	{ SSN1K_CI_Osc2Tune, 0.1f },
@@ -274,22 +295,22 @@ CtrlSetting synth2Settings[] = {
 	//{ SSN1K_CI_FltMix, 0.0f },
 	//{ SSN1K_CI_FltAmp, 0.0f },
 	//{ SSN1K_CI_FltDC, 0.0f },
-	{ SSN1K_CI_FltRes, 0.2f },
+	{ SSN1K_CI_FltRes, 0.6f },
 	{ SSN1K_CI_FltMode, CtrlValue(SSN1K_FM_LP) },
 	{ -1, -1 }
 };
 CtrlSetting synth3Settings[] = {
 	//{ SSN1K_CI_SynthMix, 0.0f },
-	{ SSN1K_CI_SynthAmp, 1.0f },
+	{ SSN1K_CI_SynthAmp, 1.6f },
 	{ SSN1K_CI_SynthBal, 0.5f },		// = dc
 
-										//{ SSN1K_CI_Env1Mix, 0.0f },
+	{ SSN1K_CI_Env1Mix, 0.5f },
 	{ SSN1K_CI_Env1Amp, 0.8f },
 	//{ SSN1K_CI_Env1DC, 0.0f },
-	{ SSN1K_CI_Env1Atk, 0.0001f },
-	{ SSN1K_CI_Env1Dec, 0.05f },
-	{ SSN1K_CI_Env1Sus, 0.8f },
-	{ SSN1K_CI_Env1Rel, 0.1f },
+	{ SSN1K_CI_Env1Atk, 0.0002f },
+	{ SSN1K_CI_Env1Dec, 0.01f },
+	{ SSN1K_CI_Env1Sus, 0.6f },
+	{ SSN1K_CI_Env1Rel, 0.14f },
 
 	//{ SSN1K_CI_Env2Mix, 0.0f },
 	//{ SSN1K_CI_Env2Amp, 0.3f },
@@ -299,23 +320,23 @@ CtrlSetting synth3Settings[] = {
 	//{ SSN1K_CI_Env2Sus, 0.3f },
 	//{ SSN1K_CI_Env2Rel, 0.2f },
 
-	{ SSN1K_CI_Env3Mix, 0.0f },
-	{ SSN1K_CI_Env3Amp, 5000.0f },
-	{ SSN1K_CI_Env3DC, 800.0f },
-	{ SSN1K_CI_Env3Atk, 0.001f },
-	{ SSN1K_CI_Env3Dec, 0.01f },
-	{ SSN1K_CI_Env3Sus, 0.2f },
-	{ SSN1K_CI_Env3Rel, 0.3f },
+	//{ SSN1K_CI_Env3Mix, 0.0f },
+	{ SSN1K_CI_Env3Amp, 2000.0f },
+	{ SSN1K_CI_Env3DC, 100.0f },
+	{ SSN1K_CI_Env3Atk, 0.01f },
+	{ SSN1K_CI_Env3Dec, 0.1f },
+	{ SSN1K_CI_Env3Sus, 0.8f },
+	{ SSN1K_CI_Env3Rel, 0.4f },
 
-	{ SSN1K_CI_Env4Mix, CtrlValue(SSN1K_MM_ADD) },
-	{ SSN1K_CI_Env4Amp, 800.0f },
-	{ SSN1K_CI_Env4DC, 40.0f },
-	{ SSN1K_CI_Env4Atk, 0.0002f },
-	{ SSN1K_CI_Env4Dec, 0.002f },
-	{ SSN1K_CI_Env4Sus, 0.04f },
-	{ SSN1K_CI_Env4Rel, 0.07f },
+	//{ SSN1K_CI_Env4Mix, CtrlValue(SSN1K_MM_ADD) },
+	{ SSN1K_CI_Env4Amp, 200.0f },
+	{ SSN1K_CI_Env4DC, 20.0f },
+	{ SSN1K_CI_Env4Atk, 0.01f },
+	{ SSN1K_CI_Env4Dec, 0.02f },
+	{ SSN1K_CI_Env4Sus, 0.3f },
+	{ SSN1K_CI_Env4Rel, 0.1f },
 
-	{ SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_MUL) },
+	//{ SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_MUL) },
 	{ SSN1K_CI_Osc1Amp, 1.0f },
 	//{ SSN1K_CI_Osc1DC, 0.0f },
 	//{ SSN1K_CI_Osc1Note, 0.0f },
@@ -329,7 +350,7 @@ CtrlSetting synth3Settings[] = {
 	//{ SSN1K_CI_Osc2DC, 0.0f },
 	//{ SSN1K_CI_Osc2Note, 0.0f },
 	//{ SSN1K_CI_Osc2Tune, 0.1f },
-	{ SSN1K_CI_Osc2Fre, 8000.0f },
+	{ SSN1K_CI_Osc2Fre, 10000.0f },
 	//{ SSN1K_CI_Osc2Psw, 0.45f },
 	{ SSN1K_CI_Osc2Wav, CtrlValue(SSN1K_WF_RND) },
 
@@ -354,20 +375,20 @@ CtrlSetting synth3Settings[] = {
 	//{ SSN1K_CI_FltMix, 0.0f },
 	//{ SSN1K_CI_FltAmp, 0.0f },
 	//{ SSN1K_CI_FltDC, 0.0f },
-	{ SSN1K_CI_FltRes, 0.5f },
+	{ SSN1K_CI_FltRes, 0.4f },
 	{ SSN1K_CI_FltMode, CtrlValue(SSN1K_FM_LP) },
 	{ -1, -1 }
 };
 CtrlSetting* synthSettings[] = {
 	&synth1Settings[0], &synth2Settings[0], &synth3Settings[0]
 };
-int voiceCount[] = { 6, 2, 4 };
+int voiceCount[] = { 6, 1, 4 };
 CtrlSetting mixerSettings[] = {
 	{ SSN1K_CI_MixVolume1,	0.2f },
 	{ SSN1K_CI_MixBalance1, 0.2f },
-	{ SSN1K_CI_MixVolume2,	0.5f },
-	{ SSN1K_CI_MixBalance2, 0.5f },
-	{ SSN1K_CI_MixVolume3,	0.5f },
+	{ SSN1K_CI_MixVolume2,	0.4f },
+	{ SSN1K_CI_MixBalance2, 0.3f },
+	{ SSN1K_CI_MixVolume3,	1.0f },
 	{ SSN1K_CI_MixBalance3, 0.5f },
 	{ -1, -1 }
 };
@@ -379,7 +400,7 @@ void soundCallback(short* buffer, int sampleCount) {
 		if (frameCounter == 0) {
 			player->run(1);
 			frameCounter = 48000 / player->refreshRate();
-			//printf(".");
+			frames++;
 		}
 		size_t len = frameCounter < remains ? frameCounter : remains;
 		end = start + len;
@@ -447,7 +468,8 @@ int _main(NS_FW_BASE::Map* args) {
 
 	if (!saveMode) {
 		if (SoundPlayer::start(sampleRate, 1, soundCallback) == 0) {
-			while (player->masterChannel()->isActive()) {
+			while (player->masterChannel()->isActive() &&
+				frames < TICKS) {
 				Sleep(10);
 			}
 			printf("\n");

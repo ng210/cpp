@@ -12,22 +12,22 @@ NS_SSN1K_BEGIN
 
 float Mdl::mix(float in1, float in2) {
 	MdlCtrls* ctrls = (MdlCtrls*)controls_;
-	float smp_ = ctrls->amp->get().f*in1 + ctrls->dc->get().f;
+	float smp = ctrls->amp->get().f*in1 + ctrls->dc->get().f;
 	switch (ctrls->mix->get().i) {
 		case SSN1K_MM_ADD:
-			smp_ += in2;
+			smp = 0.5f * (smp + in2);
 			break;
 		case SSN1K_MM_MUL:
-			smp_ *= in2;
+			smp *= in2;
 			break;
 		case SSN1K_MM_BPS:
-			smp_ = in2;
+			smp = in2;
 			break;
 		case SSN1K_MM_OVR:
 		default:
 			break;
 	}
-	return smp_;
+	return smp;
 }
 
 void Mdl::createControls(int count) {

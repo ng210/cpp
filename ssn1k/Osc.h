@@ -33,7 +33,7 @@ private:
 	float noiseTimer_;
 public:
 	Osc(void);
-	float run(float amp, float tune, float freq, float phase);
+	float run(float amp = 1.0f, float tune = 0.0f, float freq = 0.0f, float phase = 0.0f, float in = 0.0f);
 };
 
 NS_SSN1K_END

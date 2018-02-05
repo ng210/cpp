@@ -40,17 +40,17 @@ void Voice::setNote(int note, int duration, float velocity) {
 }
 float Voice::run() {
 	// run LFOs
-	float lfo1 = lfo1_.run(1.0f, 0.0f, 0.0f, 0.0f);	//1.0 - this.lfos[0].amp + (this.lfos[0].amp + this.lfos[0].run(1.0, 0.0, 0.0))/2;
-	float lfo2 = lfo2_.run(1.0f, 0.0f, 0.0f, 0.0f);
+	float lfo1 = lfo1_.run();	//1.0 - this.lfos[0].amp + (this.lfos[0].amp + this.lfos[0].run(1.0, 0.0, 0.0))/2;
+	float lfo2 = lfo2_.run();
 	// run main oscillators
-	float am = env1_.run(1.0f);
-	float pm = env2_.run(1.0f) + lfo2;
-	float cut = env3_.run(1.0f);
-	float fm = env4_.run(lfo1);
+	float am = env1_.run();
+	float pm = env2_.run() + lfo2;
+	float cut = env3_.run();
+	float fm = lfo1 + env4_.run();
 	float tune = note_.get().f + synth_->getControl(SSN1K_CI_Tune)->get().f;
 	float smp1 = osc1_.run(1.0f, tune, fm, pm);
-	float smp2 = osc2_.run(smp1, tune, fm, pm);
-	float out = flt_.run(am * smp2, cut);
+	float smp2 = osc2_.run(1.0f, tune, fm, pm, smp1);
+	float out = flt_.run(am*smp2, cut);
 	//float out = smp1 + smp2;
 	if (duration_ > 0) {
 		duration_--;
