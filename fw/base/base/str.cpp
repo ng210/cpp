@@ -1,5 +1,6 @@
-#include "base/MemoryMgr.h"
+#include "base/memory.h"
 #include "base/str.h"
+#include <string.h>
 
 NS_FW_BASE_BEGIN
 
@@ -33,7 +34,7 @@ char* strdup(const char *src) {
 	return NS_FW_BASE::strdup(src, len);
 }
 //*********************************************************
-char* substr(char *str, size_t start, size_t length) {
+char* substr(const char *str, size_t start, size_t length) {
 	char* dst = MALLOC(char, length + 1);
 	strncpy(dst, length, &str[start]);
 	return dst;
@@ -48,29 +49,132 @@ int strncmp(const char *left, const char *right, size_t len) {
 	return res;
 }
 //*********************************************************
-void memcpy(char *dst, const char *src, size_t len) {
-	for (size_t i = 0; i < len; i++) {
-		dst[i] = src[i];
-	}
-}
-//*********************************************************
 void memset(void *dst, const char value, size_t len) {
 	for (size_t i = 0; i < len; i++) {
 		((char*)dst)[i] = value;
 	}
 }
 //*********************************************************
+
+#ifdef _CRT
+void* memcpy(void *dest, const void *src, size_t count) {
+/*	if (count > 16) {
+		size_t dwCount = count >> 2;
+		char* dwDest = (char*)ALIGN4(dest);
+		char* dwSrc = (char*)ALIGN4(src);
+		size_t offset = dwDest - (char*)dest;
+		for (size_t i = 0; i < offset; i++) {
+			((unsigned char*)dest)[i] = ((unsigned char*)src)[i];
+		}
+		for (size_t i = 0; i < dwCount; i++) {
+			((unsigned int*)dwDest)[i] = ((unsigned int*)dwSrc)[i];
+		}
+		offset += dwCount << 2;
+		dest = (void*)((size_t)dest + offset);
+		src = (void*)((size_t)src + offset);
+		for (size_t i = 0; i < count; i++) {
+			((unsigned char*)dest)[i] = ((unsigned char*)src)[i];
+		}
+	}
+	else */{
+		for (size_t i = 0; i < count; i++) {
+			((unsigned char*)dest)[i] = ((unsigned char*)src)[i];
+		}
+	}
+	return dest;
+}
+//*********************************************************
 void strnncpy(char*& dst, size_t& size, size_t start, const char* src, const size_t length, const size_t offset) {
 	if (start + length > size) {
 		size_t newSize = (size << 1);
 		dst = REALLOC(dst, char, newSize);
-		//char *tmp = MALLOC(char, newSize);
-		//memcpy(tmp, dst, start);
 		size = newSize;
-		//DEL_(dst);
-		//dst = tmp;
 	}
 	strncpy(&dst[start], length, &src[offset]);
+}
+//*********************************************************
+char* strchr(const char* str, char ch) {
+	char* pos = NULL;
+	if (str != NULL) {
+		int i = 0;
+		do {
+			if (str[i] == ch) {
+				pos = (char*)&str[i];
+				break;
+			}
+		} while (str[i++] != '\0');
+	}
+	return pos;
+}
+//*********************************************************
+size_t strspn(const char *dest, const char *src) {
+	size_t i = 0;
+	while (dest[i] != '\0' && strchr(src, dest[i]) != NULL) i++;
+	return i;
+}
+//*********************************************************
+size_t strcspn(const char *dest, const char *src) {
+	size_t i = 0;
+	while (dest[i] != '\0' && strchr(src, dest[i]) == NULL) i++;
+	return i;
+}
+#endif
+//*********************************************************
+size_t strrspn(const char *dest, const char *src) {
+	size_t len = strlen(dest);
+	if (len > 0) {
+		len++;
+		while (len >= 0 &&
+			strchr(src, dest[len]) != NULL)
+			len--;
+	}
+	return len;
+}
+//*********************************************************
+size_t strrcspn(const char *dest, const char *src) {
+	size_t len = strlen(dest);
+	size_t i = 0;
+	if (len > 0) {
+		i = len - 1;
+		while (i >= 0 &&
+			strchr(src, dest[i]) == NULL)
+			i--;
+	}
+	return i;
+}
+
+//int strcontains(const char* src, const char* str) {
+//	int res = 0;
+//	if (src != NULL && str != NULL) {
+//		int i = 0, j = 0, k = 0;
+//		while (src[i] != '\0') {
+//			if (src[i] == str[j]) {
+//				k = i;
+//				while (src[++i] == str[++j]);
+//				if (str[j] == '\0') {
+//					res = k;
+//					break;
+//				}
+//				i = k, j = 0;
+//			}
+//			i++;
+//		}
+//	}
+//	return res;
+//}
+//*********************************************************
+//char** strsplit(const char* src, const char* separator, int& count) {
+//	int i = 0;
+//	while (src[i] != '\0') {
+//		
+//	}
+//	return NULL;
+//}
+//*********************************************************
+char* strtrim(const char* src, const char* str) {
+	size_t offset = strspn(src, str);
+	size_t length = strrspn(src, str);
+	return substr(src, offset, length - offset);
 }
 
 NS_FW_BASE_END

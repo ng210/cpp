@@ -1,7 +1,7 @@
 #ifndef __UTILS_H
 #define __UTILS_H
 
-#include "base/base_defs.h"
+#include "basedef.h"
 
 NS_FW_BASE_BEGIN
 

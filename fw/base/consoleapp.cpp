@@ -7,30 +7,38 @@ int main(int argc, char** argv) {
 	int error = 0;
 #ifdef _DEBUG
 	//MemoryMgr::isDebugOn = true;
+	Debug::initialize(/*DEBUG_UNICODE | DEBUG_MEMORY*/);
 #endif
-	RunTime::initialize();
-	Array* arr = NEW_(Array);
+	//RunTime::initialize();
+	Map* args = NEW_(Map, 255*sizeof(char), 255*sizeof(char));
+	args->compare(Map::compareStr);
 	for (int i = 0; i < argc; i++) {
-		arr->push(NEW_(String, (const char*)argv[i]));
+		int count = 0;
+		Array* tokens = Array::strsplit(argv[i], "=");
+		if (tokens != NULL && tokens->length() > 0) {
+			char* key = strtrim(*(char**)tokens->getAt(0));
+			char* value = count > 1 ? strtrim(*(char**)tokens->getAt(1)) : "1";
+			args->put(key, value);
+			FREE(key);
+			if (count > 1) FREE(value);
+			for (UINT32 j = 0; j < tokens->length(); j++) {
+				FREE(*(char**)tokens->getAt(j));
+			}
+			DEL_(tokens);
+		}
 	}
-	String* argSeparator = NEW_(String, "=");
-	Map* args = NEW_(Map, arr, argSeparator);
-	DEL_(argSeparator);
-	arr->cleanUp();
-	DEL_(arr);
 	error = _main(args);
-	args->keys()->cleanUp();
-	args->values()->cleanUp();
-	args->cleanUp();
 	DEL_(args);
 
-	RunTime::shutDown();
+	//RunTime::shutDown();
 #ifdef _DEBUG
 	//void* exceptions[2] = {
 	//	(void*)String::empty(),
 	//	(void*)Object::null()
 	//};
 	MemoryMgr::checkMemDbgInfo(0, NULL);
+
+	Debug::destroy();
 #endif
 
 	return error;

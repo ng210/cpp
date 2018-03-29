@@ -1,0 +1,17 @@
+Collection
+ Array
+ List
+ Map
+ Tree
+
+interface Collection<T>
+ add = insertAt(int = length(), T)
+ int insertAt(int, T)
+ T removeAt(int)
+ int length()
+ int findIndex(Function)
+ T getAt(int)
+
+Array
+ push = add
+ pop = removeAt(length())

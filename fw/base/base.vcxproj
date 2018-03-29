@@ -18,71 +18,26 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="base\base_defs.h" />
-    <ClInclude Include="base\Boolean.h" />
-    <ClInclude Include="base\debug.h" />
-    <ClInclude Include="base\Function.h" />
-    <ClInclude Include="base\MemoryMgr.h" />
-    <ClInclude Include="base\Integer.h" />
-    <ClInclude Include="base\Number.h" />
-    <ClInclude Include="base\Object.h" />
-    <ClInclude Include="base\str.h" />
-    <ClInclude Include="base\String.h" />
-    <ClInclude Include="base\Float.h" />
-    <ClInclude Include="collection\Map.h" />
-    <ClInclude Include="collection\Tree.h" />
-    <ClInclude Include="utils\Buffer.h" />
-    <ClInclude Include="collection\Array.h" />
-    <ClInclude Include="consoleapp.h" />
-    <ClInclude Include="utils\File.h" />
-    <ClInclude Include="runtime.h" />
-    <ClInclude Include="base\Type.h" />
-    <ClInclude Include="utils\PathInfo.h" />
-    <ClInclude Include="utils\utils.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="base\Boolean.cpp" />
-    <ClCompile Include="base\debug.cpp" />
-    <ClCompile Include="base\Function.cpp" />
-    <ClCompile Include="base\MemoryMgr.cpp" />
-    <ClCompile Include="base\Number.cpp" />
-    <ClCompile Include="base\Object.cpp" />
-    <ClCompile Include="base\runtime.cpp" />
-    <ClCompile Include="base\str.cpp" />
-    <ClCompile Include="base\String.cpp" />
-    <ClCompile Include="base\Type.cpp" />
-    <ClCompile Include="base\Float.cpp" />
-    <ClCompile Include="collection\Map.cpp" />
-    <ClCompile Include="collection\Tree.cpp" />
-    <ClCompile Include="utils\Buffer.cpp" />
-    <ClCompile Include="collection\Array.cpp" />
-    <ClCompile Include="consoleapp.cpp" />
-    <ClCompile Include="base\Integer.cpp" />
-    <ClCompile Include="utils\File.cpp" />
-    <ClCompile Include="utils\PathInfo.cpp" />
-    <ClCompile Include="utils\utils.cpp" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{6BEA24DB-2028-4CF7-936D-DB21A9316431}</ProjectGuid>
-    <Keyword>Win32Proj</Keyword>
-    <RootNamespace>base</RootNamespace>
+    <ProjectGuid>{6ED16EDF-025D-49D4-8B86-FA0359706971}</ProjectGuid>
+    <RootNamespace>fw</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <ProjectName>base</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -91,11 +46,11 @@
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>NotSet</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -116,94 +71,88 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)bin\$(IntDir)</OutDir>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(OutDir)</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)bin\$(IntDir)</OutDir>
-    <IntDir>$(OutDir)</IntDir>
-  </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-    </Link>
-    <Lib>
-      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
-    </Lib>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;BASE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
     </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;BASE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;BASE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-      <DebugInformationFormat>None</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <Lib>
-      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
-      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-    </Lib>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="basedef.h" />
+    <ClInclude Include="base\debug.h" />
+    <ClInclude Include="base\memory.h" />
+    <ClInclude Include="base\str.h" />
+    <ClInclude Include="base\tracer-win.h" />
+    <ClInclude Include="base\tracer.h" />
+    <ClInclude Include="collection\array.h" />
+    <ClInclude Include="collection\collection.h" />
+    <ClInclude Include="collection\keyvaluepair.h" />
+    <ClInclude Include="collection\map.h" />
+    <ClInclude Include="collection\tarray.h" />
+    <ClInclude Include="collection\Tree.h" />
+    <ClInclude Include="consoleapp.h" />
+    <ClInclude Include="fw.h" />
+    <ClInclude Include="runtime.h" />
+    <ClInclude Include="utils\buffer.h" />
+    <ClInclude Include="utils\file.h" />
+    <ClInclude Include="utils\pathinfo.h" />
+    <ClInclude Include="utils\utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="base\memory.cpp" />
+    <ClCompile Include="base\str.cpp" />
+    <ClCompile Include="base\tracer-win.cpp" />
+    <ClCompile Include="base\tracer.cpp" />
+    <ClCompile Include="collection\array.cpp" />
+    <ClCompile Include="collection\keyvaluepair.cpp" />
+    <ClCompile Include="collection\map.cpp" />
+    <ClCompile Include="collection\tarray.cpp" />
+    <ClCompile Include="collection\Tree.cpp" />
+    <ClCompile Include="consoleapp.cpp" />
+    <ClCompile Include="debug.cpp" />
+    <ClCompile Include="utils\buffer.cpp" />
+    <ClCompile Include="utils\file.cpp" />
+    <ClCompile Include="utils\pathinfo.cpp" />
+    <ClCompile Include="utils\utils.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -1,23 +1,20 @@
 #ifndef __PATHINFO_H
 #define __PATHINFO_H
 
-#include "base/base_defs.h"
-#include "base/String.h"
+#include "basedef.h"
 
 NS_FW_BASE_BEGIN
 
 class PathInfo {
-	String* path_;
-	String* fileName_;
-	String* extension_;
+	char* buffer_;
+	void init(const char*);
+protected: PROP_R(char*, path);
+protected: PROP_R(char*, fileName);
+protected: PROP_R(char*, extension);
 public:
-	PathInfo(String*);
+	PathInfo(char*);
 	PathInfo(const char*);
 	~PathInfo();
-	void init(const char*);
-	String* getPath();
-	String* getFileName();
-	String* getExtension();
 };
 
 NS_FW_BASE_END

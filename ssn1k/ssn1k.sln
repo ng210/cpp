@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "soundlib", "..\soundlib\sou
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "player", "..\player\player.vcxproj", "{7770991E-7F2A-4BB7-A2E1-434EB3709F46}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "syn", "..\syn\syn.vcxproj", "{2D270033-1079-4DB4-8658-66FE65049EFA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_CRT|Win32 = Debug_CRT|Win32
@@ -77,6 +79,18 @@ Global
 		{7770991E-7F2A-4BB7-A2E1-434EB3709F46}.Release|Win32.Build.0 = Release|Win32
 		{7770991E-7F2A-4BB7-A2E1-434EB3709F46}.Release|x64.ActiveCfg = Release|x64
 		{7770991E-7F2A-4BB7-A2E1-434EB3709F46}.Release|x64.Build.0 = Release|x64
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug_CRT|Win32.ActiveCfg = Debug|Win32
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug_CRT|Win32.Build.0 = Debug|Win32
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug_CRT|x64.ActiveCfg = Debug|x64
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug_CRT|x64.Build.0 = Debug|x64
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug|Win32.Build.0 = Debug|Win32
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug|x64.ActiveCfg = Debug|x64
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug|x64.Build.0 = Debug|x64
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Release|Win32.ActiveCfg = Release|Win32
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Release|Win32.Build.0 = Release|Win32
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Release|x64.ActiveCfg = Release|x64
+		{2D270033-1079-4DB4-8658-66FE65049EFA}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
