@@ -127,7 +127,7 @@
     <ClInclude Include="collection\keyvaluepair.h" />
     <ClInclude Include="collection\map.h" />
     <ClInclude Include="collection\tarray.h" />
-    <ClInclude Include="collection\Tree.h" />
+    <ClInclude Include="collection\tree.h" />
     <ClInclude Include="consoleapp.h" />
     <ClInclude Include="fw.h" />
     <ClInclude Include="runtime.h" />
@@ -145,7 +145,7 @@
     <ClCompile Include="collection\keyvaluepair.cpp" />
     <ClCompile Include="collection\map.cpp" />
     <ClCompile Include="collection\tarray.cpp" />
-    <ClCompile Include="collection\Tree.cpp" />
+    <ClCompile Include="collection\tree.cpp" />
     <ClCompile Include="consoleapp.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="utils\buffer.cpp" />

@@ -80,7 +80,9 @@
     <ClInclude Include="utils\pathinfo.h">
       <Filter>utils\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="collection\Tree.h" />
+    <ClInclude Include="collection\tree.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\memory.cpp">
@@ -123,6 +125,8 @@
     <ClCompile Include="utils\pathinfo.cpp">
       <Filter>utils\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="collection\Tree.cpp" />
+    <ClCompile Include="collection\tree.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

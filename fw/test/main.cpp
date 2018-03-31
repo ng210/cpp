@@ -3,12 +3,13 @@
 NS_FW_BASE_USE
 
 int testUtils();
-int testStr();
-int testArray();
-int testMap();
 int testBuffer();
 int testFile();
 int testPathInfo();
+int testStr();
+int testArray();
+int testMap();
+int testTree();
 
 #define TEST(t) t() ? failed++ : passed++;
 
@@ -26,12 +27,13 @@ int _main(Map* args) {
 	int passed = 0, failed = 0;
 
 	//TEST(testUtils);
+	//TEST(testBuffer);
+	//TEST(testFile);
+	//TEST(testPathInfo);
 	//TEST(testStr);
 	//TEST(testArray);
 	//TEST(testMap);
-	//TEST(testBuffer);
-	//TEST(testFile);
-	TEST(testPathInfo);
+	TEST(testTree);
 
 	LOG("****************\n\nFinal results: %d/%d=%.02f%%\n\n********************************\n\n",
 		passed, (passed + failed), (100.0f*passed) / (passed + failed));
@@ -41,7 +43,7 @@ int _main(Map* args) {
 
 typedef struct TEST_DATA_ {
 	int id;
-	char name[4];
+	char name[16];
 } TEST_DATA;
 
 #define ASSERT(label, expr) printf(" - " label ": "); if (expr) { passed++; printf("passed\n"); } else { failed++; printf("failed\n"); };
@@ -81,9 +83,22 @@ int checkSortObj(void* item, unsigned int ix, Collection* array, void* arg) {
 	return res;
 }
 
+void delNode(Node* node) {
+	TEST_DATA* ptr = (TEST_DATA*)node->value();
+	FREE(ptr);
+	DEL_(node);
+}
+
+void delEdge(Edge* edge) {
+	FREE(edge->value());
+	DEL_(edge);
+}
+
 int testUtils() {
 	int passed = 0;
 	int failed = 0;
+	LOG("********************************\nUtils tests\n********\n");
+
 	unsigned char* src = MALLOC(unsigned char, 679);
 	for (int i = 0; i < 679; i++) {
 		src[i] = i & 0xff;
@@ -108,6 +123,7 @@ int testUtils() {
 int testBuffer() {
 	int passed = 0;
 	int failed = 0;
+	LOG("********************************\nBuffer tests\n********\n");
 
 	Buffer* buf1 = NEW_(Buffer);
 	UINT32 number = 0;
@@ -147,6 +163,7 @@ int testBuffer() {
 int testFile() {
 	int passed = 0;
 	int failed = 0;
+	LOG("********************************\nFile tests\n********\n");
 
 	char* buffer = "Hello world! This is a test for the File static class.";
 	File::write("test.dat", (BYTE*)buffer, NS_FW_BASE::strlen(buffer));
@@ -161,6 +178,8 @@ int testFile() {
 int testPathInfo() {
 	int passed = 0;
 	int failed = 0;
+	LOG("********************************\nPathInfo tests\n********\n");
+
 	const char* fullPath = "C:\\code\\git\\cpp\\fw\\test\\main.cpp";
 	const char* path = "C:\\code\\git\\cpp\\fw\\test";
 	const char* file = "main";
@@ -177,6 +196,7 @@ int testPathInfo() {
 int testStr() {
 	int passed = 0;
 	int failed = 0;
+	LOG("********************************\nStr tests\n********\n");
 	const char* src = "  Hello world!  ";
 	ASSERT("strspn(' Helo') should return 8", strspn(src, " Helo") == 8);
 	ASSERT("strcspn('lo') should return 4", strcspn(src, "lo") == 4);
@@ -440,6 +460,62 @@ int testTree() {
 	int passed = 0;
 	int failed = 0;
 
+	LOG("********************************\nTree tests\n********\n");
+	Tree* tree1 = NEW_(Tree);
+	LOG(" Build a complete 3-level binary tree\n");
+	// Build a complete 3-level binary tree
+	int nodeCount = 1, nix = 1;
+	for (int l = 0; l < 3; l++) {
+		for (int n = 0; n < nodeCount; n++) {
+			TEST_DATA* testData = MALLOC(TEST_DATA, 1);
+			sprintf_s(testData->name, 16, "n%03d", nix);
+			testData->id = nix;
+			if (l > 0) {
+				int ix = (nodeCount>>1) - 1 + (n >> 1);
+				Node* parent = *(Node**)tree1->nodes()->getAt(ix);
+				int id = ((TEST_DATA*)parent->value())->id;
+				char* edgeValue = MALLOC(char, 16);
+				sprintf_s(edgeValue, 16, "e%03d->%03d", id, nix);
+				LOG(" %d->%d", id, nix);
+				Node* node = tree1->addNode(parent, testData, edgeValue);
+				//edgeValue = MALLOC(char, 16);
+				//sprintf_s(edgeValue, 16, "e%04d<-%04d", nix, id);
+				//tree1->addEdge(node, parent, edgeValue);
+			} else {
+				LOG(" 0->%d", nix);
+				Node* node = tree1->addNode(NULL, testData);
+			}
+			nix++;
+		}
+		nodeCount <<= 1;
+	}
+	LOG("\n");
+	Node* node = tree1->root();
+	node = (*(Edge**)node->edges()->values()->getAt(0))->to();
+	ASSERT("node 0/0 should have id 'n002'", NS_FW_BASE::strncmp(((TEST_DATA*)node->value())->name, "n002", 4) == 0);
+	node = (*(Edge**)node->edges()->values()->getAt(1))->to();
+	ASSERT("node 0/0/1 should have id 'n005'", NS_FW_BASE::strncmp(((TEST_DATA*)node->value())->name, "n005", 4) == 0);
+	node = tree1->root();
+	node = (*(Edge**)node->edges()->values()->getAt(1))->to();
+	ASSERT("node 0/1 should have id 'n003'", NS_FW_BASE::strncmp(((TEST_DATA*)node->value())->name, "n003", 4) == 0);
+	node = (*(Edge**)node->edges()->values()->getAt(0))->to();
+	ASSERT("node 0/1/0 should have id 'n006'", NS_FW_BASE::strncmp(((TEST_DATA*)node->value())->name, "n006", 4) == 0);
+
+	int path1[] = { 0, 0, 0, -1 };
+	ASSERT("node on path 0/0/0 should be 'n004'", NS_FW_BASE::strncmp(((TEST_DATA*)tree1->get(path1)->value())->name, "n004", 4) == 0);
+	path1[1] = 1;
+	ASSERT("node on path 0/1/0 should be 'n006'", NS_FW_BASE::strncmp(((TEST_DATA*)tree1->get(path1)->value())->name, "n006", 4) == 0);
+	path1[2] = 1;
+	ASSERT("node on path 0/1/1 should be 'n007'", NS_FW_BASE::strncmp(((TEST_DATA*)tree1->get(path1)->value())->name, "n007", 4) == 0);
+
+	int path2[] = { 2, 0, -1 };
+	ASSERT("node on path 2/0 should be 'n006'", NS_FW_BASE::strncmp(((TEST_DATA*)tree1->get(path2)->value())->name, "n006", 4) == 0);
+	path2[1] = 3;
+	ASSERT("node on path 2/3 should be NULL", tree1->get(path2) == NULL);
+
+	ARRAY_FOREACH(tree1->edges(), delEdge(*(Edge**)value););
+	ARRAY_FOREACH(tree1->nodes(), delNode(*(Node**)value););
+	DEL_(tree1);
 
 	LOG("****************\n\nResults: %d/%d=%.02f%%\n\n********************************\n\n",
 		passed, (passed + failed), (100.0f*passed) / (passed + failed));
