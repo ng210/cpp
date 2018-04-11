@@ -16,8 +16,8 @@ char* strncpy(char *dst, size_t len, const char *src) {
 	return dst;
 }
 //*********************************************************
-size_t strlen(const char *str) {
-	size_t len = 0;
+UINT32 strlen(const char *str) {
+	UINT32 len = 0;
 	while (str[len] != '\0') len++;
 	return len;
 }
@@ -84,15 +84,6 @@ void* memcpy(void *dest, const void *src, size_t count) {
 	return dest;
 }
 //*********************************************************
-void strnncpy(char*& dst, size_t& size, size_t start, const char* src, const size_t length, const size_t offset) {
-	if (start + length > size) {
-		size_t newSize = (size << 1);
-		dst = REALLOC(dst, char, newSize);
-		size = newSize;
-	}
-	strncpy(&dst[start], length, &src[offset]);
-}
-//*********************************************************
 char* strchr(const char* str, char ch) {
 	char* pos = NULL;
 	if (str != NULL) {
@@ -123,10 +114,7 @@ size_t strcspn(const char *dest, const char *src) {
 size_t strrspn(const char *dest, const char *src) {
 	size_t len = strlen(dest);
 	if (len > 0) {
-		len++;
-		while (len >= 0 &&
-			strchr(src, dest[len]) != NULL)
-			len--;
+		while (len > 0 && strchr(src, dest[len-1]) != NULL) len--;
 	}
 	return len;
 }
@@ -142,6 +130,17 @@ size_t strrcspn(const char *dest, const char *src) {
 	}
 	return i;
 }
+
+//*********************************************************
+void strnncpy(char*& dst, size_t& size, size_t start, const char* src, const size_t length, const size_t offset) {
+	if (start + length > size) {
+		size_t newSize = (size << 1);
+		dst = REALLOC(dst, char, newSize);
+		size = newSize;
+	}
+	strncpy(&dst[start], length, &src[offset]);
+}
+
 
 //int strcontains(const char* src, const char* str) {
 //	int res = 0;
