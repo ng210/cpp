@@ -10,9 +10,7 @@ Edge::Edge(Node* from, Node* to, void* value) {
 	to_ = to;
 	value_ = value;
 }
-
 Edge::~Edge(void) {
-
 }
 
 //int Edge::compare(void* a, void* b) {
@@ -33,38 +31,36 @@ Node::~Node() {
 	//edges_->cleanUp();
 	DEL_(edges_);
 }
-
 void Node::init(Tree* tree, void* value) {
 	flag_ = 0;
 	tree_ = tree;
 	value_ = value;
-	edges_ = NEW_(Map, sizeof(Node*), sizeof(Edge*));
-	edges_->compare(Map::compareByRef);
+	edges_ = NEW_(Map, MAP_USE_REF, MAP_USE_REF);
+	edges_->compare(Collection::compareByRef);
 }
 
 Tree::Tree() {
 	init();
 }
 Tree::~Tree() {
-	//ARRAY_FOREACH(nodes_, deleteNode_(*(Node**)value));
+	//ARRAY_FOREACH(nodes_, deleteNode_((Node*)value));
 	DEL_(nodes_);
-	//MAP_FOREACH(edges_, deleteEdge_(*(Edge**)value));
+	//MAP_FOREACH(edges_, deleteEdge_((Edge*)value));
 	DEL_(edges_);
 }
-
 void Tree::init() {
-	nodes_ = NEW_(Array, sizeof(Node*));
-	edges_ = NEW_(Array, sizeof(Edge*));
-	edges_->compare(Map::compareByRef);
+	nodes_ = NEW_(PArray, 64);
+	edges_ = NEW_(PArray, 256);
+	edges_->compare(Collection::compareByRef);
 	root_ = NULL;
 
-	createNode = Tree::createNode_;
-	deleteNode = Tree::deleteNode_;
-	createEdge = Tree::createEdge_;
-	deleteEdge = Tree::deleteEdge_;
+	createNode_ = Tree::sCreateNode_;
+	deleteNode_ = Tree::sDeleteNode_;
+	createEdge_ = Tree::sCreateEdge_;
+	deleteEdge_ = Tree::sDeleteEdge_;
 }
 
-int Tree::createNode_(void* ppNode, size_t argc, ...) {
+int Tree::sCreateNode_(void* ppNode, size_t argc, ...) {
 	va_list args;
 	Node* node = NULL;
 	if (argc > 0) {
@@ -77,16 +73,14 @@ int Tree::createNode_(void* ppNode, size_t argc, ...) {
 	va_end(args);
 	return node != NULL ? 0 : 1;
 }
-
-int Tree::deleteNode_(void* node, size_t argc, ...) {
+int Tree::sDeleteNode_(void* node, size_t argc, ...) {
 	if (((Node*)node)->value() != NULL) {
 		DEL_(((Node*)node)->value());
 	}
 	DEL_((Node*)node);
 	return 0;
 }
-
-int Tree::createEdge_(void* ppEdge, size_t argc, ...) {
+int Tree::sCreateEdge_(void* ppEdge, size_t argc, ...) {
 	va_list args;
 	Edge* edge = NULL;
 	if (argc > 1) {
@@ -100,8 +94,7 @@ int Tree::createEdge_(void* ppEdge, size_t argc, ...) {
 	va_end(args);
 	return edge != NULL ? 0 : 1;
 }
-
-int Tree::deleteEdge_(void* edge, size_t argc, ...) {
+int Tree::sDeleteEdge_(void* edge, size_t argc, ...) {
 	if (((Edge*)edge)->value() != NULL) {
 		DEL_(((Edge*)edge)->value());
 	}
@@ -111,14 +104,14 @@ int Tree::deleteEdge_(void* edge, size_t argc, ...) {
 
 Node* Tree::addNode(Node* parentNode, void* nodeValue, void* edgeValue) {
 	Node* node = NULL;
-	createNode(&node, 2, this, nodeValue);
+	createNode_(&node, 2, this, nodeValue);
 	Node* childNode = node;
 	if (parentNode == NULL || root_ == NULL) {
 		childNode = root_;
 		parentNode = node;
 		root_ = node;
 	}
-	nodes_->add(&node);
+	nodes_->add(node);
 	if (childNode != NULL) {
 		Edge* edge = NULL;
 		addEdge(parentNode, childNode, edgeValue);
@@ -128,9 +121,9 @@ Node* Tree::addNode(Node* parentNode, void* nodeValue, void* edgeValue) {
 Edge* Tree::addEdge(Node* from, Node* to, void* edgeValue) {
 	Edge* edge = NULL;
 	if (from != NULL && to != NULL) {
-		createEdge(&edge, 3, from, to, edgeValue);
-		from->edges()->put(&to, &edge);
-		edges_->add(&edge);
+		createEdge_(&edge, 3, from, to, edgeValue);
+		from->edges()->put(to, edge);
+		edges_->add(edge);
 	}
 	return edge;
 }
@@ -160,7 +153,7 @@ Node* Tree::get(const int* path) {
 	if (path != NULL) {
 		int n = path[0];
 		if (n != -1) {
-			Node* node = *(Node**)nodes_->getAt(n);
+			Node* node = (Node*)nodes_->getAt(n);
 			int i = 1;
 			while (node != NULL) {
 				int n = path[i];
@@ -169,7 +162,7 @@ Node* Tree::get(const int* path) {
 					break;
 				}
 				if (n < node->edges()->size()) {
-					node = *(Node**)node->edges()->keys()->getAt(n);
+					node = (Node*)node->edges()->keys()->getAt(n);
 				} else {
 					break;
 				}
@@ -185,7 +178,7 @@ Node* Tree::traverseDFS(TreeCallback pre, TreeCallback in, TreeCallback post, vo
 	Node* node = root == NULL ? root_ : root;
 	node->flag(node->flag() + 1);
 	if (pre == NULL || !pre(node, 1, args)) {
-		Array& edges = *node->edges()->values();
+		ArrayBase& edges = *node->edges()->values();
 		for (int i = 0; i < (int)edges.length(); i++) {
 			Edge* edge = (Edge*)edges.getAt(i);
 			if (in == NULL || !in(edge, 1, args)) {

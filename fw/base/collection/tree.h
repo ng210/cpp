@@ -1,7 +1,7 @@
 #ifndef __TREE_H
 #define __TREE_H
 
-//#include "collection/Array.h"
+#include "collection/parray.h"
 #include "collection/map.h"
 
 NS_FW_BASE_BEGIN
@@ -34,20 +34,20 @@ public:
 typedef int (TreeCallback)(void* item, size_t argc, ...);
 
 class Tree {
-	static TreeCallback createNode_;
-	static TreeCallback deleteNode_;
-	static TreeCallback createEdge_;
-	static TreeCallback deleteEdge_;
+	static TreeCallback sCreateNode_;
+	static TreeCallback sDeleteNode_;
+	static TreeCallback sCreateEdge_;
+	static TreeCallback sDeleteEdge_;
 
-protected: PROP_R(Array*, nodes);
-protected: PROP_R(Array*, edges);
+protected: PROP_R(PArray*, nodes);
+protected: PROP_R(PArray*, edges);
 protected: PROP_R(Node*, root);
 
 public:
-	TreeCallback* createNode;
-	TreeCallback* deleteNode;
-	TreeCallback* createEdge;
-	TreeCallback* deleteEdge;
+	TreeCallback* createNode_;
+	TreeCallback* deleteNode_;
+	TreeCallback* createEdge_;
+	TreeCallback* deleteEdge_;
 
 	Tree();
 	void init();
