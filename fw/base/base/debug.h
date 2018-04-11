@@ -32,6 +32,7 @@ NS_FW_BASE_END
 #else
 #define SYS(fn) fn
 #define DEBUG(format, ...) 
+#define LOG(format, ...)
 #endif
 
 #endif

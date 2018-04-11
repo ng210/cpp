@@ -1,6 +1,8 @@
 #include "base/debug.h"
 #include "base/memory.h"
 
+#ifdef _DEBUG
+
 NS_FW_BASE_BEGIN
 
 Tracer* Debug::tracer_ = NULL;
@@ -29,3 +31,5 @@ void Debug::destroy() {
 }
 
 NS_FW_BASE_END
+
+#endif
