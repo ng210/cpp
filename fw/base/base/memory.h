@@ -26,8 +26,8 @@ NS_FW_BASE_BEGIN
 	//#define DEL(v) if (MemoryMgr::delMemDbgInfo((Object&)v, __FILE__, __LINE__)) { delete v; }
 	#define DELARR(v) if (MemoryMgr::delMemDbgInfo(v, __FILE__, __LINE__)) { delete[] v; }
 	#define DEL_(v) if (v != NULL && MemoryMgr::delMemDbgInfo((void*)v, __FILE__, __LINE__)) { delete v; }
-	#define MALLOC(t, s) (t*)MemoryMgr::addMemDbgInfo(MemoryMgr::alloc(sizeof(t)*s), __FILE__, __LINE__)
-	#define REALLOC(p, t, s) (t*)MemoryMgr::addMemDbgInfo(MemoryMgr::realloc(p, sizeof(t)*s), __FILE__, __LINE__, p)
+	#define MALLOC(t, s) (t*)MemoryMgr::addMemDbgInfo(MemoryMgr::alloc(sizeof(t)*(s)), __FILE__, __LINE__)
+	#define REALLOC(p, t, s) (t*)MemoryMgr::addMemDbgInfo(MemoryMgr::realloc(p, sizeof(t)*(s)), __FILE__, __LINE__, p)
 	#define FREE(p) if (p != NULL && MemoryMgr::delMemDbgInfo((void*)p, __FILE__, __LINE__)) { MemoryMgr::free((void*)p); }
 
 #else
