@@ -83,6 +83,15 @@
     <ClInclude Include="collection\tree.h">
       <Filter>collection\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="base\string.h">
+      <Filter>base\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\parray.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\arraybase.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\memory.cpp">
@@ -126,6 +135,15 @@
       <Filter>utils\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="collection\tree.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base\string.cpp">
+      <Filter>base\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\parray.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="arraybase.cpp">
       <Filter>collection\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
