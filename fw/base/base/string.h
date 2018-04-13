@@ -8,7 +8,7 @@
 NS_FW_BASE_BEGIN
 
 char*	str_concat(const char* str1, const char* str2);
-char*	str_concat(const char* str, int argc, ...);
+char*	str_concat(int argc, ...);
 int		str_ends(const char* str, const char* part);
 int		str_indexOf(const char* str, const char* part, UINT32 offset = 0);
 char*	str_join(int argc, const char* filler, ...);

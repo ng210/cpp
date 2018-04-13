@@ -9,9 +9,9 @@
 NS_FW_BASE_BEGIN
 
 char* str_concat(const char* str1, const char* str2) {
-	return str_concat(str1, 1, str2);
+	return str_concat(2, str1, str2);
 }
-char* str_concat(const char* str, int argc, ...) {
+char* str_concat(int argc, ...) {
 	va_list args;
 	char* parts[256];
 	size_t lengths[256];
@@ -70,28 +70,63 @@ char* str_join(int argc, const char* filler, ...) {
 	return str_join(parts, filler);
 }
 char* str_join(char** parts, const char* filler) {
-	size_t lengths[256];
-	size_t len = 0;
+	size_t size = 0;
+	char* buffer = NULL;
+	char* ptr = NULL;
+	size_t ix = 0;
+	size_t offset = 0;
 	size_t fillerLength = strlen(filler);
-	int argc = 0;
-	for (; parts[argc] != NULL; argc++) {
-		len += lengths[argc] = strlen(parts[argc]);
-		len += fillerLength;
-	}
-	len -= fillerLength;
-	char* buffer = MALLOC(char, len + 1);
-	char* ptr = buffer;
-	for (int i = 0; parts[i] != NULL;) {
-		len = lengths[i];
-		strncpy(ptr, len, parts[i]);
-		ptr += len;
-		i++;
-		if (i < argc) {
-			strncpy(ptr, fillerLength, filler);
-			ptr += fillerLength;
+	while (parts[ix] != NULL) {
+		size_t len = strlen(parts[ix]);
+		size_t end = offset + len + fillerLength;
+		if (end > size) {
+			size += 65536;
+			buffer = REALLOC(buffer, char, size);
+			ptr = buffer + offset;
 		}
+		strncpy(ptr, len, parts[ix]);
+		ptr += len;
+		strncpy(ptr, fillerLength, filler);
+		ptr += fillerLength;
+		offset = end;
+		ix++;
 	}
-	*ptr = '\0';
+	offset -= fillerLength;
+	buffer = REALLOC(buffer, char, offset + 1);
+	buffer[offset] = '\0';
+
+	//size_t len = 0;
+	//size_t fillerLength = strlen(filler);
+	//if (argc == -1) {
+	//	for (argc = 0; parts[argc] != NULL; argc++);
+	//}
+	//char* buffer = NULL;
+	//size_t size = 0;
+	//for (int i = 0; parts[i] != NULL; i++) {
+	//	size_t len = strlen(parts[i]);
+	//	size += len;
+	//	buffer = REALLOC(buffer, char, size);
+	//	strncpy(&buffer[size], len, parts[i]);
+	//}
+
+	//size_t* lengths = MALLOC(size_t, argc);
+	//for (int i = 0; i < argc; i++) {
+	//	len += lengths[argc] = strlen(parts[argc]);
+	//	len += fillerLength;
+	//}
+	//char* buffer = MALLOC(char, len + 1);
+	//char* ptr = buffer;
+	//for (int i = 0; parts[i] != NULL;) {
+	//	len = lengths[i];
+	//	strncpy(ptr, len, parts[i]);
+	//	ptr += len;
+	//	i++;
+	//	if (i < argc) {
+	//		strncpy(ptr, fillerLength, filler);
+	//		ptr += fillerLength;
+	//	}
+	//}
+	//*ptr = '\0';
 	return buffer;
 }
 int str_lastIndexOf(const char* str, const char* part) {

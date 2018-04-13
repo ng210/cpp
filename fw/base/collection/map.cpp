@@ -91,11 +91,7 @@ void Map::init(UINT32 keySize, UINT32 valueSize, HashingFunction hashing, Collec
 Map::~Map() {
 	DEL_(keys_);
 	DEL_(values_);
-	//bucketList_->cleanUp();
-	for (UINT32 i = 0; i < bucketList_->length(); i++) {
-		Array* bucket = (Array*)bucketList_->getAt(i);
-		bucket->~Array();
-	}
+	ARRAY_FOREACH(bucketList_, ((Array*)value)->~Array());
 	DEL_(bucketList_);
 }
 //
