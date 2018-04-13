@@ -1,21 +1,23 @@
 #include "WavFmt.h"
 
-#include "base/MemoryMgr.h"
+#include "base/memory.h"
 #include "utils/File.h"
 
 #pragma warning( disable : 4996)
 
 NS_FW_BASE_USE
 
-WaveFmt::WaveFmt(String& path, int sampleRate, int channelCount, int bitsPerSample) {
+WaveFmt::WaveFmt(char* path, int sampleRate, int channelCount, int bitsPerSample) {
 	fileName_ = path;
 	length_ = 0;
-	buffer_ = NEW_(Buffer, TYPE_SHORT);
-	createHeader(sampleRate, channelCount, bitsPerSample);
+	buffer_ = NEW_(Buffer);
+	header_ = createHeader(sampleRate, channelCount, bitsPerSample);
+	buffer_->write(header_, sizeof(WAVEHEADER));
 }
 
 WaveFmt::~WaveFmt() {
-	DEL_(buffer_)
+	DEL_(buffer_);
+	DEL_(header_);
 }
 
 WAVEHEADER* WaveFmt::createHeader(int sampleRate, int channelCount, int bitsPerSample) {
@@ -33,27 +35,26 @@ WAVEHEADER* WaveFmt::createHeader(int sampleRate, int channelCount, int bitsPerS
 	header->SubChunk1.nBlockAlign = blockAlign;
 	return header;
 }
+
 size_t WaveFmt::write(const char* data, size_t length, size_t offset) {
 	length_ += length;
 	return buffer_->append((void*)data, length, offset);
 }
-size_t WaveFmt::write(Buffer& data, size_t length, size_t offset) {
-	length_ += length;
-	return buffer_->append(data, length, offset);
-	//write(data.getBuffer(), offset, length);
+
+size_t WaveFmt::close() {
+	size_t byteCount = header_->SubChunk1.nBlockAlign * length_;
+	header_->chunkSize = (long)(sizeof(WAVEHEADER) - offsetof(WAVEHEADER, format) + byteCount);
+	header_->SubChunk2.subchunk2Size = (long)byteCount;
+
+	buffer_->write((char*)header_, sizeof(WAVEHEADER));
+	//buffer_->append(buffer, byteCount);
+	File::write(fileName_, buffer_);
+	//BYTE* buffer = buffer_->getByteBuffer();
+	//File::write(fileName_, buffer, buffer_->length());
+	//FREE(buffer);
+	return byteCount;
 }
 
-//size_t WaveFmt::write(String& path, int sampleRate, int channelCount, int bitsPerSample, const char* data, size_t length) {
-//	WaveFmt waveFmt(path, sampleRate, channelCount, bitsPerSample);
-//	waveFmt.write(data, 0, length);
-//	return waveFmt.close();
-//}
-//size_t WaveFmt::write(String& path, int sampleRate, int channelCount, int bitsPerSample, Buffer& data, size_t length) {
-//	WaveFmt waveFmt(path, sampleRate, channelCount, bitsPerSample);
-//	waveFmt.write(data, 0, length);
-//	return waveFmt.close();
-//}
-//
 size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bitsPerSample, const char* data, size_t byteCount) {
 	WAVEHEADER* header = WaveFmt::createHeader(sampleRate, channelCount, bitsPerSample);
 	header->chunkSize = (long)(sizeof(WAVEHEADER) - offsetof(WAVEHEADER, format) + byteCount);
@@ -65,30 +66,13 @@ size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bi
 	for (; i < sizeof(WAVEHEADER); i++) {
 		buffer[i] = ((char*)header)[i];
 	}
-	for (size_t j=0; j < byteCount; j++) {
+	for (size_t j = 0; j < byteCount; j++) {
 		buffer[i + j] = data[j];
 	}
-	File::write(path, buffer, length);
+	File::write(path, (BYTE*)buffer, length);
 	FREE(buffer);
 	FREE(header);
 	return length;
-}
-//size_t WaveFmt::write(String& path, int sampleRate, int channelCount, int bitsPerSample, Buffer& data) {
-//	return write(path, sampleRate, channelCount, bitsPerSample, data.getBuffer(), data.length());
-//}
-//size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bitsPerSample, Buffer& data) {
-//	return write(path, sampleRate, channelCount, bitsPerSample, data, data.length());
-//}
-
-size_t WaveFmt::close() {
-	size_t byteCount = header_.SubChunk1.nBlockAlign * length_;
-	header_.chunkSize = (long)(sizeof(WAVEHEADER) - offsetof(WAVEHEADER, format) + byteCount);
-	header_.SubChunk2.subchunk2Size = (long)byteCount;
-	buffer_->write((char*)&header_, 0, sizeof(WAVEHEADER));
-	char* buffer = buffer_->getBuffer<char>();
-	File::write(fileName_, buffer, byteCount + sizeof(WAVEHEADER));
-	FREE(buffer);
-	return byteCount;	// File::write(fileName_, *buffer_);
 }
 
 //int WaveFmt::write(float* buffer, int length)

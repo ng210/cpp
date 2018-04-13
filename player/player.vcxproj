@@ -128,15 +128,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="AbstractAdapter.h" />
-    <ClInclude Include="Channel.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="player_def.h" />
+    <ClInclude Include="_abstractadapter.h" />
+    <ClInclude Include="_channel.h" />
+    <ClInclude Include="_player.h" />
+    <ClInclude Include="playerdef.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AbstractAdapter.cpp" />
-    <ClCompile Include="Channel.cpp" />
-    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="_abstractadapter.cpp" />
+    <ClCompile Include="_channel.cpp" />
+    <ClCompile Include="_player.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

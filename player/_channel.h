@@ -1,15 +1,15 @@
 #ifndef __PLAYER_CHANNEL_H
 #define __PLAYER_CHANNEL_H
 
-#include "collection/Array.h"
+#include "collection/array.h"
 #include "Player.h"
 
-NS_FW_BASE_USE
+//NS_FW_BASE_USE
 
 NS_PLAYER_BEGIN
 
 class Player;
-class Channel : public Object {
+class Channel {
 protected: PROP_R(Player*, player);
 protected: PROP_R(Target*, target);
 protected: PROP_R(Array*, sequence);		// Array<PlayerCommand>

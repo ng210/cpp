@@ -15,27 +15,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AbstractAdapter.h">
+    <ClInclude Include="_abstractadapter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
+    <ClInclude Include="_channel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Channel.h">
+    <ClInclude Include="_player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="player_def.h">
+    <ClInclude Include="playerdef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Channel.cpp">
+    <ClCompile Include="_abstractadapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp">
+    <ClCompile Include="_channel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AbstractAdapter.cpp">
+    <ClCompile Include="_player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

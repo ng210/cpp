@@ -1,5 +1,5 @@
 #include "SoundPlayer.h"
-#include "base/MemoryMgr.h"
+#include "base/memory.h"
 #include <stdio.h>
 
 NS_FW_BASE_USE

@@ -23,6 +23,7 @@ void Channel::set(Player* player, size_t id, Target* target, Array* sequence, si
 	currentTick_ = 0;
 	tick_ = 0;
 }
+
 void Channel::run(size_t ticks) {
 	bool restart;
 	do {

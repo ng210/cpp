@@ -1,6 +1,6 @@
-#include "AbstractAdapter.h"
-#include "base/MemoryMgr.h"
-#include <varargs.h>
+#include "abstractadapter.h"
+//#include "base/memory.h"
+//#include <varargs.h>
 
 NS_PLAYER_BEGIN
 

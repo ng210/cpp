@@ -1,8 +1,8 @@
 #ifndef __PLAYER_H
 #define __PLAYER_H
 
-#include "base/base_defs.h"
-#include "collection/Array.h"
+#include "basedef.h"
+#include "collection/array.h"
 
 NS_FW_BASE_USE
 

@@ -41,16 +41,16 @@ typedef struct WAVEHEADER_ {
 } WAVEHEADER;
 
 class WaveFmt {
-	WAVEHEADER header_;
-	String fileName_;
+	WAVEHEADER* header_;
+	char* fileName_;
 	Buffer* buffer_;
 private: PROP_R(size_t, length);
 
 	static WAVEHEADER* createHeader(int sampleRate, int channelCount, int bitsPerSample);
 public:
-	WaveFmt(String& path, int sampleRate, int channelCount, int bitsPerSample);
+	WaveFmt(char* path, int sampleRate, int channelCount, int bitsPerSample);
 	~WaveFmt();
-	size_t write(Buffer& data, size_t length, size_t offset = 0);
+	//size_t write(Buffer& data, size_t length, size_t offset = 0);
 	size_t write(const char* data, size_t length, size_t offset = 0);
 	size_t close();
 

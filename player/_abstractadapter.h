@@ -1,10 +1,10 @@
 #ifndef __PLAYER_ABSTRACT_ADAPTER_H
 #define __PLAYER_ABSTRACT_ADAPTER_H
 
-#include "player_def.h"
-#include "collection/Array.h"
+#include "playerdef.h"
+//#include "collection/array.h"
 
-NS_FW_BASE_USE
+//NS_FW_BASE_USE
 NS_PLAYER_BEGIN
 
 typedef unsigned char COMMAND_ARGUMENT;
@@ -24,7 +24,7 @@ typedef union PLAYER_COMMAND_U_ {
 } PLAYER_COMMAND_U;
 
 
-class PlayerCommand : public Object {
+class PlayerCommand {
 public:
 	size_t delta_;
 	size_t code_;
@@ -42,7 +42,7 @@ public:
 	virtual int processCommand(void* target, PLAYER_COMMAND* cmd) = 0;
 };
 
-class Target : public Object {
+class Target {
 public:
 	void* object;
 	AbstractAdapter* adapter;
