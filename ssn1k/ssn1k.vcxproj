@@ -293,29 +293,29 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="_ctrl.cpp" />
-    <ClCompile Include="_env.cpp" />
-    <ClCompile Include="_flt.cpp" />
-    <ClCompile Include="_mdl.cpp" />
-    <ClCompile Include="_mixer.cpp" />
-    <ClCompile Include="_osc.cpp" />
+    <ClCompile Include="ctrl.cpp" />
+    <ClCompile Include="env.cpp" />
+    <ClCompile Include="flt.cpp" />
+    <ClCompile Include="mdl.cpp" />
+    <ClCompile Include="mixer.cpp" />
+    <ClCompile Include="osc.cpp" />
     <ClCompile Include="ssn1k.cpp" />
-    <ClCompile Include="_synth.cpp" />
-    <ClCompile Include="_synthadapter.cpp" />
-    <ClCompile Include="_voice.cpp" />
+    <ClCompile Include="synth.cpp" />
+    <ClCompile Include="synthadapter.cpp" />
+    <ClCompile Include="voice.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="_ctrl.h" />
-    <ClInclude Include="_env.h" />
-    <ClInclude Include="_flt.h" />
-    <ClInclude Include="_mdl.h" />
-    <ClInclude Include="_mixer.h" />
-    <ClInclude Include="_osc.h" />
+    <ClInclude Include="ctrl.h" />
+    <ClInclude Include="env.h" />
+    <ClInclude Include="flt.h" />
+    <ClInclude Include="mdl.h" />
+    <ClInclude Include="mixer.h" />
+    <ClInclude Include="osc.h" />
     <ClInclude Include="ssn1k.h" />
     <ClInclude Include="ssn1klib.h" />
-    <ClInclude Include="_synth.h" />
-    <ClInclude Include="_synthadapter.h" />
-    <ClInclude Include="_voice.h" />
+    <ClInclude Include="synth.h" />
+    <ClInclude Include="synthadapter.h" />
+    <ClInclude Include="voice.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
