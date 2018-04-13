@@ -18,7 +18,9 @@ int testTree();
 #define TEST(t) t() ? failed++ : passed++;
 
 int main(int argc, char* args[]) {
+	#ifdef _DEBUG
 	Debug::initialize(/*DEBUG_UNICODE | DEBUG_MEMORY*/);
+	#endif
 	LOG("Framework tests\n\nCommand line arguments:\n");
 
 	//for (UINT32 i = 0; i < args->keys()->length(); i++) {
@@ -53,8 +55,9 @@ int main(int argc, char* args[]) {
 	printf("****************\n\nFinal results: %d/%d=%.02f%%\n\n********************************\n\n",
 		passed, (passed + failed), (100.0f*passed) / (passed + failed));
 
+#ifdef _DEBUG
 	MemoryMgr::checkMemDbgInfo(0, NULL);
-
+#endif
 	return 0;
 }
 
@@ -230,10 +233,10 @@ int testString() {
 
 	char* str = NULL;
 	str = str_concat("Hello", "world");
-	ASSERT("concat should create 'Helloworld", strncmp(str, "Helloworld"));
+	ASSERT("concat should create 'Helloworld", strncmp(str, "Helloworld") == 0);
 	FREE(str);
-	str = str_concat("Concat test: ", 3, "Hello", " ", "world!");
-	ASSERT("concat should create 'Concat test: Hello world!'", strncmp(str, "Concat test: Hello world!"));
+	str = str_concat(4, "Concat test: ", "Hello", " ", "world!");
+	ASSERT("concat should create 'Concat test: Hello world!'", strncmp(str, "Concat test: Hello world!") == 0);
 	FREE(str);
 	ASSERT("string should end with 'world!'", str_ends("Hello world!", "world!") != 0);
 	ASSERT("string should not end with 'qorld!'", str_ends("Hello world!", "qorld!") == 0);
@@ -715,8 +718,8 @@ int testTree() {
 	path2[1] = 3;
 	ASSERT("node on path 2/3 should be NULL", tree1->get(path2) == NULL);
 
-	ARRAY_FOREACH(tree1->edges(), delEdge((Edge*)value););
-	ARRAY_FOREACH(tree1->nodes(), delNode((Node*)value););
+	//ARRAY_FOREACH(tree1->edges(), delEdge((Edge*)value););
+	//ARRAY_FOREACH(tree1->nodes(), delNode((Node*)value););
 	DEL_(tree1);
 
 	LOG("****************\n\nResults: %d/%d=%.02f%%\n\n********************************\n\n",

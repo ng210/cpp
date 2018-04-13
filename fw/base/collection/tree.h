@@ -34,20 +34,26 @@ public:
 typedef int (TreeCallback)(void* item, size_t argc, ...);
 
 class Tree {
-	static TreeCallback sCreateNode_;
-	static TreeCallback sDeleteNode_;
-	static TreeCallback sCreateEdge_;
-	static TreeCallback sDeleteEdge_;
+protected:
+	TreeCallback createNode_;
+	TreeCallback deleteNode_;
+	TreeCallback createEdge_;
+	TreeCallback deleteEdge_;
+	
+	static TreeCallback defCreateNodeHandler_;
+	static TreeCallback defDeleteNodeHandler_;
+	static TreeCallback defCreateEdgeHandler_;
+	static TreeCallback defDeleteEdgeHandler_;
 
 protected: PROP_R(PArray*, nodes);
 protected: PROP_R(PArray*, edges);
 protected: PROP_R(Node*, root);
 
 public:
-	TreeCallback* createNode_;
-	TreeCallback* deleteNode_;
-	TreeCallback* createEdge_;
-	TreeCallback* deleteEdge_;
+	TreeCallback* createNodeHandler;
+	TreeCallback* deleteNodeHandler;
+	TreeCallback* createEdgeHandler;
+	TreeCallback* deleteEdgeHandler;
 
 	Tree();
 	void init();

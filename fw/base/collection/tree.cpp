@@ -43,9 +43,9 @@ Tree::Tree() {
 	init();
 }
 Tree::~Tree() {
-	//ARRAY_FOREACH(nodes_, deleteNode_((Node*)value));
+	ARRAY_FOREACH(nodes_, deleteNode_(value, 1, this));
 	DEL_(nodes_);
-	//MAP_FOREACH(edges_, deleteEdge_((Edge*)value));
+	ARRAY_FOREACH(edges_, deleteEdge_(value, 1, this));
 	DEL_(edges_);
 }
 void Tree::init() {
@@ -54,13 +54,28 @@ void Tree::init() {
 	edges_->compare(Collection::compareByRef);
 	root_ = NULL;
 
-	createNode_ = Tree::sCreateNode_;
-	deleteNode_ = Tree::sDeleteNode_;
-	createEdge_ = Tree::sCreateEdge_;
-	deleteEdge_ = Tree::sDeleteEdge_;
+	createNodeHandler = Tree::defCreateNodeHandler_;
+	deleteNodeHandler = Tree::defDeleteNodeHandler_;
+	createEdgeHandler = Tree::defCreateEdgeHandler_;
+	deleteEdgeHandler = Tree::defDeleteEdgeHandler_;
 }
 
-int Tree::sCreateNode_(void* ppNode, size_t argc, ...) {
+int Tree::defCreateNodeHandler_(void* node, size_t argc, ...) {
+	return 0;
+}
+int Tree::defDeleteNodeHandler_(void* node, size_t argc, ...) {
+	FREE(((Node*)node)->value());
+	return 0;
+}
+int Tree::defCreateEdgeHandler_(void* edge, size_t argc, ...) {
+	return 0;
+}
+int Tree::defDeleteEdgeHandler_(void* edge, size_t argc, ...) {
+	FREE(((Edge*)edge)->value());
+	return 0;
+}
+
+int Tree::createNode_(void* ppNode, size_t argc, ...) {
 	va_list args;
 	Node* node = NULL;
 	if (argc > 0) {
@@ -68,19 +83,18 @@ int Tree::sCreateNode_(void* ppNode, size_t argc, ...) {
 		Tree* tree = va_arg(args, Tree*);
 		void* value = argc > 1 ? va_arg(args, void*) : NULL;
 		node = NEW_(Node, tree, value);
+		createNodeHandler(node, 0);
 	}
 	*(Node**)ppNode = node;
 	va_end(args);
 	return node != NULL ? 0 : 1;
 }
-int Tree::sDeleteNode_(void* node, size_t argc, ...) {
-	if (((Node*)node)->value() != NULL) {
-		DEL_(((Node*)node)->value());
-	}
+int Tree::deleteNode_(void* node, size_t argc, ...) {
+	deleteNodeHandler(node, 0);
 	DEL_((Node*)node);
 	return 0;
 }
-int Tree::sCreateEdge_(void* ppEdge, size_t argc, ...) {
+int Tree::createEdge_(void* ppEdge, size_t argc, ...) {
 	va_list args;
 	Edge* edge = NULL;
 	if (argc > 1) {
@@ -89,15 +103,14 @@ int Tree::sCreateEdge_(void* ppEdge, size_t argc, ...) {
 		Node* to = va_arg(args, Node*);
 		void* value = argc > 2 ? va_arg(args, void*) : NULL;
 		edge = NEW_(Edge, from, to, value);
+		createEdgeHandler(edge, 0);
 	}
 	*(Edge**)ppEdge = edge;
 	va_end(args);
 	return edge != NULL ? 0 : 1;
 }
-int Tree::sDeleteEdge_(void* edge, size_t argc, ...) {
-	if (((Edge*)edge)->value() != NULL) {
-		DEL_(((Edge*)edge)->value());
-	}
+int Tree::deleteEdge_(void* edge, size_t argc, ...) {
+	deleteEdgeHandler(edge, 0);
 	DEL_(edge);
 	return 0;
 }
