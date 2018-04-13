@@ -7,9 +7,9 @@
 
 #define _USE_MATH_DEFINES
 
-#include "base/base_defs.h"
+#include "basedef.h"
 #include "ssn1k.h"
-#include "Ctrl.h"
+#include "ctrl.h"
 #include <stdio.h>
 
 //extern double SSN1K_THETA;

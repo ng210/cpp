@@ -5,7 +5,7 @@
 #ifndef __FLT_H
 #define __FLT_H
 
-#include "Mdl.h"
+#include "mdl.h"
 
 NS_SSN1K_BEGIN
 

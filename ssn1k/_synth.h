@@ -5,10 +5,10 @@
 #ifndef __SYNTH_H
 #define __SYNTH_H
 
-#include "Mdl.h"
-#include "Osc.h"
-#include "Env.h"
-#include "Flt.h"
+#include "mdl.h"
+#include "osc.h"
+#include "env.h"
+#include "flt.h"
 
 NS_SSN1K_BEGIN
 

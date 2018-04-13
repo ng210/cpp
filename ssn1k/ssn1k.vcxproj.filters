@@ -4,31 +4,31 @@
     <ClCompile Include="ssn1k.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Env.cpp">
+    <ClCompile Include="_env.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Mdl.cpp">
+    <ClCompile Include="_ctrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Ctrl.cpp">
+    <ClCompile Include="_flt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Synth.cpp">
+    <ClCompile Include="_mdl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Osc.cpp">
+    <ClCompile Include="_mixer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Voice.cpp">
+    <ClCompile Include="_osc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Flt.cpp">
+    <ClCompile Include="_synth.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SynthAdapter.cpp">
+    <ClCompile Include="_synthadapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Mixer.cpp">
+    <ClCompile Include="_voice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -39,31 +39,31 @@
     <ClInclude Include="ssn1klib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Mdl.h">
+    <ClInclude Include="_ctrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Env.h">
+    <ClInclude Include="_env.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Ctrl.h">
+    <ClInclude Include="_flt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Osc.h">
+    <ClInclude Include="_mdl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Synth.h">
+    <ClInclude Include="_mixer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Voice.h">
+    <ClInclude Include="_osc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Flt.h">
+    <ClInclude Include="_synth.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SynthAdapter.h">
+    <ClInclude Include="_synthadapter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Mixer.h">
+    <ClInclude Include="_voice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

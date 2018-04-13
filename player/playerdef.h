@@ -6,4 +6,6 @@
 #define NS_PLAYER_END }
 #define NS_PLAYER_USE using namespace NS_PLAYER;
 
+#include "basedef.h"
+
 #endif

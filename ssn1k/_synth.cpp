@@ -2,10 +2,10 @@
 // Simple synth: in->osc->env->flt->out
 //*****************************************************************************
 
-#include "base/MemoryMgr.h"
-#include "Synth.h"
-#include "Voice.h"
 #include <math.h>
+#include "base/memory.h"
+#include "synth.h"
+#include "voice.h"
 
 NS_FW_BASE_USE
 NS_SSN1K_BEGIN

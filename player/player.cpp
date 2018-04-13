@@ -1,29 +1,24 @@
-#include "base/MemoryMgr.h"
+#include "base/memory.h"
 #include "Channel.h"
 #include "Player.h"
 
 NS_PLAYER_BEGIN
 
-Player::Player() {
+Player::Player() : targets_(sizeof(Target)), channels_(sizeof(Channel)) {
 	Target* target = NEW_(Target, this, this);
-	targets_ = NEW_(Array, 1, target);	// Array<Target>
-	channels_ = NEW_(Array);			// Array<Channel>
+	targets_.add(target);
 	masterChannel_ = NULL;
-	sequences_ = NEW_(Array);			// Array<Array<PlayerCommand>>
 	framesPerSecond_ = 25;
 	ticksPerFrame_ = 1;
 }
 Player::~Player() {
-	targets_->cleanUp();
-	DEL_(targets_);
-	channels_->cleanUp();
-	DEL_(channels_);
-	sequences_->cleanUp();
-	DEL_(sequences_);
+	ARRAY_FOREACH(&targets_, DEL_((Target*)value));
+	ARRAY_FOREACH(&channels_, DEL_((Channel*)value));
+	ARRAY_FOREACH(&sequences_, FREE(value));
 }
 
 void Player::addTarget(void* object, AbstractAdapter* adapter) {
-	targets_->push(NEW_(Target, object, adapter));
+	targets_.add(NEW_(Target, object, adapter));
 	adapter->prepareObject(object);
 }
 //void Player::addSequence(Array* sequence) {
@@ -42,7 +37,7 @@ void Player::addTarget(void* object, AbstractAdapter* adapter) {
 //}
 void Player::addSequence(unsigned char* stream) {
 	// create sequence as Array
-	Array* sequence = NEW_(Array);
+	PArray* sequence = NEW_(PArray);
 	unsigned short delta = 0;
 	int cmd = 0;
 	unsigned char* args = NULL;
@@ -50,22 +45,22 @@ void Player::addSequence(unsigned char* stream) {
 	PLAYER_COMMAND_U ptr;
 	ptr.p = stream;
 	while (true) {
-		sequence->push((Object*)ptr.p);
+		sequence->add(ptr.p);
 		cmd = ptr.s->code;
 		if (cmd == (unsigned char)Player_Cmd_end) {
 			break;
 		}
 		ptr.p += offsetof(PLAYER_COMMAND, args) + ptr.s->argc;
 	}
-	sequences_->push(sequence);
+	sequences_.add(sequence);
 
-	if (sequences_->length() == 1) {
+	if (sequences_.length() == 1) {
 		// the very first sequence is assigned to the master channel
-		Target* target = (Target*)targets_->get(0);
+		Target* target = (Target*)targets_.getAt(0);
 		masterChannel_ = NEW_(Channel, this, 0, target, sequence);
 		masterChannel_->setActive();
 		masterChannel_->setLooping();
-		channels_->push(masterChannel_);
+		channels_.add(masterChannel_);
 	}
 }
 void Player::run(size_t ticks) {
@@ -75,14 +70,16 @@ void Player::run(size_t ticks) {
 	}
 	if (masterChannel_->isActive()) {
 		// if master is still active run every other channel
-		for (size_t i = 1; i < channels_->length(); i++) {
-			Channel* chn = (Channel*)channels_->get(i);
+		for (int i = 1; i < (int)channels_.length(); i++) {
+			Channel* chn = (Channel*)channels_.getAt(i);
 			if (chn->isActive()) {
 				chn->run(ticks);
 			}
 		}
 	}
 }
+
+// Adapter
 
 int Player::prepareObject(void* object) {
 	return 0;
@@ -98,14 +95,14 @@ int Player::processCommand(void* object, PLAYER_COMMAND* command) {
 		player->refreshRate_ = player->framesPerSecond_ * player->ticksPerFrame_;
 		break;
 	case Player_Cmd_assign:
-		Target* target = (Target*)player->targets_->get(args[0]);
-		Array* sequence = (Array*)player->sequences_->get(args[1]);
+		Target* target = (Target*)player->targets_.getAt(args[0]);
+		PArray* sequence = (PArray*)player->sequences_.getAt(args[1]);
 		size_t status = args[2];
 		Channel* chn = NULL;
 		// get an inactive channel
 		size_t ix = -1;
-		for (size_t i = 0; i<player->channels_->length(); i++) {
-			chn = (Channel*)player->channels_->get(i);
+		for (int i = 0; i < (int)player->channels_.length(); i++) {
+			chn = (Channel*)player->channels_.getAt(i);
 			if (!chn->isActive()) {
 				ix = i;
 				break;
@@ -113,10 +110,10 @@ int Player::processCommand(void* object, PLAYER_COMMAND* command) {
 		}
 		if (ix == -1) {
 			// create new channel
-			ix = player->channels_->length();
+			ix = player->channels_.length();
 			chn = NEW_(Channel, this, ix, target, sequence);
 			//chn->id_ = NEW_(String, ix);
-			player->channels_->push(chn);
+			player->channels_.add(chn);
 		}
 		// assign channel
 		chn->set(player, ix, target, sequence, status & 0x80);

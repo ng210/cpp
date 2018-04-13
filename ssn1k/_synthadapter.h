@@ -1,9 +1,9 @@
 #ifndef __SYNTH_ADAPTER_H
 #define __SYNTH_ADAPTER_H
 
-#include "AbstractAdapter.h"
-#include "Synth.h"
-#include "Player.h"
+#include "abstractadapter.h"
+#include "synth.h"
+#include "player.h"
 
 NS_PLAYER_USE
 
@@ -26,7 +26,7 @@ public:
 	virtual ~SynthAdapter();
 
 	int prepareObject(void* object);
-	int processCommand(void* target, PLAYER_COMMAND* cmd);
+	int processCommand(void* object, PLAYER_COMMAND* cmd);
 };
 
 NS_SSN1K_END

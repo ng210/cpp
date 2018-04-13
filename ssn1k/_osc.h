@@ -5,7 +5,7 @@
 #ifndef __OSC_H
 #define __OSC_H
 
-#include "Mdl.h"
+#include "mdl.h"
 
 NS_SSN1K_BEGIN
 

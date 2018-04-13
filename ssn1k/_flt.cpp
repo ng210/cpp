@@ -2,8 +2,8 @@
 // 2 pole Butterworth filter
 //*****************************************************************************
 
-#include "Flt.h"
 #include <math.h>
+#include "flt.h"
 
 NS_SSN1K_BEGIN
 

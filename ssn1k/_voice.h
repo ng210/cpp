@@ -1,14 +1,13 @@
 #ifndef __VOICE_H
 #define __VOICE_H
 
-#include "base/Object.h"
-#include "Synth.h"
+#include "basedef.h"
+#include "synth.h"
 
-NS_FW_BASE_USE
 NS_SSN1K_BEGIN
 
 class Synth;
-class Voice : public Object {
+class Voice {
 private: Synth* synth_;
 private: Env env1_, env2_, env3_, env4_;
 private: Osc osc1_, osc2_, lfo1_, lfo2_;

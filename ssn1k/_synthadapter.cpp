@@ -1,5 +1,5 @@
-#include "SynthAdapter.h"
-#include "Player.h"
+#include "synthadapter.h"
+#include "player.h"
 
 NS_SSN1K_BEGIN
 
@@ -10,11 +10,11 @@ SynthAdapter::SynthAdapter(Player* player) {
 SynthAdapter::~SynthAdapter() {
 }
 
-int SynthAdapter::prepareObject(void* object) {
+int SynthAdapter::prepareObject(void* synth) {
 	return 0;
 }
-int SynthAdapter::processCommand(void* target, PLAYER_COMMAND* command) {
-	Synth* synth = (Synth*)target;
+int SynthAdapter::processCommand(void* object, PLAYER_COMMAND* command) {
+	Synth* synth = (Synth*)object;
 	unsigned char* args = &command->args;
 	int duration = 0;
 	switch (command->code) {

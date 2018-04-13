@@ -6,8 +6,8 @@
 
 NS_FW_BASE_USE
 
-#include "AbstractAdapter.h"
-#include "Channel.h"
+#include "abstractadapter.h"
+#include "channel.h"
 
 #define NS_PLAYER ply
 #define NS_PLAYER_BEGIN namespace NS_PLAYER {
@@ -43,10 +43,10 @@ class Channel;
 *****************************************************************************/
 class Player : public AbstractAdapter {
 protected:	AbstractAdapter* adapter_;
-protected:	PROP_R(Array*, targets);			// Array<Target>
-protected:	PROP_R(Array*, channels);			// Array<Channel>
+protected:	PROP_R(Array, targets);
+protected:	PROP_R(Array, channels);
 protected:	PROP_R(Channel*, masterChannel);
-protected:	PROP_R(Array*, sequences);			// Array<Array<PlayerCommand>>
+protected:	PROP_R(PArray, sequences);
 protected:	size_t framesPerSecond_;
 protected:	size_t ticksPerFrame_;
 protected:	PROP_R(size_t, refreshRate);
@@ -75,8 +75,8 @@ public:
 	void run(size_t ticks);
 
 	// AbstractAdapter interface
-	int prepareObject(void* object);
-	int processCommand(void* object, PLAYER_COMMAND* cmd);
+	int prepareObject(void* target);
+	int processCommand(void* target, PLAYER_COMMAND* cmd);
 	size_t getCurrentFrame();
 
 	//// return status of player

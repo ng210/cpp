@@ -7,8 +7,8 @@
 
 #define _USE_LINEAR_CURVES
 
-#include "Mdl.h"
-#include "base/base_defs.h"
+#include "mdl.h"
+#include "basedef.h"
 
 //#define OVERLAY_LENGTH 48
 

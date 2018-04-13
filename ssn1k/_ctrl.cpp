@@ -1,4 +1,4 @@
-#include "Ctrl.h"
+#include "ctrl.h"
 
 NS_SSN1K_USE
 

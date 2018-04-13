@@ -2,9 +2,8 @@
 // ADSR envelope
 //*****************************************************************************
 
-#include "Env.h"
-
-#include <stdio.h>
+//#include <stdio.h>
+#include "env.h"
 
 NS_SSN1K_USE
 

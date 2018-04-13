@@ -1,11 +1,10 @@
 #include "channel.h"
-//#include "AbstractAdapter.h"
-#include "Player.h"
+#include "player.h"
 #include <stdio.h>
 
 NS_PLAYER_BEGIN
 
-Channel::Channel(Player* player, size_t id, Target* target, Array* sequence) {
+Channel::Channel(Player* player, size_t id, Target* target, PArray* sequence) {
 	set(player, id, target, sequence);
 }
 
@@ -13,7 +12,7 @@ Channel::~Channel() {
 
 }
 
-void Channel::set(Player* player, size_t id, Target* target, Array* sequence, size_t status) {
+void Channel::set(Player* player, size_t id, Target* target, PArray* sequence, size_t status) {
 	player_ = player;
 	id_ = id;
 	target_ = target;
@@ -28,7 +27,7 @@ void Channel::run(size_t ticks) {
 	bool restart;
 	do {
 		restart = false;
-		PLAYER_COMMAND* command = (PLAYER_COMMAND*)sequence_->get(cursor_);
+		PLAYER_COMMAND* command = (PLAYER_COMMAND*)sequence_->getAt(cursor_);
 		if (currentTick_ < command->delta) {
 			//printf("#%03llu, channel:%02llu, tick:%02llu, delta:%03u\n", tick_, id_, currentTick_, command->delta);
 			// advance tick counter
@@ -36,7 +35,7 @@ void Channel::run(size_t ticks) {
 			tick_++;
 			break;
 		}
-		currentTick_ = 0;	//-= this.sequence[this.cursor].delta;
+		currentTick_ = 0;	//-= command->delta;
 		do {
 			//printf("#%03llu, channel:%02llu, command:%02x\n", tick_, id_, command->code);
 			if (command->code != (unsigned char)Player_Cmd_end) {
@@ -44,12 +43,9 @@ void Channel::run(size_t ticks) {
 			} else {
 				tick_ = 0;
 				if (loopCount_ != 0) {
-				//if (status_ & Player_Flg_Looping) {
 					if (this == player_->masterChannel()) {
 						// reset
-						for (size_t i = 1; i < player_->channels()->length(); i++) {
-							((Channel*)player_->channels()->get(i))->setActive(false);
-						}
+						ARRAY_FOREACH(&player_->channels(), ((Channel*)value)->setActive(false));
 					}
 					// restart sequence
 					cursor_ = 0;
@@ -70,7 +66,7 @@ void Channel::run(size_t ticks) {
 				}
 			}
 			cursor_++;
-			command = (PLAYER_COMMAND*)sequence_->get(cursor_);
+			command = (PLAYER_COMMAND*)sequence_->getAt(cursor_);
 		} while (command->delta == 0);
 		if (!restart) {
 			currentTick_++;

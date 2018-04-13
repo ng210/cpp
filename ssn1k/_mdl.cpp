@@ -2,8 +2,8 @@
 // Base module
 //*****************************************************************************
 
-#include "Mdl.h"
-#include "base/MemoryMgr.h"
+#include "mdl.h"
+#include "base/memory.h"
 
 //double SSN1K_THETA = 2*M_PI;
 
@@ -31,12 +31,17 @@ float Mdl::mix(float in1, float in2) {
 }
 
 void Mdl::createControls(int count) {
-	controls_ = (Ctrl**)MALLOC(Ctrl*, count);
+	controls_ = (Ctrl**)MALLOC(char, (sizeof(Ctrl*) + sizeof(Ctrl)) * count);
 	Ctrl* controls = MALLOC(Ctrl, count);
 	for (int i = 0; i < count; i++) {
 		controls_[i] = &controls[i];
 		controls[i].set(0.0, 0.0, 1.0f);
 	}
+}
+
+void Mdl::destroyControls() {
+	FREE(controls_[0]);
+	FREE(controls_);
 }
 
 void Mdl::setup(CtrlSetting* data) {

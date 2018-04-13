@@ -1,8 +1,8 @@
 #ifndef __MIX_H
 #define __MIX_H
 
-#include "Mdl.h"
-#include "Synth.h"
+#include "mdl.h"
+#include "synth.h"
 
 NS_SSN1K_BEGIN
 

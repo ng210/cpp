@@ -1,6 +1,6 @@
-#include "Mixer.h"
-#include "base/MemoryMgr.h"
 #include <math.h>
+#include "mixer.h"
+#include "base/memory.h"
 
 NS_FW_BASE_USE
 NS_SSN1K_BEGIN
