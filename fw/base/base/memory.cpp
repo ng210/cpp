@@ -58,10 +58,10 @@ void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine, void *old) {
 		}
 		if (found) {
 			if (MemoryMgr::isDebugOn) {
-				LOG("1>%s(%d): Realloc at 0x%lX=>0x%lX\n", szFile, iLine, old, p);
+				LOG("1>%s(%d): Realloc at 0x%llX=>0x%llX\n", szFile, iLine, old, p);
 			}
 		} else {
-			LOG("1>%s(%d): Bad realloc at 0x%lX\n", szFile, iLine, old);
+			LOG("1>%s(%d): Bad realloc at 0x%llX\n", szFile, iLine, old);
 		}
 	} else {
 		if (MemoryMgr::nMemDbgInfos_ < _MEM_DBG_SIZE) {
@@ -78,7 +78,7 @@ void* MemoryMgr::addMemDbgInfo(void *p, char *szFile, int iLine, void *old) {
 			;
 		}
 		if (MemoryMgr::isDebugOn) {
-			LOG("1>%s(%d): Alloc at 0x%lX\n", szFile, iLine, p);
+			LOG("1>%s(%d): Alloc at 0x%llX\n", szFile, iLine, p);
 
 		}
 	}
@@ -99,10 +99,10 @@ int MemoryMgr::delMemDbgInfo(void *ptr, char *szFile, int iLine) {
 	}
 	if (bFound) {
 		if (MemoryMgr::isDebugOn) {
-			LOG("1>%s(%d): Free at 0x%lX\n", szFile, iLine, ptr);
+			LOG("1>%s(%d): Free at 0x%llX\n", szFile, iLine, ptr);
 		}
 	} else {
-		LOG("1>%s(%d): Attempt to free invalid block at 0x%lX\n", szFile, iLine, ptr);
+		LOG("1>%s(%d): Attempt to free invalid block at 0x%llX\n", szFile, iLine, ptr);
 	}
 	return bFound;
 }
@@ -120,7 +120,7 @@ void MemoryMgr::checkMemDbgInfo(size_t count, void** exceptions) {
 				}
 			}
 			if (!isException) {
-				LOG("1>%s(%d): Memory leak at 0x%lX\n", mb->szFile, mb->iLine, mb->ptr.address);
+				LOG("1>%s(%d): Memory leak at 0x%llX\n", mb->szFile, mb->iLine, mb->ptr.address);
 				found++;
 			}
 		}
