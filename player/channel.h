@@ -12,7 +12,7 @@ class Player;
 class Channel {
 protected: PROP_R(Player*, player);
 protected: PROP_R(Target*, target);
-protected: PROP_R(PArray*, sequence);		// Array<PlayerCommand>
+protected: PROP_R(PArray*, sequence);
 protected: PROP_R(int, cursor);
 protected: PROP_R(size_t, status);
 protected: PROP_R(size_t, currentTick);

@@ -36,9 +36,11 @@ protected:
 	float smp_;
 	float mix(float in1, float in2);
 	void createControls(int count);
+	void destroyControls();
 public:
 	Ctrl** controls_;
 	void setup(CtrlSetting* data);
+	void setup(BYTE* data);
 	Ctrl* getControl(size_t id);
 	//virtual float run(...) = 0;
 	//virtual void setControls(Ctrl** controls);

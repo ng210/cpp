@@ -4,7 +4,7 @@
 
 NS_PLAYER_BEGIN
 
-Player::Player() : targets_(sizeof(Target)), channels_(sizeof(Channel)) {
+Player::Player() { // : targets_(sizeof(Target)), channels_(sizeof(Channel)) {
 	Target* target = NEW_(Target, this, this);
 	targets_.add(target);
 	masterChannel_ = NULL;
@@ -14,7 +14,7 @@ Player::Player() : targets_(sizeof(Target)), channels_(sizeof(Channel)) {
 Player::~Player() {
 	ARRAY_FOREACH(&targets_, DEL_((Target*)value));
 	ARRAY_FOREACH(&channels_, DEL_((Channel*)value));
-	ARRAY_FOREACH(&sequences_, FREE(value));
+	ARRAY_FOREACH(&sequences_, DEL_((PArray*)value));
 }
 
 void Player::addTarget(void* object, AbstractAdapter* adapter) {

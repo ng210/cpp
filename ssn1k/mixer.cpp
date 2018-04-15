@@ -1,8 +1,6 @@
 #include <math.h>
 #include "mixer.h"
-#include "base/memory.h"
 
-NS_FW_BASE_USE
 NS_SSN1K_BEGIN
 
 Mixer::Mixer() {
@@ -11,8 +9,7 @@ Mixer::Mixer() {
 }
 
 Mixer::~Mixer() {
-	FREE(controls_[0]);
-	FREE(controls_);
+	destroyControls();
 }
 
 void Mixer::writeSample(short* ptr, float smp) {

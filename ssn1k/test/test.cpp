@@ -1,12 +1,12 @@
-#include "fw/base/consoleapp.h"
+#include "consoleapp.h"
 #include "soundlib/SoundPlayer.h"
 #include "soundlib/WavFmt.h"
-#include "fw/base/utils/File.h"
+#include "utils/file.h"
 
 #include <stdio.h>
 #include <math.h>
 #include "ssn1k/ssn1klib.h"
-#include "player/Player.h"
+#include "player/player.h"
 
 NS_FW_BASE_USE
 NS_SSN1K_USE
@@ -33,19 +33,19 @@ unsigned char mainSequence[] = {
 	DWtoDB(0),  Player_Cmd_assign,	 3, 1, 1, 0x80,		// connect target #1 with sequence #1 with status active
 	DWtoDB(0),  Player_Cmd_assign,	 3, 2, 5, 0x83,		// connect target #2 with sequence #1 with status active
 	DWtoDB(0),  Player_Cmd_assign,	 3, 2, 6, 0x80,		// connect target #2 with sequence #3 with status active
-	DWtoDB(0),  Player_Cmd_assign,	 3, 3, 7, 0x83,		// connect target #3 with sequence #4 with status active
+	//DWtoDB(0),  Player_Cmd_assign,	 3, 3, 7, 0x83,		// connect target #3 with sequence #4 with status active
 
 	DWtoDB(128),  Player_Cmd_assign, 3, 1, 2, 0x80,		// connect target #1 with sequence #1 with status active
 	DWtoDB(128),  Player_Cmd_assign, 3, 1, 3, 0x80,		// connect target #1 with sequence #1 with status active
 	DWtoDB(128),  Player_Cmd_assign, 3, 1, 4, 0x80,		// connect target #1 with sequence #1 with status active
-														////DWtoDB(0),  Player_Cmd_assign,	 3, 4, 5, 3,		// connect target #4 with sequence #5 with status active
-	//////DWtoDB(0),  Player_Cmd_assign,	 3, 4, 3, 3,		// connect target #2 with sequence #3 with status active
-	//////DWtoDB(32),  Player_Cmd_assign,	 3, 4, 6, 1,		// connect target #4 with sequence #6 with status active
-	//////DWtoDB(32),  Player_Cmd_assign,	 3, 4, 7, 1,		// connect target #4 with sequence #7 with status active
-	//////DWtoDB(32),  Player_Cmd_assign,	 3, 4, 8, 1,		// connect target #4 with sequence #8 with status active
-	//DWtoDB(512), Player_Cmd_assign,	 3, 1, 1, 1,		// connect target #1 with sequence #1 with status active
-	//DWtoDB(32), Player_Cmd_assign,	 3, 1, 1, 1,		// connect target #1 with sequence #1 with status active
-	//DWtoDB(32), Player_Cmd_assign,	 3, 1, 1, 1,		// connect target #1 with sequence #1 with status active
+
+														////////DWtoDB(0),  Player_Cmd_assign,	 3, 4, 3, 3,		// connect target #2 with sequence #3 with status active
+	////////DWtoDB(32),  Player_Cmd_assign,	 3, 4, 6, 1,		// connect target #4 with sequence #6 with status active
+	////////DWtoDB(32),  Player_Cmd_assign,	 3, 4, 7, 1,		// connect target #4 with sequence #7 with status active
+	////////DWtoDB(32),  Player_Cmd_assign,	 3, 4, 8, 1,		// connect target #4 with sequence #8 with status active
+	////DWtoDB(512), Player_Cmd_assign,	 3, 1, 1, 1,		// connect target #1 with sequence #1 with status active
+	////DWtoDB(32), Player_Cmd_assign,	 3, 1, 1, 1,		// connect target #1 with sequence #1 with status active
+	////DWtoDB(32), Player_Cmd_assign,	 3, 1, 1, 1,		// connect target #1 with sequence #1 with status active
 	DWtoDB(128), Player_Cmd_end							// end
 };
 unsigned char sequence11[] = {
@@ -128,18 +128,18 @@ unsigned char sequence7[] = {
 	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x10,
 	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x60,
 
-	DWtoDB(24), Synth_Cmd_setNote, 3, E(0), 2, 0x60,
+	DWtoDB(28), Synth_Cmd_setNote, 3, E(0), 2, 0x60,
 	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Env1Rel, 0x12,
 	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc1Amp, 0x7F,
 	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_Osc2Amp, 0x00,
 	DWtoDB(0), Synth_Cmd_setControl, 2, SSN1K_CI_SynthBal, 0x40,
 
-	DWtoDB(8), Player_Cmd_end
+	DWtoDB(4), Player_Cmd_end
 };
 
 CtrlSetting synth1Settings[] = {
 	//{ SSN1K_CI_SynthMix, 0.0f },
-	{ SSN1K_CI_SynthAmp, 0.5f },
+	{ SSN1K_CI_SynthAmp, 0.7f },
 	{ SSN1K_CI_SynthBal, 0.5f },		// = dc
 
 	//{ SSN1K_CI_Env1Mix, 0.0f },
@@ -432,9 +432,9 @@ void saveSamples(const char* path, int ticks) {
 
 int _main(NS_FW_BASE::Map* args) {
 	printf("SSN1K test\n");
-	MemoryMgr::isDebugOn = true;
+	//MemoryMgr::isDebugOn = true;
 
-	bool saveMode = args->get(&String("save")) != Null;
+	bool saveMode = args->get("save") != NULL;
 	//int ticks = Integer::parse(args->get(&String("ticks")));
 
 	for (int i = 0; i < 16; i++) {

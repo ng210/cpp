@@ -55,8 +55,7 @@ Synth::~Synth() {
 	for (size_t i = 0; i < voiceCount_; i++) {
 		DEL_(voices_[i]);
 	}
-	FREE(controls_[0]);
-	FREE(controls_);
+	destroyControls();
 }
 
 float Synth::run() {

@@ -43,8 +43,8 @@ class Channel;
 *****************************************************************************/
 class Player : public AbstractAdapter {
 protected:	AbstractAdapter* adapter_;
-protected:	PROP_R(Array, targets);
-protected:	PROP_R(Array, channels);
+protected:	PROP_R(PArray, targets);
+protected:	PROP_R(PArray, channels);
 protected:	PROP_R(Channel*, masterChannel);
 protected:	PROP_R(PArray, sequences);
 protected:	size_t framesPerSecond_;

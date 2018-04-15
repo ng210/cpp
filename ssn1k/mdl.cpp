@@ -31,7 +31,7 @@ float Mdl::mix(float in1, float in2) {
 }
 
 void Mdl::createControls(int count) {
-	controls_ = (Ctrl**)MALLOC(char, (sizeof(Ctrl*) + sizeof(Ctrl)) * count);
+	controls_ = (Ctrl**)MALLOC(Ctrl*, count);
 	Ctrl* controls = MALLOC(Ctrl, count);
 	for (int i = 0; i < count; i++) {
 		controls_[i] = &controls[i];
@@ -48,6 +48,15 @@ void Mdl::setup(CtrlSetting* data) {
 	while (data->id != -1) {
 		Ctrl* ctrl = getControl(data->id);
 		ctrl->set(data->value);
+		data++;
+	}
+}
+
+void Mdl::setup(BYTE* data) {
+	int id = *data++;
+	while (*data != -1) {
+		Ctrl* ctrl = getControl(id);
+		ctrl->set(*data/128.0f);
 		data++;
 	}
 }
