@@ -53,11 +53,6 @@ public:
 //	int findIndex(Compare* compare);
 //};
 
-#define ARRAY_FOREACH(array, ACTION) for (UINT32 i = 0; i < (array)->length(); i++) { \
-	void* value = (array)->getAt(i);	\
-	ACTION; \
-}
-
 NS_FW_BASE_END
 
 #endif
