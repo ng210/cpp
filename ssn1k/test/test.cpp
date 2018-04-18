@@ -7,6 +7,7 @@
 #include <math.h>
 #include "ssn1k/ssn1klib.h"
 #include "player/player.h"
+#include "ssn1k/xmloader.h"
 
 NS_FW_BASE_USE
 NS_SSN1K_USE
@@ -33,7 +34,7 @@ unsigned char mainSequence[] = {
 	DWtoDB(0),  Player_Cmd_assign,	 3, 1, 1, 0x80,		// connect target #1 with sequence #1 with status active
 	DWtoDB(0),  Player_Cmd_assign,	 3, 2, 5, 0x83,		// connect target #2 with sequence #1 with status active
 	DWtoDB(0),  Player_Cmd_assign,	 3, 2, 6, 0x80,		// connect target #2 with sequence #3 with status active
-	//DWtoDB(0),  Player_Cmd_assign,	 3, 3, 7, 0x83,		// connect target #3 with sequence #4 with status active
+	DWtoDB(0),  Player_Cmd_assign,	 3, 3, 7, 0x83,		// connect target #3 with sequence #4 with status active
 
 	DWtoDB(128),  Player_Cmd_assign, 3, 1, 2, 0x80,		// connect target #1 with sequence #1 with status active
 	DWtoDB(128),  Player_Cmd_assign, 3, 1, 3, 0x80,		// connect target #1 with sequence #1 with status active
@@ -433,6 +434,13 @@ void saveSamples(const char* path, int ticks) {
 int _main(NS_FW_BASE::Map* args) {
 	printf("SSN1K test\n");
 	//MemoryMgr::isDebugOn = true;
+
+	//XmLoader xmLoader;
+	////xmPlayer.load("C:\\code\\source\\syn\\data\\test.xm");
+	//xmLoader.load("C:\\code\\source\\syn\\data\\chip8k.xm");
+	//PArray* patterns = xmLoader.sequences();
+	//LOG("Pattern count: %d\n", patterns->length());
+	//return 0;
 
 	bool saveMode = args->get("save") != NULL;
 	//int ticks = Integer::parse(args->get(&String("ticks")));

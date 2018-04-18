@@ -303,6 +303,7 @@
     <ClCompile Include="synth.cpp" />
     <ClCompile Include="synthadapter.cpp" />
     <ClCompile Include="voice.cpp" />
+    <ClCompile Include="xmloader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ctrl.h" />
@@ -316,6 +317,7 @@
     <ClInclude Include="synth.h" />
     <ClInclude Include="synthadapter.h" />
     <ClInclude Include="voice.h" />
+    <ClInclude Include="xmloader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

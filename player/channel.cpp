@@ -45,7 +45,7 @@ void Channel::run(size_t ticks) {
 				if (loopCount_ != 0) {
 					if (this == player_->masterChannel()) {
 						// reset
-						ARRAY_FOREACH(&player_->channels(), ((Channel*)value)->setActive(false));
+						ARRAY_FOREACH(player_->channels(), ((Channel*)value)->setActive(false));
 					}
 					// restart sequence
 					cursor_ = 0;

@@ -31,6 +31,9 @@
     <ClCompile Include="voice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="xmloader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ssn1k.h">
@@ -64,6 +67,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="voice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xmloader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
