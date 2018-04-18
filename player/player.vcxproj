@@ -129,12 +129,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="abstractadapter.h" />
+    <ClInclude Include="abstractplayer.h" />
     <ClInclude Include="channel.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="playercommand.h" />
     <ClInclude Include="playerdef.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="abstractplayer.cpp" />
     <ClCompile Include="playercommand.cpp" />
     <ClCompile Include="channel.cpp" />
     <ClCompile Include="player.cpp" />

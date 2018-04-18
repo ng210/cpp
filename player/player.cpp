@@ -6,20 +6,17 @@ NS_PLAYER_BEGIN
 
 Player::Player() { // : targets_(sizeof(Target)), channels_(sizeof(Channel)) {
 	Target* target = NEW_(Target, this, this);
-	targets_.add(target);
+	targets_->add(target);
+	channels_ = NEW_(PArray);
 	masterChannel_ = NULL;
 	framesPerSecond_ = 25;
 	ticksPerFrame_ = 1;
 }
 Player::~Player() {
-	ARRAY_FOREACH(&targets_, DEL_((Target*)value));
-	ARRAY_FOREACH(&channels_, DEL_((Channel*)value));
-	ARRAY_FOREACH(&sequences_, DEL_((PArray*)value));
-}
-
-void Player::addTarget(void* object, AbstractAdapter* adapter) {
-	targets_.add(NEW_(Target, object, adapter));
-	adapter->prepareObject(object);
+	//ARRAY_FOREACH(targets_, DEL_((Target*)value));
+	ARRAY_FOREACH(channels_, DEL_((Channel*)value));
+	DEL_(channels_);
+	//ARRAY_FOREACH(sequences_, DEL_((PArray*)value));
 }
 //void Player::addSequence(Array* sequence) {
 //	sequences_->push(sequence);
@@ -35,7 +32,7 @@ void Player::addTarget(void* object, AbstractAdapter* adapter) {
 //	}
 //
 //}
-void Player::addSequence(unsigned char* stream) {
+void Player::addSequence(void* stream) {
 	// create sequence as Array
 	PArray* sequence = NEW_(PArray);
 	unsigned short delta = 0;
@@ -43,7 +40,7 @@ void Player::addSequence(unsigned char* stream) {
 	unsigned char* args = NULL;
 	size_t i = 0;
 	PLAYER_COMMAND_U ptr;
-	ptr.p = stream;
+	ptr.p = (BYTE*)stream;
 	while (true) {
 		sequence->add(ptr.p);
 		cmd = ptr.s->code;
@@ -52,15 +49,15 @@ void Player::addSequence(unsigned char* stream) {
 		}
 		ptr.p += offsetof(PLAYER_COMMAND, args) + ptr.s->argc;
 	}
-	sequences_.add(sequence);
+	sequences_->add(sequence);
 
-	if (sequences_.length() == 1) {
+	if (sequences_->length() == 1) {
 		// the very first sequence is assigned to the master channel
-		Target* target = (Target*)targets_.getAt(0);
+		Target* target = (Target*)targets_->getAt(0);
 		masterChannel_ = NEW_(Channel, this, 0, target, sequence);
 		masterChannel_->setActive();
 		masterChannel_->setLooping();
-		channels_.add(masterChannel_);
+		channels_->add(masterChannel_);
 	}
 }
 void Player::run(size_t ticks) {
@@ -70,8 +67,8 @@ void Player::run(size_t ticks) {
 	}
 	if (masterChannel_->isActive()) {
 		// if master is still active run every other channel
-		for (int i = 1; i < (int)channels_.length(); i++) {
-			Channel* chn = (Channel*)channels_.getAt(i);
+		for (int i = 1; i < (int)channels_->length(); i++) {
+			Channel* chn = (Channel*)channels_->getAt(i);
 			if (chn->isActive()) {
 				chn->run(ticks);
 			}
@@ -95,14 +92,14 @@ int Player::processCommand(void* object, PLAYER_COMMAND* command) {
 		player->refreshRate_ = player->framesPerSecond_ * player->ticksPerFrame_;
 		break;
 	case Player_Cmd_assign:
-		Target* target = (Target*)player->targets_.getAt(args[0]);
-		PArray* sequence = (PArray*)player->sequences_.getAt(args[1]);
+		Target* target = (Target*)player->targets_->getAt(args[0]);
+		PArray* sequence = (PArray*)player->sequences_->getAt(args[1]);
 		size_t status = args[2];
 		Channel* chn = NULL;
 		// get an inactive channel
 		size_t ix = -1;
-		for (int i = 0; i < (int)player->channels_.length(); i++) {
-			chn = (Channel*)player->channels_.getAt(i);
+		for (int i = 0; i < (int)player->channels_->length(); i++) {
+			chn = (Channel*)player->channels_->getAt(i);
 			if (!chn->isActive()) {
 				ix = i;
 				break;
@@ -110,10 +107,10 @@ int Player::processCommand(void* object, PLAYER_COMMAND* command) {
 		}
 		if (ix == -1) {
 			// create new channel
-			ix = player->channels_.length();
+			ix = player->channels_->length();
 			chn = NEW_(Channel, this, ix, target, sequence);
 			//chn->id_ = NEW_(String, ix);
-			player->channels_.add(chn);
+			player->channels_->add(chn);
 		}
 		// assign channel
 		chn->set(player, ix, target, sequence, status & 0x80);
@@ -139,7 +136,7 @@ NS_PLAYER_END
 //	// create array of channel structures
 //	NEW(m_aChannels, EArray, sizeof(PLAYERCHANNEL), 16);
 //	// add master channel at index 0
-//	COLLECTIONITEM item = m_aChannels->add();
+//	COLLECTIONITEM item = m_achannels_->add();
 //	m_pMasterChannel = (PLAYERCHANNEL*)item.p;
 //	//memset(m_pMasterChannel, 0, sizeof(PLAYERCHANNEL));
 //	// master channel is interpreted by this player
@@ -189,8 +186,8 @@ NS_PLAYER_END
 //*/
 //}
 //void Player::setChannel(size_t iTarget, size_t iStream, char cStatus) {
-//	//int id = m_aChannels->Count();
-//	COLLECTIONITEM item = m_aChannels->add();
+//	//int id = m_achannels_->Count();
+//	COLLECTIONITEM item = m_achannels_->add();
 //	PLAYERCHANNEL *pCh = (PLAYERCHANNEL*)item.p;
 //	//pCh->m_id = id;
 //	pCh->m_iTarget = iTarget;
@@ -220,15 +217,15 @@ NS_PLAYER_END
 //		// is the master channel still active?
 //		if (m_pMasterChannel->m_status & Player_Flg_Active) {
 //			// run the other channels
-//			Iterator *it = m_aChannels->begin(1);
-//			while (m_aChannels->next(it)) {
+//			Iterator *it = m_achannels_->begin(1);
+//			while (m_achannels_->next(it)) {
 //				PLAYERCHANNEL *pChn = (PLAYERCHANNEL*)it->pItem;
 //				// include active channels only
 //				if (pChn->m_status & Player_Flg_Active) {
 //					runChannel(pChn);
 //				}
 //			}
-//			m_aChannels->end(it);
+//			m_achannels_->end(it);
 //			//for (int i=1; i<m_iChannels; i++)
 //			//{
 //			//	PLAYERCHANNEL *pChn = &m_aChannels[i];
@@ -327,9 +324,9 @@ NS_PLAYER_END
 //				if (pCh == m_pMasterChannel)
 //				{
 //					// remove all other channels
-//					while (m_aChannels->Count() > 1)
+//					while (m_achannels_->Count() > 1)
 //					{
-//						m_aChannels->removeAt(1);
+//						m_achannels_->removeAt(1);
 //					}
 //				}
 //				// looping was enabled, the sequence restarts
@@ -341,7 +338,7 @@ NS_PLAYER_END
 //			else
 //			{
 //				// set channel inactive
-//				m_aChannels->remove(pCh);
+//				m_achannels_->remove(pCh);
 //				//pCh->m_status &= ~Player_Flg_Active;
 //			}
 //			goto _End;
@@ -474,9 +471,9 @@ NS_PLAYER_END
 //				if (pCh == m_pMasterChannel)
 //				{
 //					// remove all other channels
-//					while (m_aChannels->Count() > 1)
+//					while (m_achannels_->Count() > 1)
 //					{
-//						m_aChannels->removeAt(1);
+//						m_achannels_->removeAt(1);
 //					}
 //				}
 //				// restart the channel
@@ -489,7 +486,7 @@ NS_PLAYER_END
 //			{
 //				if (pCh != m_pMasterChannel) {
 //					// remove channel
-//					m_aChannels->remove(pCh);
+//					m_achannels_->remove(pCh);
 //				} else {
 //					// set channel inactive
 //					pCh->m_status &= ~Player_Flg_Active;

@@ -6,7 +6,7 @@
 
 NS_FW_BASE_USE
 
-#include "abstractadapter.h"
+#include "abstractplayer.h"
 #include "channel.h"
 
 #define NS_PLAYER ply
@@ -41,15 +41,10 @@ class Channel;
 /******************************************************************************
 * Base player class
 *****************************************************************************/
-class Player : public AbstractAdapter {
-protected:	AbstractAdapter* adapter_;
-protected:	PROP_R(PArray, targets);
-protected:	PROP_R(PArray, channels);
+class Player : public AbstractPlayer {
+//protected:	AbstractAdapter* adapter_;
+protected:	PROP_R(PArray*, channels);
 protected:	PROP_R(Channel*, masterChannel);
-protected:	PROP_R(PArray, sequences);
-protected:	size_t framesPerSecond_;
-protected:	size_t ticksPerFrame_;
-protected:	PROP_R(size_t, refreshRate);
 
 	//// number of cycles per second
 	//int m_iCyclesPerSecond;
@@ -69,9 +64,8 @@ public:
 	Player();
 	virtual ~Player();
 
-	void addTarget(void* target, AbstractAdapter* adapter);
 	//void addSequence(Array* sequence);
-	void addSequence(unsigned char* stream);
+	void addSequence(void* stream);
 	void run(size_t ticks);
 
 	// AbstractAdapter interface
