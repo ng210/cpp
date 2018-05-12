@@ -247,13 +247,13 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="SoundPlayer.cpp" />
-    <ClCompile Include="WavFmt.cpp" />
+    <ClCompile Include="_soundplayer.cpp" />
+    <ClCompile Include="_wavfmt.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dsound.h" />
-    <ClInclude Include="SoundPlayer.h" />
-    <ClInclude Include="WavFmt.h" />
+    <ClInclude Include="_soundplayer.h" />
+    <ClInclude Include="_wavfmt.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />

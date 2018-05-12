@@ -3,11 +3,11 @@
 
 #ifdef __CRT
 	#include "crt.h"
-	#include "File.h"
+	#include "file.h"
 #else
-	#include "base/String.h"
-	#include "collection/Array.h"
-	#include "utils/Buffer.h"
+	#include "base/string.h"
+	#include "collection/array.h"
+	#include "utils/buffer.h"
 	//#include <stdio.h>
 	//#include <string.h>
 #endif
@@ -51,11 +51,11 @@ public:
 	WaveFmt(char* path, int sampleRate, int channelCount, int bitsPerSample);
 	~WaveFmt();
 	//size_t write(Buffer& data, size_t length, size_t offset = 0);
-	size_t write(const char* data, size_t length, size_t offset = 0);
+	size_t write(const char* data, UINT32 length, UINT32 offset = 0);
 	size_t close();
 
 	//static size_t write(const char* path, int sampleRate, int channelCount, int bitsPerSample, Buffer& data);
-	static size_t write(const char* path, int sampleRate, int channelCount, int bitsPerSample, const char* data, size_t byteCount);
+	static size_t write(const char* path, int sampleRate, int channelCount, int bitsPerSample, BYTE* data, UINT32 byteCount);
 	//static size_t write(String& path, int sampleRate, int channelCount, int bitsPerSample, Buffer& data);
 	//static size_t write(String& path, int sampleRate, int channelCount, int bitsPerSample, const char* data, size_t length);
 };

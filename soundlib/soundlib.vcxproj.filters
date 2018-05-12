@@ -15,21 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SoundPlayer.cpp">
+    <ClCompile Include="_wavfmt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WavFmt.cpp">
+    <ClCompile Include="_soundplayer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SoundPlayer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dsound.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WavFmt.h">
+    <ClInclude Include="_soundplayer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="_wavfmt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

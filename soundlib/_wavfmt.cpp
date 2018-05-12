@@ -36,7 +36,7 @@ WAVEHEADER* WaveFmt::createHeader(int sampleRate, int channelCount, int bitsPerS
 	return header;
 }
 
-size_t WaveFmt::write(const char* data, size_t length, size_t offset) {
+size_t WaveFmt::write(const char* data, UINT32 length, UINT32 offset) {
 	length_ += length;
 	return buffer_->append((void*)data, length, offset);
 }
@@ -55,13 +55,13 @@ size_t WaveFmt::close() {
 	return byteCount;
 }
 
-size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bitsPerSample, const char* data, size_t byteCount) {
+size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bitsPerSample, BYTE* data, UINT32 byteCount) {
 	WAVEHEADER* header = WaveFmt::createHeader(sampleRate, channelCount, bitsPerSample);
 	header->chunkSize = (long)(sizeof(WAVEHEADER) - offsetof(WAVEHEADER, format) + byteCount);
 	header->SubChunk2.subchunk2Size = (long)byteCount;
 	size_t length = sizeof(WAVEHEADER) + byteCount;
 
-	char* buffer = MALLOC(char, length);
+	BYTE* buffer = MALLOC(BYTE, length);
 	size_t i = 0;
 	for (; i < sizeof(WAVEHEADER); i++) {
 		buffer[i] = ((char*)header)[i];
@@ -69,7 +69,7 @@ size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bi
 	for (size_t j = 0; j < byteCount; j++) {
 		buffer[i + j] = data[j];
 	}
-	File::write(path, (BYTE*)buffer, length);
+	File::write(path, buffer, length);
 	FREE(buffer);
 	FREE(header);
 	return length;
