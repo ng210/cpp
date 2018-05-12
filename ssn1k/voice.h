@@ -19,8 +19,10 @@ private: int duration_;
 public:
 	Voice(Synth* synth, int id);
 	virtual ~Voice();
-
-	void setNote(int note, int duration, float velocity);
+	void setControls();
+	void reset();
+	void noteOn(int note, float velocity);
+	void noteOff();
 	float run();
 	bool isActive();
 };

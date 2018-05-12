@@ -13,13 +13,13 @@
 NS_SSN1K_BEGIN
 
 struct SynthCtrls : public MdlCtrls {
-	Ctrl* tune;
+	Ctrl tune;
 	EnvCtrls env1, env2, env3, env4;
 	OscCtrls osc1, osc2, lfo1, lfo2;
 	FltCtrls flt;
 };
 
-enum SynthControlIds {
+enum SynthControlIds : BYTE {
 	 SSN1K_CI_SynthMix	// 0
 	,SSN1K_CI_SynthAmp
 	,SSN1K_CI_SynthBal
@@ -104,17 +104,22 @@ enum SynthControlIds {
 
 class Voice;
 //*****************************************************************************
+// Control: Ctrl*, Instrument: Ctrl**, Bank: Ctrl***
 class Synth : public Mdl {
 protected:
 	//Array sweepControls;	//Array<Ctrl>
 	//Ctrl **paSweepCtrls;
-	size_t voiceCount_;
+	UINT32 voiceCount_;
 	Voice* voices_[64];
-	size_t nextVoice_;
+	UINT32 nextVoice_;
+	PROP_R(Ctrl**, bank);
+	//UINT32 bankCount_;
+	UINT32 selectedBank_;
+	//Ctrl** banks_[4];
 	float overlayValue_;
-	void init(size_t voices);
+	void init(UINT32 voices);
 public:
-	Synth(size_t voices = 64);
+	Synth(UINT32 voices = 64);
 	~Synth();
 
 #ifdef _PROFILE
@@ -122,18 +127,23 @@ public:
 	_Profiler profiler;
 
 #endif
-	//void setup(CtrlSetting* data);
 	//void setCtrls(SynthCtrls* controls);
-	//Ctrl* getControl(size_t id);
+	//Ctrl* getControl(UINT32 id);
 	//int isActive();
 	//inline float getSmp() { return this->smp; }
 	//inline float getDelta() { return this->smp - this->prevSmp; }
 	float run();
-	void run(void* buffer, size_t start, size_t end);
-	//void run(void* buffer, size_t ix);
-	void setNote(int note, int duration, float velocity);
-	void setGate(float velocity);
+	void run(void* buffer, UINT32 start, UINT32 end);
+	//void run(void* buffer, UINT32 ix);
+	void noteOn(int note, float velocity);
+	void noteOff(int note);
+	//void addBank(Ctrl** bank);
+	void changeProgram(int prgId);
+	//void setGate(float velocity);
 	//void setCtrlSweep(int id, float fStart, float fEnd, int iCycles);
+
+	void bank(Ctrl** bank);
+	static void setControls(Ctrl* controls, BYTE* data);
 };
 
 NS_SSN1K_END
