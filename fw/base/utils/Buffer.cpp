@@ -1,17 +1,18 @@
+#include <stdarg.h>
 #include "Buffer.h"
 #include "base/memory.h"
 
 NS_FW_BASE_BEGIN
 
 
-BufferChunk::BufferChunk(size_t byteCount) {
+BufferChunk::BufferChunk(UINT32 byteCount) {
 	byteCount_ = byteCount;
 	buffer_ = MALLOC(BYTE, byteCount);
 }
 BufferChunk::~BufferChunk() {
 	FREE(buffer_);
 }
-BYTE& BufferChunk::get(size_t offset) {
+BYTE& BufferChunk::get(UINT32 offset) {
 	return buffer_[offset];
 }
 BYTE* BufferChunk::flush() {
@@ -29,51 +30,62 @@ Buffer::~Buffer() {
 }
 void Buffer::init() {
 	length_ = 0;
+	offset_ = 0;
 	//writeTo_ = 0;
+	//readFrom_ = 0;
 	chunks_ = NEW_(Array, sizeof(BufferChunk), 16);
 }
-size_t Buffer::append(void* data, size_t byteCount, size_t from) {
-	write(data, byteCount, from, length_);
-	return length_;
-}
-size_t Buffer::write(void* data, size_t byteCount, size_t from, size_t to) {
-	size_t remainingBytes = byteCount - from;
-	size_t readFrom = from;
-	size_t writeTo = to;
+UINT32 Buffer::seek(UINT32 to, UINT32& offset) {
 	UINT32 chunkIndex = 0;
+	offset = to;
 	if (to <= length_) {
 		// seek the first chunk
 		for (; chunkIndex < chunks_->length(); chunkIndex++) {
 			BufferChunk* chunk = (BufferChunk*)chunks_->getAt(chunkIndex);
-			if (writeTo < chunk->byteCount()) {
+			if (offset < chunk->byteCount()) {
 				break;
 			}
-			writeTo -= chunk->byteCount();
+			offset -= chunk->byteCount();
 		}
-		//writeTo_ = writeTo;
 	} else {
 		chunkIndex = chunks_->length() - 1;
-		//writeTo = writeTo_;
+		offset = 0;
 	}
-	// write part of data that fits into current buffer
-	for (; chunkIndex < chunks_->length(); chunkIndex++) {
+	return chunkIndex;
+}
+UINT32 Buffer::append(void* data, UINT32 byteCount, UINT32 from) {
+	write(data, byteCount, from, length_);
+	return length_;
+}
+UINT32 Buffer::append(Buffer* buffer, UINT32 byteCount, UINT32 from) {
+	write(buffer, byteCount, from, length_);
+	return length_;
+}
+UINT32 Buffer::write(void* data, UINT32 byteCount, UINT32 from, UINT32 to) {
+	UINT32 remainingBytes = byteCount;
+	UINT32 readFrom = from;
+	UINT32 writeTo = 0;
+	UINT32 offset = 0;
+	UINT32 chunkIndex = seek(to, writeTo);
+	// write part of data that fits into the last buffer chunk
+	if (chunkIndex < chunks_->length()) {
 		BufferChunk* chunk = (BufferChunk*)chunks_->getAt(chunkIndex);
-		size_t bytesInChunk = chunk->byteCount() - writeTo;
-		size_t writeLength = remainingBytes < bytesInChunk ? remainingBytes : bytesInChunk;
-		for (size_t i = 0; i < writeLength; i++) {
+		UINT32 freeBytesInChunk = chunk->byteCount() - writeTo;
+		UINT32 writeLength = remainingBytes < freeBytesInChunk ? remainingBytes : freeBytesInChunk;
+		for (UINT32 i = 0; i < writeLength; i++) {
 			chunk->get(writeTo++) = ((BYTE*)data)[readFrom++];
 		}
 		remainingBytes -= writeLength;
 		length_ += writeLength;
 		//writeTo = 0;
 	}
-	// write rest of the data into a new chunk
+	// write the rest of the data into a new chunk
 	if (remainingBytes > 0) {
 		// allocate at least BUFFER_CHUNK_SIZE bytes
-		size_t chunkSize = remainingBytes < BUFFER_CHUNK_SIZE ? BUFFER_CHUNK_SIZE : remainingBytes;
+		UINT32 chunkSize = remainingBytes < BUFFER_CHUNK_SIZE ? BUFFER_CHUNK_SIZE : remainingBytes;
 		BufferChunk chunk(chunkSize);
 		chunks_->add(&chunk);
-		for (size_t i = 0; i < remainingBytes; i++) {
+		for (UINT32 i = 0; i < remainingBytes; i++) {
 			chunk.get(i) = ((BYTE*)data)[readFrom++];
 		}
 		chunk.flush();
@@ -81,25 +93,54 @@ size_t Buffer::write(void* data, size_t byteCount, size_t from, size_t to) {
 	}
 	return length_;
 }
-size_t Buffer::read(void* targetBuffer, size_t byteCount, size_t from, size_t to) {
-	size_t length = byteCount < length_ ? byteCount : length_;
-	size_t writeTo = to;
-	size_t readFrom = from;
-	UINT32 chunkIndex = 0;
-	// seek the first chunk
-	for (; chunkIndex < chunks_->length(); chunkIndex++) {
+UINT32 Buffer::write(Buffer* buffer, UINT32 byteCount, UINT32 from, UINT32 to) {
+	UINT32 remainingBytes = byteCount != 0 ? byteCount : buffer->length();
+	UINT32 readFrom = from;
+	UINT32 writeTo = 0;
+	UINT32 offset = 0;
+	UINT32 chunkIndex = seek(to, writeTo);
+	// write part of data that fits into the last buffer chunk
+	if (chunkIndex < chunks_->length()) {
 		BufferChunk* chunk = (BufferChunk*)chunks_->getAt(chunkIndex);
-		if (readFrom < chunk->byteCount()) {
-			break;
-		}
-		readFrom -= chunk->byteCount();
+		UINT32 freeBytesInChunk = chunk->byteCount() - writeTo;
+		UINT32 writeLength = remainingBytes < freeBytesInChunk ? remainingBytes : freeBytesInChunk;
+		buffer->read(chunk->buffer(), writeLength, readFrom, writeTo);
+		readFrom += writeLength;
+		remainingBytes -= writeLength;
+		length_ += writeLength;
 	}
+	// write the rest of the data into a new chunk
+	if (remainingBytes > 0) {
+		// allocate at least BUFFER_CHUNK_SIZE bytes
+		UINT32 chunkSize = remainingBytes < BUFFER_CHUNK_SIZE ? BUFFER_CHUNK_SIZE : remainingBytes;
+		BufferChunk chunk(chunkSize);
+		chunks_->add(&chunk);
+		buffer->read(chunk.buffer(), remainingBytes, readFrom, 0);
+		chunk.flush();
+		length_ += remainingBytes;
+	}
+	return length_;
+}
+
+UINT32 Buffer::read(void* targetBuffer, UINT32 byteCount, UINT32 from, UINT32 to) {
+	UINT32 length = byteCount < length_ ? byteCount : length_;
+	UINT32 writeTo = to;
+	UINT32 readFrom = 0;
+	UINT32 chunkIndex = seek(from, readFrom);
+	//// seek the first chunk
+	//for (; chunkIndex < chunks_->length(); chunkIndex++) {
+	//	BufferChunk* chunk = (BufferChunk*)chunks_->getAt(chunkIndex);
+	//	if (readFrom < chunk->byteCount()) {
+	//		break;
+	//	}
+	//	readFrom -= chunk->byteCount();
+	//}
 	// copy data
 	for (; chunkIndex < chunks_->length(); chunkIndex++) {
 		BufferChunk* chunk = (BufferChunk*)chunks_->getAt(chunkIndex);
-		size_t remainingBytes = chunk->byteCount() - readFrom;
-		long long readLength = (long long)(length < remainingBytes ? length : remainingBytes);
-		for (long long j = 0; j < readLength; j++) {
+		UINT32 remainingBytes = chunk->byteCount() - readFrom;
+		UINT32 readLength = length < remainingBytes ? length : remainingBytes;
+		for (UINT32 j = 0; j < readLength; j++) {
 			((BYTE*)targetBuffer)[writeTo++] = chunk->get(j + readFrom);
 		}
 		length -= readLength;
@@ -108,16 +149,17 @@ size_t Buffer::read(void* targetBuffer, size_t byteCount, size_t from, size_t to
 		}
 		readFrom = 0;
 	}
+	//readFrom_ += byteCount;
 	return length_;
 }
 BYTE* Buffer::getByteBuffer() {
 	BYTE* buffer = MALLOC(BYTE, length_);
-	size_t length = length_;
-	size_t writeTo = 0;
+	UINT32 length = length_;
+	UINT32 writeTo = 0;
 	for (UINT32 i = 0; i < chunks_->length(); i++) {
 		BufferChunk* chunk = (BufferChunk*)chunks_->getAt(i);
-		size_t writeLength = length < chunk->byteCount() ? length : chunk->byteCount();
-		for (size_t j = 0; j < writeLength; j++) {
+		UINT32 writeLength = length < chunk->byteCount() ? length : chunk->byteCount();
+		for (UINT32 j = 0; j < writeLength; j++) {
 			buffer[writeTo++] = chunk->get(j);
 		}
 		length -= writeLength;
@@ -125,18 +167,18 @@ BYTE* Buffer::getByteBuffer() {
 	return buffer;
 }
 
-//#define BUFFER_SET(t) void Buffer::set(t v, size_t ix) { ((t*)buffer_)[ix] = v; }
+//#define BUFFER_SET(t) void Buffer::set(t v, UINT32 ix) { ((t*)buffer_)[ix] = v; }
 //#define BUFFER_PUSH(t) void Buffer::push(t v) { ((t*)buffer_)[position_++] = v; }
 //
 //BUFFER_SET(char)
 //BUFFER_SET(int)
-//BUFFER_SET(size_t)
+//BUFFER_SET(UINT32)
 //BUFFER_SET(float)
 //BUFFER_SET(double)
 //
 //BUFFER_PUSH(char)
 //BUFFER_PUSH(int)
-//BUFFER_PUSH(size_t)
+//BUFFER_PUSH(UINT32)
 //BUFFER_PUSH(float)
 //BUFFER_PUSH(double)
 
