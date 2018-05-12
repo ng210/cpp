@@ -129,17 +129,24 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="abstractadapter.h" />
+    <ClInclude Include="abstractchannel.h" />
     <ClInclude Include="abstractplayer.h" />
     <ClInclude Include="channel.h" />
-    <ClInclude Include="player.h" />
-    <ClInclude Include="playercommand.h" />
+    <ClInclude Include="file.h" />
+    <ClInclude Include="frame.h" />
+    <ClInclude Include="playeradapter.h" />
     <ClInclude Include="playerdef.h" />
+    <ClInclude Include="sequence.h" />
+    <ClInclude Include="target.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="abstractadapter.cpp" />
+    <ClCompile Include="abstractchannel.cpp" />
     <ClCompile Include="abstractplayer.cpp" />
-    <ClCompile Include="playercommand.cpp" />
     <ClCompile Include="channel.cpp" />
-    <ClCompile Include="player.cpp" />
+    <ClCompile Include="frame.cpp" />
+    <ClCompile Include="playeradapter.cpp" />
+    <ClCompile Include="sequence.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -16,35 +16,12 @@ NS_FW_BASE_USE
 
 NS_PLAYER_BEGIN
 
-/******************************************************************************
- * Commands used by the player adapter
- *****************************************************************************/
-enum PlayerCommands {
-	Player_Cmd_setTempo,		// sets the frame rate (fps)
-	Player_Cmd_assign,			// assigns a sequence to a channel
-
-	Player_Cmd_Count
-};
-#define Player_Cmd_end -1
-
-/******************************************************************************
- * Track control flags
- *****************************************************************************/
-enum Player_Flags {
-	Player_Flg_Active	= 0x80,
-	Player_Flg_Unused1	= 0x40,
-	Player_Flg_Unused2	= 0x20,
-	Player_Flg_Unused3	= 0x10
-};
-
 class Channel;
 /******************************************************************************
 * Base player class
 *****************************************************************************/
 class Player : public AbstractPlayer {
 //protected:	AbstractAdapter* adapter_;
-protected:	PROP_R(PArray*, channels);
-protected:	PROP_R(Channel*, masterChannel);
 
 	//// number of cycles per second
 	//int m_iCyclesPerSecond;
