@@ -20,15 +20,16 @@ private: PROP_R(ArrayBase*, values);
 private: PROP_R(size_t, size);
 	//static const size_t seedExt_;
 	//static const size_t seedInt_;
-	static int compareWrapper_(void* item, unsigned int ix, Collection* collection, void* key);
+	static int compareWrapper_(void* item, UINT32 ix, Collection* collection, void* key);
 protected:
 	HashingFunction* hashing_;
 	Array* bucketList_;
 	//static void initialize();
 	//static void shutDown();
-	void init(unsigned int keySize, unsigned int valueSize, HashingFunction hashing, CollectionCallback* compare);
+	Map() {};
+	void init(UINT32 keySize, UINT32 valueSize, HashingFunction hashing, CollectionCallback* compare);
 public:
-	Map(unsigned int keySize = sizeof(void*), unsigned int valueSize = sizeof(void*), HashingFunction hashing = Map::hashingStr, CollectionCallback* compare = Collection::compareByRef);
+	Map(UINT32 keySize, UINT32 valueSize = sizeof(void*), HashingFunction hashing = Map::hashingStr, CollectionCallback* compare = Collection::compareByRef);
 	//Map(Array*, const char* = "=");
 	//Map(Array*, const wchar_t* = L"=");
 	virtual ~Map();

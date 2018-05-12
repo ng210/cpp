@@ -75,6 +75,10 @@
 #define PROP_R(t, n)\
 	t n##_;\
 	public: inline t n() { return n##_; };
+// declare a field with a reference getter
+#define PROP_REF(t, n)\
+	t n##_;\
+	public: inline t& n() { return n##_; };
 
 #endif
 

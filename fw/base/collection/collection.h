@@ -22,12 +22,17 @@ public:
 
 	//inline UINT32 length() { return length_;  }
 
-	static int compareByRef(void* item, UINT32 ix, Collection* map, void* key) {
+	static int compareByRef(void* item, UINT32 ix, Collection* collection, void* key) {
 		return (int)((size_t)item - (size_t)key);
 	}
-	static int compareStr(void* item, UINT32 ix, Collection* map, void* key) {
+	static int compareStr(void* item, UINT32 ix, Collection* collection, void* key) {
 		return strncmp((char*)item, (char*)key);
 	}
+	static int compareInt(void* item, UINT32 ix, Collection* collection, void* key) {
+		int i = *(int*)item;
+		return i - *(int*)key;
+	}
+
 };
 
 typedef int (CollectionCallback)(void* value, unsigned int ix, Collection* collection, void* args);

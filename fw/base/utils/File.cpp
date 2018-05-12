@@ -33,7 +33,13 @@ size_t File::write(const char* path, Buffer* buffer) {
 	size_t byteCount = 0;
 	FILE* fp = NULL;
 	if (fopen_s(&fp, path, "wb") == 0 && fp != NULL) {
-		ARRAY_FOREACH(buffer->chunks(), fwrite(((BufferChunk*)value)->buffer(), sizeof(BYTE), ((BufferChunk*)value)->byteCount(), fp););
+		size_t remainingBytes = buffer->length();
+		for (UINT32 i = 0; i < buffer->chunks()->length(); i++) {
+			BufferChunk* chunk = (BufferChunk*)buffer->chunks()->getAt(i);
+			size_t length = chunk->byteCount() < remainingBytes ? chunk->byteCount() : remainingBytes;
+			fwrite(chunk->buffer(), sizeof(BYTE), length, fp);
+			remainingBytes -= chunk->byteCount();
+		}
 		fclose(fp);
 	}
 	return byteCount;
