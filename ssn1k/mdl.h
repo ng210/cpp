@@ -17,12 +17,12 @@
 NS_SSN1K_BEGIN
 
 struct MdlCtrls {
-	Ctrl* mix;
-	Ctrl* amp;
-	Ctrl* dc;
+	Ctrl mix;
+	Ctrl amp;
+	Ctrl dc;
 };
 
-enum SSN1K_MixMode {
+enum SSN1K_MixMode : BYTE {
 	 SSN1K_MM_OVR	= 0x00	// overwrite
 	,SSN1K_MM_ADD	= 0x01	// add
 	,SSN1K_MM_MUL	= 0x02	// multiply
@@ -35,13 +35,12 @@ class Mdl {
 protected:
 	float smp_;
 	float mix(float in1, float in2);
-	void createControls(int count);
 	void destroyControls();
 public:
-	Ctrl** controls_;
-	void setup(CtrlSetting* data);
-	void setup(BYTE* data);
+	Ctrl* controls_;
 	Ctrl* getControl(size_t id);
+	//void setup(CtrlSetting* data);
+
 	//virtual float run(...) = 0;
 	//virtual void setControls(Ctrl** controls);
 	//void setControls(MdlCtrls*);

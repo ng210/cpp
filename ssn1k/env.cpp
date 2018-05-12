@@ -11,13 +11,7 @@ NS_SSN1K_BEGIN
 
 Env::Env(void) {
 	bpm(60);
-	phase_ = 0;
-	gate_ = 0;
-	timer_ = 0.0f;
-	rate_ = 0.0f;
-	velocity_ = 0.0f;
-	//overlayCounter_ = 0;
-	smp_ = 0.0f;
+	reset();
 }
 
 int Env::isActive() {
@@ -32,27 +26,36 @@ void Env::setGate(float v) {
 			timer_ = 0.0f;
 			phase_ = SSN1K_ENV_ATTACK;
 			velocity_ = v;
-			float value = ctrls->atk->get().f + SSN1K::getSampleRateR();
+			float value = ctrls->atk.f() + SSN1K::getSampleRateR();
 			rate_ = tickPerSample_ / value;
 		}
 	} else {
 		if (v <= 0.0f) {
 			// slope down: start release phase
 			gate_ = 0;
-			timer_ = ctrls->sus->get().f + SSN1K::getSampleRateR();
+			timer_ = ctrls->sus.f() + SSN1K::getSampleRateR();
 			phase_ = SSN1K_ENV_RELEASE;
-			float value = ctrls->rel->get().f;
-			rate_ = tickPerSample_ / value * (ctrls->sus->get().f + SSN1K::getSampleRateR());
+			float value = ctrls->rel.f();
+			rate_ = tickPerSample_ / value * (ctrls->sus.f() + SSN1K::getSampleRateR());
 		}
 	}
-};
+}
+void Env::reset() {
+	phase_ = 0;
+	gate_ = 0;
+	timer_ = 0.0f;
+	rate_ = 0.0f;
+	velocity_ = 0.0f;
+	//overlayCounter_ = 0;
+	smp_ = 0.0f;
+}
 float Env::run() {
 #ifdef _PROFILE
 	SSN1K_PROFILER.enter(1);
 #endif
 	EnvCtrls* ctrls = (EnvCtrls*)controls_;
 
-	float sustain = ctrls->sus->get().f + SSN1K::getSampleRateR();
+	float sustain = ctrls->sus.f() + SSN1K::getSampleRateR();
 	float invSustain = 1.0f - sustain;
 
 	if (phase_ > 0)	{
@@ -62,7 +65,7 @@ float Env::run() {
 				if (timer_ >= 1.0f) {
 					phase_ = SSN1K_ENV_DECAY;
 					timer_ = 1.0f;
-					float value = ctrls->dec->get().f + SSN1K::getSampleRateR();
+					float value = ctrls->dec.f() + SSN1K::getSampleRateR();
 					rate_ = tickPerSample_ / value * invSustain;
 				}
 				smp_ = SSN1K::interpolate(timer_);
@@ -94,7 +97,7 @@ float Env::run() {
 	SSN1K_PROFILER.leave(1);
 #endif
 	//1 - mod + mod * velocity
-	float mod = ctrls->mix->get().f;
+	float mod = ctrls->mix.f();
 	return Mdl::mix(smp_ * (1.0f - mod + mod * velocity_), 0.0f);
 }
 void Env::bpm(float v) {
@@ -110,7 +113,7 @@ float Env::run(EnvCtrls& ctrls, float in)
 	{
 		fTimer = 1.0f;
 		iPhase = 1;
-		fVelocity = ctrls->gate->get().fValue;
+		fVelocity = ctrls->gate.f()Value;
 	}
 	else
 	if (ctrls->gate.slopeDown())
@@ -121,7 +124,7 @@ float Env::run(EnvCtrls& ctrls, float in)
 	ctrls->gate.update();
 	if (this->iPhase != 0)
 	{
-		float fValue = ((Ctrl*)&ctrls)[this->iPhase]->get().fValue;
+		float fValue = ((Ctrl*)&ctrls)[this->iPhase].f()Value;
 		float fTimer2 = fTimer * fTimer;
 		if (this->iPhase != 3)
 		{ // not sustain
@@ -132,7 +135,7 @@ float Env::run(EnvCtrls& ctrls, float in)
 					out = smp = 1.0f - fTimer;
 					break;
 				case 2: // dec
-					out = smp = fTimer2 * (1.0f - ctrls->sus->get().fValue) + ctrls->sus->get().fValue;
+					out = smp = fTimer2 * (1.0f - ctrls->sus.f()Value) + ctrls->sus.f()Value;
 					break;
 				case 4: // rel
 					out = fTimer2 * smp;
@@ -151,9 +154,9 @@ float Env::run(EnvCtrls& ctrls, float in)
 		{ // sustain
 			out = smp = fValue;
 		}
-		out *= fVelocity * ctrls->amp->get().fValue;
+		out *= fVelocity * ctrls->amp.f()Value;
 	}
-	return mix(ctrls, in, out + ctrls->dc->get().fValue);
+	return mix(ctrls, in, out + ctrls->dc.f()Value);
 }
 */
 

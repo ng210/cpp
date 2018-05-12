@@ -18,11 +18,11 @@ float Flt::run(float in, float cut) {
 	SSN1K_PROFILER.enter(3);
 #endif
 	FltCtrls* ctrls = (FltCtrls*)controls_;
-	int mode = ctrls->mode->get().i;
+	int mode = ctrls->mode.i();
 	float out = in;
 	if (mode != 0) {
 		// Update filter coefficients
-		float res = (ctrls->res->get().i == 0) ? 1.0f : 1.0f - ctrls->res->get().f;
+		float res = (ctrls->res.i() == 0) ? 1.0f : 1.0f - ctrls->res.f();
 		float e = cut * SSN1K::getTheta();
 		//float e = (float)tan(cut*SSN1K::getTheta());
 		float g = (float)(-/*M_SQRT2 **/ res * e);

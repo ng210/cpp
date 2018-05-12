@@ -11,14 +11,14 @@ NS_SSN1K_BEGIN
 
 #define FLT_CUTOFF_MOD_RANGE 4000
 
-enum SSN1K_FILTER_MODE {
+enum SSN1K_FILTER_MODE : BYTE {
 	SSN1K_FM_LP = 1,
 	SSN1K_FM_HP = 2
 };
 
 struct FltCtrls : public MdlCtrls {
-	Ctrl* res;
-	Ctrl* mode;
+	Ctrl res;
+	Ctrl mode;
 };
 
 class Flt : public Mdl {

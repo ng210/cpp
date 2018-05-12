@@ -14,7 +14,7 @@
 
 NS_SSN1K_BEGIN
 
-enum SSN1K_ENV_PHASE {
+enum SSN1K_ENV_PHASE : BYTE {
 	 SSN1K_ENV_IDLE
 	,SSN1K_ENV_ATTACK
 	,SSN1K_ENV_DECAY
@@ -23,10 +23,10 @@ enum SSN1K_ENV_PHASE {
 };
 
 struct EnvCtrls : public MdlCtrls {
-	Ctrl* atk;
-	Ctrl* dec;
-	Ctrl* sus;
-	Ctrl* rel;
+	Ctrl atk;
+	Ctrl dec;
+	Ctrl sus;
+	Ctrl rel;
 };
 
 class Env : public Mdl {
@@ -39,13 +39,14 @@ private:
 	float velocity_;
 	float tickPerSample_;
 public:
-	Env(void);
-
 	PROP_R(float, bpm);
+
+	Env(void);
+	void bpm(float bpm);
 	//int overlayCounter_;
 	int isActive();
+	void reset();
 	float run();
-	void bpm(float bpm);
 	void setGate(float velocity);
 };
 

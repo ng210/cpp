@@ -10,6 +10,7 @@ NS_SSN1K_BEGIN
 Osc::Osc(void) {
 	timer_ = 0;
 	noiseTimer_ = 0;
+	smp_ = 0.0f;
 	//fDelta = 0;
 }
 
@@ -20,14 +21,14 @@ float Osc::run(float amp, float tune, float freq, float phase, float in) {
 	SSN1K_PROFILER.enter(2);
 #endif
 
-	float pitch = (float)(tune + ctrls->note->get().f + ctrls->tune->get().f);
-	float delta = (freq + ctrls->fre->get().f + SSN1K::p2f(pitch)) * SSN1K::getSampleRateR();
+	float pitch = (float)(tune + ctrls->note.f() + ctrls->tune.f());
+	float delta = (freq + ctrls->fre.f() + SSN1K::p2f(pitch)) * SSN1K::getSampleRateR();
 	if (delta >= 1.0f) {
 		delta = 0.99999999f;
 	}
-	float psw = phase + ctrls->psw->get().f;
+	float psw = phase + ctrls->psw.f();
 	float out = 0.0f;
-	int waveForm = ctrls->wav->get().i & 0x1F;
+	int waveForm = ctrls->wav.i() & 0x1F;
 	int waveFormCount = 0;
 	if (waveForm & SSN1K_WF_TRI) {
 		float tmp = (timer_ < psw) ? timer_/psw : (1.0f - timer_)/(1.0f - psw);

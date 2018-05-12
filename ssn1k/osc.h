@@ -9,7 +9,7 @@
 
 NS_SSN1K_BEGIN
 
-enum SSN1K_WaveForm {
+enum SSN1K_WaveForm : BYTE {
 	 SSN1K_WF_TRI	= 0x01
 	,SSN1K_WF_PSAW	= 0x02
 	,SSN1K_WF_PLS	= 0x04
@@ -20,11 +20,11 @@ enum SSN1K_WaveForm {
 };
 
 struct OscCtrls : public MdlCtrls {
-	Ctrl* note;
-	Ctrl* tune;
-	Ctrl* fre;
-	Ctrl* psw;
-	Ctrl* wav;
+	Ctrl note;
+	Ctrl tune;
+	Ctrl fre;
+	Ctrl psw;
+	Ctrl wav;
 };
 
 class Osc : public Mdl {

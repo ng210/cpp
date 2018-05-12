@@ -1,7 +1,7 @@
 #include "ctrl.h"
+#include "base/memory.h"
 
-NS_SSN1K_USE
-
+NS_FW_BASE_USE
 NS_SSN1K_BEGIN
 
 #ifdef _PROFILE
@@ -17,43 +17,49 @@ void SSN1K_ProfileInit() {
 
 #endif
 
-CtrlValue Ctrl::get() {
-	return value_;
-}
-void Ctrl::set(CtrlValue value) {
-	value_ = value;
-}
-//void Ctrl::set(int value) {
-//	value_.i = value;
+//bool Ctrl::set(float value) {
+//	set(0.0f, 0.0f, 1.0f);
+//	return set(value, true);
 //}
-bool Ctrl::set(float value) {
-	set(0.0f, 0.0f, 1.0f);
-	return set(value, true);
-}
-void Ctrl::set(float value, float min, float max) {
-	min_.f = min;
-	max_.f = max;
-	set(value, true);
-}
-bool Ctrl::set(float value, bool check) {
-	int isValid = 0;
-	if (check) {
-		isValid = value >= min_.f;
-		if (!isValid) {
-			value = min_.f;
-		} else {
-			isValid = value < max_.f;
-			if (!isValid) value = max_.f;
-		}
+//void Ctrl::set(float value, float min, float max) {
+//	min_.f = min;
+//	max_.f = max;
+//	set(value, true);
+//}
+//bool Ctrl::set(float value, bool check) {
+//	int isValid = 0;
+//	if (check) {
+//		isValid = value >= min_.f;
+//		if (!isValid) {
+//			value = min_.f;
+//		} else {
+//			isValid = value < max_.f;
+//			if (!isValid) value = max_.f;
+//		}
+//	}
+//	value_.f = value;
+//	return isValid;
+//}
+//bool Ctrl::change() {
+//	return set(value_.f + delta_, true);
+//}
+//bool Ctrl::change(float value) {
+//	return set(value_.f + value, true);
+//}
+
+Ctrl* Ctrl::createControls(int count) {
+	Ctrl* ptr = MALLOC(Ctrl, count);
+	for (int i = 0; i < count; i++) {
+		ptr[i].set(0);
 	}
-	value_.f = value;
-	return isValid;
+	return ptr;
 }
-bool Ctrl::change() {
-	return set(value_.f + delta_, true);
-}
-bool Ctrl::change(float value) {
-	return set(value_.f + value, true);
-}
+
+//void Ctrl::setControls(Ctrl** controls, CtrlSetting* data) {
+//	while (data->id != -1) {
+//		controls[data->id]->set(data->value);
+//		data++;
+//	}
+//}
 
 NS_SSN1K_END
