@@ -17,18 +17,18 @@ NS_SSN1K_BEGIN
 typedef float (INTERPOLATE)(float);
 
 
-#define E(o)	(0 + o*12)
-#define F(o)	(1 + o*12)
-#define Fis(o)	(2 + o*12)
-#define G(o)	(3 + o*12)
-#define Gis(o)	(4 + o*12)
-#define A(o)	(5 + o*12)
-#define Ais(o)	(6 + o*12)
-#define H(o)	(7 + o*12)
-#define C(o)	(8 + o*12)
-#define Cis(o)	(9 + o*12)
-#define D(o)	(10 + o*12)
-#define Dis(o)	(11 + o*12)
+#define C(o)	( 0 + o*12)
+#define Cis(o)	( 1 + o*12)
+#define D(o)	( 2 + o*12)
+#define Dis(o)	( 3 + o*12)
+#define E(o)	( 4 + o*12)
+#define F(o)	( 5 + o*12)
+#define Fis(o)	( 6 + o*12)
+#define G(o)	( 7 + o*12)
+#define Gis(o)	( 8 + o*12)
+#define A(o)	( 9 + o*12)
+#define Ais(o)	(10 + o*12)
+#define H(o)	(11 + o*12)
 
 class SSN1K {
 	static const float referenceFrequency;

@@ -2,9 +2,15 @@
 #define __XMLOADER_H
 
 #include "basedef.h"
+#include "collection/map.h"
+#include "sequence.h"
 #include "collection/parray.h"
+#include "playeradapter.h"
+#include "synthadapter.h"
 
 NS_FW_BASE_USE
+NS_PLAYER_USE
+NS_SSN1K_USE
 
 #define MAX_NUMBER_OF_CHANNELS 32
 
@@ -17,7 +23,7 @@ typedef struct XMFILEHEADER_ {
 	WORD version;
 	DWORD headerSize;
 	WORD songLength;
-	WORD rstartPosition;
+	WORD restartPosition;
 	WORD channelCount;
 	WORD patternCount;
 	WORD instrumentCount;
@@ -38,18 +44,20 @@ typedef struct XMFILEPATTERN_ {
 
 //typedef Array XMSTREAM;
 
-typedef struct XMPATTERN_ {
-	int rows;
-	int channels[MAX_NUMBER_OF_CHANNELS];
-} XMPATTERN;
-
 typedef struct XMNOTE_ {
-	int note;
-	int instrument;
-	int volume;
-	int effect;
-	int parameter;
+	BYTE hasData;
+	BYTE note;
+	BYTE instrument;
+	BYTE volume;
+	BYTE effect;
+	BYTE parameter;
 } XMNOTE;
+
+typedef struct XMPATTERN_ {
+	int rowCount;
+	XMNOTE* data;
+	int sequences[64];
+} XMPATTERN;
 
 //typedef struct CHANNELINFO {
 //	// id of currently assigned sequence
@@ -67,20 +75,41 @@ typedef struct XMNOTE_ {
 //} XMFILEINSTRUMENT;
 
 class XmLoader {
-protected:
+//protected:
 	//static void mapVol2Ctrl(int volume, int& cmd, int& ctrlId, int& ctrlValue);
 	//static void mapFx2Ctrl(int fx, int fxArg, int& cmd, int& ctrlId, int& ctrlValue);
 	//static void addEvent(XMSTREAM *pStream, int iDelta, int cmd, int arg1, int arg2, int arg3, int arg4);
-protected:	PROP_R(size_t, tempo);
-protected:	PROP_R(PArray*, sequences);
-protected:	PROP_R(PArray*, instruments);
+protected:	PROP_R(float, bpm);
+protected:	PROP_R(float, ticks);
+protected:	PROP_REF(PArray, patterns);
+protected:	PROP_REF(Array, patternOrder);
+protected:	PROP_R(PlayerAdapter*, playerAdapter);
+protected:	PROP_R(SynthAdapter*, synthAdapter);
+protected:	XMNOTE states_[64];
+
+//protected:	PROP_R(PArray*, sequences);
+//protected:	PROP_R(PArray*, instruments);
+//protected:	PROP_R(Sequence*, mainSequence);
+protected:	PROP_R(int, channelCount);
 public:
-	XmLoader();
+	XmLoader(PlayerAdapter* playerAdapter, SynthAdapter* synthAdapter);
 	virtual ~XmLoader(void);
 
-	void readRow(XMNOTE* note, BYTE*& data);
+	XMPATTERN* readPattern(XMFILEPATTERN* ptr);
+	void convertPattern(XMPATTERN* pattern, PArray* sequences);
+	int printPattern(XMPATTERN* pattern, char* buffer);
+
+	XMNOTE* readNote(BYTE*& ptr, XMNOTE* xmNote);
+	PArray* convertNote(XMNOTE* xmNote, XMNOTE& state);
+	int printNote(XMNOTE* xmNote, char* buffer);
+
+	//void addEvent(Frame* frame, BYTE cmd, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
+	//void convertNote(XMNOTE& note, Sequence* track, int delta, BYTE*& data);
 	//void readInstrument();
-	int load(char *szPath);
+	int load(const char *szPath);
+	PArray* convert();
+
+	static Map effects;
 };
 
 #endif

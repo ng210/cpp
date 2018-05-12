@@ -7,7 +7,7 @@
 NS_FW_BASE_USE
 NS_SSN1K_BEGIN
 
-const float SSN1K::referenceFrequency = 20.60172230705f;
+const float SSN1K::referenceFrequency = 16.351597831287414667365624595207f; // C-1
 float SSN1K::sampleRate = 48000.0f;
 float SSN1K::sampleRateR = 1.0f/48000.0f;
 float SSN1K::theta = (float)(2*M_PI / 48000.0f);
@@ -32,7 +32,7 @@ float SSN1K::p2f(float pitch) {
 	SSN1K_PROFILER.enter(4);
 #endif
 	// c = pow(2, 1/12); f = pow(c, pitch)*ref_freq
-	float f = ((*(int*)&pitch) == 0 ? 0.0f : (float)pow(1.05946309436f, pitch) * SSN1K::referenceFrequency);
+	float f = pitch < 0.0f ? 0.0f : (float)pow(1.0594630943592952645618252949463f, pitch) * SSN1K::referenceFrequency;
 #ifdef _PROFILE
 	SSN1K_PROFILER.leave(4);
 #endif

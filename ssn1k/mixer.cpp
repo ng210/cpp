@@ -5,7 +5,7 @@ NS_SSN1K_BEGIN
 
 Mixer::Mixer() {
 	inputCount_ = 0;
-	createControls(SSN1K_CI_MIX_COUNT);
+	controls_ = Ctrl::createControls(SSN1K_CI_MIX_COUNT);
 }
 
 Mixer::~Mixer() {
@@ -32,8 +32,11 @@ float Mixer::run(void* buffer, size_t start, size_t end) {
 		float right = 0.0f;
 		MixCtrls* ctrls = (MixCtrls*)controls_;
 		for (size_t j = 0; j < inputCount_; j++) {
-			float smp = input_[j]->run() * ctrls->volume[j]->get().f;
-			float balance = (ctrls->balance[j]->get().f + input_[j]->getControl(SSN1K_CI_SynthBal)->get().f) / 2.0f;
+			if (ctrls->volume[j].i() == 0) {
+				continue;
+			}
+			float smp = input_[j]->run() * ctrls->volume[j].f();
+			float balance = (ctrls->balance[j].f() + input_[j]->getControl(SSN1K_CI_SynthBal)->f()) / 2.0f;
 			float lSmp = smp * balance;
 			left += lSmp;
 			right += smp - lSmp;
@@ -42,8 +45,8 @@ float Mixer::run(void* buffer, size_t start, size_t end) {
 		writeSample(ptr, left);
 		writeSample(ptr+1, right);
 
-		//((short*)buffer)[2 * i] += (short)(smp * ctrls->balance[j]->get().f);
-		//((short*)buffer)[2 * i + 1] += (short)(smp * (1.0f - ctrls->balance[j]->get().f));
+		//((short*)buffer)[2 * i] += (short)(smp * ctrls->balance[j].f());
+		//((short*)buffer)[2 * i + 1] += (short)(smp * (1.0f - ctrls->balance[j].f()));
 	}
 	return 0.0f;
 }
@@ -53,6 +56,21 @@ void Mixer::addInput(Synth* in) {
 		//MixCtrls* ctrls = (MixCtrls*)controls_;
 		input_[inputCount_] = in;
 		inputCount_++;
+	}
+}
+
+void Mixer::setControls(BYTE* data) {
+	BYTE* ptr = data;
+	int ctrlId;
+	CtrlValue value;
+	while ((ctrlId = *ptr++) != 0xFF) {
+		Ctrl* ctrl = &controls_[ctrlId];
+		if (ctrlId == SSN1K_CI_MixMix) {
+			ctrl->set(*ptr++);
+		} else
+		if (ctrlId < SSN1K_CI_MIX_COUNT) {
+			ctrl->set((float)(*ptr++ / 255.0f));
+		}
 	}
 }
 
