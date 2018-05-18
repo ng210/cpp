@@ -17,7 +17,6 @@ void* MemoryMgr::realloc(void* p, size_t size) {
 }
 
 void MemoryMgr::free(void *p) {
-	//DEBUG("free:%x\n", (int)p);
 	::free(p);
 }
 

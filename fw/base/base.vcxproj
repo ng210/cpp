@@ -129,6 +129,7 @@
     <ClInclude Include="base\string.h" />
     <ClInclude Include="base\tracer-win.h" />
     <ClInclude Include="base\tracer.h" />
+    <ClInclude Include="base\windowwrapper.h" />
     <ClInclude Include="collection\array.h" />
     <ClInclude Include="collection\collection.h" />
     <ClInclude Include="collection\arraybase.h" />
@@ -144,6 +145,7 @@
     <ClInclude Include="utils\file.h" />
     <ClInclude Include="utils\pathinfo.h" />
     <ClInclude Include="utils\utils.h" />
+    <ClInclude Include="winapp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="arraybase.cpp" />
@@ -152,6 +154,7 @@
     <ClCompile Include="base\string.cpp" />
     <ClCompile Include="base\tracer-win.cpp" />
     <ClCompile Include="base\tracer.cpp" />
+    <ClCompile Include="base\windowwrapper.cpp" />
     <ClCompile Include="collection\array.cpp" />
     <ClCompile Include="collection\keyvaluepair.cpp" />
     <ClCompile Include="collection\map.cpp" />
@@ -164,6 +167,7 @@
     <ClCompile Include="utils\file.cpp" />
     <ClCompile Include="utils\pathinfo.cpp" />
     <ClCompile Include="utils\utils.cpp" />
+    <ClCompile Include="winapp.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

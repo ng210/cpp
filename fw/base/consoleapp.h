@@ -4,6 +4,26 @@
 #include <windows.h>
 #include "runtime.h"
 
+//*****************************************************************************
+// CONSOLE
+//*****************************************************************************
+class Console {
+protected: PROP_R(HANDLE, hConsole);
+protected: PROP_R(CONSOLE_SCREEN_BUFFER_INFO, consoleScreenBufferInfo);
+protected: PROP_R(CONSOLE_CURSOR_INFO, consoleCursorInfo);
+protected: PROP_R(char*, consoleBuffer);
+
+public:
+	Console();
+	~Console();
+
+	void showCursor(bool status);
+	void vprintf(const char* const format, va_list args);
+	COORD* gotoxy(int x, int y);
+};
+
+extern Console console;
+
 extern int _main(NS_FW_BASE::Map*);
 
 char* getWorkingDir();

@@ -92,6 +92,10 @@
     <ClInclude Include="collection\arraybase.h">
       <Filter>collection\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="winapp.h" />
+    <ClInclude Include="base\windowwrapper.h">
+      <Filter>base\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\memory.cpp">
@@ -145,6 +149,10 @@
     </ClCompile>
     <ClCompile Include="arraybase.cpp">
       <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="winapp.cpp" />
+    <ClCompile Include="base\windowwrapper.cpp">
+      <Filter>base\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
