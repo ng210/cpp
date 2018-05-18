@@ -19,6 +19,7 @@ public:
 	virtual int prepareObject(void* object) = 0;
 	virtual int processCommand(void* object, PLAYER_COMMAND cmd) = 0;
 	virtual PLAYER_COMMAND createCommand(int code, ...) = 0;
+	virtual void setTempo(void *object, float ticksPerSecond) = 0;
 #ifdef _DEBUG
 	virtual char* logCommand(PLAYER_COMMAND cmd);
 #endif

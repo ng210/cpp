@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "playeradapter.h"
-#include "abstractplayer.h"
+#include "player.h"
 
 NS_PLAYER_BEGIN
 
@@ -13,11 +13,14 @@ int PlayerAdapter::prepareObject(void* object) {
 	return 0;
 }
 int PlayerAdapter::processCommand(void* object, PLAYER_COMMAND command) {
-	AbstractPlayer* player = (AbstractPlayer*)object;
+	Player* player = (Player*)object;
 	switch (command[0]) {
 	case Player_Cmd_setTempo:	// fps, tps
-		player->framesPerSecond(((PLAYER_CMD_SET_TEMPO*)command)->framePerMinute/60.0f);
-		player->ticksPerFrame(((PLAYER_CMD_SET_TEMPO*)command)->ticksPerFrame);
+		//player->framesPerSecond(((PLAYER_CMD_SET_TEMPO*)command)->framePerMinute/60.0f);
+		//player->ticksPerFrame(((PLAYER_CMD_SET_TEMPO*)command)->ticksPerFrame);
+		float refreshRate;
+		refreshRate = ((PLAYER_CMD_SET_TEMPO*)command)->framePerMinute * ((PLAYER_CMD_SET_TEMPO*)command)->ticksPerFrame / 60.0f;
+		ARRAY_FOREACH(player->channels(), Target* target = ((AbstractChannel*)value)->target(); target->adapter->setTempo(target->object, refreshRate));
 		break;
 	case Player_Cmd_assign:		// target, sequence, status
 		Target* target = (Target*)player->targets()->getAt(((PLAYER_CMD_ASSIGN*)command)->target);
@@ -30,7 +33,7 @@ int PlayerAdapter::processCommand(void* object, PLAYER_COMMAND command) {
 		ARRAY_FOREACH(player->channels(), if (!((AbstractChannel*)value)->isActive()) { ix = i; chn = (AbstractChannel*)value; break; });
 		if (ix == -1) {
 			// create new channel
-			AbstractChannel* chn = AbstractPlayer::createChannel();
+			AbstractChannel* chn = Player::createChannel();
 			chn->init(/*player,*/ player->channels()->length(), target, sequence, status);
 			player->addChannel(chn);
 			//chn->id_ = NEW_(String, ix);
@@ -41,6 +44,11 @@ int PlayerAdapter::processCommand(void* object, PLAYER_COMMAND command) {
 	}
 	return 0;
 }
+
+void PlayerAdapter::setTempo(void *object, float ticksPerSecond) {
+	((Player*)object)->refreshRate(ticksPerSecond);
+}
+
 PLAYER_COMMAND PlayerAdapter::createCommand(int code, ...) {
 	PLAYER_COMMAND cmd = NULL;
 	va_list args;

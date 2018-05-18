@@ -1,5 +1,5 @@
 #include "channel.h"
-#include "abstractplayer.h"
+#include "player.h"
 #include "sequence.h"
 #include <stdio.h>
 

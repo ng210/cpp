@@ -112,7 +112,9 @@ protected:
 	UINT32 voiceCount_;
 	Voice* voices_[64];
 	UINT32 nextVoice_;
+	PROP_R(Voice*, activeVoice);
 	PROP_R(Ctrl**, bank);
+	PROP_REF(float, ticksPerSample);
 	//UINT32 bankCount_;
 	UINT32 selectedBank_;
 	//Ctrl** banks_[4];
@@ -141,8 +143,9 @@ public:
 	void changeProgram(int prgId);
 	//void setGate(float velocity);
 	//void setCtrlSweep(int id, float fStart, float fEnd, int iCycles);
-
+	void ticksPerSample(float bpm);
 	void bank(Ctrl** bank);
+	
 	static void setControls(Ctrl* controls, BYTE* data);
 };
 

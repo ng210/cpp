@@ -3,9 +3,6 @@
 
 #include "abstractchannel.h"
 
-//#include "collection/parray.h"
-//#include "player.h"
-
 //NS_FW_BASE_USE
 
 NS_PLAYER_BEGIN

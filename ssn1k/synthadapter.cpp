@@ -1,13 +1,14 @@
 #include <stdarg.h>
 #include "synthadapter.h"
 #include "player.h"
+#include "voice.h"
 
 NS_SSN1K_BEGIN
 
 static char* NOTES[] = { "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "H-" };
 
 
-SynthAdapter::SynthAdapter(AbstractPlayer* player) {
+SynthAdapter::SynthAdapter(Player* player) {
 	id_ = SYNTH_ADAPTER_ID;
 	player_ = player;
 }
@@ -52,7 +53,14 @@ int SynthAdapter::processCommand(void* object, PLAYER_COMMAND command) {
 			SYNTH_CMD_SET_CTRLF* cmdCtrlF;
 			cmdCtrlF = (SYNTH_CMD_SET_CTRLF*)command;
 			ctrlId = cmdCtrlF->id;
-			synth->getControl(ctrlId)->set(cmdCtrlF->value);
+			switch (ctrlId) {
+				case SSN1K_CI_Tune:
+					synth->activeVoice()->note().set(36.0f);	// cmdCtrlF->value);
+					break;
+				default:
+					synth->getControl(ctrlId)->set(cmdCtrlF->value);
+					break;
+			}
 			break;
 		case Synth_Cmd_prgChange:	// prg id
 			int prgId = ((SYNTH_CMD_PRG_CHNG*)command)->id;
@@ -61,6 +69,10 @@ int SynthAdapter::processCommand(void* object, PLAYER_COMMAND command) {
 	}
 	return 1;
 }
+void SynthAdapter::setTempo(void *object, float ticksPerSecond) {
+	((Synth*)object)->ticksPerSample(ticksPerSecond*SSN1K::getSampleRateR());
+}
+
 PLAYER_COMMAND SynthAdapter::createCommand(int code, ...) {
 	PLAYER_COMMAND cmd = NULL;
 	va_list args;

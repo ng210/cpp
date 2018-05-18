@@ -8,8 +8,13 @@
 NS_SSN1K_BEGIN
 
 Flt::Flt() {
-	for (int i=0; i<3*3+4*2; i++) {
-		((float*)&this->ai)[i] = 0.0f;
+	reset();
+}
+
+void Flt::reset() {
+	float* dst = &this->ai[0];
+	for (int i = 0; i < 3 * 3 + 4 * 2; i++) {
+		dst[i] = 0.0f;
 	}
 }
 

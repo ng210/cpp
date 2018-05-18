@@ -32,7 +32,8 @@ float Osc::run(float amp, float tune, float freq, float phase, float in) {
 	int waveFormCount = 0;
 	if (waveForm & SSN1K_WF_TRI) {
 		float tmp = (timer_ < psw) ? timer_/psw : (1.0f - timer_)/(1.0f - psw);
-		out += 2*tmp - 1.0f;
+		//float tmp = (timer_ < psw) ? timer_/psw : timer_/(psw - 1.0f);
+		out += 2 * tmp - 1.0f;
 		waveFormCount++;
 	}
 	if (waveForm & SSN1K_WF_PSAW) {

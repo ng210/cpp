@@ -130,7 +130,7 @@
   <ItemGroup>
     <ClInclude Include="abstractadapter.h" />
     <ClInclude Include="abstractchannel.h" />
-    <ClInclude Include="abstractplayer.h" />
+    <ClInclude Include="player.h" />
     <ClInclude Include="channel.h" />
     <ClInclude Include="file.h" />
     <ClInclude Include="frame.h" />
@@ -142,7 +142,7 @@
   <ItemGroup>
     <ClCompile Include="abstractadapter.cpp" />
     <ClCompile Include="abstractchannel.cpp" />
-    <ClCompile Include="abstractplayer.cpp" />
+    <ClCompile Include="player.cpp" />
     <ClCompile Include="channel.cpp" />
     <ClCompile Include="frame.cpp" />
     <ClCompile Include="playeradapter.cpp" />

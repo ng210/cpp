@@ -24,9 +24,6 @@
     <ClInclude Include="channel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="abstractplayer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="abstractchannel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -45,12 +42,12 @@
     <ClInclude Include="file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="channel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="abstractplayer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="abstractchannel.cpp">
@@ -66,6 +63,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="abstractadapter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

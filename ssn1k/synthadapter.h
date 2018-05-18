@@ -48,13 +48,14 @@ typedef struct SYNTH_CMD_PRG_CHNG_ : ABSTRACT_ADAPTER_COMMAND_ {
 } SYNTH_CMD_PRG_CHNG;
 
 class SynthAdapter : public AbstractAdapter {
-	AbstractPlayer* player_;
+	Player* player_;
 public:
-	SynthAdapter(AbstractPlayer* player);
+	SynthAdapter(Player* player);
 	virtual ~SynthAdapter();
 
 	int prepareObject(void* object);
 	int processCommand(void* object, PLAYER_COMMAND command);
+	void setTempo(void *object, float ticksPerSecond);
 	PLAYER_COMMAND createCommand(int code, ...);
 #ifdef _DEBUG
 	char* logCommand(PLAYER_COMMAND command);

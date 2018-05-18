@@ -37,17 +37,15 @@ private:
 	//float fDelta;
 	float rate_;
 	float velocity_;
-	float tickPerSample_;
+	float* ticksPerSample_;
 public:
-	PROP_R(float, bpm);
-
 	Env(void);
-	void bpm(float bpm);
 	//int overlayCounter_;
 	int isActive();
 	void reset();
 	float run();
 	void setGate(float velocity);
+	void ticksPerSample(float* v);
 };
 
 NS_SSN1K_END

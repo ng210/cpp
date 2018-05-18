@@ -32,7 +32,7 @@ float SSN1K::p2f(float pitch) {
 	SSN1K_PROFILER.enter(4);
 #endif
 	// c = pow(2, 1/12); f = pow(c, pitch)*ref_freq
-	float f = pitch < 0.0f ? 0.0f : (float)pow(1.0594630943592952645618252949463f, pitch) * SSN1K::referenceFrequency;
+	float f = (*(int*)&pitch == 0) ? 0.0f : (float)pow(1.0594630943592952645618252949463f, pitch) * SSN1K::referenceFrequency;
 #ifdef _PROFILE
 	SSN1K_PROFILER.leave(4);
 #endif

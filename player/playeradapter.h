@@ -33,6 +33,8 @@ public:
 	PlayerAdapter();
 	int prepareObject(void* object);
 	int processCommand(void* object, PLAYER_COMMAND cmd);
+	void setTempo(void *object, float ticksPerSecond);
+
 	PLAYER_COMMAND createCommand(int code, ...);
 #ifdef _DEBUG
 	char* logCommand(PLAYER_COMMAND command);

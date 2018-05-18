@@ -32,6 +32,7 @@ private:
 	float hp[2];
 public:
 	Flt();
+	void reset();
 	float run(float in, float cut);
 };
 

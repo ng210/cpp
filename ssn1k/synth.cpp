@@ -26,6 +26,8 @@ Synth::Synth(UINT32 voices) {
 
 void Synth::init(UINT32 voices) {
 	smp_ = .0f;
+	ticksPerSample(60.0f);
+
 	voiceCount_ = voices > 64 ? 64 : voices;
 	//overlayValue_ = .0f;
 	// create controls
@@ -37,6 +39,7 @@ void Synth::init(UINT32 voices) {
 		voices_[i] = NEW_(Voice, this, i);
 	}
 	nextVoice_ = 0;
+	activeVoice_ = voices_[0];
 	//bankCount_ = 0;
 	//selectedBank_ = 0;
 #ifdef _PROFILE
@@ -98,7 +101,9 @@ void Synth::noteOn(int note, float velocity) {
 	// get free voice
 	//printf("synth: %llx, note: %d, velocity: %f, duration: %d\n", this, note, velocity, duration);
 	Voice* voice = voices_[nextVoice_];
+	activeVoice_ = voice;
 	nextVoice_ = (nextVoice_ + 1) % voiceCount_;
+	voice->noteOff();
 	voice->noteOn(note, velocity);
 }
 void Synth::noteOff(int note) {
@@ -139,6 +144,10 @@ void Synth::changeProgram(int prgId) {
 //	}
 //}
 
+void Synth::ticksPerSample(float bpm) {
+	ticksPerSample_ = bpm * SSN1K::getSampleRateR() / 60.0f;
+}
+
 void Synth::bank(Ctrl** bank) {
 	bank_ = bank;
 	changeProgram(0);
@@ -150,12 +159,18 @@ void Synth::setControls(Ctrl* controls, BYTE* data) {
 		Ctrl* ctrl = &controls[ctrlId];
 		switch (ctrlId) {
 		case SSN1K_CI_Tune:
+		case SSN1K_CI_Env1Mix:
 		case SSN1K_CI_Env1Amp:
 		case SSN1K_CI_Env1DC:
+		case SSN1K_CI_Env2Mix:
 		case SSN1K_CI_Env2Amp:
 		case SSN1K_CI_Env2DC:
+		case SSN1K_CI_Env3Mix:
 		case SSN1K_CI_Env3Amp:
 		case SSN1K_CI_Env3DC:
+		case SSN1K_CI_Env4Mix:
+		case SSN1K_CI_Env4Amp:
+		case SSN1K_CI_Env4DC:
 		case SSN1K_CI_Osc1Tune:
 		case SSN1K_CI_Osc2Tune:
 		case SSN1K_CI_Lfo1Amp:
@@ -167,10 +182,6 @@ void Synth::setControls(Ctrl* controls, BYTE* data) {
 			ptr += sizeof(float);
 			break;
 		case SSN1K_CI_SynthMix:
-		case SSN1K_CI_Env1Mix:
-		case SSN1K_CI_Env2Mix:
-		case SSN1K_CI_Env3Mix:
-		case SSN1K_CI_Env4Mix:
 		case SSN1K_CI_Lfo1Wav:
 		case SSN1K_CI_Lfo2Wav:
 		case SSN1K_CI_Osc1Wav:

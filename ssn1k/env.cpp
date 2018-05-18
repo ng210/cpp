@@ -10,7 +10,7 @@ NS_SSN1K_USE
 NS_SSN1K_BEGIN
 
 Env::Env(void) {
-	bpm(60);
+	ticksPerSample_ = NULL;
 	reset();
 }
 
@@ -23,20 +23,21 @@ void Env::setGate(float v) {
 		if (v > 0.0f) {
 			// slope up: retrigger envelope
 			gate_ = 1;
-			timer_ = 0.0f;
+			//timer_ = 0.0f;
 			phase_ = SSN1K_ENV_ATTACK;
 			velocity_ = v;
 			float value = ctrls->atk.f() + SSN1K::getSampleRateR();
-			rate_ = tickPerSample_ / value;
+			rate_ = *ticksPerSample_ / value;
 		}
 	} else {
 		if (v <= 0.0f) {
 			// slope down: start release phase
 			gate_ = 0;
-			timer_ = ctrls->sus.f() + SSN1K::getSampleRateR();
+			//timer_ = ctrls->sus.f() + SSN1K::getSampleRateR();
 			phase_ = SSN1K_ENV_RELEASE;
-			float value = ctrls->rel.f();
-			rate_ = tickPerSample_ / value * (ctrls->sus.f() + SSN1K::getSampleRateR());
+			float value = ctrls->rel.f() + SSN1K::getSampleRateR();
+			float sustain = ctrls->sus.f() + SSN1K::getSampleRateR();
+			rate_ = *ticksPerSample_ / value * (sustain + SSN1K::getSampleRateR());
 		}
 	}
 }
@@ -48,6 +49,7 @@ void Env::reset() {
 	velocity_ = 0.0f;
 	//overlayCounter_ = 0;
 	smp_ = 0.0f;
+	phase_ = SSN1K_ENV_IDLE;
 }
 float Env::run() {
 #ifdef _PROFILE
@@ -58,7 +60,7 @@ float Env::run() {
 	float sustain = ctrls->sus.f() + SSN1K::getSampleRateR();
 	float invSustain = 1.0f - sustain;
 
-	if (phase_ > 0)	{
+	if (phase_ != SSN1K_ENV_IDLE)	{
 		switch (phase_) {
 			case SSN1K_ENV_ATTACK: // attack
 				timer_ += rate_;
@@ -66,10 +68,11 @@ float Env::run() {
 					phase_ = SSN1K_ENV_DECAY;
 					timer_ = 1.0f;
 					float value = ctrls->dec.f() + SSN1K::getSampleRateR();
-					rate_ = tickPerSample_ / value * invSustain;
+					rate_ = *ticksPerSample_ / value * invSustain;
+				} else {
+					smp_ = SSN1K::interpolate(timer_);
+					break;
 				}
-				smp_ = SSN1K::interpolate(timer_);
-				break;
 			case SSN1K_ENV_DECAY: // decay/sustain
 				// 0.0 : 0.005s -> 1/(0*3.995 + 0.005)/smpRate = 200/smpRate
 				// 1.0 : 4.0s -> 1/(1*3.995 + 0.005)/smpRate
@@ -80,7 +83,8 @@ float Env::run() {
 					smp_ = sustain;
 					//phase_ = SSN1K_ENV_SUSTAIN;
 				} else {
-					smp_ = invSustain*SSN1K::interpolate((timer_ - sustain) / invSustain) + sustain;
+					//smp_ = invSustain*SSN1K::interpolate((timer_ - sustain) / invSustain) + sustain;
+					smp_ = SSN1K::interpolate(timer_);
 				}
 				break;
 			case SSN1K_ENV_RELEASE: // release
@@ -89,22 +93,28 @@ float Env::run() {
 					phase_ = SSN1K_ENV_IDLE;
 					timer_ = 0.0f;
 				}
-				smp_ = sustain*SSN1K::interpolate(timer_/ sustain);
+				//smp_ = sustain*SSN1K::interpolate(timer_/ sustain);
+				smp_ = SSN1K::interpolate(timer_);
+				break;
+			default:
 				break;
 		}
 	}
 #ifdef _PROFILE
 	SSN1K_PROFILER.leave(1);
 #endif
-	//1 - mod + mod * velocity
+	// mod=0.0 out=smp
+	// mod=1.0 out=velocity*smp
+	// mod=0.5 out=smp*(0.5+0.5*velocity)
+	// out=smp*(1.0-mod + mod*velocity)
 	float mod = ctrls->mix.f();
-	return Mdl::mix(smp_ * (1.0f - mod + mod * velocity_), 0.0f);
+	//return Mdl::mix(smp_ * (1.0f - mod + mod * velocity_), 0.0f);
+	smp_ *= ctrls->amp.f() * (1.0f - mod + mod * velocity_);
+	return smp_ + ctrls->dc.f();
 }
-void Env::bpm(float v) {
-	bpm_ = v;
-	tickPerSample_ = v * SSN1K::getSampleRateR() / 60;
+void Env::ticksPerSample(float* v) {
+	ticksPerSample_ = v;
 }
-
 /*
 float Env::run(EnvCtrls& ctrls, float in)
 {

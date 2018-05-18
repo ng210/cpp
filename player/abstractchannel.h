@@ -5,8 +5,6 @@
 #include "collection/parray.h"
 #include "target.h"
 
-//#include "abstractadapter.h"
-
 NS_FW_BASE_USE
 
 NS_PLAYER_BEGIN
@@ -19,7 +17,7 @@ enum Player_Flags : BYTE {
 	Player_Flg_Active = 0x80
 };
 
-class AbstractPlayer;
+class Player;
 class AbstractChannel {
 //protected: PROP_R(AbstractPlayer*, player);
 protected: PROP_R(Target*, target);
