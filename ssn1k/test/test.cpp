@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <conio.h>
 
 #include "consoleapp.h"
 #include "soundlib/SoundPlayer.h"
@@ -8,7 +9,7 @@
 #include "ssn1k/ssn1klib.h"
 #include "ssn1k/xmloader.h"
 #include "ssn1k/synthadapter.h"
-#include "player/abstractplayer.h"
+#include "player/player.h"
 #include "player/playeradapter.h"
 #include "player/sequence.h"
 
@@ -25,7 +26,7 @@ const int sampleRate = 48000;
 
 size_t frameCounter = 0;
 size_t frames = 0;
-AbstractPlayer* player = NULL;
+Player* player = NULL;
 Synth* synths[16];
 Mixer* mixer;
 SynthAdapter* synthAdapter;
@@ -33,18 +34,32 @@ Sequence* sequences[256];
 
 #define dd2db(dd) (BYTE)(dd & 0xff), (BYTE)((dd>>8) & 0xff), (BYTE)((dd>>16) & 0xff), (BYTE)((dd>>24) & 0xff)
 
+void print(const char* const format, ...) {
+	va_list args;
+	va_start(args, format);
+	console.vprintf(format, args);
+	va_end(args);
+}
+
+COORD* gotoxy(int x, int y) {
+	return console.gotoxy(x, y);
+}
+
+//*****************************************************************************
+
+
 BYTE chords[] = {
 	SSN1K_CI_SynthMix, SSN1K_MM_OVR,
 	SSN1K_CI_SynthAmp, 0xFF,
 	SSN1K_CI_SynthBal, 0x80,
 
-	//SSN1K_CI_Env1Mix, 0.0f,
+	SSN1K_CI_Env1Mix, dd2db(0x3F600000),
 	SSN1K_CI_Env1Amp, dd2db(0x3F800000),
 	//SSN1K_CI_Env1DC, 0.0f,
-	SSN1K_CI_Env1Atk, 0x06,
+	SSN1K_CI_Env1Atk, 0x10,
 	SSN1K_CI_Env1Dec, 0x20,
-	SSN1K_CI_Env1Sus, 0xA0,
-	SSN1K_CI_Env1Rel, 0x20,
+	SSN1K_CI_Env1Sus, 0x80,
+	SSN1K_CI_Env1Rel, 0x80,
 
 	//SSN1K_CI_Env2Mix, 0.0f,
 	//SSN1K_CI_Env2Amp, 0.1f,
@@ -54,15 +69,17 @@ BYTE chords[] = {
 	//SSN1K_CI_Env2Sus, 0.2f,
 	//SSN1K_CI_Env2Rel, 0.4f,
 
-	//SSN1K_CI_Env3Mix, 0.0f,
-	SSN1K_CI_Env3Amp, dd2db(0x447A0000),
-	SSN1K_CI_Env3DC, dd2db(0x41C80000),
+	SSN1K_CI_Env3Mix, dd2db(0x3F400000),
+	SSN1K_CI_Env3Amp, dd2db(0x43FA0000),
+	SSN1K_CI_Env3DC, dd2db(0x43480000),
+	//SSN1K_CI_Env3Amp, dd2db(0x447A0000),
+	//SSN1K_CI_Env3DC, dd2db(0x41C80000),
 	SSN1K_CI_Env3Atk, 0x0C,
-	SSN1K_CI_Env3Dec, 0x20,
+	SSN1K_CI_Env3Dec, 0x18,
 	SSN1K_CI_Env3Sus, 0x80,
-	SSN1K_CI_Env3Rel, 0x40,
+	SSN1K_CI_Env3Rel, 0x60,
 
-	SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
+	//SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
 	//SSN1K_CI_Env4Amp, 0.0f,
 	//SSN1K_CI_Env4DC, 0.0f,
 	//SSN1K_CI_Env4Atk, 0.0f,
@@ -77,7 +94,7 @@ BYTE chords[] = {
 	//SSN1K_CI_Osc1Note, 0.0f,
 	//SSN1K_CI_Osc1Tune, 0.0f,
 	//SSN1K_CI_Osc1Fre, 0.0f,
-	SSN1K_CI_Osc1Psw, 0x40,
+	SSN1K_CI_Osc1Psw, 0x80,
 	SSN1K_CI_Osc1Wav, SSN1K_WF_PSAW,
 
 	SSN1K_CI_Osc2Mix, SSN1K_MM_ADD,
@@ -86,23 +103,23 @@ BYTE chords[] = {
 	//SSN1K_CI_Osc2Note, 0.0f,
 	SSN1K_CI_Osc2Tune, dd2db(0x4140A3D7),
 	//SSN1K_CI_Osc2Fre, 0.0f,
-	SSN1K_CI_Osc2Psw, 0x50,
+	SSN1K_CI_Osc2Psw, 0x80,
 	SSN1K_CI_Osc2Wav, SSN1K_WF_PSAW,
 
 	//SSN1K_CI_Lfo1Mix, SSN1K_MM_MUL,
-	SSN1K_CI_Lfo1Amp, dd2db(0x38333333),
+	SSN1K_CI_Lfo1Amp, dd2db(0x3E833333),
 	//SSN1K_CI_Lfo1DC, 0.0f,
 	//SSN1K_CI_Lfo1Note, 0.0f,
-	SSN1K_CI_Lfo1Tune,dd2db(0xBF800000),
-	SSN1K_CI_Lfo1Fre, dd2db(0x40A33333),
+	//SSN1K_CI_Lfo1Tune,dd2db(0xBF800000),
+	SSN1K_CI_Lfo1Fre, dd2db(0x40C33333),
 	//SSN1K_CI_Lfo1Psw, 0.8f,
 	SSN1K_CI_Lfo1Wav, SSN1K_WF_SIN,
 
 	//SSN1K_CI_Lfo2Mix,SSN1K_MM_MUL,
-	SSN1K_CI_Lfo2Amp, dd2db(0x32CCCCCD),
+	SSN1K_CI_Lfo2Amp, dd2db(0x3ACCCCCD),
 	//SSN1K_CI_Lfo2DC, 0.0f,
 	//SSN1K_CI_Lfo2Note, 0.0f,
-	SSN1K_CI_Lfo1Tune,dd2db(0xBF800000),
+	//SSN1K_CI_Lfo1Tune,dd2db(0xBF800000),
 	SSN1K_CI_Lfo2Fre, dd2db(0x404CCCCD),
 	//SSN1K_CI_Lfo2Psw, 0.0f,
 	SSN1K_CI_Lfo2Wav, SSN1K_WF_SIN,
@@ -110,7 +127,7 @@ BYTE chords[] = {
 	//SSN1K_CI_FltMix, 0.0f,
 	//SSN1K_CI_FltAmp, 0.0f,
 	//SSN1K_CI_FltDC, 0.0f,
-	SSN1K_CI_FltRes, 0x60,
+	SSN1K_CI_FltRes, 0x80,
 	SSN1K_CI_FltMode, SSN1K_FM_LP,
 	0xFF
 };
@@ -118,14 +135,100 @@ BYTE solo[] = {
 	SSN1K_CI_SynthMix, SSN1K_MM_OVR,
 	SSN1K_CI_SynthAmp, 0xFF,
 	SSN1K_CI_SynthBal, 0x80,
-	//SSN1K_CI_Tune, C(5),
+	//SSN1K_CI_Tune, dd2db(0xC1400000),
 
-	//SSN1K_CI_Env1Mix, 0.0f,
+	SSN1K_CI_Env1Mix, dd2db(0x3F600000),
 	SSN1K_CI_Env1Amp, dd2db(0x3F800000),
 	//SSN1K_CI_Env1DC, 0.0f,
-	SSN1K_CI_Env1Atk, 0x01,
-	SSN1K_CI_Env1Dec, 0x20,
+	SSN1K_CI_Env1Atk, 0x11,
+	SSN1K_CI_Env1Dec, 0x10,
 	SSN1K_CI_Env1Sus, 0xA0,
+	SSN1K_CI_Env1Rel, 0x60,
+
+	//SSN1K_CI_Env2Mix, 0.0f,
+	//SSN1K_CI_Env2Amp, 0.1f,
+	//SSN1K_CI_Env2DC, 0.0f,
+	//SSN1K_CI_Env2Atk, 0.1f,
+	//SSN1K_CI_Env2Dec, 0.2f,
+	//SSN1K_CI_Env2Sus, 0.2f,
+	//SSN1K_CI_Env2Rel, 0.4f,
+
+	SSN1K_CI_Env3Mix, dd2db(0x3F400000),
+	SSN1K_CI_Env3Amp, dd2db(0x44FA0000),
+	SSN1K_CI_Env3DC, dd2db(0x42C80000),
+	//SSN1K_CI_Env3Amp, dd2db(0x447A0000),
+	//SSN1K_CI_Env3DC, dd2db(0x41C80000),
+	//SSN1K_CI_Env3Amp, dd2db(0x46FA0000),
+	//SSN1K_CI_Env3DC, dd2db(0x437A0000),
+	SSN1K_CI_Env3Atk, 0x08,
+	SSN1K_CI_Env3Dec, 0x18,
+	SSN1K_CI_Env3Sus, 0xA0,
+	SSN1K_CI_Env3Rel, 0x40,
+
+	//SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
+	//SSN1K_CI_Env4Amp, 0.0f,
+	//SSN1K_CI_Env4DC, 0.0f,
+	//SSN1K_CI_Env4Atk, 0.0f,
+	//SSN1K_CI_Env4Dec, 0.0f,
+	//SSN1K_CI_Env4Sus, 0.0f,
+	//SSN1K_CI_Env4Rel, 0.0f,
+	//SSN1K_CI_Env4Gate, 0.0f,
+
+	//SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_OVR),
+	SSN1K_CI_Osc1Amp, 0xC0,
+	//SSN1K_CI_Osc1DC, 0.0f,
+	//SSN1K_CI_Osc1Note, 0.0f,
+	//SSN1K_CI_Osc1Tune, dd2db(0xC1400000),
+	//SSN1K_CI_Osc1Fre, 0.0f,
+	SSN1K_CI_Osc1Psw, 0x80,
+	SSN1K_CI_Osc1Wav, SSN1K_WF_TRI,
+
+	SSN1K_CI_Osc2Mix, SSN1K_MM_ADD,
+	SSN1K_CI_Osc2Amp, 0x80,
+	//SSN1K_CI_Osc2DC, 0.0f,
+	//SSN1K_CI_Osc2Note, 0.0f,
+	SSN1K_CI_Osc2Tune, dd2db(0x3DCCCCCD),
+	//SSN1K_CI_Osc2Fre, 0.0f,
+	SSN1K_CI_Osc2Psw, 0x80,
+	SSN1K_CI_Osc2Wav, SSN1K_WF_TRI,
+
+	//SSN1K_CI_Lfo1Mix, SSN1K_MM_MUL,
+	SSN1K_CI_Lfo1Amp, dd2db(0x3DCCCCCD),
+	//SSN1K_CI_Lfo1DC, 0.0f,
+	//SSN1K_CI_Lfo1Note, 0.0f,
+	//SSN1K_CI_Lfo1Tune, 0.0f,
+	SSN1K_CI_Lfo1Fre, dd2db(0x4059999A),
+	//SSN1K_CI_Lfo1Psw, 0.8f,
+	SSN1K_CI_Lfo1Wav, SSN1K_WF_SIN,
+
+	//SSN1K_CI_Lfo2Mix,SSN1K_MM_MUL,
+	SSN1K_CI_Lfo2Amp, dd2db(0x3C000000),
+	//SSN1K_CI_Lfo2DC, 0.0f,
+	//SSN1K_CI_Lfo2Note, 0.0f,
+	//SSN1K_CI_Lfo2Tune, 0.0f,
+	SSN1K_CI_Lfo2Fre, dd2db(0x3E99999A),
+	//SSN1K_CI_Lfo2Psw, 0.0f,
+	SSN1K_CI_Lfo2Wav, SSN1K_WF_SIN,
+
+	//SSN1K_CI_FltMix, 0.0f,
+	//SSN1K_CI_FltAmp, 0.0f,
+	//SSN1K_CI_FltDC, 0.0f,
+	SSN1K_CI_FltRes, 0x80,
+	SSN1K_CI_FltMode, SSN1K_FM_LP,
+	0xFF
+};
+BYTE bass[] = {
+	SSN1K_CI_SynthMix, SSN1K_MM_OVR,
+	SSN1K_CI_SynthAmp, 0xFF,
+	SSN1K_CI_SynthBal, 0x80,
+	//SSN1K_CI_Tune, C(5),
+
+	SSN1K_CI_Env1Mix, dd2db(0x3F600000),
+	SSN1K_CI_Env1Amp, dd2db(0x3F800000),
+	//SSN1K_CI_Env1DC, 0.0f,
+	SSN1K_CI_Env1Atk, 0x20,
+	SSN1K_CI_Env1Dec, 0x40,
+	SSN1K_CI_Env1Sus, 0x80,
 	SSN1K_CI_Env1Rel, 0x80,
 
 	//SSN1K_CI_Env2Mix, 0.0f,
@@ -136,15 +239,15 @@ BYTE solo[] = {
 	//SSN1K_CI_Env2Sus, 0.2f,
 	//SSN1K_CI_Env2Rel, 0.4f,
 
-	//SSN1K_CI_Env3Mix, 0.0f,
-	SSN1K_CI_Env3Amp, dd2db(0x46FA0000),
-	SSN1K_CI_Env3DC, dd2db(0x437A0000),
-	SSN1K_CI_Env3Atk, 0x10,
-	SSN1K_CI_Env3Dec, 0x22,
-	SSN1K_CI_Env3Sus, 0x80,
-	SSN1K_CI_Env3Rel, 0x40,
+	SSN1K_CI_Env3Mix, dd2db(0x3F400000),
+	SSN1K_CI_Env3Amp, dd2db(0x43FA0000),
+	SSN1K_CI_Env3DC, dd2db(0x42C86666),
+	SSN1K_CI_Env3Atk, 0xE0,
+	SSN1K_CI_Env3Dec, 0x80,
+	SSN1K_CI_Env3Sus, 0x20,
+	SSN1K_CI_Env3Rel, 0x60,
 
-	SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
+	//SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
 	//SSN1K_CI_Env4Amp, 0.0f,
 	//SSN1K_CI_Env4DC, 0.0f,
 	//SSN1K_CI_Env4Atk, 0.0f,
@@ -162,112 +265,30 @@ BYTE solo[] = {
 	SSN1K_CI_Osc1Psw, 0x80,
 	SSN1K_CI_Osc1Wav, SSN1K_WF_PLS,
 
-	SSN1K_CI_Osc2Mix, SSN1K_MM_MUL,
-	SSN1K_CI_Osc2Amp, 0xA0,
+	SSN1K_CI_Osc2Mix, SSN1K_MM_ADD,
+	SSN1K_CI_Osc2Amp, 0x60,
 	//SSN1K_CI_Osc2DC, 0.0f,
 	//SSN1K_CI_Osc2Note, 0.0f,
-	SSN1K_CI_Osc2Tune, dd2db(0x4140A3D7),
+	SSN1K_CI_Osc2Tune, dd2db(0x41433333),
 	//SSN1K_CI_Osc2Fre, 0.0f,
 	SSN1K_CI_Osc2Psw, 0x80,
-	SSN1K_CI_Osc2Wav, SSN1K_WF_PSAW,
-
-	//SSN1K_CI_Lfo1Mix, SSN1K_MM_MUL,
-	SSN1K_CI_Lfo1Amp, dd2db(0x3E000000),
-	//SSN1K_CI_Lfo1DC, 0.0f,
-	//SSN1K_CI_Lfo1Note, 0.0f,
-	//SSN1K_CI_Lfo1Tune, 0.0f,
-	SSN1K_CI_Lfo1Fre, dd2db(0x38000000),
-	//SSN1K_CI_Lfo1Psw, 0.8f,
-	SSN1K_CI_Lfo1Wav, SSN1K_WF_RND,
-
-	//SSN1K_CI_Lfo2Mix,SSN1K_MM_MUL,
-	SSN1K_CI_Lfo2Amp, dd2db(0x3C000000),
-	//SSN1K_CI_Lfo2DC, 0.0f,
-	//SSN1K_CI_Lfo2Note, 0.0f,
-	//SSN1K_CI_Lfo2Tune, 0.0f,
-	SSN1K_CI_Lfo2Fre, dd2db(0x3E99999A),
-	//SSN1K_CI_Lfo2Psw, 0.0f,
-	SSN1K_CI_Lfo2Wav, SSN1K_WF_SIN,
-
-	//SSN1K_CI_FltMix, 0.0f,
-	//SSN1K_CI_FltAmp, 0.0f,
-	//SSN1K_CI_FltDC, 0.0f,
-	SSN1K_CI_FltRes, 0x00,
-	SSN1K_CI_FltMode, SSN1K_FM_LP,
-	0xFF
-};
-BYTE bass[] = {
-	SSN1K_CI_SynthMix, SSN1K_MM_OVR,
-	SSN1K_CI_SynthAmp, 0xFF,
-	SSN1K_CI_SynthBal, 0x80,
-	//SSN1K_CI_Tune, C(5),
-
-	//SSN1K_CI_Env1Mix, 0.0f,
-	SSN1K_CI_Env1Amp, dd2db(0x3F800000),
-	//SSN1K_CI_Env1DC, 0.0f,
-	SSN1K_CI_Env1Atk, 0x02,
-	SSN1K_CI_Env1Dec, 0x20,
-	SSN1K_CI_Env1Sus, 0x80,
-	SSN1K_CI_Env1Rel, 0x20,
-
-	//SSN1K_CI_Env2Mix, 0.0f,
-	//SSN1K_CI_Env2Amp, 0.1f,
-	//SSN1K_CI_Env2DC, 0.0f,
-	//SSN1K_CI_Env2Atk, 0.1f,
-	//SSN1K_CI_Env2Dec, 0.2f,
-	//SSN1K_CI_Env2Sus, 0.2f,
-	//SSN1K_CI_Env2Rel, 0.4f,
-
-	//SSN1K_CI_Env3Mix, 0.0f,
-	SSN1K_CI_Env3Amp, dd2db(0x447A0000),
-	SSN1K_CI_Env3DC, dd2db(0x41C80000),
-	SSN1K_CI_Env3Atk, 0x40,
-	SSN1K_CI_Env3Dec, 0x80,
-	SSN1K_CI_Env3Sus, 0x20,
-	SSN1K_CI_Env3Rel, 0x20,
-
-	SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
-	//SSN1K_CI_Env4Amp, 0.0f,
-	//SSN1K_CI_Env4DC, 0.0f,
-	//SSN1K_CI_Env4Atk, 0.0f,
-	//SSN1K_CI_Env4Dec, 0.0f,
-	//SSN1K_CI_Env4Sus, 0.0f,
-	//SSN1K_CI_Env4Rel, 0.0f,
-	//SSN1K_CI_Env4Gate, 0.0f,
-
-	//SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_OVR),
-	SSN1K_CI_Osc1Amp, 0xC0,
-	//SSN1K_CI_Osc1DC, 0.0f,
-	//SSN1K_CI_Osc1Note, 0.0f,
-	//SSN1K_CI_Osc1Tune, 0.0f,
-	//SSN1K_CI_Osc1Fre, 0.0f,
-	SSN1K_CI_Osc1Psw, 0x41,
-	SSN1K_CI_Osc1Wav, SSN1K_WF_PLS,
-
-	SSN1K_CI_Osc2Mix, SSN1K_MM_ADD,
-	SSN1K_CI_Osc2Amp, 0xA0,
-	//SSN1K_CI_Osc2DC, 0.0f,
-	//SSN1K_CI_Osc2Note, 0.0f,
-	SSN1K_CI_Osc2Tune, dd2db(0x4140A3D7),
-	//SSN1K_CI_Osc2Fre, 0.0f,
-	SSN1K_CI_Osc2Psw, 0x40,
 	SSN1K_CI_Osc2Wav, SSN1K_WF_PLS,
 
 	//SSN1K_CI_Lfo1Mix, SSN1K_MM_MUL,
 	SSN1K_CI_Lfo1Amp, dd2db(0x34000000),
 	//SSN1K_CI_Lfo1DC, 0.0f,
 	//SSN1K_CI_Lfo1Note, 0.0f,
-	//SSN1K_CI_Lfo1Tune, 0.0f,
+	SSN1K_CI_Lfo1Tune, dd2db(0xBF800000),
 	SSN1K_CI_Lfo1Fre, dd2db(0x40400000),
 	//SSN1K_CI_Lfo1Psw, 0.8f,
-	SSN1K_CI_Lfo1Wav, SSN1K_WF_SIN,
+	SSN1K_CI_Lfo1Wav, SSN1K_WF_PLS,
 
 	//SSN1K_CI_Lfo2Mix,SSN1K_MM_MUL,
-	SSN1K_CI_Lfo2Amp, dd2db(0x32000000),
+	SSN1K_CI_Lfo2Amp, dd2db(0x3E800000),
 	//SSN1K_CI_Lfo2DC, 0.0f,
 	//SSN1K_CI_Lfo2Note, 0.0f,
-	//SSN1K_CI_Lfo2Tune, 0.0f,
-	SSN1K_CI_Lfo2Fre, dd2db(0x3E99999A),
+	//SSN1K_CI_Lfo2Tune, dd2db(0x3C333333),
+	SSN1K_CI_Lfo2Fre, dd2db(0x3F000000),
 	//SSN1K_CI_Lfo2Psw, 0.0f,
 	SSN1K_CI_Lfo2Wav, SSN1K_WF_SIN,
 
@@ -284,31 +305,31 @@ BYTE bassline[] = {
 	SSN1K_CI_SynthBal, 0x80,
 	//SSN1K_CI_Tune, C(5),
 
-	//SSN1K_CI_Env1Mix, 0.0f,
+	SSN1K_CI_Env1Mix, dd2db(0x3F800000),
 	SSN1K_CI_Env1Amp, dd2db(0x3F800000),
 	//SSN1K_CI_Env1DC, 0.0f,
 	SSN1K_CI_Env1Atk, 0x01,
-	SSN1K_CI_Env1Dec, 0x30,
-	SSN1K_CI_Env1Sus, 0xC0,
-	SSN1K_CI_Env1Rel, 0x20,
+	SSN1K_CI_Env1Dec, 0x28,
+	SSN1K_CI_Env1Sus, 0x60,
+	SSN1K_CI_Env1Rel, 0x10,
 
-	SSN1K_CI_Env2Mix, SSN1K_MM_BPS,
-	//SSN1K_CI_Env2Amp, 0.1f,
-	//SSN1K_CI_Env2DC, 0.0f,
-	//SSN1K_CI_Env2Atk, 0.1f,
-	//SSN1K_CI_Env2Dec, 0.2f,
-	//SSN1K_CI_Env2Sus, 0.2f,
-	//SSN1K_CI_Env2Rel, 0.4f,
+	SSN1K_CI_Env2Mix, dd2db(0x3F400000),
+	SSN1K_CI_Env2Amp, dd2db(0x38800000),
+	//SSN1K_CI_Env2DC, dd2db(0x3F800000),
+	SSN1K_CI_Env2Atk, 0x00,
+	SSN1K_CI_Env2Dec, 0x20,
+	SSN1K_CI_Env2Sus, 0x40,
+	SSN1K_CI_Env2Rel, 0x10,
 
-	//SSN1K_CI_Env3Mix, 0.0f,
-	SSN1K_CI_Env3Amp, dd2db(0x447A0000),
-	SSN1K_CI_Env3DC, dd2db(0x42C80000),
-	SSN1K_CI_Env3Atk, 0x00,
-	SSN1K_CI_Env3Dec, 0x42,
-	SSN1K_CI_Env3Sus, 0xC0,
-	SSN1K_CI_Env3Rel, 0x20,
+	SSN1K_CI_Env3Mix, dd2db(0x3F400000),
+	SSN1K_CI_Env3Amp, dd2db(0x43960000),
+	SSN1K_CI_Env3DC, dd2db(0x42880000),
+	SSN1K_CI_Env3Atk, 0x03,
+	SSN1K_CI_Env3Dec, 0x10,
+	SSN1K_CI_Env3Sus, 0x20,
+	SSN1K_CI_Env3Rel, 0x10,
 
-	SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
+	//SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
 	//SSN1K_CI_Env4Amp, 0.0f,
 	//SSN1K_CI_Env4DC, 0.0f,
 	//SSN1K_CI_Env4Atk, 0.0f,
@@ -324,7 +345,7 @@ BYTE bassline[] = {
 	//SSN1K_CI_Osc1Tune, 0.0f,
 	//SSN1K_CI_Osc1Fre, 0.0f,
 	SSN1K_CI_Osc1Psw, 0x80,
-	SSN1K_CI_Osc1Wav, SSN1K_WF_PLS,
+	SSN1K_CI_Osc1Wav, SSN1K_WF_PSAW,
 
 	SSN1K_CI_Osc2Mix, SSN1K_MM_ADD,
 	SSN1K_CI_Osc2Amp, 0x80,
@@ -356,7 +377,7 @@ BYTE bassline[] = {
 	//SSN1K_CI_FltMix, 0.0f,
 	//SSN1K_CI_FltAmp, 0.0f,
 	//SSN1K_CI_FltDC, 0.0f,
-	SSN1K_CI_FltRes, 0x20,
+	SSN1K_CI_FltRes, 0x80,
 	SSN1K_CI_FltMode, SSN1K_FM_LP,
 	0xFF
 };
@@ -364,15 +385,15 @@ BYTE kick[] = {
 	SSN1K_CI_SynthMix, SSN1K_MM_OVR,
 	SSN1K_CI_SynthAmp, 0xFF,
 	SSN1K_CI_SynthBal, 0x80,
-	SSN1K_CI_Tune, dd2db(0xC1F00000),
+	SSN1K_CI_Tune, dd2db(0xC2200000),
 
-	//SSN1K_CI_Env1Mix, 0.0f,
+	SSN1K_CI_Env1Mix, dd2db(0x3DCCCCCD),
 	SSN1K_CI_Env1Amp, dd2db(0x3F800000),
 	//SSN1K_CI_Env1DC, 0.0f,
-	SSN1K_CI_Env1Atk, 0x02,
-	SSN1K_CI_Env1Dec, 0x20,
-	SSN1K_CI_Env1Sus, 0x00,
-	SSN1K_CI_Env1Rel, 0x00,
+	SSN1K_CI_Env1Atk, 0x00,
+	SSN1K_CI_Env1Dec, 0x32,
+	SSN1K_CI_Env1Sus, 0x40,
+	SSN1K_CI_Env1Rel, 0x10,
 
 	//SSN1K_CI_Env2Mix, 0.0f,
 	//SSN1K_CI_Env2Amp, 0.1f,
@@ -382,21 +403,23 @@ BYTE kick[] = {
 	//SSN1K_CI_Env2Sus, 0.2f,
 	//SSN1K_CI_Env2Rel, 0.4f,
 
-	//SSN1K_CI_Env3Mix, 0.0f,
-	SSN1K_CI_Env3Amp, dd2db(0x447A0000),
-	SSN1K_CI_Env3DC, dd2db(0x42C80000),
+	//SSN1K_CI_Env3Mix, dd2db(0x00000000),
+	SSN1K_CI_Env3Amp, dd2db(0x457A0000),
+	SSN1K_CI_Env3DC, dd2db(0x447A0000),
+	//SSN1K_CI_Env3Amp, dd2db(0x447A0000),
+	//SSN1K_CI_Env3DC, dd2db(0x42C80000),
 	SSN1K_CI_Env3Atk, 0x01,
-	SSN1K_CI_Env3Dec, 0x10,
-	SSN1K_CI_Env3Sus, 0x00,
-	SSN1K_CI_Env3Rel, 0x00,
+	SSN1K_CI_Env3Dec, 0x24,
+	SSN1K_CI_Env3Sus, 0x10,
+	SSN1K_CI_Env3Rel, 0x10,
 
-	SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
-	//SSN1K_CI_Env4Amp, 0.0f,
-	//SSN1K_CI_Env4DC, 0.0f,
-	//SSN1K_CI_Env4Atk, 0.0f,
-	//SSN1K_CI_Env4Dec, 0.0f,
-	//SSN1K_CI_Env4Sus, 0.0f,
-	//SSN1K_CI_Env4Rel, 0.0f,
+	//SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
+	SSN1K_CI_Env4Amp, dd2db(0x43260000),
+	//SSN1K_CI_Env4DC, dd2db(0x42C80000),
+	SSN1K_CI_Env4Atk, 0x00,
+	SSN1K_CI_Env4Dec, 0x04,
+	SSN1K_CI_Env4Sus, 0x08,
+	SSN1K_CI_Env4Rel, 0x10,
 	//SSN1K_CI_Env4Gate, 0.0f,
 
 	//SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_OVR),
@@ -409,7 +432,7 @@ BYTE kick[] = {
 	SSN1K_CI_Osc1Wav, SSN1K_WF_SIN,
 
 	SSN1K_CI_Osc2Mix, SSN1K_MM_ADD,
-	SSN1K_CI_Osc2Amp, 0xA0,
+	SSN1K_CI_Osc2Amp, 0x40,
 	//SSN1K_CI_Osc2DC, 0.0f,
 	//SSN1K_CI_Osc2Note, 0.0f,
 	SSN1K_CI_Osc2Tune, dd2db(0x4140A3D7),
@@ -438,7 +461,7 @@ BYTE kick[] = {
 	//SSN1K_CI_FltMix, 0.0f,
 	//SSN1K_CI_FltAmp, 0.0f,
 	//SSN1K_CI_FltDC, 0.0f,
-	SSN1K_CI_FltRes, 0x40,
+	SSN1K_CI_FltRes, 0x30,
 	SSN1K_CI_FltMode, SSN1K_FM_LP,
 	0xFF
 };
@@ -446,15 +469,15 @@ BYTE snare[] = {
 	SSN1K_CI_SynthMix, SSN1K_MM_OVR,
 	SSN1K_CI_SynthAmp, 0xFF,
 	SSN1K_CI_SynthBal, 0x80,
-	SSN1K_CI_Tune, dd2db(0x31C00000),
+	SSN1K_CI_Tune, dd2db(0xC1600000),
 
-	//SSN1K_CI_Env1Mix, 0.0f,
-	SSN1K_CI_Env1Amp, dd2db(0x3F800000),
+	SSN1K_CI_Env1Mix, dd2db(0x3E800000),
+	SSN1K_CI_Env1Amp, dd2db(0x3F000000),
 	//SSN1K_CI_Env1DC, 0.0f,
-	SSN1K_CI_Env1Atk, 0x02,
+	SSN1K_CI_Env1Atk, 0x01,
 	SSN1K_CI_Env1Dec, 0x10,
-	SSN1K_CI_Env1Sus, 0x00,
-	SSN1K_CI_Env1Rel, 0x00,
+	SSN1K_CI_Env1Sus, 0x30,
+	SSN1K_CI_Env1Rel, 0x10,
 
 	//SSN1K_CI_Env2Mix, 0.0f,
 	//SSN1K_CI_Env2Amp, 0.1f,
@@ -464,39 +487,38 @@ BYTE snare[] = {
 	//SSN1K_CI_Env2Sus, 0.2f,
 	//SSN1K_CI_Env2Rel, 0.4f,
 
-	//SSN1K_CI_Env3Mix, 0.0f,
-	SSN1K_CI_Env3Amp, dd2db(0x447A0000),
-	SSN1K_CI_Env3DC, dd2db(0x42C80000),
-	SSN1K_CI_Env3Atk, 0x04,
-	SSN1K_CI_Env3Dec, 0x10,
-	SSN1K_CI_Env3Sus, 0x00,
-	SSN1K_CI_Env3Rel, 0x00,
+	SSN1K_CI_Env3Mix, dd2db(0x3F600000),
+	SSN1K_CI_Env3Amp, dd2db(0x437A0000),
+	SSN1K_CI_Env3DC, dd2db(0x427A0000),
+	SSN1K_CI_Env3Atk, 0x08,
+	SSN1K_CI_Env3Dec, 0x14,
+	SSN1K_CI_Env3Sus, 0x40,
+	SSN1K_CI_Env3Rel, 0x10,
 
-	SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
-	//SSN1K_CI_Env4Amp, 0.0f,
+	//SSN1K_CI_Env4Mix, SSN1K_MM_BPS,
+	SSN1K_CI_Env4Amp, dd2db(0x42800000),
 	//SSN1K_CI_Env4DC, 0.0f,
-	//SSN1K_CI_Env4Atk, 0.0f,
-	//SSN1K_CI_Env4Dec, 0.0f,
-	//SSN1K_CI_Env4Sus, 0.0f,
-	//SSN1K_CI_Env4Rel, 0.0f,
-	//SSN1K_CI_Env4Gate, 0.0f,
+	SSN1K_CI_Env4Atk, 0x01,
+	SSN1K_CI_Env4Dec, 0x03,
+	SSN1K_CI_Env4Sus, 0x40,
+	SSN1K_CI_Env4Rel, 0x40,
 
 	//SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_OVR),
-	SSN1K_CI_Osc1Amp, 0xC0,
+	SSN1K_CI_Osc1Amp, 0x80,
 	//SSN1K_CI_Osc1DC, 0.0f,
 	//SSN1K_CI_Osc1Note, 0.0f,
-	//SSN1K_CI_Osc1Tune, 0.0f,
+	//SSN1K_CI_Osc1Tune, dd2db(0xC1D00000),
 	//SSN1K_CI_Osc1Fre, 0.0f,
-	SSN1K_CI_Osc1Psw, 0x80,
+	SSN1K_CI_Osc1Psw, 0xA0,
 	SSN1K_CI_Osc1Wav, SSN1K_WF_SIN,
 
-	SSN1K_CI_Osc2Mix, SSN1K_MM_ADD,
-	SSN1K_CI_Osc2Amp, 0xA0,
+	SSN1K_CI_Osc2Mix, SSN1K_MM_MUL ,
+	SSN1K_CI_Osc2Amp, 0xE0,
 	//SSN1K_CI_Osc2DC, 0.0f,
 	//SSN1K_CI_Osc2Note, 0.0f,
-	SSN1K_CI_Osc2Tune, dd2db(0x4140A3D7),
+	SSN1K_CI_Osc2Tune, dd2db(0x42800000),
 	//SSN1K_CI_Osc2Fre, 0.0f,
-	SSN1K_CI_Osc2Psw, 0x78,
+	//SSN1K_CI_Osc2Psw, 0x78,
 	SSN1K_CI_Osc2Wav, SSN1K_WF_RND,
 
 	//SSN1K_CI_Lfo1Mix, SSN1K_MM_MUL,
@@ -520,7 +542,7 @@ BYTE snare[] = {
 	//SSN1K_CI_FltMix, 0.0f,
 	//SSN1K_CI_FltAmp, 0.0f,
 	//SSN1K_CI_FltDC, 0.0f,
-	SSN1K_CI_FltRes, 0xA0,
+	SSN1K_CI_FltRes, 0x88,
 	SSN1K_CI_FltMode, SSN1K_FM_LP,
 	0xFF
 };
@@ -537,12 +559,28 @@ BYTE saw[] = {
 	SSN1K_CI_Env1Sus, 0x80,
 	SSN1K_CI_Env1Rel, 0x20,
 
+	SSN1K_CI_Env3Mix, dd2db(0x3F600000),
+	SSN1K_CI_Env3Amp, dd2db(0x447A0000),
+	SSN1K_CI_Env3DC, dd2db(0x427A0000),
+	SSN1K_CI_Env3Atk, 0x08,
+	SSN1K_CI_Env3Dec, 0x14,
+	SSN1K_CI_Env3Sus, 0x40,
+	SSN1K_CI_Env3Rel, 0x10,
+
+
 	SSN1K_CI_Osc1Amp, 0xE0,
 	SSN1K_CI_Osc1Psw, 0x80,
 	SSN1K_CI_Osc1Wav, SSN1K_WF_PSAW,
 
-	SSN1K_CI_Osc2Mix, SSN1K_MM_BPS,
-	SSN1K_CI_FltMix, SSN1K_MM_BPS,
+	SSN1K_CI_Osc2Mix, SSN1K_MM_ADD,
+	SSN1K_CI_Osc2Amp, 0x30,
+	SSN1K_CI_Osc2Psw, 0x60,
+	SSN1K_CI_Osc2Tune, dd2db(0x414051EC),
+
+	//SSN1K_CI_FltMix, SSN1K_MM_BPS,
+	SSN1K_CI_FltRes, 0x60,
+	SSN1K_CI_FltMode, SSN1K_FM_LP,
+
 	0xFF
 };
 BYTE pls[] = {
@@ -557,278 +595,45 @@ BYTE pls[] = {
 	SSN1K_CI_Env1Sus, 0x80,
 	SSN1K_CI_Env1Rel, 0x20,
 
+	SSN1K_CI_Env3DC, dd2db(0x43800000),
+
 	SSN1K_CI_Osc1Amp, 0xE0,
 	SSN1K_CI_Osc1Psw, 0x80,
 	SSN1K_CI_Osc1Wav, SSN1K_WF_PLS,
 
 	SSN1K_CI_Osc2Mix, SSN1K_MM_BPS,
-	SSN1K_CI_FltMix, SSN1K_MM_BPS,
+	//SSN1K_CI_FltMix, SSN1K_MM_BPS,
 	0xFF
 };
 
+// test.xm
+//BYTE* instruments[] = {
+//	chords, bassline, solo, kick, snare, bass
+//};
+
+// 1asu.xm
 BYTE* instruments[] = {
-	chords, bassline, solo, kick, snare, bass
+	saw, /*chords,*/ solo, bass, bassline, kick, snare,
+	pls, saw
 };
 
 Ctrl** bank01 = NULL;
 
-//CtrlSetting synth1Settings[] = {
-//	//{ SSN1K_CI_SynthMix, 0.0f },
-//	{ SSN1K_CI_SynthAmp, 0.3f },
-//	{ SSN1K_CI_SynthBal, 0.5f },		// = dc
-//
-//	//{ SSN1K_CI_Env1Mix, 0.0f },
-//	{ SSN1K_CI_Env1Amp, 0.5f },
-//	//{ SSN1K_CI_Env1DC, 0.0f },
-//	{ SSN1K_CI_Env1Atk, 0.02f },
-//	{ SSN1K_CI_Env1Dec, 0.04f },
-//	{ SSN1K_CI_Env1Sus, 0.8f },
-//	{ SSN1K_CI_Env1Rel, 6.0f },
-//
-//	//{ SSN1K_CI_Env2Mix, 0.0f },
-//	//{ SSN1K_CI_Env2Amp, 0.1f },
-//	//{ SSN1K_CI_Env2DC, 0.0f },
-//	//{ SSN1K_CI_Env2Atk, 0.1f },
-//	//{ SSN1K_CI_Env2Dec, 0.2f },
-//	//{ SSN1K_CI_Env2Sus, 0.2f },
-//	//{ SSN1K_CI_Env2Rel, 0.4f },
-//
-//	//{ SSN1K_CI_Env3Mix, 0.0f },
-//	{ SSN1K_CI_Env3Amp, 1000.0f },
-//	{ SSN1K_CI_Env3DC, 100.0f },
-//	{ SSN1K_CI_Env3Atk, 0.02f },
-//	{ SSN1K_CI_Env3Dec, 0.06f },
-//	{ SSN1K_CI_Env3Sus, 0.8f },
-//	{ SSN1K_CI_Env3Rel, 2.0f },
-//
-//	{ SSN1K_CI_Env4Mix, CtrlValue(SSN1K_MM_BPS) },
-//	//{ SSN1K_CI_Env4Amp, 0.0f },
-//	//{ SSN1K_CI_Env4DC, 0.0f },
-//	//{ SSN1K_CI_Env4Atk, 0.0f },
-//	//{ SSN1K_CI_Env4Dec, 0.0f },
-//	//{ SSN1K_CI_Env4Sus, 0.0f },
-//	//{ SSN1K_CI_Env4Rel, 0.0f },
-//	//{ SSN1K_CI_Env4Gate, 0.0f },
-//
-//	//{ SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_OVR) },
-//	{ SSN1K_CI_Osc1Amp, 0.8f },
-//	//{ SSN1K_CI_Osc1DC, 0.0f },
-//	//{ SSN1K_CI_Osc1Note, 0.0f },
-//	{ SSN1K_CI_Osc1Tune, 0.0f },
-//	{ SSN1K_CI_Osc1Fre, 0.0f },
-//	{ SSN1K_CI_Osc1Psw, 0.5f },
-//	{ SSN1K_CI_Osc1Wav, CtrlValue(SSN1K_WF_PSAW) },
-//
-//	{ SSN1K_CI_Osc2Mix, CtrlValue(SSN1K_MM_ADD) },
-//	{ SSN1K_CI_Osc2Amp, 0.6f },
-//	//{ SSN1K_CI_Osc2DC, 0.0f },
-//	//{ SSN1K_CI_Osc2Note, 0.0f },
-//	{ SSN1K_CI_Osc2Tune, 12.04f },
-//	{ SSN1K_CI_Osc2Fre, 0.0f },
-//	{ SSN1K_CI_Osc2Psw, 0.5f },
-//	{ SSN1K_CI_Osc2Wav, CtrlValue(SSN1K_WF_PLS) },
-//
-//	//{ SSN1K_CI_Lfo1Mix, CtrlValue(SSN1K_MM_MUL) },
-//	{ SSN1K_CI_Lfo1Amp, 2.0f },
-//	//{ SSN1K_CI_Lfo1DC, 0.0f },
-//	//{ SSN1K_CI_Lfo1Note, 0.0f },
-//	//{ SSN1K_CI_Lfo1Tune, 0.0f },
-//	{ SSN1K_CI_Lfo1Fre, 4.0f },
-//	//{ SSN1K_CI_Lfo1Psw, 0.8f },
-//	{ SSN1K_CI_Lfo1Wav, CtrlValue(SSN1K_WF_SIN) },
-//
-//	//{ SSN1K_CI_Lfo2Mix,CtrlValue(SSN1K_MM_MUL) },
-//	{ SSN1K_CI_Lfo2Amp, 0.2f },
-//	//{ SSN1K_CI_Lfo2DC, 0.0f },
-//	//{ SSN1K_CI_Lfo2Note, 0.0f },
-//	//{ SSN1K_CI_Lfo2Tune, 0.0f },
-//	{ SSN1K_CI_Lfo2Fre, 1.5f },
-//	//{ SSN1K_CI_Lfo2Psw, 0.0f },
-//	{ SSN1K_CI_Lfo2Wav, CtrlValue(SSN1K_WF_SIN) },
-//
-//	//{ SSN1K_CI_FltMix, 0.0f },
-//	//{ SSN1K_CI_FltAmp, 0.0f },
-//	//{ SSN1K_CI_FltDC, 0.0f },
-//	{ SSN1K_CI_FltRes, 0.5f },
-//	{ SSN1K_CI_FltMode, CtrlValue(SSN1K_FM_LP) },
-//	{ -1, -1 }
-//};
-//CtrlSetting synth2Settings[] = {
-//	//{ SSN1K_CI_SynthMix, 0.0f },
-//	{ SSN1K_CI_SynthAmp, 1.0f },
-//	{ SSN1K_CI_SynthBal, 0.5f },		// = dc
-//
-//	{ SSN1K_CI_Env1Mix, 0.9f },
-//	{ SSN1K_CI_Env1Amp, 1.0f },
-//	//{ SSN1K_CI_Env1DC, 0.0f },
-//	{ SSN1K_CI_Env1Atk, 0.01f },
-//	{ SSN1K_CI_Env1Dec, 0.1f },
-//	{ SSN1K_CI_Env1Sus, 0.5f },
-//	{ SSN1K_CI_Env1Rel, 0.2f },
-//
-//	//{ SSN1K_CI_Env2Mix, 0.0f },
-//	{ SSN1K_CI_Env2Amp, 0.5f },
-//	//{ SSN1K_CI_Env2DC, 0.0f },
-//	{ SSN1K_CI_Env2Atk, 0.01f },
-//	{ SSN1K_CI_Env2Dec, 0.2f },
-//	{ SSN1K_CI_Env2Sus, 0.3f },
-//	{ SSN1K_CI_Env2Rel, 0.2f },
-//
-//	{ SSN1K_CI_Env3Mix, 0.8f },
-//	{ SSN1K_CI_Env3Amp, 2000.0f },
-//	{ SSN1K_CI_Env3DC, 20.0f },
-//	{ SSN1K_CI_Env3Atk, 0.01f },
-//	{ SSN1K_CI_Env3Dec, 0.1f },
-//	{ SSN1K_CI_Env3Sus, 0.6f },
-//	{ SSN1K_CI_Env3Rel, 0.2f },
-//
-//	//{ SSN1K_CI_Env4Mix, 0.0f },
-//	//{ SSN1K_CI_Env4Amp, 800.0f },
-//	//{ SSN1K_CI_Env4DC, 0.0f },
-//	//{ SSN1K_CI_Env4Atk, 0.0f },
-//	//{ SSN1K_CI_Env4Dec, 0.1f },
-//	//{ SSN1K_CI_Env4Sus, 0.5f },
-//	//{ SSN1K_CI_Env4Rel, 0.2f },
-//
-//	//{ SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_MUL) },
-//	{ SSN1K_CI_Osc1Amp, 0.8f },
-//	//{ SSN1K_CI_Osc1DC, 0.0f },
-//	//{ SSN1K_CI_Osc1Note, 0.0f },
-//	{ SSN1K_CI_Osc1Tune, 0.0f },
-//	{ SSN1K_CI_Osc1Fre, 0.0f },
-//	{ SSN1K_CI_Osc1Psw, 0.2f },
-//	{ SSN1K_CI_Osc1Wav, CtrlValue(SSN1K_WF_PSAW) },
-//
-//	{ SSN1K_CI_Osc2Mix, CtrlValue(SSN1K_MM_ADD) },
-//	{ SSN1K_CI_Osc2Amp, 0.6f },
-//	//{ SSN1K_CI_Osc2DC, 0.0f },
-//	//{ SSN1K_CI_Osc2Note, 0.0f },
-//	{ SSN1K_CI_Osc2Tune, 0.1f },
-//	{ SSN1K_CI_Osc2Fre, 0.0f },
-//	{ SSN1K_CI_Osc2Psw, 0.3f },
-//	{ SSN1K_CI_Osc2Wav, CtrlValue(SSN1K_WF_PLS) },
-//
-//	//{ SSN1K_CI_Lfo1Mix, CtrlValue(SSN1K_MM_MUL) },
-//	//{ SSN1K_CI_Lfo1Amp, 8.0f },
-//	//{ SSN1K_CI_Lfo1DC, 0.0f },
-//	//{ SSN1K_CI_Lfo1Note, 0.0f },
-//	//{ SSN1K_CI_Lfo1Tune, 0.0f },
-//	//{ SSN1K_CI_Lfo1Fre, 6.0f },
-//	//{ SSN1K_CI_Lfo1Psw, 0.8f },
-//	//{ SSN1K_CI_Lfo1Wav, CtrlValue(SSN1K_WF_SIN) },
-//
-//	//{ SSN1K_CI_Lfo2Mix,CtrlValue(SSN1K_MM_MUL) },
-//	//{ SSN1K_CI_Lfo2Amp, 0.0f },
-//	//{ SSN1K_CI_Lfo2DC, 0.0f },
-//	//{ SSN1K_CI_Lfo2Note, 0.0f },
-//	//{ SSN1K_CI_Lfo2Tune, 0.0f },
-//	//{ SSN1K_CI_Lfo2Fre, 0.0f },
-//	//{ SSN1K_CI_Lfo2Psw, 0.0f },
-//	//{ SSN1K_CI_Lfo2Wav, CtrlValue(SSN1K_WF_SIN) },
-//
-//	//{ SSN1K_CI_FltMix, 0.0f },
-//	//{ SSN1K_CI_FltAmp, 0.0f },
-//	//{ SSN1K_CI_FltDC, 0.0f },
-//	{ SSN1K_CI_FltRes, 0.8f },
-//	{ SSN1K_CI_FltMode, CtrlValue(SSN1K_FM_LP) },
-//	{ -1, -1 }
-//};
-//CtrlSetting synth3Settings[] = {
-//	//{ SSN1K_CI_SynthMix, 0.0f },
-//	{ SSN1K_CI_SynthAmp, 1.6f },
-//	{ SSN1K_CI_SynthBal, 0.5f },		// = dc
-//
-//	{ SSN1K_CI_Env1Mix, 0.5f },
-//	{ SSN1K_CI_Env1Amp, 0.8f },
-//	//{ SSN1K_CI_Env1DC, 0.0f },
-//	{ SSN1K_CI_Env1Atk, 0.0002f },
-//	{ SSN1K_CI_Env1Dec, 0.01f },
-//	{ SSN1K_CI_Env1Sus, 0.6f },
-//	{ SSN1K_CI_Env1Rel, 0.14f },
-//
-//	//{ SSN1K_CI_Env2Mix, 0.0f },
-//	//{ SSN1K_CI_Env2Amp, 0.3f },
-//	//{ SSN1K_CI_Env2DC, 0.0f },
-//	//{ SSN1K_CI_Env2Atk, 0.01f },
-//	//{ SSN1K_CI_Env2Dec, 0.1f },
-//	//{ SSN1K_CI_Env2Sus, 0.3f },
-//	//{ SSN1K_CI_Env2Rel, 0.2f },
-//
-//	//{ SSN1K_CI_Env3Mix, 0.0f },
-//	{ SSN1K_CI_Env3Amp, 2000.0f },
-//	{ SSN1K_CI_Env3DC, 100.0f },
-//	{ SSN1K_CI_Env3Atk, 0.01f },
-//	{ SSN1K_CI_Env3Dec, 0.1f },
-//	{ SSN1K_CI_Env3Sus, 0.8f },
-//	{ SSN1K_CI_Env3Rel, 0.4f },
-//
-//	//{ SSN1K_CI_Env4Mix, CtrlValue(SSN1K_MM_ADD) },
-//	{ SSN1K_CI_Env4Amp, 200.0f },
-//	{ SSN1K_CI_Env4DC, 20.0f },
-//	{ SSN1K_CI_Env4Atk, 0.01f },
-//	{ SSN1K_CI_Env4Dec, 0.02f },
-//	{ SSN1K_CI_Env4Sus, 0.3f },
-//	{ SSN1K_CI_Env4Rel, 0.1f },
-//
-//	//{ SSN1K_CI_Osc1Mix, CtrlValue(SSN1K_MM_MUL) },
-//	{ SSN1K_CI_Osc1Amp, 1.0f },
-//	//{ SSN1K_CI_Osc1DC, 0.0f },
-//	//{ SSN1K_CI_Osc1Note, 0.0f },
-//	//{ SSN1K_CI_Osc1Tune, 0.0f },
-//	//{ SSN1K_CI_Osc1Fre, 0.0f },
-//	//{ SSN1K_CI_Osc1Psw, 0.2f },
-//	{ SSN1K_CI_Osc1Wav, CtrlValue(SSN1K_WF_SIN) },
-//
-//	{ SSN1K_CI_Osc2Mix, CtrlValue(SSN1K_MM_ADD) },
-//	//{ SSN1K_CI_Osc2Amp, 0.0f },
-//	//{ SSN1K_CI_Osc2DC, 0.0f },
-//	//{ SSN1K_CI_Osc2Note, 0.0f },
-//	//{ SSN1K_CI_Osc2Tune, 0.1f },
-//	{ SSN1K_CI_Osc2Fre, 10000.0f },
-//	//{ SSN1K_CI_Osc2Psw, 0.45f },
-//	{ SSN1K_CI_Osc2Wav, CtrlValue(SSN1K_WF_RND) },
-//
-//	//{ SSN1K_CI_Lfo1Mix, CtrlValue(SSN1K_MM_MUL) },
-//	//{ SSN1K_CI_Lfo1Amp, 8.0f },
-//	//{ SSN1K_CI_Lfo1DC, 0.0f },
-//	//{ SSN1K_CI_Lfo1Note, 0.0f },
-//	//{ SSN1K_CI_Lfo1Tune, 0.0f },
-//	//{ SSN1K_CI_Lfo1Fre, 6.0f },
-//	//{ SSN1K_CI_Lfo1Psw, 0.8f },
-//	//{ SSN1K_CI_Lfo1Wav, CtrlValue(SSN1K_WF_SIN) },
-//
-//	//{ SSN1K_CI_Lfo2Mix,CtrlValue(SSN1K_MM_MUL) },
-//	//{ SSN1K_CI_Lfo2Amp, 0.0f },
-//	//{ SSN1K_CI_Lfo2DC, 0.0f },
-//	//{ SSN1K_CI_Lfo2Note, 0.0f },
-//	//{ SSN1K_CI_Lfo2Tune, 0.0f },
-//	//{ SSN1K_CI_Lfo2Fre, 0.0f },
-//	//{ SSN1K_CI_Lfo2Psw, 0.0f },
-//	//{ SSN1K_CI_Lfo2Wav, CtrlValue(SSN1K_WF_SIN) },
-//
-//	//{ SSN1K_CI_FltMix, 0.0f },
-//	//{ SSN1K_CI_FltAmp, 0.0f },
-//	//{ SSN1K_CI_FltDC, 0.0f },
-//	{ SSN1K_CI_FltRes, 0.4f },
-//	{ SSN1K_CI_FltMode, CtrlValue(SSN1K_FM_LP) },
-//	{ -1, -1 }
-//};
-//CtrlSetting* synthSettings[] = {
-//	synth2Settings, synth2Settings, synth2Settings, synth2Settings,
-//	synth2Settings, synth2Settings, synth2Settings, synth2Settings,
-//	synth1Settings, synth2Settings, synth1Settings, synth1Settings,
-//	synth1Settings, synth2Settings, synth1Settings, synth1Settings
-//};
+int startPattern = 0;
+int endPattern = 0;
 int voiceCount[] = {
-	1, 2, 1, 3, 3, 3,	 1, 2, 2,  2, 2, 2, 2, 2, 2, 2, 2
+	2, 2, 2, 2,  1, 1, 1, 2,
+	2, 2, 2, 2,  2, 2, 2, 2
 };
 BYTE mixerSettings[] = {
-	SSN1K_CI_MixVolume1,	0x80,	SSN1K_CI_MixBalance1,	0xA0,
-	SSN1K_CI_MixVolume2,	0x00,	SSN1K_CI_MixBalance2,	0x60,
-	SSN1K_CI_MixVolume3,	0x40,	SSN1K_CI_MixBalance3,	0x40,
-	SSN1K_CI_MixVolume4,	0x40,	SSN1K_CI_MixBalance4,	0xC0,
-	SSN1K_CI_MixVolume5,	0x40,	SSN1K_CI_MixBalance5,	0x20,
-	SSN1K_CI_MixVolume6,	0x40,	SSN1K_CI_MixBalance6,	0xE0,
+	SSN1K_CI_MixVolume1,	0xC0,	SSN1K_CI_MixBalance1,	0xA0,
+	SSN1K_CI_MixVolume2,	0x80,	SSN1K_CI_MixBalance2,	0x60,
+	SSN1K_CI_MixVolume3,	0x60,	SSN1K_CI_MixBalance3,	0x40,
+	SSN1K_CI_MixVolume4,	0x20,	SSN1K_CI_MixBalance4,	0xC0,
+	SSN1K_CI_MixVolume5,	0x20,	SSN1K_CI_MixBalance5,	0x20,
+	SSN1K_CI_MixVolume6,	0x20,	SSN1K_CI_MixBalance6,	0xE0,
+	SSN1K_CI_MixVolume7,	0x00,	SSN1K_CI_MixBalance7,	0x20,
+	SSN1K_CI_MixVolume8,	0x00,	SSN1K_CI_MixBalance8,	0x80,
 	0xFF
 };
 
@@ -841,6 +646,8 @@ void soundCallback(short* buffer, int sampleCount) {
 			player->run(1);
 			frameCounter = (size_t)(48000.0f / player->refreshRate());
 			frames++;
+			print("Frame: %05d\n", frames);
+			gotoxy(0, -1);
 		}
 		size_t len = frameCounter < remains ? frameCounter : remains;
 		end = start + len;
@@ -853,17 +660,17 @@ void soundCallback(short* buffer, int sampleCount) {
 void saveSamples(const char* path) {
 	Buffer buffer;
 	WORD tmp[4096];
-	while (player->masterChannel()->isActive() && frames < TICKS) {
+	while (player->masterChannel()->isActive()) {
 		soundCallback((short*)tmp, 4096/2);
 		buffer.append(tmp, 2 * 4096);
 	}
-	printf("Writing %d bytes to %s...\n", buffer.length(), path);
+	printf("\n\nWriting %d bytes to %s...\n", buffer.length(), path);
 	BYTE* data = buffer.getByteBuffer();
 	WaveFmt::write(path, sampleRate, 2, 16, data, buffer.length());
 	FREE(data);
 }
 
-void setupSequences(AbstractPlayer* player) {
+void setupSequences(Player* player) {
 	Sequence* sequence;
 	Frame* frame;
 	// create main sequence
@@ -877,7 +684,7 @@ void setupSequences(AbstractPlayer* player) {
 	frame = sequence->addFrame(128);
 	frame->addCommand(adapter->createEndCommand());
 	player->addSequence(sequence);
-	AbstractChannel* chn = AbstractPlayer::createChannel();
+	AbstractChannel* chn = Player::createChannel();
 	chn->init(/*player,*/ 0, (Target*)player->targets()->getAt(0), sequence, Player_Flg_Active);
 	player->addChannel(chn);
 
@@ -981,7 +788,7 @@ void loadXm(const char* file, PlayerAdapter* playerAdapter, SynthAdapter* synthA
 		// create master channel, sequence
 		Sequence* sequence = (Sequence*)sequences->getAt(0);
 		player->addSequence(sequence);
-		AbstractChannel* chn = AbstractPlayer::createChannel();
+		AbstractChannel* chn = Player::createChannel();
 		chn->init(/*player,*/ 0, (Target*)player->targets()->getAt(0), sequences->getAt(0), Player_Flg_Active);
 		player->addChannel(chn);
 
@@ -999,20 +806,20 @@ AbstractChannel* createChannel(void) {
 }
 
 int _main(NS_FW_BASE::Map* args) {
-	printf("SSN1K test\n");
-	//MemoryMgr::isDebugOn = true;
 
-	//float f = 1000.0f;
-	//printf("%0X\n", reinterpret_cast<int&>(f));
-	//return 0;
+	console.showCursor(false);
+	print("SSN1K test\n");
+	//MemoryMgr::isDebugOn = true;
 
 	const char* saveFile = (const char*)args->get("save");
 	const char* exportFile = (const char*)args->get("export");
+	//const char* startFrame = parseInt((const char*)args->get("start"));
+	//const char* endFrame = parseInt((const char*)args->get("end"));
 	//int ticks = Integer::parse(args->get(&String("ticks")));
 
 	// setup player
-	AbstractPlayer::createChannel = createChannel;
-	player = NEW_(AbstractPlayer);
+	Player::createChannel = createChannel;
+	player = NEW_(Player);
 	PlayerAdapter* playerAdapter = (PlayerAdapter*)player->adapters()->getAt(0);
 	synthAdapter = NEW_(SynthAdapter, player);
 	player->adapters()->add(synthAdapter);
@@ -1032,9 +839,9 @@ int _main(NS_FW_BASE::Map* args) {
 	}
 
 	SSN1K::setSampleRate((float)sampleRate);
-	//SSN1K::interpolate = SSN1K::smoothstep;
+	SSN1K::interpolate = SSN1K::smoothstep;
 	//SSN1K::interpolate = SSN1K::sinusoid;
-	SSN1K::interpolate = SSN1K::flat;
+	//SSN1K::interpolate = SSN1K::flat;
 
 	const char* file = (const char*)args->get("in");
 	if (file != NULL) {
@@ -1044,18 +851,19 @@ int _main(NS_FW_BASE::Map* args) {
 		setupSequences(player);
 	}
 
+	if (player->masterChannel() != NULL) {
+
 #ifdef _DEBUG
-	LOG("#00 Sequence\n");
-	PArray* sequences = player->sequences();
-	((Sequence*)sequences->getAt(0))->print((AbstractAdapter*)player->adapters()->getAt(0));
-	for (UINT32 i = 1; i < sequences->length(); i++) {
-		Sequence* sequence = (Sequence*)sequences->getAt(i);
-		LOG("#%02d Sequence\n", i);
-		sequence->print(synthAdapter);
-	}
+		LOG("#00 Sequence\n");
+		PArray* sequences = player->sequences();
+		((Sequence*)sequences->getAt(0))->print((AbstractAdapter*)player->adapters()->getAt(0));
+		for (UINT32 i = 1; i < sequences->length(); i++) {
+			Sequence* sequence = (Sequence*)sequences->getAt(i);
+			LOG("#%02d Sequence\n", i);
+			sequence->print(synthAdapter);
+		}
 #endif
 
-	if (player->masterChannel() != NULL) {
 		bool play = true;
 		if (exportFile && NS_FW_BASE::strlen(exportFile) > 0) {
 			Buffer* asuData = NEW_(Buffer);
@@ -1108,15 +916,19 @@ int _main(NS_FW_BASE::Map* args) {
 		}
 
 		if (play && SoundPlayer::start(sampleRate, 1, soundCallback) == 0) {
-			while (player->masterChannel()->isActive() &&
-				frames < TICKS) {
+			// fast forward to start
+			//while (!startPattern) {
+
+			//}
+
+			while (player->masterChannel()->isActive()) {
 				Sleep(10);
 			}
 			printf("\n");
 			printf("Stopping audio playback\n");
 			SoundPlayer::stop();
 		}
-		printf("Exiting\n");
+		printf("\n\nExiting\n");
 	}
 	DEL_(synthAdapter);
 	DEL_(mixer);
@@ -1131,6 +943,8 @@ int _main(NS_FW_BASE::Map* args) {
 		FREE(bank01[i]);
 	}
 	FREE(bank01);
+
+	console.showCursor(true);
 
 	return 0;
 }

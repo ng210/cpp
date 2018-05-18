@@ -93,11 +93,11 @@ XMNOTE* XmLoader::readNote(BYTE*& ptr, XMNOTE* xmNote) {
 	bool isCompressed = code & 0x80;
 	int note = -1;
 	if (!isCompressed) {
-		note = code;
+		note = code - 1;
 		code = 0x9e;
 	}
 	code &= 0x1f;
-	xmNote->note = ((code & 0x01) ? *ptr++ : note) - 1;
+	xmNote->note = (code & 0x01) ? *ptr++-1 : note;
 	xmNote->instrument = (code & 0x02) ? *ptr++-1 : -1;
 	xmNote->volume = (code & 0x04) ? *ptr++ : -1;
 	xmNote->effect = (code & 0x08) ? *ptr++ : -1;
@@ -108,28 +108,51 @@ PArray* XmLoader::convertNote(XMNOTE* xmNote, XMNOTE& state) {
 	PLAYER_COMMAND cmd = NULL;
 	PArray* commands = NEW_(PArray);
 	if (xmNote->hasData) {
-		if (xmNote->instrument != 0xFF && xmNote->instrument != state.instrument) {
-			state.instrument = xmNote->instrument;
-			cmd = synthAdapter_->createCommand(Synth_Cmd_prgChange, xmNote->instrument);
+		// process instrument
+		int instrument = xmNote->instrument;
+		if (instrument != 0xFF && instrument != state.instrument) {
+			state.instrument = instrument;
+			cmd = synthAdapter_->createCommand(Synth_Cmd_prgChange, instrument);
 			commands->add(cmd);
 		}
+		// process volume
+		int volume = xmNote->volume;
+		if (volume != 0xFF) {
+			volume -= 0x10;
+			if (volume < 0 || volume > 0x40) {
+				volume = state.volume;
+			}
+			state.volume = volume;
+		}
+		// process note
 		int note = xmNote->note;
 		if (note >= 0x00 && note < 0x60) {
 			note += 12;
-			if (note != state.note || xmNote->instrument != 0xff) {
-				state.note = note;
-				BYTE vol = xmNote->volume;
-				if (vol >= 0x10 && vol <= 0x50) {
-					vol = (BYTE)floor((vol - 0x10) / 64.0f * 127);
-				}
-				cmd = synthAdapter_->createCommand(Synth_Cmd_setNoteOn, note, vol);
+			//if (instrument != 0xff) {
+				// note on
+				int v = volume == 0xFF ? 0x40 : volume;
+				cmd = synthAdapter_->createCommand(Synth_Cmd_setControlF, SSN1K_CI_Env1Amp, 1.0);
 				commands->add(cmd);
-			}
+				cmd = synthAdapter_->createCommand(Synth_Cmd_setNoteOn, note, volume*255 >> 6);
+				commands->add(cmd);
+				volume = 0xFF;
+			//} else {
+			//	if (note != state.note) {
+			//		// set note
+			//		cmd = synthAdapter_->createCommand(Synth_Cmd_setControlF, SSN1K_CI_Tune, (double)note);
+			//		commands->add(cmd);
+			//	}
+			//}
+			state.note = note;
 		}
 		if (note == 0x60 && xmNote->note != state.note) {
 			cmd = synthAdapter_->createCommand(Synth_Cmd_setNoteOff, state.note);
 			commands->add(cmd);
 			state.note = xmNote->note;
+		}
+		if (volume != 0xFF) {
+			cmd = synthAdapter_->createCommand(Synth_Cmd_setControlF, SSN1K_CI_Env1Amp, volume / 255.0);
+			commands->add(cmd);
 		}
 	}
 	//v = xmNote.instrument;

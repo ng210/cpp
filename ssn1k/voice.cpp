@@ -7,6 +7,10 @@ Voice::Voice(Synth* synth, int id) {
 	id_ = id;
 	duration_ = 0;
 	setControls();
+	env1_.ticksPerSample(&synth->ticksPerSample());
+	env2_.ticksPerSample(&synth->ticksPerSample());
+	env3_.ticksPerSample(&synth->ticksPerSample());
+	env4_.ticksPerSample(&synth->ticksPerSample());
 }
 void Voice::setControls() {
 	SynthCtrls* ctrls = (SynthCtrls*)synth_->controls_;
@@ -35,8 +39,7 @@ Voice::~Voice() {
 void Voice::noteOn(int note, float velocity) {
 	//printf("voice: %d, note: %d, velocity: %f, duration: %d\n", id_, note, velocity, duration);
 	SynthCtrls* controls = (SynthCtrls*)synth_->controls_;
-	noteOff();
-
+	//noteOff();
 	note_.set((float)note);
 	// key on
 	velocity_ = velocity;
@@ -44,6 +47,7 @@ void Voice::noteOn(int note, float velocity) {
 	env2_.setGate(velocity);
 	env3_.setGate(velocity);
 	env4_.setGate(velocity);
+	//flt_.reset();
 }
 void Voice::noteOff() {
 	SynthCtrls* controls = (SynthCtrls*)synth_->controls_;
@@ -66,21 +70,6 @@ float Voice::run() {
 	float smp1 = osc1_.run(1.0f, tune, fm, pm);
 	float smp2 = osc2_.run(1.0f, tune, fm, pm, smp1);
 	float out = flt_.run(am*smp2, cut);
-	//if (duration_ > 0) {
-	//	duration_--;
-	//} else {
-	//	if (duration_ == 0) {
-	//		//printf("voice: %d, note off\n", id_);
-	//		// key off
-	//		env1_.setGate(0.0f);
-	//		env2_.setGate(0.0f);
-	//		env3_.setGate(0.0f);
-	//		env4_.setGate(0.0f);
-	//		duration_ = -1;
-	//	}
-	//}
-
-	//float smp2 = osc2_.run(1.0f, lfo2, psw);
 	return out;
 }
 bool Voice::isActive() {
