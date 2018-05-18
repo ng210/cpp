@@ -1,23 +1,18 @@
 WindowWrapper {
-  ctor(string id);
-  onCreate()
-  onCommand(int)
-  onMouseClick(POINT, int)
-  onMouseMove(POINT)
-  onPaint(HDC)
-}
-
-WinApp {
-  WindowWrapper* window;
+  HWND hWnd;
   WNDCLASS wndClass;
-
-  void initialize(WNDCLASSEX&, CREATESTRUCT&)
+  
+  WindowWrapper(WNDCLASSEX&, CREATESTRUCT&);
+  HRESULT create(WNDCLASSEX&, CREATESTRUCT&);
   HRESULT onCreate()
   HRESULT onCommand(int)
   HRESULT onMouseClick(POINT, int)
   HRESULT onMouseMove(POINT)
   HRESULT onPaint(HDC)
-  ...
+}
+
+WinApp : public WindowWrapper {
+  WinApp(CREATESTRUCT*, WNDCLASSEX* = NULL);
 
 }
 
@@ -25,14 +20,12 @@ WinApp* createApplication();
 
 
 Startup
-WinMain()
- - createApplication() => WinApp
- - WinApp.initialize(WNDCLASSEX&, CREATESTRUCT&)
- - RegisterWindowEx => WinApp.wndClass
- - CreateWindowEx => WinApp.window
- - ShowWindow(WinApp.window)
+WinMain() {
+ WinApp app = createApplication();
+ ShowWindow(WinApp.window)
  - UpdateWindow(WinApp.window)
  - messageLoop
+}
  =>WM_CREATE
     - WindowWrapper.main(HWND, UMSG, WPARAM, LPARAM)
        - GetWindowLongPtr(hWnd, GWL_USERDATA) => WinApp
