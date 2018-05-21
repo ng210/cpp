@@ -2,6 +2,7 @@
 #define __BUFFER_H
 
 #include "basedef.h"
+#include "types.h"
 #include "collection/array.h"
 
 NS_FW_BASE_BEGIN

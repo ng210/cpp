@@ -129,7 +129,10 @@
     <ClInclude Include="base\string.h" />
     <ClInclude Include="base\tracer-win.h" />
     <ClInclude Include="base\tracer.h" />
-    <ClInclude Include="base\windowwrapper.h" />
+    <ClInclude Include="win\ctrl.h" />
+    <ClInclude Include="win\editctrl.h" />
+    <ClInclude Include="win\staticctrl.h" />
+    <ClInclude Include="win\window.h" />
     <ClInclude Include="collection\array.h" />
     <ClInclude Include="collection\collection.h" />
     <ClInclude Include="collection\arraybase.h" />
@@ -141,6 +144,7 @@
     <ClInclude Include="consoleapp.h" />
     <ClInclude Include="fw.h" />
     <ClInclude Include="runtime.h" />
+    <ClInclude Include="types.h" />
     <ClInclude Include="utils\buffer.h" />
     <ClInclude Include="utils\file.h" />
     <ClInclude Include="utils\pathinfo.h" />
@@ -154,7 +158,10 @@
     <ClCompile Include="base\string.cpp" />
     <ClCompile Include="base\tracer-win.cpp" />
     <ClCompile Include="base\tracer.cpp" />
-    <ClCompile Include="base\windowwrapper.cpp" />
+    <ClCompile Include="win\ctrl.cpp" />
+    <ClCompile Include="win\editctrl.cpp" />
+    <ClCompile Include="win\staticctrl.cpp" />
+    <ClCompile Include="win\window.cpp" />
     <ClCompile Include="collection\array.cpp" />
     <ClCompile Include="collection\keyvaluepair.cpp" />
     <ClCompile Include="collection\map.cpp" />

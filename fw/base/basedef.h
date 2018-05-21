@@ -7,29 +7,6 @@
 #define NULL 0
 #endif
 
-#ifndef BYTE
-#define BYTE unsigned char
-#define byte BYTE
-#endif
-#ifndef WORD
-#define WORD unsigned short
-#define word WORD
-#endif
-#ifndef DWORD
-#define DWORD unsigned long
-#define dword DWORD
-#endif
-
-#ifndef UINT8
-#define UINT8 unsigned char
-#endif
-#ifndef UINT16
-#define UINT16 unsigned short
-#endif
-#ifndef UINT32
-#define UINT32 unsigned int
-#endif
-
 #define ALIGN4(a) ALIGN(a, 4)
 #define ALIGN(a, n) (((size_t)a+n-1) & ~(n-1))
 
@@ -43,13 +20,6 @@
 #else
 #define arraysize(a) (sizeof(a)/sizeof(a[0]))
 #endif
-#endif
-
-#ifdef UNICODE
-#include <wchar.h>
-#define TCHAR wchar_t
-#else
-#define TCHAR char
 #endif
 
 #define STRINGIFY(str) #str

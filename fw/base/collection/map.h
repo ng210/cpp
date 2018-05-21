@@ -41,10 +41,6 @@ public:
 	void* put(KeyValuePair* keyValue);
 	void* put(void* key, void* value);
 
-	static CollectionCallback compareStr;
-	static CollectionCallback compareChar;
-	static CollectionCallback compareByRef;
-
 	static HashingFunction hashingItem;
 	static HashingFunction hashingStr;
 };

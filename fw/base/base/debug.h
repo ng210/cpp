@@ -25,12 +25,14 @@ public:
 
 NS_FW_BASE_END
 
-#define SYS(fn) fn; if (Debug::tracer_ != NULL) Debug::tracer_->logLastError( __FILE__, __LINE__)
+//#define SYS(fn) fn; if (var == 0 && Debug::tracer_ != NULL) Debug::tracer_->logLastError( __FILE__, __LINE__)
+#define SYSPR(fn) if (fn == 0 && Debug::tracer_ != NULL) Debug::tracer_->logLastError( __FILE__, __LINE__)
+#define SYSFN(var, fn) var = fn; if (var == 0 && Debug::tracer_ != NULL) Debug::tracer_->logLastError( __FILE__, __LINE__)
 #define DEBUG(format, ...) if (Debug::tracer_ != NULL) Debug::tracer_->debug(format, __FILE__, __LINE__, __VA_ARGS__)
 #define LOG(format, ...) if (Debug::tracer_ != NULL) Debug::tracer_->log(format, __VA_ARGS__)
 
 #else
-#define SYS(fn) fn
+#define SYS(var, fn) var = fn
 #define DEBUG(format, ...) 
 #define LOG(format, ...)
 #endif

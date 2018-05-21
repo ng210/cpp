@@ -66,9 +66,10 @@ UINT32 Buffer::write(void* data, UINT32 byteCount, UINT32 from, UINT32 to) {
 	UINT32 readFrom = from;
 	UINT32 writeTo = 0;
 	UINT32 offset = 0;
+	UINT32 length = to;
 	UINT32 chunkIndex = seek(to, writeTo);
 	// write part of data that fits into the last buffer chunk
-	if (chunkIndex < chunks_->length()) {
+	for (UINT32 i=chunkIndex; i<chunks_->length(); i++) {
 		BufferChunk* chunk = (BufferChunk*)chunks_->getAt(chunkIndex);
 		UINT32 freeBytesInChunk = chunk->byteCount() - writeTo;
 		UINT32 writeLength = remainingBytes < freeBytesInChunk ? remainingBytes : freeBytesInChunk;
@@ -76,7 +77,7 @@ UINT32 Buffer::write(void* data, UINT32 byteCount, UINT32 from, UINT32 to) {
 			chunk->get(writeTo++) = ((BYTE*)data)[readFrom++];
 		}
 		remainingBytes -= writeLength;
-		length_ += writeLength;
+		length += writeLength;
 		//writeTo = 0;
 	}
 	// write the rest of the data into a new chunk
@@ -89,7 +90,10 @@ UINT32 Buffer::write(void* data, UINT32 byteCount, UINT32 from, UINT32 to) {
 			chunk.get(i) = ((BYTE*)data)[readFrom++];
 		}
 		chunk.flush();
-		length_ += remainingBytes;
+		length += remainingBytes;
+	}
+	if (length > length_) {
+		length_ = length;
 	}
 	return length_;
 }

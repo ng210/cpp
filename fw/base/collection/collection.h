@@ -2,6 +2,7 @@
 #define __COLLECTION_H
 
 #include "basedef.h"
+#include "types.h"
 #include "base/str.h"
 
 NS_FW_BASE_BEGIN

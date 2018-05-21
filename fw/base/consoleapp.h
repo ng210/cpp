@@ -24,7 +24,7 @@ public:
 
 extern Console console;
 
-extern int _main(NS_FW_BASE::Map*);
+extern int _main(NS_FW_BASE::Map* args);
 
 char* getWorkingDir();
 

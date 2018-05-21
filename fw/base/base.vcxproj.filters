@@ -32,6 +32,15 @@
     <Filter Include="utils\Source Files">
       <UniqueIdentifier>{778c534c-a25a-468f-99e3-3241df4447e1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="win">
+      <UniqueIdentifier>{759bddbb-64c8-47a8-8776-8e5f4ec5418f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win\Header Files">
+      <UniqueIdentifier>{2e5f63e1-d8fb-4b83-a6ed-f75bf018ca73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win\Source Files">
+      <UniqueIdentifier>{9f09fbda-989a-4fc2-8af9-93d644264153}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fw.h" />
@@ -93,8 +102,18 @@
       <Filter>collection\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="winapp.h" />
-    <ClInclude Include="base\windowwrapper.h">
-      <Filter>base\Header Files</Filter>
+    <ClInclude Include="types.h" />
+    <ClInclude Include="win\window.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win\staticctrl.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrl.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win\editctrl.h">
+      <Filter>win\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -151,8 +170,17 @@
       <Filter>collection\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="winapp.cpp" />
-    <ClCompile Include="base\windowwrapper.cpp">
-      <Filter>base\Source Files</Filter>
+    <ClCompile Include="win\window.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\staticctrl.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrl.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\editctrl.cpp">
+      <Filter>win\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

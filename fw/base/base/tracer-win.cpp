@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include "base/tracer-win.h"
+#include "base/str.h"
 
 NS_FW_BASE_BEGIN
 
@@ -15,17 +16,21 @@ void TracerWinA::log(const void* format, ...) {
 	OutputDebugStringA(message);
 }
 void TracerWinA::logLastError(const void* file, int line) {
-	const char* buffer = NULL;
+	char buffer[256] = "";
 	DWORD dwError = GetLastError();
 	if (dwError != 0) {
 		FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 			NULL,
 			dwError,
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			0,	//MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 			(LPSTR)&buffer,
-			0, NULL
+			256,
+			NULL
 		);
-		log("1>%s(%d): %s", file, line, buffer);
+		if (buffer[0] == '\0') {
+			NS_FW_BASE::strncpy(buffer, 256, "Unknown error!");
+		}
+		log("1>%s(%d): (%08x) %s", file, line, dwError, buffer);
 	}
 }
 
