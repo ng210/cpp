@@ -3,14 +3,14 @@
 #include "runtime.h"
 
 NS_FW_BASE_USE
+NS_FW_WIN_USE
 
-static char* workingDir_;
-
+// Entry point
 extern int APIENTRY WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdShow) {
 	int error = 0;
 #ifdef _DEBUG
 	//MemoryMgr::isDebugOn = true;
-	Debug::initialize(/*DEBUG_UNICODE | DEBUG_MEMORY*/);
+	Debug::initialize(DEBUG_WINDOWS/* | DEBUG_UNICODE | DEBUG_MEMORY*/);
 #endif
 	//RunTime::initialize();
 
@@ -27,16 +27,26 @@ extern int APIENTRY WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cm
 	//}
 	//DEL_(workingDir);
 
+	// get command line arguments
 	char** args_ = str_split_(cmdLine, " ");
-	Map* args = NEW_(Map, MAP_USE_REF, MAP_USE_REF, Map::hashingStr, Map::compareStr);
+	Map* args = NEW_(Map, MAP_USE_REF, MAP_USE_REF, Map::hashingStr, Collection::compareStr);
 	for (int i = 0; args_[i] != NULL; i++) {
 		size_t pos = strcspn(args_[i], "=");
 		char* key = substr(args_[i], 0, pos);
 		char* value = (args_[i][pos] != '\0') ? substr(args_[i], pos + 1, NS_FW_BASE::strlen(args_[i])) : NS_FW_BASE::strdup("1");
 		args->put(key, value);
 	}
+	FREE(args_);
 
-	error = winMain(instance, args);
+	WinApp* winApp = createApplication(instance, args);
+	if (winApp != NULL && winApp->hWnd() != NULL) {
+		SYSPR(ShowWindow(winApp->hWnd(), SW_SHOWDEFAULT));
+		SYSPR(UpdateWindow(winApp->hWnd()));
+		winApp->main(args);
+	}
+
+	DEL_(winApp);
+
 	MAP_FOREACH(args, FREE(key); FREE(value));
 	DEL_(args);
 
@@ -46,70 +56,31 @@ extern int APIENTRY WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cm
 #endif
 	return error;
 }
-
-extern int APIENTRY wWinMain(HINSTANCE instance, HINSTANCE prevInstance, LPWSTR cmdLine, int cmdShow) {
-	int error = 0;
-#ifdef _DEBUG
-	//MemoryMgr::isDebugOn = true;
-	Debug::initialize(/*DEBUG_UNICODE | DEBUG_MEMORY*/);
-#endif
-	//RunTime::initialize();
-
-	//Map* args = NEW_(Map, MAP_USE_REF, MAP_USE_REF, Map::hashingStr, Collection::compareStr);
-	//GetModuleFileNameA()
-	//PathInfo* workingDir = NEW_(PathInfo, ???);
-	//workingDir_ = workingDir->path();
-	//for (int i = 0; i < argc; i++) {
-	//	int count = 0;
-	//	size_t pos = strcspn(argv[i], "=");
-	//	char* key = substr(argv[i], 0, pos);
-	//	char* value = (argv[i][pos] != '\0') ? substr(argv[i], pos + 1, NS_FW_BASE::strlen(argv[i])) : NS_FW_BASE::strdup("1");
-	//	args->put(key, value);
-	//}
-	//DEL_(workingDir);
-
-	char** args_ = str_split_(cmdLine, " ");
-	Map* args = NEW_(Map, MAP_USE_REF, MAP_USE_REF, Map::hashingStr, Map::compareStr);
-	for (int i = 0; args_[i] != NULL; i++) {
-		size_t pos = strcspn(args_[i], "=");
-		char* key = substr(args_[i], 0, pos);
-		char* value = (args_[i][pos] != '\0') ? substr(args_[i], pos + 1, NS_FW_BASE::strlen(args_[i])) : NS_FW_BASE::strdup("1");
-		args->put(key, value);
-	}
-
-	error = winMain(instance, args);
-	MAP_FOREACH(args, FREE(key); FREE(value));
-	DEL_(args);
-
-	//RunTime::shutDown();
-#ifdef _DEBUG
-	MemoryMgr::checkMemDbgInfo(0, NULL);
-#endif
-	return error;
-}
-
-NS_FW_BASE_BEGIN
-
-ATOM WinApp::windowClass_ = 0;
 
 WinApp::~WinApp() {
-
 }
 
-HACCEL WinApp::getAcceleratorTable() {
-	return NULL;
+HWND WinApp::create(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx) {
+	return Window::create(createStruct, NULL, wndClassEx);
 }
-int WinApp::main(LPCWSTR cmdLine) {
-	HINSTANCE instance = SYS(GetModuleHandle(NULL));
-	HACCEL hAccelTable = SYS(getAcceleratorTable());
+
+int WinApp::main(NS_FW_BASE::Map* args) {
 	MSG msg;
-	while (GetMessage(&msg, nullptr, 0, 0)) {
-		if (!hAccelTable || !TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+	int isExiting = 0;
+	while (!isExiting) {
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+			//LOG("msg: %08x\n", msg.message);
+			if (msg.message != WM_QUIT) {
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			} else {
+				isExiting = true;
+			}
 		}
+		update();
 	}
 	return (int)msg.wParam;
 }
 
-NS_FW_BASE_END
+void WinApp::update() {
+}

@@ -1,34 +1,25 @@
 #ifndef __WINAPP_H
 #define __WINAPP_H
 
-#include "base/windowwrapper.h"
+#include "win/window.h"
 #include "collection/map.h"
 
 NS_FW_BASE_USE
+NS_FW_WIN_USE
 
-extern int winMain(HINSTANCE instance, Map* args);
-
-//#ifdef UNICODE
-//#define WinMain WinMainW
-//#else
-//#define WinMain WinMainA
-//#endif
-
-extern int APIENTRY WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdShow);
-extern int APIENTRY wWinMain(HINSTANCE instance, HINSTANCE prevInstance, LPWSTR cmdLine, int cmdShow);
-
-NS_FW_BASE_BEGIN
-
-class WinApp : public WindowWrapper {
-private:
-	static ATOM windowClass_;
+class WinApp : public Window {
+protected: PROP_R(char*, workingDir);
+	//virtual HACCEL getAcceleratorTable();
 protected:
-	virtual HACCEL getAcceleratorTable();
+	virtual void update();
 public:
-	~WinApp();
-	int main(LPCWSTR cmdLine);
+	WinApp() {};
+	virtual ~WinApp();
+	virtual int main(Map* args);
+
+	HWND create(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx);
 };
 
-NS_FW_BASE_END
+extern WinApp* createApplication(HINSTANCE instance, Map* args);
 
 #endif
