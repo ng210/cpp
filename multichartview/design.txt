@@ -1,0 +1,41 @@
+1. DataSeries
+ - based an Array, can wrap an Array;
+ - handles composite data, splits data into channels;
+ - get/set/add/remove access at index per channel.
+
+2. MultiChartView
+ - UI element to visualize DataSeries objects,
+ - structure: points, channels, chart;
+ - DataSeries are visualized by channels;
+ - custom visualizations;
+ - select channel(s);
+ - add/select/remove data point(s);
+ - min/max values specify data range per channel;
+ - scroll and zoom on both axes.
+
+3. Sequence as DataSeries
+3.1. Complex data structure:
+    Sequence struct {
+       Array<Frame> frames }
+    Frame struct {
+      UINT16 delta;
+      Array<Command> commands;
+    }
+    typedef Command UINT8*;
+3.2. Indexing
+      - problem: Sequence stores relative offsets (Frame::delta),
+      - has to read the frames sequentially to reach the desired index; simple but slow,
+      or
+      - has to use a mapping between indices and frames; possibly creates a very scarce table with many blank entries.
+3.3. Channel selection
+      - a channel represents a command type,
+      - command parameters are vectors,
+      - channel visualization has to handle scalar or vector inputs.
+3.4. The methods
+      - void* get(int index, int chnId);
+      - void* set(int index, int chnId, void* data);
+      - void* add(int index, int chnId);
+      - void* remove(int index, int chnId);
+
+4. Visualizing a Sequence
+    - required visualizations: line, bar.
