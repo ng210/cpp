@@ -1,8 +1,9 @@
-#include "SoundPlayer.h"
-#include "base/memory.h"
-#include <stdio.h>
+#include "soundplayer.h"
 
-NS_FW_BASE_USE
+#include "initguid.h"
+#include "cguid.h"
+#include "Mmreg.h"
+#include <stdio.h>
 
 //HMODULE SoundPlayer::hDSoundDll_ = 0;
 //LPDIRECTSOUNDCREATE8 SoundPlayer::pDirectSoundCreate_ = 0;

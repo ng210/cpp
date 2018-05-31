@@ -23,6 +23,7 @@ public:
 	Array(UINT32 itemSize, UINT32 capacity = ARRAY_DEFAULT_CAPACITY);
 	//virtual ~Array();
 	void init(UINT32 itemSize, UINT32 capacity, void* items = NULL);
+	void clear();
 	/* Collection */
 	void* add(void* item);
 	void* insertAt(int ix, void* item);

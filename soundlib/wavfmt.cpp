@@ -1,7 +1,7 @@
 #include "WavFmt.h"
 
 #include "base/memory.h"
-#include "utils/File.h"
+#include "utils/file.h"
 
 #pragma warning( disable : 4996)
 

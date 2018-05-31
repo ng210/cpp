@@ -8,6 +8,7 @@
 #define _USE_MATH_DEFINES
 
 #include "basedef.h"
+#include "types.h"
 #include "ssn1k.h"
 #include "ctrl.h"
 #include <stdio.h>

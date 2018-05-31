@@ -43,7 +43,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -99,12 +99,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\code\git\cpp\fw\base;c:\code\git\cpp\CustomCtrl\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)..\fw\base\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>C:\code\git\cpp\fw\bin\$(Platform)\$(Configuration);$(SolutionDir)$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>base.lib;CustomCtrl.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\fw\$(Platform)\$(Configuration);$(SolutionDir)\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>base.lib;multichartview.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;msimg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -138,16 +138,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Resource.h" />
+    <ClInclude Include="testseries.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="test.h" />
-    <ClInclude Include="MultiView.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="testseries.cpp" />
     <ClCompile Include="test.cpp" />
-    <ClCompile Include="MultiView.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="test.rc" />

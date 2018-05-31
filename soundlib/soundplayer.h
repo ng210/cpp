@@ -2,13 +2,13 @@
 #define __SOUNDPLAYER_H
 
 #include <windows.h>
+#include "dsound.h"
 #ifdef __CRT
 #include "crt\crt.h"
 #endif
-#include "initguid.h"
-#include "cguid.h"
-#include "Mmreg.h"
-#include "dsound.h"
+
+//#include "base/memory.h"
+//#include "types.h"
 
 //#define USE_DOUBLE_BUFFER
 

@@ -7,10 +7,10 @@ NS_FW_BASE_USE
 NS_FW_WIN_BEGIN
 
 class Ctrl : public Window {
+protected: PROP_R(Window*, parent);
+protected: PROP_R(size_t, ctrlId);
 protected:
-	Ctrl();
-public:
-	virtual ~Ctrl();
+	Ctrl(Window* parent, size_t ctrlId);
 };
 
 NS_FW_WIN_END

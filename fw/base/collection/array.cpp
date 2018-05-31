@@ -30,6 +30,9 @@ void Array::init(UINT32 itemSize, UINT32 capacity, void* items) {
 		length_ = 0;
 	}
 }
+void Array::clear() {
+	length_ = 0;
+}
 void* Array::add(void* item) {
 	// insert item at the end
 	return insertAt(length_, item);

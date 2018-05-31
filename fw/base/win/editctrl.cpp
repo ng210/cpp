@@ -3,7 +3,7 @@
 NS_FW_BASE_USE
 NS_FW_WIN_BEGIN
 
-EditCtrl::EditCtrl(Window* parent, size_t ctrlId, int style, TCHAR* text) {
+EditCtrl::EditCtrl(Window* parent, size_t ctrlId, int style, TCHAR* text) : Ctrl(parent, ctrlId) {
 	if (style == 0) {
 		style = WS_BORDER | ES_LEFT;
 	}

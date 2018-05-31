@@ -322,7 +322,7 @@ BYTE bassline[] = {
 	SSN1K_CI_Env2Rel, 0x10,
 
 	SSN1K_CI_Env3Mix, dd2db(0x3F400000),
-	SSN1K_CI_Env3Amp, dd2db(0x43960000),
+	SSN1K_CI_Env3Amp, dd2db(0x42960000),
 	SSN1K_CI_Env3DC, dd2db(0x42880000),
 	SSN1K_CI_Env3Atk, 0x03,
 	SSN1K_CI_Env3Dec, 0x10,
@@ -559,12 +559,20 @@ BYTE saw[] = {
 	SSN1K_CI_Env1Sus, 0x80,
 	SSN1K_CI_Env1Rel, 0x20,
 
+	SSN1K_CI_Env2Mix, dd2db(0x3F400000),
+	SSN1K_CI_Env2Amp, dd2db(0x38800000),
+	//SSN1K_CI_Env2DC, dd2db(0x3F800000),
+	SSN1K_CI_Env2Atk, 0x00,
+	SSN1K_CI_Env2Dec, 0x20,
+	SSN1K_CI_Env2Sus, 0x40,
+	SSN1K_CI_Env2Rel, 0x10,
+
 	SSN1K_CI_Env3Mix, dd2db(0x3F600000),
 	SSN1K_CI_Env3Amp, dd2db(0x447A0000),
 	SSN1K_CI_Env3DC, dd2db(0x427A0000),
 	SSN1K_CI_Env3Atk, 0x08,
 	SSN1K_CI_Env3Dec, 0x14,
-	SSN1K_CI_Env3Sus, 0x40,
+	SSN1K_CI_Env3Sus, 0x80,
 	SSN1K_CI_Env3Rel, 0x10,
 
 
@@ -590,19 +598,40 @@ BYTE pls[] = {
 	SSN1K_CI_Tune, dd2db(0x31C00000),
 
 	SSN1K_CI_Env1Amp, dd2db(0x3F800000),
-	SSN1K_CI_Env1Atk, 0x00,
-	SSN1K_CI_Env1Dec, 0x10,
-	SSN1K_CI_Env1Sus, 0x80,
-	SSN1K_CI_Env1Rel, 0x20,
+	SSN1K_CI_Env1Atk, 0x08,
+	SSN1K_CI_Env1Dec, 0x18,
+	SSN1K_CI_Env1Sus, 0x40,
+	SSN1K_CI_Env1Rel, 0x10,
 
-	SSN1K_CI_Env3DC, dd2db(0x43800000),
+	SSN1K_CI_Env2Mix, dd2db(0x3F400000),
+	SSN1K_CI_Env2Amp, dd2db(0x38800000),
+	//SSN1K_CI_Env2DC, dd2db(0x3F800000),
+	SSN1K_CI_Env2Atk, 0x00,
+	SSN1K_CI_Env2Dec, 0x20,
+	SSN1K_CI_Env2Sus, 0x40,
+	SSN1K_CI_Env2Rel, 0x10,
 
-	SSN1K_CI_Osc1Amp, 0xE0,
+	SSN1K_CI_Env3Mix, dd2db(0x3F600000),
+	SSN1K_CI_Env3Amp, dd2db(0x447A0000),
+	SSN1K_CI_Env3DC, dd2db(0x437A0000),
+	SSN1K_CI_Env3Atk, 0x02,
+	SSN1K_CI_Env3Dec, 0x14,
+	SSN1K_CI_Env3Sus, 0x40,
+	SSN1K_CI_Env3Rel, 0x10,
+
+
+	SSN1K_CI_Osc1Amp, 0x60,
 	SSN1K_CI_Osc1Psw, 0x80,
 	SSN1K_CI_Osc1Wav, SSN1K_WF_PLS,
 
 	SSN1K_CI_Osc2Mix, SSN1K_MM_BPS,
+	SSN1K_CI_Osc2Amp, 0x40,
+	SSN1K_CI_Osc2Psw, 0x80,
+	SSN1K_CI_Osc2Tune, dd2db(0x414051EC),
+
 	//SSN1K_CI_FltMix, SSN1K_MM_BPS,
+	SSN1K_CI_FltRes, 0x10,
+	SSN1K_CI_FltMode, SSN1K_FM_HP,
 	0xFF
 };
 
@@ -613,7 +642,7 @@ BYTE pls[] = {
 
 // 1asu.xm
 BYTE* instruments[] = {
-	saw, /*chords,*/ solo, bass, bassline, kick, snare,
+	saw, pls, /*chords, solo,*/ bass, bassline, kick, snare,
 	pls, saw
 };
 

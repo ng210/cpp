@@ -24,9 +24,9 @@ int SynthAdapter::processCommand(void* object, PLAYER_COMMAND command) {
 	unsigned char* args = &command[1];
 	int ctrlId;
 #ifdef _DEBUG
-	char *str = logCommand(command);
-	printf("%s\n", str);
-	FREE(str);
+	//char *str = logCommand(command);
+	//printf("%s\n", str);
+	//FREE(str);
 #endif
 	switch (command[0]) {
 		case Synth_Cmd_setNoteOn:		// note, duration, velocity

@@ -1,22 +1,27 @@
-#pragma once
-
 #include "resource.h"
 #include "winapp.h"
-#include "MultiView.h"
+#include "utils/buffer.h"
+#include "utils/file.h"
+#include "multichartview.h"
+#include "dataseries.h"
+
+#include "win/editctrl.h"
 
 #define MYCONTROLID 0x1234
+#define SERIESLENGTH 128
 
 NS_FW_BASE_USE
 
 class TestApp : public WinApp {
-	MultiView* multiView;
-	ATOM wndClass_;
-public:
-	TestApp(HINSTANCE instance);
-	~TestApp();
+	MultiChartView* multiChartView_;
+	Buffer log_;
 
 	LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+public:
+	TestApp::TestApp(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx);
+	~TestApp();
 
-	LRESULT onCreate();
-	LRESULT onPaint(HDC hdc, PAINTSTRUCT* ps);
+	int onCreate();
+	//int onPaint(HDC hdc, PAINTSTRUCT* ps);
+	int onDestroy();
 };

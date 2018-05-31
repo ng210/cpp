@@ -3,7 +3,7 @@
 NS_FW_BASE_USE
 NS_FW_WIN_BEGIN
 
-StaticCtrl::StaticCtrl(Window* parent, size_t ctrlId, TCHAR* text) {
+StaticCtrl::StaticCtrl(Window* parent, size_t ctrlId, TCHAR* text) : Ctrl(parent, ctrlId) {
 	CREATESTRUCT createStruct = {
 		NULL,							// LPVOID      lpCreateParams;
 		parent->hInstance(),			// HINSTANCE   hInstance;

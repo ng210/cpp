@@ -30,11 +30,11 @@ protected:
 	static LRESULT CALLBACK wndProcWrapper(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	inline WNDCLASS_ wndClass() { return wndClass_; }
-
 public:
 	Window(CREATESTRUCT* createStruct, Window* parent = NULL, WNDCLASSEX* wndClassEx = NULL);
 	virtual ~Window();
+
+	inline WNDCLASS_ wndClass() { return wndClass_; }
 
 	HWND create(CREATESTRUCT* createStruct, Window* parent = NULL, WNDCLASSEX* wndClassEx = NULL);
 	void sizing(int sizingEdge, LPRECT sizingRect, LPRECT confineRect, int width, int height);

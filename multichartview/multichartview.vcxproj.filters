@@ -15,12 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DataSeries.h">
+    <Text Include="design.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="multichartview.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dataseries.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DataSeries.cpp">
+    <ClCompile Include="multichartview.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
