@@ -16,8 +16,6 @@ int PlayerAdapter::processCommand(void* object, PLAYER_COMMAND command) {
 	Player* player = (Player*)object;
 	switch (command[0]) {
 	case Player_Cmd_setTempo:	// fps, tps
-		//player->framesPerSecond(((PLAYER_CMD_SET_TEMPO*)command)->framePerMinute/60.0f);
-		//player->ticksPerFrame(((PLAYER_CMD_SET_TEMPO*)command)->ticksPerFrame);
 		float refreshRate;
 		refreshRate = ((PLAYER_CMD_SET_TEMPO*)command)->framePerMinute * ((PLAYER_CMD_SET_TEMPO*)command)->ticksPerFrame / 60.0f;
 		ARRAY_FOREACH(player->channels(), Target* target = ((AbstractChannel*)value)->target(); target->adapter->setTempo(target->object, refreshRate));
@@ -25,7 +23,7 @@ int PlayerAdapter::processCommand(void* object, PLAYER_COMMAND command) {
 	case Player_Cmd_assign:		// target, sequence, status
 		Target* target = (Target*)player->targets()->getAt(((PLAYER_CMD_ASSIGN*)command)->target);
 		PLAYER_SEQUENCE sequence;
-		sequence = (BYTE*)player->sequences()->getAt(((PLAYER_CMD_ASSIGN*)command)->sequence);
+		sequence = (UINT8*)player->sequences()->getAt(((PLAYER_CMD_ASSIGN*)command)->sequence);
 		size_t status = ((PLAYER_CMD_ASSIGN*)command)->status;
 		AbstractChannel* chn = NULL;
 		// get an inactive channel
@@ -55,17 +53,17 @@ PLAYER_COMMAND PlayerAdapter::createCommand(int code, ...) {
 	va_start(args, code);
 	switch (code) {
 	case Player_Cmd_setTempo:
-		cmd = (BYTE*)MALLOC(PLAYER_CMD_SET_TEMPO, 1);
+		cmd = (UINT8*)MALLOC(PLAYER_CMD_SET_TEMPO, 1);
 		((PLAYER_CMD_SET_TEMPO*)cmd)->code = code;
 		((PLAYER_CMD_SET_TEMPO*)cmd)->framePerMinute = (float)va_arg(args, double);	// framePerMinute
 		((PLAYER_CMD_SET_TEMPO*)cmd)->ticksPerFrame = (float)va_arg(args, double);	// ticksPerFrame
 		break;
 	case Player_Cmd_assign:
-		cmd = (BYTE*)MALLOC(PLAYER_CMD_ASSIGN, 1);
+		cmd = (UINT8*)MALLOC(PLAYER_CMD_ASSIGN, 1);
 		((PLAYER_CMD_ASSIGN*)cmd)->code = code;
-		((PLAYER_CMD_ASSIGN*)cmd)->target = (BYTE)va_arg(args, int);	// id
-		((PLAYER_CMD_ASSIGN*)cmd)->sequence = (BYTE)va_arg(args, int);	// value
-		((PLAYER_CMD_ASSIGN*)cmd)->status = (BYTE)va_arg(args, int);	// value
+		((PLAYER_CMD_ASSIGN*)cmd)->target = (UINT8)va_arg(args, int);	// id
+		((PLAYER_CMD_ASSIGN*)cmd)->sequence = (UINT8)va_arg(args, int);	// value
+		((PLAYER_CMD_ASSIGN*)cmd)->status = (UINT8)va_arg(args, int);	// value
 		break;
 	}
 	va_end(args);
@@ -98,7 +96,7 @@ char* PlayerAdapter::logCommand(PLAYER_COMMAND command) {
 int PlayerAdapter::dumpCommand(PLAYER_COMMAND command, Buffer* buffer) {
 	PLAYER_CMD_SET_TEMPO* cmdTempo;
 	PLAYER_CMD_ASSIGN* cmdAssign;
-	BYTE tmp[64];
+	UINT8 tmp[64];
 	int length = 1;
 	tmp[0] = command[0];
 	switch (command[0]) {
@@ -122,18 +120,4 @@ int PlayerAdapter::dumpCommand(PLAYER_COMMAND command, Buffer* buffer) {
 	}
 	return length;
 }
-
-//int PlayerAdapter::getArgCount(PLAYER_COMMAND command) {
-//	int ret = -1;
-//	switch (command[0]) {
-//	case Player_Cmd_setTempo:
-//		ret = 2;
-//		break;
-//	case Player_Cmd_assign:
-//		ret = 3;
-//		break;
-//	}
-//	return ret;
-//}
-
 NS_PLAYER_END

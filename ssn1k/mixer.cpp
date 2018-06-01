@@ -44,10 +44,7 @@ float Mixer::run(void* buffer, size_t start, size_t end) {
 		short* ptr = &((short*)buffer)[2 * i];
 		writeSample(ptr, left);
 		writeSample(ptr+1, right);
-
-		//((short*)buffer)[2 * i] += (short)(smp * ctrls->balance[j].f());
-		//((short*)buffer)[2 * i + 1] += (short)(smp * (1.0f - ctrls->balance[j].f()));
-	}
+			}
 	return 0.0f;
 }
 
@@ -59,8 +56,8 @@ void Mixer::addInput(Synth* in) {
 	}
 }
 
-void Mixer::setControls(BYTE* data) {
-	BYTE* ptr = data;
+void Mixer::setControls(UINT8* data) {
+	UINT8* ptr = data;
 	int ctrlId;
 	CtrlValue value;
 	while ((ctrlId = *ptr++) != 0xFF) {

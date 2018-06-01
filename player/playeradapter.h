@@ -10,7 +10,7 @@ NS_PLAYER_BEGIN
 /******************************************************************************
 * Commands
 *****************************************************************************/
-enum PlayerCommands : BYTE {
+enum PlayerCommands : UINT8 {
 	Player_Cmd_setTempo,		// sets the frame rate (fps)
 	Player_Cmd_assign,			// assigns a sequence to a channel
 
@@ -23,9 +23,9 @@ typedef struct PLAYER_CMD_SET_TEMPO_ : ABSTRACT_ADAPTER_COMMAND_ {
 } PLAYER_CMD_SET_TEMPO;
 
 typedef struct PLAYER_CMD_ASSIGN_ : ABSTRACT_ADAPTER_COMMAND_ {
-	BYTE target;
-	BYTE sequence;
-	BYTE status;
+	UINT8 target;
+	UINT8 sequence;
+	UINT8 status;
 } PLAYER_CMD_ASSIGN;
 
 class PlayerAdapter : public AbstractAdapter {

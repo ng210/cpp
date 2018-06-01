@@ -10,16 +10,6 @@
 NS_FW_BASE_USE
 NS_SSN1K_BEGIN
 
-//SynthCtrls::SynthCtrls() {
-//	Ctrl* ctrl = (Ctrl*)this;
-//	for (int i=0; i<SSN1K_CI_COUNT; i++) {
-//		ctrl[i].set(.0f, .0f, 1.f);
-//	}
-//	//this->osc2.mix.set(SSN1K_MM_BPS);
-//	//this->flt.mix.set(SSN1K_MM_BPS);
-//	this->osc1.mix.set(SSN1K_MM_MUL);
-//}
-
 Synth::Synth(UINT32 voices) {
 	init(voices);
 }
@@ -125,10 +115,6 @@ void Synth::changeProgram(int prgId) {
 	for (int i = 0; i < (sizeof(Ctrl) * SSN1K_CI_COUNT)>>2; i++) {
 		dst[i] = src[i];
 	}
-	//for (UINT32 i = 0; i < voiceCount_; i++) {
-	//	voices_[i]->setControls();
-	//	//voices_[i]->reset();
-	//}
 }
 //void Synth::setCtrlSweep(int id, float fStart, float fEnd, int iCycles) {
 //	Ctrl* ctrl = paSweepCtrls[iSweepCtrls] = &ctrls[id];
@@ -137,13 +123,6 @@ void Synth::changeProgram(int prgId) {
 //	ctrls->delta = (fEnd - fStart)/iCycles;
 //	iSweepCtrls++;
 //}
-
-//void Synth::addBank(Ctrl** bank) {
-//	if (bankCount_ < 4) {
-//		banks_[bankCount_++] = bank;
-//	}
-//}
-
 void Synth::ticksPerSample(float bpm) {
 	ticksPerSample_ = bpm * SSN1K::getSampleRateR() / 60.0f;
 }
@@ -152,8 +131,8 @@ void Synth::bank(Ctrl** bank) {
 	bank_ = bank;
 	changeProgram(0);
 }
-void Synth::setControls(Ctrl* controls, BYTE* data) {
-	BYTE* ptr = data;
+void Synth::setControls(Ctrl* controls, UINT8* data) {
+	UINT8* ptr = data;
 	int ctrlId;
 	while ((ctrlId = *ptr++) != 0xFF) {
 		Ctrl* ctrl = &controls[ctrlId];
@@ -192,11 +171,11 @@ void Synth::setControls(Ctrl* controls, BYTE* data) {
 		case SSN1K_CI_Lfo2Mix:
 		case SSN1K_CI_FltMix:
 		case SSN1K_CI_FltMode:
-			// set as byte
+			// set as UINT8
 			ctrl->set((int)*ptr++);
 			break;
 		default:
-			// set as float from byte / 255
+			// set as float from UINT8 / 255
 			ctrl->set((float)(*ptr++ / 255.0f));
 			break;
 		}

@@ -45,50 +45,12 @@ void Player::addSequence(PLAYER_SEQUENCE sequence) {
 	sequences_->add(sequence);
 }
 
-void Player::addUserData(DWORD length, void* data) {
+void Player::addUserData(UINT32 length, void* data) {
 	PLAYER_USER_DATA userData;
 	userData.length = length;
 	userData.data = data;
 	userData_->add(&userData);
 }
-//// The very first sequence is assigned to the master channel
-	//if (sequences_->length() == 1) {
-	//	// The master channel controls the first target
-	//	Target* target = (Target*)targets_->getAt(0);
-	//	if (channels_->length() == 0) {
-	//		masterChannel_ = createChannel(0, target, sequence, Player_Flg_Active);
-	//		channels_->add(masterChannel_);
-	//	} else {
-	//		masterChannel_->assign(this, target, sequence, Player_Flg_Active);
-	//	}
-	//}
-
-	//// create sequence as Array
-	//PArray* sequence = NEW_(PArray);
-	//unsigned short delta = 0;
-	//int cmd = 0;
-	//unsigned char* args = NULL;
-	//size_t i = 0;
-	//PLAYER_COMMAND_U ptr;
-	//ptr.p = (BYTE*)stream;
-	//while (true) {
-	//	sequence->add(ptr.p);
-	//	cmd = ptr.s->code;
-	//	if (cmd == (unsigned char)Player_Cmd_end) {
-	//		break;
-	//	}
-	//	ptr.p += offsetof(PLAYER_COMMAND, args) + ptr.s->argc;
-	//}
-	//sequences_->add(sequence);
-
-	//if (sequences_->length() == 1) {
-	//	// the very first sequence is assigned to the master channel
-	//	Target* target = (Target*)targets_->getAt(0);
-	//	masterChannel_ = NEW_(Channel, this, 0, target, sequence);
-	//	masterChannel_->setActive();
-	//	masterChannel_->setLooping();
-	//	channels_->add(masterChannel_);
-	//}
 
 void Player::addChannel(AbstractChannel* chn) {
 	if (channels_->length() == 0) {
@@ -119,19 +81,4 @@ void Player::run(size_t ticks) {
 void Player::refreshRate(float ticksPerSecond) {
 	refreshRate_ = ticksPerSecond;
 }
-
-//void AbstractPlayer::updateRefreshRate() {
-//	refreshRate_ = framesPerSecond_ * ticksPerFrame_;
-//}
-//
-//void AbstractPlayer::framesPerSecond(float fps) {
-//	if (fps > 0.0f) framesPerSecond_ = fps;
-//	updateRefreshRate();
-//}
-//void AbstractPlayer::ticksPerFrame(float tpf) {
-//	if (tpf > 0.0f) ticksPerFrame_ = tpf;
-//	updateRefreshRate();
-//}
-
-
 NS_PLAYER_END

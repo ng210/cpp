@@ -19,7 +19,7 @@ struct SynthCtrls : public MdlCtrls {
 	FltCtrls flt;
 };
 
-enum SynthControlIds : BYTE {
+enum SynthControlIds : UINT8 {
 	 SSN1K_CI_SynthMix	// 0
 	,SSN1K_CI_SynthAmp
 	,SSN1K_CI_SynthBal
@@ -129,24 +129,16 @@ public:
 	_Profiler profiler;
 
 #endif
-	//void setCtrls(SynthCtrls* controls);
-	//Ctrl* getControl(UINT32 id);
-	//int isActive();
-	//inline float getSmp() { return this->smp; }
-	//inline float getDelta() { return this->smp - this->prevSmp; }
 	float run();
 	void run(void* buffer, UINT32 start, UINT32 end);
-	//void run(void* buffer, UINT32 ix);
 	void noteOn(int note, float velocity);
 	void noteOff(int note);
-	//void addBank(Ctrl** bank);
 	void changeProgram(int prgId);
-	//void setGate(float velocity);
 	//void setCtrlSweep(int id, float fStart, float fEnd, int iCycles);
 	void ticksPerSample(float bpm);
 	void bank(Ctrl** bank);
 	
-	static void setControls(Ctrl* controls, BYTE* data);
+	static void setControls(Ctrl* controls, UINT8* data);
 };
 
 NS_SSN1K_END

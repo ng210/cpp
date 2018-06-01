@@ -23,7 +23,7 @@ struct MdlCtrls {
 	Ctrl dc;
 };
 
-enum SSN1K_MixMode : BYTE {
+enum SSN1K_MixMode : UINT8 {
 	 SSN1K_MM_OVR	= 0x00	// overwrite
 	,SSN1K_MM_ADD	= 0x01	// add
 	,SSN1K_MM_MUL	= 0x02	// multiply
@@ -40,12 +40,6 @@ protected:
 public:
 	Ctrl* controls_;
 	Ctrl* getControl(size_t id);
-	//void setup(CtrlSetting* data);
-
-	//virtual float run(...) = 0;
-	//virtual void setControls(Ctrl** controls);
-	//void setControls(MdlCtrls*);
-
 };
 
 NS_SSN1K_END

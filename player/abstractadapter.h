@@ -9,7 +9,7 @@ NS_FW_BASE_USE
 NS_PLAYER_BEGIN
 
 typedef struct ABSTRACT_ADAPTER_COMMAND_ {
-	BYTE code;
+	UINT8 code;
 } ABSTRACT_ADAPTER_COMMAND;
 
 // Interface 
@@ -25,8 +25,6 @@ public:
 #endif
 	virtual int dumpCommand(PLAYER_COMMAND cmd, Buffer* buffer) = 0;
 	PLAYER_COMMAND createEndCommand();
-
-	//PLAYER_CHANNEL_CREATE* createChannel;
 };
 
 NS_PLAYER_END

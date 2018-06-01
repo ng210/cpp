@@ -27,17 +27,17 @@ int Sequence::toStream(AbstractAdapter* adapter, Buffer* buffer) {
 	int totalLength = 0;
 	for (UINT32 i = 0; i < frames_.length(); i++) {
 		Frame* frame = (Frame*)frames_.getAt(i);
-		BYTE tmp[4];
-		*(WORD*)&tmp[0] = frame->delta_;
+		UINT8 tmp[4];
+		*(UINT16*)&tmp[0] = frame->delta_;
 		tmp[2] = frame->commands()->length();
-		buffer->append(tmp, sizeof(BYTE) + sizeof(WORD));
-		totalLength += sizeof(BYTE) + sizeof(WORD);
+		buffer->append(tmp, sizeof(UINT8) + sizeof(UINT16));
+		totalLength += sizeof(UINT8) + sizeof(UINT16);
 		for (UINT32 c = 0; c < frame->commands()->length(); c++) {
 			PLAYER_COMMAND cmd = (PLAYER_COMMAND)frame->commands()->getAt(c);
 			totalLength += adapter->dumpCommand(cmd, buffer);
 		}
 	}
-	LOG("%d bytes written\n", totalLength);
+	LOG("%d UINT8s written\n", totalLength);
 	return totalLength;
 }
 
@@ -60,30 +60,4 @@ void Sequence::print(AbstractAdapter* adapter) {
 }
 
 #endif
-
-// sequence: frame1, frame2, frame3, ...
-// frame: delta, count, command1, command2, ...
-// command: code, arguments
-// end: command = END
-//
-// sequence: delta, command1, delta, command2, ...
-// command: code, arguments
-// end: command = END
-//Sequence::Sequence(BYTE* stream) {
-//	PLAYER_FRAME* frame;
-//	PLAYER_COMMAND* cmd;
-//	WORD delta;
-//	BYTE* ptr = stream;
-//	do {
-//		delta = *(WORD*)ptr; ptr += 2;
-//		if (delta != 0) {
-//			frame = NEW_(PLAYER_FRAME);
-//			frame->delta = delta;
-//			frame->commands = NEW_(PArray);
-//		}
-//		cmd = 
-//		frame->commands->add(cmd);
-//	}
-//}
-
 NS_PLAYER_END

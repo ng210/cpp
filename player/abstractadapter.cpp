@@ -4,7 +4,7 @@
 NS_PLAYER_BEGIN
 
 PLAYER_COMMAND AbstractAdapter::createEndCommand() {
-	BYTE* cmd = MALLOC(BYTE, sizeof(BYTE));
+	UINT8* cmd = MALLOC(UINT8, sizeof(UINT8));
 	cmd[0] = Player_Cmd_end;
 	return cmd;
 }
@@ -23,18 +23,5 @@ char* AbstractAdapter::logCommand(PLAYER_COMMAND command) {
 	return str;
 }
 #endif
-
-//int AbstractAdapter::dumpCommand(PLAYER_COMMAND command, Buffer& buffer) {
-//	buffer.append(command, sizeof(BYTE));
-//	int length = 1;
-//	switch (command[0]) {
-//	case Player_Cmd_end:
-//		break;
-//	default:
-//		LOG("Invalid command: %02X\n", command[0]);
-//		break;
-//	}
-//	return length;
-//}
 
 NS_PLAYER_END

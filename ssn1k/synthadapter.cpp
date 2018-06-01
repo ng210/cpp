@@ -37,13 +37,13 @@ int SynthAdapter::processCommand(void* object, PLAYER_COMMAND command) {
 		case Synth_Cmd_setNoteOff:
 			synth->noteOff(((SYNTH_CMD_SET_NOTE_OFF*)command)->note);
 			break;
-		case Synth_Cmd_setControl:	// id, value:byte
+		case Synth_Cmd_setControl:	// id, value:UINT8
 			SYNTH_CMD_SET_CTRL* cmdCtrl;
 			cmdCtrl = (SYNTH_CMD_SET_CTRL*)command;
 			ctrlId = cmdCtrl->id;
 			synth->getControl(ctrlId)->set(cmdCtrl->value / 255.0f);
 			break;
-		case Synth_Cmd_setControlB:	// id, value:byte->float
+		case Synth_Cmd_setControlB:	// id, value:UINT8->float
 			SYNTH_CMD_SET_CTRL* cmdCtrlB;
 			cmdCtrlB = (SYNTH_CMD_SET_CTRL*)command;
 			ctrlId = cmdCtrlB->id;
@@ -81,35 +81,35 @@ PLAYER_COMMAND SynthAdapter::createCommand(int code, ...) {
 	case Synth_Cmd_setNoteOn:
 		SYNTH_CMD_SET_NOTE_ON* cmdNoteOn;
 		cmdNoteOn = MALLOC(SYNTH_CMD_SET_NOTE_ON, 1);
-		cmdNoteOn->note = (BYTE)va_arg(args, int);			// note
-		cmdNoteOn->velocity = (BYTE)va_arg(args, int);		// velocity
+		cmdNoteOn->note = (UINT8)va_arg(args, int);			// note
+		cmdNoteOn->velocity = (UINT8)va_arg(args, int);		// velocity
 		cmd = (PLAYER_COMMAND)cmdNoteOn;
 		break;
 	case Synth_Cmd_setNoteOff:
 		SYNTH_CMD_SET_NOTE_OFF* cmdNoteOff;
 		cmdNoteOff = MALLOC(SYNTH_CMD_SET_NOTE_OFF, 1);
-		cmdNoteOff->note = (BYTE)va_arg(args, int);			// note
+		cmdNoteOff->note = (UINT8)va_arg(args, int);			// note
 		cmd = (PLAYER_COMMAND)cmdNoteOff;
 		break;
 	case Synth_Cmd_setControl:
 	case Synth_Cmd_setControlB:
 		SYNTH_CMD_SET_CTRL* cmdCtrl;
 		cmdCtrl = MALLOC(SYNTH_CMD_SET_CTRL, 1);
-		cmdCtrl->id = (BYTE)va_arg(args, int);				// id
-		cmdCtrl->value = (BYTE)va_arg(args, int);			// value
+		cmdCtrl->id = (UINT8)va_arg(args, int);				// id
+		cmdCtrl->value = (UINT8)va_arg(args, int);			// value
 		cmd = (PLAYER_COMMAND)cmdCtrl;
 		break;
 	case Synth_Cmd_setControlF:
 		SYNTH_CMD_SET_CTRLF* cmdCtrlF;
 		cmdCtrlF = MALLOC(SYNTH_CMD_SET_CTRLF, 1);
-		cmdCtrlF->id = (BYTE)va_arg(args, int);				// id
+		cmdCtrlF->id = (UINT8)va_arg(args, int);				// id
 		cmdCtrlF->value = (float)va_arg(args, double);		// value
 		cmd = (PLAYER_COMMAND)cmdCtrlF;
 		break;
 	case Synth_Cmd_prgChange:
 		SYNTH_CMD_PRG_CHNG* cmdPrg;
 		cmdPrg = MALLOC(SYNTH_CMD_PRG_CHNG, 1);
-		cmdPrg->id = (BYTE)va_arg(args, int);				// id
+		cmdPrg->id = (UINT8)va_arg(args, int);				// id
 		cmd = (PLAYER_COMMAND)cmdPrg;
 		break;
 	}
@@ -162,7 +162,7 @@ int SynthAdapter::dumpCommand(PLAYER_COMMAND command, Buffer* buffer) {
 	SYNTH_CMD_SET_NOTE_ON* cmdNoteOn;
 	SYNTH_CMD_SET_NOTE_OFF* cmdNoteOff;
 	SYNTH_CMD_SET_CTRL* cmdCtrl;
-	BYTE tmp[64];
+	UINT8 tmp[64];
 	int length = 0;
 	tmp[length++] = command[0];
 	switch (command[0]) {
@@ -181,7 +181,6 @@ int SynthAdapter::dumpCommand(PLAYER_COMMAND command, Buffer* buffer) {
 		tmp[length++] = cmdCtrl->value;
 		break;
 	default:
-		//length += AbstractAdapter::dumpCommand(command, buffer);
 		break;
 	}
 	if (buffer != NULL) {
@@ -189,18 +188,4 @@ int SynthAdapter::dumpCommand(PLAYER_COMMAND command, Buffer* buffer) {
 	}
 	return length;
 }
-
-//int SynthAdapter::getArgCount(PLAYER_COMMAND command) {
-//	int ret = -1;
-//	switch (command[0]) {
-//	case Synth_Cmd_setNote:
-//		ret = 3;
-//		break;
-//	case Synth_Cmd_setControl:
-//		ret = 2;
-//		break;
-//	}
-//	return ret;
-//}
-
 NS_SSN1K_END

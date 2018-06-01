@@ -14,10 +14,7 @@ protected: Array frames_;
 public:
 	Sequence() : frames_(sizeof(Frame)) {};
 	~Sequence();
-	//Sequence(BYTE* stream);
-
 	Frame* addFrame(int time);
-	//Frame* delFrame();
 	Frame* frame(int ix);
 
 	int toStream(AbstractAdapter* adapter, Buffer* buffer);

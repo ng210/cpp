@@ -12,7 +12,7 @@ NS_PLAYER_BEGIN
 /******************************************************************************
 * Track control flags
 *****************************************************************************/
-enum Player_Flags : BYTE {
+enum Player_Flags : UINT8 {
 	// 00-7F: loop count
 	Player_Flg_Active = 0x80
 };
@@ -30,12 +30,12 @@ protected: PROP_R(size_t, loopCount);
 protected: PROP_R(size_t, id);
 public:
 	AbstractChannel() {};
-	AbstractChannel(/*AbstractPlayer* player,*/ size_t id, Target* target, PLAYER_SEQUENCE sequence);
+	AbstractChannel(size_t id, Target* target, PLAYER_SEQUENCE sequence);
 	virtual ~AbstractChannel();
 
 	virtual void reset();
-	virtual void init(/*AbstractPlayer* player,*/ size_t id, Target* target, PLAYER_SEQUENCE sequence, size_t status = 0);
-	virtual void assign(/*AbstractPlayer* player,*/ Target* target, PLAYER_SEQUENCE sequence, size_t status = 0);
+	virtual void init(size_t id, Target* target, PLAYER_SEQUENCE sequence, size_t status = 0);
+	virtual void assign(Target* target, PLAYER_SEQUENCE sequence, size_t status = 0);
 	virtual int run(size_t ticks) = 0;
 
 	void setActive(bool flag = true);

@@ -26,12 +26,12 @@ void Frame::empty() {
 }
 
 PLAYER_COMMAND Frame::makeCommand(int code, int argc, ...) {
-	BYTE* cmd = MALLOC(BYTE, (1 + argc) * sizeof(BYTE));
+	UINT8* cmd = MALLOC(UINT8, (1 + argc) * sizeof(UINT8));
 	cmd[0] = code;
 	va_list args;
 	va_start(args, argc);
 	for (int i = 0; i < argc; i++) {
-		cmd[1 + i] = va_arg(args, BYTE);
+		cmd[1 + i] = va_arg(args, UINT8);
 	}
 	va_end(args);
 	return cmd;

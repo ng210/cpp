@@ -9,7 +9,7 @@
 
 NS_SSN1K_BEGIN
 
-enum SSN1K_WaveForm : BYTE {
+enum SSN1K_WaveForm : UINT8 {
 	 SSN1K_WF_TRI	= 0x01
 	,SSN1K_WF_PSAW	= 0x02
 	,SSN1K_WF_PLS	= 0x04

@@ -11,7 +11,7 @@ struct MixCtrls : public MdlCtrls {
 	Ctrl balance[16];
 };
 
-enum MixerControlIds : BYTE {
+enum MixerControlIds : UINT8 {
 	SSN1K_CI_MixMix,
 	SSN1K_CI_MixAmp,
 	SSN1K_CI_MixBal,
@@ -65,7 +65,7 @@ public:
 	void addInput(Synth* in);
 
 	float run(void* buffer, size_t start, size_t end);
-	void setControls(BYTE* data);
+	void setControls(UINT8* data);
 };
 
 NS_SSN1K_END
