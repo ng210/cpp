@@ -49,19 +49,16 @@ size_t WaveFmt::close() {
 	buffer_->write((char*)header_, sizeof(WAVEHEADER));
 	//buffer_->append(buffer, byteCount);
 	File::write(fileName_, buffer_);
-	//BYTE* buffer = buffer_->getByteBuffer();
-	//File::write(fileName_, buffer, buffer_->length());
-	//FREE(buffer);
 	return byteCount;
 }
 
-size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bitsPerSample, BYTE* data, UINT32 byteCount) {
+size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bitsPerSample, UINT8* data, UINT32 byteCount) {
 	WAVEHEADER* header = WaveFmt::createHeader(sampleRate, channelCount, bitsPerSample);
 	header->chunkSize = (long)(sizeof(WAVEHEADER) - offsetof(WAVEHEADER, format) + byteCount);
 	header->SubChunk2.subchunk2Size = (long)byteCount;
 	size_t length = sizeof(WAVEHEADER) + byteCount;
 
-	BYTE* buffer = MALLOC(BYTE, length);
+	UINT8* buffer = MALLOC(UINT8, length);
 	size_t i = 0;
 	for (; i < sizeof(WAVEHEADER); i++) {
 		buffer[i] = ((char*)header)[i];
@@ -74,31 +71,3 @@ size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bi
 	FREE(header);
 	return length;
 }
-
-//int WaveFmt::write(float* buffer, int length)
-//{
-//	int ret = 0;
-//	if (this->fp != 0)
-//	{
-//		short int *ptr = (short int*)buffer;
-//		for (int i=0;i<length;i++)
-//		{
-//			int s;
-//			if (buffer[i] < -1.0f)
-//				s = -32767;
-//			else
-//			if (buffer[i] > 1.0f)
-//				s = 32767;
-//			else
-//				s = (short int)(32767*buffer[i]);
-//			ptr[i] = s;
-//		}
-//#ifdef __CRT
-//		ret = fp->write(ptr, this->nBlockAlign*length);
-//#else
-//		ret = (int)fwrite(ptr, this->nBlockAlign, length,fp);
-//#endif
-//	}
-//	this->nSamples += length;
-//	return ret;
-//}

@@ -8,8 +8,6 @@
 	#include "base/string.h"
 	#include "collection/array.h"
 	#include "utils/buffer.h"
-	//#include <stdio.h>
-	//#include <string.h>
 #endif
 
 NS_FW_BASE_USE
@@ -22,7 +20,7 @@ typedef struct SUBCHUNK1_ {
 	short int audioFormat = 1;
 	short int nChannels;		// 1,2 for stereo data is (l,r) pairs
 	long int nSampleRate;
-	long int nByteRate;	// = SampleRate * NumChannels * BitsPerSample/8
+	long int nByteRate;			// = SampleRate * NumChannels * BitsPerSample/8
 	short int nBlockAlign;		// = NumChannels * BitsPerSample/8
 	short int nBitsPerSample;
 } SUBCHUNK1;
@@ -54,10 +52,7 @@ public:
 	size_t write(const char* data, UINT32 length, UINT32 offset = 0);
 	size_t close();
 
-	//static size_t write(const char* path, int sampleRate, int channelCount, int bitsPerSample, Buffer& data);
-	static size_t write(const char* path, int sampleRate, int channelCount, int bitsPerSample, BYTE* data, UINT32 byteCount);
-	//static size_t write(String& path, int sampleRate, int channelCount, int bitsPerSample, Buffer& data);
-	//static size_t write(String& path, int sampleRate, int channelCount, int bitsPerSample, const char* data, size_t length);
+	static size_t write(const char* path, int sampleRate, int channelCount, int bitsPerSample, UINT8* data, UINT32 byteCount);
 };
 
 #endif
