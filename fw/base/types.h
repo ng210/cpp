@@ -6,14 +6,14 @@ typedef unsigned char       UINT8, *PUINT8;
 typedef unsigned short      UINT16, *PUINT16;
 typedef unsigned int        UINT32, *PUINT32;
 typedef unsigned __int64    UINT64, *PUINT64;
-#define BYTE UINT8
-#define byte BYTE
-#define WORD UINT16
-#define word WORD
-#define DWORD UINT32
-#define dword DWORD
-#define QWORD UINT64
-#define qword QWORD
+//#define UINT8 UINT8
+//#define byte UINT8
+//#define WORD UINT16
+//#define word WORD
+//#define DWORD UINT32
+//#define dword DWORD
+//#define QWORD UINT64
+//#define qword QWORD
 
 #ifdef UNICODE
 #include <wchar.h>

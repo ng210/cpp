@@ -2,7 +2,6 @@
 #define __MEMORY_H
 
 #include "basedef.h"
-#include "types.h"
 
 NS_FW_BASE_BEGIN
 

@@ -7,16 +7,16 @@ NS_FW_BASE_BEGIN
 
 BufferChunk::BufferChunk(UINT32 byteCount) {
 	byteCount_ = byteCount;
-	buffer_ = MALLOC(BYTE, byteCount);
+	buffer_ = MALLOC(UINT8, byteCount);
 }
 BufferChunk::~BufferChunk() {
 	FREE(buffer_);
 }
-BYTE& BufferChunk::get(UINT32 offset) {
+UINT8& BufferChunk::get(UINT32 offset) {
 	return buffer_[offset];
 }
-BYTE* BufferChunk::flush() {
-	BYTE* buffer = buffer_;
+UINT8* BufferChunk::flush() {
+	UINT8* buffer = buffer_;
 	buffer_ = NULL;
 	return buffer;
 }
@@ -74,7 +74,7 @@ UINT32 Buffer::write(void* data, UINT32 byteCount, UINT32 from, UINT32 to) {
 		UINT32 freeBytesInChunk = chunk->byteCount() - writeTo;
 		UINT32 writeLength = remainingBytes < freeBytesInChunk ? remainingBytes : freeBytesInChunk;
 		for (UINT32 i = 0; i < writeLength; i++) {
-			chunk->get(writeTo++) = ((BYTE*)data)[readFrom++];
+			chunk->get(writeTo++) = ((UINT8*)data)[readFrom++];
 		}
 		remainingBytes -= writeLength;
 		length += writeLength;
@@ -87,7 +87,7 @@ UINT32 Buffer::write(void* data, UINT32 byteCount, UINT32 from, UINT32 to) {
 		BufferChunk chunk(chunkSize);
 		chunks_->add(&chunk);
 		for (UINT32 i = 0; i < remainingBytes; i++) {
-			chunk.get(i) = ((BYTE*)data)[readFrom++];
+			chunk.get(i) = ((UINT8*)data)[readFrom++];
 		}
 		chunk.flush();
 		length += remainingBytes;
@@ -145,7 +145,7 @@ UINT32 Buffer::read(void* targetBuffer, UINT32 byteCount, UINT32 from, UINT32 to
 		UINT32 remainingBytes = chunk->byteCount() - readFrom;
 		UINT32 readLength = length < remainingBytes ? length : remainingBytes;
 		for (UINT32 j = 0; j < readLength; j++) {
-			((BYTE*)targetBuffer)[writeTo++] = chunk->get(j + readFrom);
+			((UINT8*)targetBuffer)[writeTo++] = chunk->get(j + readFrom);
 		}
 		length -= readLength;
 		if (length == 0) {
@@ -156,8 +156,8 @@ UINT32 Buffer::read(void* targetBuffer, UINT32 byteCount, UINT32 from, UINT32 to
 	//readFrom_ += byteCount;
 	return length_;
 }
-BYTE* Buffer::getByteBuffer() {
-	BYTE* buffer = MALLOC(BYTE, length_);
+UINT8* Buffer::getByteBuffer() {
+	UINT8* buffer = MALLOC(UINT8, length_);
 	UINT32 length = length_;
 	UINT32 writeTo = 0;
 	for (UINT32 i = 0; i < chunks_->length(); i++) {

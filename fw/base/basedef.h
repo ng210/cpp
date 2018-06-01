@@ -2,6 +2,7 @@
 #define __BASEDEF_H
 
 //#include <stddef.h>
+#include "types.h"
 
 #ifndef NULL
 #define NULL 0

@@ -2,7 +2,6 @@
 #define __COLLECTION_H
 
 #include "basedef.h"
-#include "types.h"
 #include "base/str.h"
 
 NS_FW_BASE_BEGIN
@@ -36,7 +35,7 @@ public:
 
 };
 
-typedef int (CollectionCallback)(void* value, unsigned int ix, Collection* collection, void* args);
+typedef int (CollectionCallback)(void* value, UINT32 ix, Collection* collection, void* args);
 
 //template<typename T> class Collection {
 //	PROP_R(size_t, length);

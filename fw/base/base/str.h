@@ -2,7 +2,7 @@
 #define __STR_H
 
 #include "basedef.h"
-#include "types.h"
+//#include "types.h"
 
 NS_FW_BASE_BEGIN
 

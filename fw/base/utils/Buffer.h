@@ -2,7 +2,6 @@
 #define __BUFFER_H
 
 #include "basedef.h"
-#include "types.h"
 #include "collection/array.h"
 
 NS_FW_BASE_BEGIN
@@ -11,12 +10,12 @@ NS_FW_BASE_BEGIN
 
 class BufferChunk {
 protected: PROP_R(UINT32, byteCount);
-protected: PROP_R(BYTE*, buffer);
+protected: PROP_R(UINT8*, buffer);
 public:
 	BufferChunk(UINT32 byteCount);
 	~BufferChunk();
-	BYTE* flush();
-	BYTE& get(UINT32 offset);
+	UINT8* flush();
+	UINT8& get(UINT32 offset);
 };
 
 class Buffer {
@@ -40,7 +39,7 @@ public:
 	template<typename T> UINT32 readAsType(void* targetBuffer, UINT32 count, UINT32 from = 0, UINT32 to = 0) {
 		return read(targetBuffer, sizeof(T)*count, sizeof(T)*from, sizeof(T)*to);
 	};
-	BYTE* getByteBuffer();
+	UINT8* getByteBuffer();
 	template<typename T> T* getBufferAsType() {
 		return (T*)getByteBuffer();
 	};

@@ -8,8 +8,8 @@ NS_FW_BASE_BEGIN
 
 class File {
 public:
-	static BYTE* read(const char* path);
-	static size_t write(const char* path, BYTE* data, size_t length);
+	static UINT8* read(const char* path);
+	static size_t write(const char* path, UINT8* data, size_t length);
 	static size_t write(const char* path, Buffer* data);
 };
 

@@ -26,7 +26,7 @@ NS_FW_BASE_BEGIN
 
 size_t Map::hashingItem(void* key, size_t itemSize) {
 	size_t hash = 0;
-	BYTE* b = (BYTE*)key;
+	UINT8* b = (UINT8*)key;
 	for (int i = 0; i < itemSize; i++) {
 		hash = ((hash + *b++) * MAP_SEED1) ^ MAP_SEED2;
 	}
