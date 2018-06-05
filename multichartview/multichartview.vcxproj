@@ -135,9 +135,11 @@
   <ItemGroup>
     <ClInclude Include="dataseries.h" />
     <ClInclude Include="multichartview.h" />
+    <ClInclude Include="toolbar.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="multichartview.cpp" />
+    <ClCompile Include="toolbar.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

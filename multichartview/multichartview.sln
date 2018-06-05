@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.26430.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj", "{4A6ABFFB-5AD2-47C8-8660-49F9EB7CB20D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{78AE3E9D-331C-4E29-94B8-1B33557C3723} = {78AE3E9D-331C-4E29-94B8-1B33557C3723}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "multichartview", "multichartview.vcxproj", "{78AE3E9D-331C-4E29-94B8-1B33557C3723}"
 EndProject

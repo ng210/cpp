@@ -16,12 +16,14 @@ class TestApp : public WinApp {
 	MultiChartView* multiChartView_;
 	Buffer log_;
 
+	DataSeries* dataSeries_;
+
 	LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 public:
 	TestApp::TestApp(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx);
 	~TestApp();
 
-	int onCreate();
+	LRESULT onCreate();
 	//int onPaint(HDC hdc, PAINTSTRUCT* ps);
-	int onDestroy();
+	//int onDestroy();
 };

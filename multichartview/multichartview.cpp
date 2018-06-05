@@ -24,6 +24,23 @@ WNDCLASSEX MultiChartView::wndClassEx_ = {
 	NULL							// HICON       hIconSm;
 };
 
+static DWORD addColors(DWORD color1, DWORD color2) {
+	DWORD col = 0;
+	for (int c = 0; c < 3; c++) {
+		int cc = ((UINT8*)&color1)[c] + ((UINT8*)&color2)[c];
+		((UINT8*)&col)[c] = cc > 0xFF ? 0xFF : cc;
+	}
+	return col;
+}
+static DWORD mixColors(DWORD color1, DWORD color2, float mix) {
+	DWORD col = 0;
+	for (int c = 0; c < 3; c++) {
+		int cc = (int)(mix*((UINT8*)&color1)[c] + (1.0f - mix) * ((UINT8*)&color2)[c]);
+		((UINT8*)&col)[c] = cc > 0xFF ? 0xFF : cc;
+	}
+	return col;
+}
+
 MultiChartView::MultiChartView(Window* parent, size_t ctrlId) : Ctrl(parent, ctrlId), selection_(sizeof(int)) {
 	dataSeries_ = NULL;
 	offsetX_ = 0;
@@ -61,11 +78,33 @@ MultiChartView::MultiChartView(Window* parent, size_t ctrlId) : Ctrl(parent, ctr
 
 	isSelecting_ = 0;
 	hSelectionBitmap_ = NULL;
+	selectedChannel_ = 0;
+
+	hdc_ = NULL;
+	hBitmap_ = NULL;
+
+	update();
 }
 
 MultiChartView::~MultiChartView() {
 	DeleteObject(hSelectionBitmap_);
 	DeleteDC(selectHdc_);
+
+	//for (int i = 0; i < channelCount_; i++) {
+	//	CHARTCHANNELINFO& channel = channels_[i];
+	//	DeleteObject(channel.brush_);
+	//	DeleteObject(channel.gridBrush_);
+	//	DeleteObject(channel.pen_);
+	//}
+
+	if (hdc_ != NULL) {
+		HBITMAP bitmap = (HBITMAP)SelectObject(hdc_, hBitmap_);
+		DeleteObject(bitmap);
+		DeleteDC(hdc_);
+	}
+	DeleteObject(hBackgroundBrush_);
+	DeleteObject(hGridBrush_);
+	DEL_(toolbar_);
 }
 
 void MultiChartView::setDataSource(DataSeries* source, int channelCount, CHARTCHANNELINFO* channels) {
@@ -73,12 +112,16 @@ void MultiChartView::setDataSource(DataSeries* source, int channelCount, CHARTCH
 	dataSeries_ = source;
 	channelCount_ = channelCount;
 	channels_ = channels;
-	//minY_ = 1000000;
-	//maxY_ = -1000000;
-	//for (int ch = 0; ch < channelCount; ch++) {
-	//	minY_ = min(minY_, channels[ch].min);
-	//	maxY_ = max(maxY_, channels[ch].max);
-	//}
+	for (int i = 0; i < channelCount; i++) {
+		CHARTCHANNELINFO& ci = channels_[i];
+		toolbar_->channelSelect()->addItem((LPTSTR)ci.label);
+		//SYSFN(ci.activeBrush_, CreateSolidBrush(ci.color));
+		//DWORD color = mixColors(ci.color, configuration_.backgroundColor, 0.3);
+		//SYSFN(ci.inactiveBrush_, CreateSolidBrush(color));
+		//SYSFN(ci.gridBrush_, CreateSolidBrush(addColors(color, 0x404040)));
+		//SYSFN(ci.pen_, CreatePen(PS_GEOMETRIC, 0, color));
+	}
+	SendMessage(toolbar_->channelSelect()->hWnd(), CB_SETCURSEL, 0, 0);
 }
 
 void MultiChartView::select() {
@@ -92,8 +135,15 @@ void MultiChartView::select() {
 	InvalidateRect(hWnd_, NULL, false);
 }
 
+void MultiChartView::selectChannel(int chnId) {
+	if (chnId >= 0 && chnId < channelCount_) {
+		selectedChannel_ = chnId;
+		InvalidateRect(hWnd_, NULL, false);
+	}
+}
+
 void MultiChartView::draw(LPARAM lParam) {
-	int ch = 0;
+	int ch = selectedChannel_;
 	// get x,y from mouse click
 	int cx = GET_X_LPARAM(lParam) + offsetX_;
 	int cy = GET_Y_LPARAM(lParam);
@@ -111,20 +161,94 @@ void MultiChartView::draw(LPARAM lParam) {
 	InvalidateRect(hWnd_, NULL, false);
 }
 
+void MultiChartView::update() {
+	SYSFN(hBackgroundBrush_, CreateSolidBrush(configuration_.backgroundColor));
+	DWORD gridColor = addColors(configuration_.backgroundColor, 0x101010);
+	SYSFN(hGridBrush_, CreateSolidBrush(gridColor));
+	SYSFN(hGridPen_, CreatePen(PS_GEOMETRIC, 0, gridColor));
+}
+
+static 	BLENDFUNCTION blendFunction_ = {
+	AC_SRC_OVER,
+	0,
+	20,
+	0
+};
+void MultiChartView::drawChannel(HDC hdc, int chnId, RECT* rect, int dataStart, int dataRange) {
+	RECT frameRect;
+	CopyRect(&frameRect, rect);
+	int width = rect->right - rect->left;
+	int height = rect->bottom - rect->top;
+	float x = 0;
+	CHARTCHANNELINFO& ci = channels_[chnId];
+
+	DWORD color = selectedChannel_ != chnId ? mixColors(ci.color, configuration_.backgroundColor, 0.3f) : ci.color;
+	HBRUSH SYSFN(brush, CreateSolidBrush(color));
+	HPEN SYSFN(pen, CreatePen(PS_GEOMETRIC, 0, color));
+	HBRUSH SYSFN(gridBrush, CreateSolidBrush(addColors(color, 0x404040)));
+
+	HPEN SYSFN(penOld, (HPEN)SelectObject(hdc, pen));
+	// paint data points
+	int gridX = dataStart % configuration_.grid.x;
+	int px = -1, py = 0;
+	for (int i = dataStart; i < dataRange; i++) {
+		double value;
+		if (dataSeries_->get(i, chnId, value)) {
+			int y = (int)(value * height);
+			frameRect.left = (long)x;
+			frameRect.right = (long)(x + configuration_.stepSize.x * scaleX_);
+			HBRUSH br = brush;
+			if (++gridX == configuration_.grid.x) {
+				br = gridBrush;
+				gridX = 0;
+			}
+			int cy = rect->bottom - y;
+			switch (ci.paintMode) {
+			case CHART_PAINTMODE_BAR:
+				frameRect.top = cy;
+				frameRect.bottom = rect->bottom;
+				SYSPR(FillRect(hdc, &frameRect, br));
+				break;
+			case CHART_PAINTMODE_LINE:
+				frameRect.top = cy - 2;
+				frameRect.bottom = cy + 3;
+				if (px != -1) {
+					SYSPR(MoveToEx(hdc, px, py, NULL));
+					SYSPR(LineTo(hdc, frameRect.left, cy));
+				}
+				px = frameRect.right; py = cy;
+				SYSPR(FillRect(hdc, &frameRect, br));
+				break;
+			}
+			// overpaint selection
+			int ix = 0;
+			if (selection_.binSearch(&i, ix, Collection::compareInt)) {
+				SYSPR(AlphaBlend(
+					hdc, frameRect.left - 1, rect->top, frameRect.right - frameRect.left + 2, height,
+					selectHdc_, 0, 0, 1, 1, blendFunction_));
+			}
+		}
+		x += CHART_TO_X(1);
+	}
+
+	SelectObject(hdc, penOld);
+	DeleteObject(brush);
+	DeleteObject(pen);
+	DeleteObject(gridBrush);
+}
+
 //void MultiChartView::setGrid(int x, int y) {
 //	gridX_ = x > 4 ? x < 16 ? x : 16 : 4;
 //	gridY_ = y > 4 ? y < 16 ? y : 16 : 4;
 //	InvalidateRect(hWnd_, NULL, true);
 //}
-int maxSize = 0;
-int xMaxScroll = 0;
-int xCurrentScroll = 0;
+
 LRESULT CALLBACK MultiChartView::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg) {
-		case WM_SIZE:
-			onSize(wParam, lParam);
-			DefWindowProc(hWnd, uMsg, wParam, lParam);
-			break;
+		//case WM_SIZE:
+		//	onSize(wParam, lParam);
+		//	DefWindowProc(hWnd, uMsg, wParam, lParam);
+		//	break;
 		case WM_HSCROLL:
 			onScrollX(wParam, lParam);
 			break;
@@ -149,24 +273,36 @@ LRESULT CALLBACK MultiChartView::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	return Window::wndProc(hWnd, uMsg, wParam, lParam);
 }
 
-void MultiChartView::onSize(WPARAM wParam, LPARAM lParam) {
+LRESULT MultiChartView::onCreate() {
+	// create toolbar
+	toolbar_ = NEW_(MultiChartViewToolbar, this, 0x2000);
+	toolbar_->channelSelect()->setSelection(selectedChannel_);
+	return 1;
+}
+
+LRESULT MultiChartView::onSize(WPARAM wParam, LPARAM lParam) {
+	// resize toolbar
+	SYSPR(SetWindowPos(toolbar_->hWnd(), NULL, 0, 0, width_, MULTICHARTVIEW_TOOLBARHEIGHT-3, SWP_SHOWWINDOW));
 	if (dataSeries_ != NULL) {
-		//SYSPR(GetClientRect(hWnd_, &rect));
-		//UINT32 width = rect.right - rect.left;
-		UINT32 width = LOWORD(lParam);
 		int maxWidth = (int)CHART_TO_X(dataSeries_->getLength());
-		maxX_ = maxWidth - width;
+		maxX_ = maxWidth - width_;
 		offsetX_ = min(offsetX_, maxX_);
 		SCROLLINFO si = {
 			sizeof(SCROLLINFO),				// cbSize
 			SIF_RANGE | SIF_PAGE | SIF_POS,	// fMask
 			0,								// nMin
 			maxWidth,						// nMax
-			width,							// nPage
+			(UINT)width_,					// nPage
 			offsetX_						// nPos
 		};
 		SetScrollInfo(hWnd_, SB_HORZ, &si, false);
 	}
+	// drop hdc to recreate it
+	HBITMAP bitmap = (HBITMAP)SelectObject(hdc_, hBitmap_);
+	DeleteObject(bitmap);
+	DeleteDC(hdc_);
+	hdc_ = NULL;
+	return 0;
 }
 
 void MultiChartView::onScrollX(WPARAM wParam, LPARAM lParam) {
@@ -232,54 +368,38 @@ void MultiChartView::onLeftUp(WPARAM wParam, LPARAM lParam) {
 }
 
 void MultiChartView::onRightDown(WPARAM wParam, LPARAM lParam) {
-	//isDragging_ = true;
 	draw(lParam);
 }
 
 void MultiChartView::onRightUp(WPARAM wParam, LPARAM lParam) {
-	//isDragging_ = false;
 }
 
 void MultiChartView::onMouseMove(WPARAM wParam, LPARAM lParam) {
-	//if (isDragging_) {
-		if (wParam & MK_LBUTTON) {
-			long x = GET_X_LPARAM(lParam);
-			selectRect_.left = min(dragStartX_, x);
-			selectRect_.right = max(dragStartX_, x);
-			InvalidateRect(hWnd_, NULL, false);
-		}
-		if (wParam & MK_RBUTTON) {
-			draw(lParam);
-		}
-	//}
-}
-
-DWORD addColors(DWORD color1, DWORD color2) {
-	DWORD col = 0;
-	for (int c = 0; c < 3; c++) {
-		int cc = ((UINT8*)&color1)[c] + ((UINT8*)&color2)[c];
-		((UINT8*)&col)[c] = cc > 0xFF ? 0xFF : cc;
+	if (wParam & MK_LBUTTON) {
+		long x = GET_X_LPARAM(lParam);
+		selectRect_.left = min(dragStartX_, x);
+		selectRect_.right = max(dragStartX_, x);
+		InvalidateRect(hWnd_, NULL, false);
 	}
-	return col;
+	if (wParam & MK_RBUTTON) {
+		draw(lParam);
+	}
 }
 
 int MultiChartView::onPaint(HDC hdc, PAINTSTRUCT* ps) {
-	RECT clientRect, toolbarRect, frameRect;
-	SYSPR(GetClientRect(hWnd_, &clientRect));
+	// create custom hdc and bitmap
+	if (hdc_ == NULL) {
+		SYSFN(hdc_, CreateCompatibleDC(hdc));
+		HBITMAP SYSFN(hBitmap, CreateCompatibleBitmap(hdc, width_, height_));
+		HBITMAP SYSFN(hBitmap_, (HBITMAP)SelectObject(hdc_, hBitmap));
+	}
+	//HDC SYSFN(hdc_, CreateCompatibleDC(hdc));
+	//int width = clientRect.right - clientRect.left;
+	//int height = clientRect.bottom - clientRect.top;
+	//HBITMAP SYSFN(hBitMap, CreateCompatibleBitmap(hdc, width, height));
+	//HBITMAP SYSFN(hBitMapOld, (HBITMAP)SelectObject(hdc_, hBitMap));
 
-	// paint toolbar
-	CopyRect(&toolbarRect, &clientRect);
-	toolbarRect.bottom = MULTICHARTVIEW_TOOLBARHEIGHT;
-	HBRUSH toolbarColor = GetSysColorBrush(COLOR_3DFACE);
-	SYSPR(FillRect(hdc, &toolbarRect, toolbarColor));
-	clientRect.bottom -= MULTICHARTVIEW_TOOLBARHEIGHT;
-
-	HDC SYSFN(hdcMem, CreateCompatibleDC(hdc));
-	int width = clientRect.right - clientRect.left;
-	int height = clientRect.bottom - clientRect.top;
-	HBITMAP SYSFN(hBitMap, CreateCompatibleBitmap(hdc, width, height));
-	HBITMAP SYSFN(hBitMapOld, (HBITMAP)SelectObject(hdcMem, hBitMap));
-
+	// create selection hdc and bitmap
 	if (hSelectionBitmap_ == NULL) {
 		SYSFN(selectHdc_, CreateCompatibleDC(hdc));
 		SYSFN(hSelectionBitmap_, CreateCompatibleBitmap(hdc, 1, 1));
@@ -291,34 +411,26 @@ int MultiChartView::onPaint(HDC hdc, PAINTSTRUCT* ps) {
 	}
 
 	// paint background
-	HBRUSH SYSFN(backgroundColor, CreateSolidBrush(configuration_.backgroundColor));
-	SYSPR(FillRect(hdcMem, &clientRect, backgroundColor));
-	DeleteBrush(backgroundColor);
-
-	CopyRect(&frameRect, &clientRect);
-
-	BLENDFUNCTION ftn = {
-		AC_SRC_OVER,
-		0,
-		20,
-		0
-	};
+	int height = height_ - MULTICHARTVIEW_TOOLBARHEIGHT;
+	RECT clientRect = { 0, 0, width_, height };
+	SYSPR(FillRect(hdc_, &clientRect, hBackgroundBrush_));
 
 	if (dataSeries_ != NULL) {
-		DWORD gridColor = addColors(configuration_.backgroundColor, 0x101010);
-		HBRUSH SYSFN(gridColorBg, CreateSolidBrush(gridColor));
 		// get x range
 		int dataStart = (int)CHART_FROM_X(offsetX_);
-		int dataRange = (int)CHART_FROM_X(clientRect.right - clientRect.left) + dataStart;
+		int dataRange = (int)CHART_FROM_X(width_) + dataStart;
+
 		// paint horizontal grid lines
-		HPEN SYSFN(gridPen, CreatePen(PS_GEOMETRIC, 0, gridColor));
-		float deltaY = (float)height / configuration_.grid.y;
-		SYSPR(SelectObject(hdcMem, gridPen));
+		float deltaY = (float)height_ / configuration_.grid.y;
+		HPEN SYSFN(hpen, (HPEN)SelectObject(hdc_, hGridPen_));
 		for (float y = (float)clientRect.bottom; y > (float)clientRect.top; y -= deltaY) {
-			SYSPR(MoveToEx(hdcMem, clientRect.left, (int)y, NULL));
-			SYSPR(LineTo(hdcMem, clientRect.right, (int)y));
+			SYSPR(MoveToEx(hdc_, 0, (int)y, NULL));
+			SYSPR(LineTo(hdc_, width_, (int)y));
 		}
-		// vertical gridlines
+		SYSPR(SelectObject(hdc_, hpen));
+		
+		// paint vertical grid bars
+		RECT frameRect;
 		float deltaX = CHART_TO_X(configuration_.grid.x);
 		float x = 0;	// (float)(-offsetX_ % (int)(configuration_.grid.x * configuration_.stepSize.x * scaleX_));
 		int gridX = dataStart % configuration_.grid.x;
@@ -328,77 +440,31 @@ int MultiChartView::onPaint(HDC hdc, PAINTSTRUCT* ps) {
 				frameRect.bottom = clientRect.bottom;
 				frameRect.left = (long)x;
 				frameRect.right = (long)(x + configuration_.stepSize.x * scaleX_);
-				SYSPR(FillRect(hdcMem, &frameRect, gridColorBg));
-				//x += deltaX;
+				SYSPR(FillRect(hdc_, &frameRect, hGridBrush_));
 				gridX = 0;
 			}
 			x += CHART_TO_X(1);
 		}
-		SYSPR(DeletePen(gridPen));
+		
+		// paint chart
 		for (int ch = 0; ch < channelCount_; ch++) {
-			x = 0;
-			CHARTCHANNELINFO* ci = &channels_[ch];
-			HBRUSH SYSFN(color, CreateSolidBrush(ci->color));
-			DWORD gridColor = addColors(ci->color, 0x404040);
-			HBRUSH SYSFN(gridBrush, CreateSolidBrush(gridColor));
-			SYSFN(gridPen, CreatePen(PS_GEOMETRIC, 0, gridColor));
-			SYSPR(SelectObject(hdcMem, gridPen));
-			// paint bars
-			gridX = dataStart % configuration_.grid.x;
-			int px = -1, py = 0;
-			for (int i = dataStart; i < dataRange; i++) {
-				double value;
-				if (dataSeries_->get(i, ch, value)) {
-					int y = (int)(value * height);
-					frameRect.left = (long)x;
-					frameRect.right = (long)(x + configuration_.stepSize.x * scaleX_);
-					HBRUSH brush = color;
-					if (++gridX == configuration_.grid.x) {
-						brush = gridBrush;
-						gridX = 0;
-					}
-					int cy = clientRect.bottom - y;
-					frameRect.top = cy - 1;
-					frameRect.bottom = cy + 1;
-					if (px != -1) {
-						SYSPR(MoveToEx(hdcMem, px, py, NULL));
-						SYSPR(LineTo(hdcMem, frameRect.left, cy));
-					}
-					px = frameRect.right; py = cy;
-					SYSPR(FillRect(hdcMem, &frameRect, brush));
-					// overpaint selection
-					int ix = 0;
-					if (selection_.binSearch(&i, ix, Collection::compareInt)) {
-						SYSPR(AlphaBlend(
-							hdcMem, frameRect.left-1, clientRect.top, frameRect.right - frameRect.left+2, height,
-							selectHdc_, 0, 0, 1, 1, ftn));
-					}
-				}
-				x += CHART_TO_X(1);
+			if (ch != selectedChannel_) {
+				drawChannel(hdc_, ch, &clientRect, dataStart, dataRange);
 			}
-			SYSPR(DeletePen(gridPen));
-			SYSPR(DeleteBrush(gridBrush));
-			SYSPR(DeleteBrush(color));
 		}
-		SYSPR(DeleteBrush(gridColorBg));
+		drawChannel(hdc_, selectedChannel_, &clientRect, dataStart, dataRange);
 	}
 
 	// paint selection rectangle
 	if (isSelecting_) {
 		SYSPR(AlphaBlend(
-			hdcMem, selectRect_.left, selectRect_.top, selectRect_.right - selectRect_.left, height,
-			selectHdc_, 0, 0, 1, 1, ftn));
+			hdc_, selectRect_.left, selectRect_.top, selectRect_.right - selectRect_.left, height_,
+			selectHdc_, 0, 0, 1, 1, blendFunction_));
 	}
 
-	BitBlt(hdc, clientRect.left, MULTICHARTVIEW_TOOLBARHEIGHT, width, height, hdcMem, 0, 0, SRCCOPY);
-	SelectObject(hdcMem, hBitMapOld);
-	DeleteObject(hBitMap);
-	DeleteDC(hdcMem);
+	BitBlt(hdc, clientRect.left, MULTICHARTVIEW_TOOLBARHEIGHT, width_, height, hdc_, 0, 0, SRCCOPY);
 
 	return 0;
 }
-//int MultiChartView::onDestroy() {
-//	return Window::onDestroy();
-//}
 
 NS_FW_WIN_END

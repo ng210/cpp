@@ -41,13 +41,26 @@ WinApp* createApplication(HINSTANCE hInstance, Map* args) {
 
 
 TestApp::TestApp(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx) {
+	// prepare data and dataseries
+	Array* array = NEW_(Array, sizeof(TESTDATA));
+	for (int i = 0; i < SERIESLENGTH; i++) {
+		TESTDATA testData = {
+			(int)Utils::random(100),
+			(float)Utils::random()
+		};
+		array->add(&testData);
+	}
+	dataSeries_ = NEW_(TestSeries, array);
 	// put initialization code here
 	log_.append("", 1);
 	create(createStruct, wndClassEx);
 }
 
 TestApp::~TestApp() {
-	//DEL_(multiView);
+	FREE(multiChartView_->channels());
+	DEL_(multiChartView_);
+	DEL_(dataSeries_->data());
+	DEL_(dataSeries_);
 }
 
 LRESULT CALLBACK TestApp::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -75,23 +88,21 @@ LRESULT CALLBACK TestApp::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 	return ret;
 }
 
-int TestApp::onCreate() {
+LRESULT TestApp::onCreate() {
 	SYSPR(SetWindowText(hWnd_, "MultiChartView test"));
-	// prepare data and dataseries
-	Array* array = NEW_(Array, sizeof(TESTDATA));
-	for (int i = 0; i < SERIESLENGTH; i++) {
-		int v = (int)Utils::random(100);
-		TESTDATA testData = { v, (float)v/SERIESLENGTH };
-		array->add(&testData);
-	}
-	DataSeries* dataSeries = NEW_(TestSeries, array);
 	// create multichartview
 	multiChartView_ = NEW_(MultiChartView, this, MYCONTROLID);
-	CHARTCHANNELINFO* channels = MALLOC(CHARTCHANNELINFO, 2);
+	CHARTCHANNELINFO* channels = MALLOC(CHARTCHANNELINFO, 3);
 	int ci = 0;
-	channels[ci].min = 0.0f; channels[ci].max = 100.0f; channels[ci].color = 0xA04020; ci++;
-	channels[ci].min = 0.0f; channels[ci].max = 1.0f; channels[ci].color = 0x40A020;
-	multiChartView_->setDataSource(dataSeries, 2, channels);
+	channels[ci].min = 0.0f; channels[ci].max = 100.0f; channels[ci].color = 0xF00000;
+	channels[ci].paintMode = CHART_PAINTMODE_BAR; channels[ci].label = "Value";
+	ci++;
+	channels[ci].min = 0.0f; channels[ci].max = 1.0f; channels[ci].color = 0x00F000;
+	channels[ci].paintMode = CHART_PAINTMODE_BAR; channels[ci].label = "Normalized";
+	ci++;
+	channels[ci].min = -1.0f; channels[ci].max = 1.0f; channels[ci].color = 0x0000F0;
+	channels[ci].paintMode = CHART_PAINTMODE_LINE; channels[ci].label = "Diff";
+	multiChartView_->setDataSource(dataSeries_, 3, channels);
 	//multiChartView_->configuration().stepSize.x = 2;
 	//multiChartView_->wndClass();
 	RECT rect;
@@ -112,7 +123,7 @@ int TestApp::onCreate() {
 //	return 1;
 //}
 
-int TestApp::onDestroy() {
-	FREE(multiChartView_->channels());
-	return 0;
-}
+//int TestApp::onDestroy() {
+//
+//	return 0;
+//}

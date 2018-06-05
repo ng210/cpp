@@ -8,6 +8,7 @@ int TestSeries::get(int ix, int seriesId, double& value) {
 		switch (seriesId) {
 			case 0: value = data->i / 100.0; break;
 			case 1: value = (double)data->f; break;
+			case 2: value = data->i / 100.0 - data->f; break;
 		}
 		result = 1;
 	}
@@ -18,8 +19,9 @@ int TestSeries::set(int ix, int seriesId, double value) {
 	TESTDATA* data = (TESTDATA*)data_->getAt(ix);
 	if (data != NULL) {
 		switch (seriesId) {
-		case 0: data->i = (int)(value * 100.0); break;
-		case 1: data->f = (float)value; break;
+			case 0: data->i = (int)(value * 100.0); break;
+			case 1: data->f = (float)value; break;
+			case 2: break;
 		}
 		result = 1;
 	}
