@@ -20,11 +20,21 @@ NS_FW_WIN_BEGIN
 #define SIZING_TOP		4
 #define SIZING_BOTTOM	8
 
+typedef union WINDOWCLASS_ {
+	ATOM atom;
+	LPTSTR str;
+	size_t v;
+	WINDOWCLASS_() : v(0) {}
+} WINDOWCLASS;
+
 class Window {
 	protected: PROP_R(HINSTANCE, hInstance);
 	protected: PROP_R(HWND, hWnd);
+	protected: PROP_R(RECT, rect);
+	protected: PROP_R(int, width);
+	protected: PROP_R(int, height);
 protected:
-	union WNDCLASS_ { ATOM atom; LPTSTR str; size_t v; } wndClass_;
+	WINDOWCLASS wndClass_;
 
 	Window() {};
 	static LRESULT CALLBACK wndProcWrapper(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -34,14 +44,14 @@ public:
 	Window(CREATESTRUCT* createStruct, Window* parent = NULL, WNDCLASSEX* wndClassEx = NULL);
 	virtual ~Window();
 
-	inline WNDCLASS_ wndClass() { return wndClass_; }
+	inline WINDOWCLASS wndClass() { return wndClass_; }
 
 	HWND create(CREATESTRUCT* createStruct, Window* parent = NULL, WNDCLASSEX* wndClassEx = NULL);
-	void sizing(int sizingEdge, LPRECT sizingRect, LPRECT confineRect, int width, int height);
-	virtual int onCreate();
+	//void sizing(int sizingEdge, LPRECT sizingRect, LPRECT confineRect, int width, int height);
+	virtual LRESULT onCreate();
 	//virtual int onMove(int x, int y);
-	//virtual int onSize(int width, int height);
-	//virtual int onCommand(int);
+	virtual LRESULT onSize(WPARAM wParam, LPARAM lParam);
+	virtual LRESULT onCommand(WPARAM wParam, LPARAM lParam);
 	//virtual int onMouseClick(POINT, int);
 	//virtual int onMouseMove(POINT);
 	virtual int onPaint(HDC hdc, PAINTSTRUCT* ps);

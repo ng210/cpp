@@ -20,7 +20,7 @@ public:
 
 	void update();
 
-	int onCreate();
+	LRESULT onCreate();
 	//int onCommand(int);
 	//int onMouseClick(POINT, int);
 	//int onMouseMove(POINT);

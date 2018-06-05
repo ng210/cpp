@@ -40,7 +40,7 @@ extern int APIENTRY WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cm
 
 	WinApp* winApp = createApplication(instance, args);
 	if (winApp != NULL && winApp->hWnd() != NULL) {
-		SYSPR(ShowWindow(winApp->hWnd(), SW_SHOWDEFAULT));
+		ShowWindow(winApp->hWnd(), SW_SHOWDEFAULT);
 		SYSPR(UpdateWindow(winApp->hWnd()));
 		winApp->main(args);
 	}
@@ -83,4 +83,5 @@ int WinApp::main(NS_FW_BASE::Map* args) {
 }
 
 void WinApp::update() {
+	Sleep(1);
 }

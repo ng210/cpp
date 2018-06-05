@@ -115,6 +115,9 @@
     <ClInclude Include="win\editctrl.h">
       <Filter>win\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="win\comboboxctrl.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\memory.cpp">
@@ -180,6 +183,9 @@
       <Filter>win\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="win\editctrl.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\comboboxctrl.cpp">
       <Filter>win\Source Files</Filter>
     </ClCompile>
   </ItemGroup>

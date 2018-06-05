@@ -50,31 +50,30 @@ HWND Window::create(CREATESTRUCT* createStruct, Window* parent, WNDCLASSEX* wndC
 Window::~Window() {
 }
 
-
-void Window::sizing(int sizingEdge, LPRECT sizingRect, LPRECT confineRect, int width, int height) {
-	int direction = wm_sizing_wparam[sizingEdge];
-	if (confineRect != NULL) {
-		if (sizingRect->left < confineRect->left) sizingRect->left = confineRect->left;
-		if (sizingRect->right < confineRect->right) sizingRect->right = confineRect->right;
-		if (sizingRect->top < confineRect->top) sizingRect->top = confineRect->top;
-		if (sizingRect->bottom < confineRect->bottom) sizingRect->bottom = confineRect->bottom;
-	}
-	if (sizingRect->right - sizingRect->left < width) {
-		if (direction & SIZING_LEFT) {
-			sizingRect->left = sizingRect->right - width;
-		} else if (direction & SIZING_RIGHT) {
-			sizingRect->right = sizingRect->left + width;
-		}
-	}
-	if (sizingRect->bottom - sizingRect->top < height) {
-		if (direction & SIZING_TOP) {
-			sizingRect->top = sizingRect->bottom - height;
-		} else if (direction & SIZING_BOTTOM) {
-			sizingRect->bottom = sizingRect->top + height;
-		}
-	}
-}
-
+//void Window::sizing(int sizingEdge, LPRECT sizingRect, LPRECT confineRect, int width, int height) {
+//	int direction = wm_sizing_wparam[sizingEdge];
+//	if (confineRect != NULL) {
+//		if (sizingRect->left < confineRect->left) sizingRect->left = confineRect->left;
+//		if (sizingRect->right < confineRect->right) sizingRect->right = confineRect->right;
+//		if (sizingRect->top < confineRect->top) sizingRect->top = confineRect->top;
+//		if (sizingRect->bottom < confineRect->bottom) sizingRect->bottom = confineRect->bottom;
+//	}
+//	if (sizingRect->right - sizingRect->left < width) {
+//		if (direction & SIZING_LEFT) {
+//			sizingRect->left = sizingRect->right - width;
+//		} else if (direction & SIZING_RIGHT) {
+//			sizingRect->right = sizingRect->left + width;
+//		}
+//	}
+//	if (sizingRect->bottom - sizingRect->top < height) {
+//		if (direction & SIZING_TOP) {
+//			sizingRect->top = sizingRect->bottom - height;
+//		} else if (direction & SIZING_BOTTOM) {
+//			sizingRect->bottom = sizingRect->top + height;
+//		}
+//	}
+//}
+//
 //ATOM WindowWrapper::registerClassByName(LPCTSTR className) {
 //	// register window class
 //	WNDCLASSEX wndClassEx = {
@@ -126,6 +125,9 @@ LRESULT CALLBACK Window::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		PostQuitMessage(0);
 		ret = 1;
 		break;
+	case WM_COMMAND:
+		ret = onCommand(wParam, lParam);
+		break;
 	case WM_PAINT:
 		PAINTSTRUCT ps;
 		HDC hdc;
@@ -133,7 +135,10 @@ LRESULT CALLBACK Window::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		ret = onPaint(hdc, &ps);
 		SYSPR(EndPaint(hWnd, &ps));
 		break;
-
+	case WM_SIZE:
+		width_ = LOWORD(lParam); height_ = HIWORD(lParam);
+		ret = onSize(wParam, lParam);
+		break;
 	//case WM_COMMAND:
 	//	onCommand(LOWORD(wParam));
 	//	break;
@@ -152,20 +157,21 @@ LRESULT CALLBACK Window::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 	return ret;
 }
 
-int Window::onCreate() {
+LRESULT Window::onCreate() {
 	return 0;
 }
 //int Window::onMove(int x, int y) {
 //	SYSPR(SetWindowPos(hWnd_, NULL, x, y, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOZORDER));
 //	return 0;
 //}
-//int Window::onSize(int width, int height) {
-//	SYSPR(SetWindowPos(hWnd_, NULL, 0, 0, width, height, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOZORDER));
-//	return 0;
-//}
-//int Window::onCommand(int wmId) {
-//	return 0;
-//}
+LRESULT Window::onSize(WPARAM wParam, LPARAM lParam) {
+	//SYSPR(SetWindowPos(hWnd_, NULL, 0, 0, width_, height_, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOZORDER));
+	//return 0;
+	return DefWindowProc(hWnd_, WM_SIZE, wParam, lParam);
+}
+LRESULT Window::onCommand(WPARAM wParam, LPARAM lParam) {
+	return 0;
+}
 //int Window::onMouseClick(POINT, int) {
 //	return 0;
 //}

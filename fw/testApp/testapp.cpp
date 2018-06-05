@@ -122,16 +122,17 @@ void TestApp::update() {
 		default:
 			break;
 	}
+	Sleep(1);
 }
 
-int TestApp::onCreate() {
+LRESULT TestApp::onCreate() {
 	// Create static text control
 	RECT rect;
 	SYSPR(GetClientRect(hWnd_, &rect));
-	logControl_ = NEW_(EditCtrl, this, 0x001, ES_MULTILINE, NULL);
-	LONG_PTR SYSFN(style, GetWindowLongPtr(logControl_->hWnd(), GWL_STYLE));
-	style = WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL;
-	SYSPR(SetWindowLongPtr(logControl_->hWnd(), GWL_STYLE, style));
+	logControl_ = NEW_(EditCtrl, this, 0x001, WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL, NULL);
+	//LONG_PTR SYSFN(style, GetWindowLongPtr(logControl_->hWnd(), GWL_STYLE));
+	//style = WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL;
+	//SYSPR(SetWindowLongPtr(logControl_->hWnd(), GWL_STYLE, style));
 	SYSPR(SetWindowPos(logControl_->hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	HFONT hFont = (HFONT)GetStockObject(SYSTEM_FIXED_FONT);
 	SendMessage(logControl_->hWnd(), WM_SETFONT, (WPARAM)hFont, false);
