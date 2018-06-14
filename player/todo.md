@@ -45,8 +45,11 @@
    * a frame consists of a time delta and an array of commands
    * a command consists of a code and a variable length list of parameters
  * add player to process byte stream sequences
-   __solution a,__
+#### solution a,
    * a sequence consists of an array of time delta and a command
+   * synchron commands are seperated with a time delta of 0
+   * pro: very simple structure, very simple logic to process
+   * contra: redundant time delta at synchron commands
 #### Example
 >    0000: time delta #1<br/>
 >    01: command code #1<br/>
@@ -59,12 +62,10 @@
 >    0007: time delta #n<br/>
 >    09: command code #n<br/>
 >    01: parameters #n<br/>
-
-   * synchron commands are seperated with a time delta of 0
-   * pro: very simple structure, very simple logic to process
-   * contra: redundant time delta at synchron commands
-  __solution b,__
-    * a sequence consists of an array of time delta, length and array of commands<br/>
+#### solution b,
+   * a sequence consists of an array of time delta, length and array of commands<br/>
+   * pro: clear structure, simple loop to process the commands
+   * contra: single command frames contain extra byte for the command array length
 #### Example
 >  0000: delta time #1<br/>
 >  01: length of command array #1<br/>
@@ -82,8 +83,6 @@
 >  01: length of command array #n<br/>
 >  01: command code #n1<br/>
 >  02,03,04: parameters #n<br/>
-    * pro: clear structure, simple loop to process the commands
-    * contra: single command frames contain extra byte for the command array length
 
 ## 4. Create new adapters/objects
  * 2D objects
