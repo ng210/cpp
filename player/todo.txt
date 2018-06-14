@@ -1,0 +1,47 @@
+Todos
+1. Design for a self-containing file format: ASU Adapter-Sequence-User data
+ - identify adapters required for the playback
+   00 db count of adapters
+   02 db ID of the 1st adapter
+   2n db ID of the nth adapter
+ - store sequences
+   00 dw length of 1st sequence (master)
+   02 dw length of 2nd sequence
+   2n dw length of n+1 sequence
+   This list has to be read sequentially to get the start address of each sequence.
+ - store user data
+   00 dd length of 1st user data block
+   04 dd length of 2nd user data block
+   4n dd length of n+1 user data block
+   This list has to be read sequentially to get the start address of each data block.
+
+2. Player changes to support the ASU format
+ - optional adapter checks
+   A common list of adapters is required, that currently contains:
+   00: player adapter
+   01: synth adapter
+ - possible adjustments of the sequence management
+ - manage user-data blocks
+   an array of arrays
+ - player command to create targets
+   - targets consist of an object and its adapter
+   - targets should be created by the player, not the context
+   - adapters should contain a factory method to create objects
+   - the user data blocks can provide the data for the creation/initialization
+Example
+ - the synth adapter creates the synth objects for each channel
+ - the synth objects have data banks for their instrument settings
+ - these data banks have to be stored in the user data blocks
+ - player reads the create target command with parameters ID of the synth adapter and ID of the user data block containing synth data bank with the instrument definitions
+ - the synth adapter creates a synth object and adds the data bank from the user data block
+
+3. Create new adapters/objects
+ - 2D objects
+   - sprites
+   - particles
+ - 3D objects
+   - objects
+   - particles
+   - heightmap
+
+
