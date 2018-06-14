@@ -1,18 +1,28 @@
 Todos
+
+First of all: cleanup code
+ - review class model: merge, remove, rename
+
 1. Design for a self-containing file format: ASU Adapter-Sequence-User data
  - identify adapters required for the playback
+
    00 db count of adapters
    02 db ID of the 1st adapter
    2n db ID of the nth adapter
+
  - store sequences
+
    00 dw length of 1st sequence (master)
    02 dw length of 2nd sequence
    2n dw length of n+1 sequence
+
    This list has to be read sequentially to get the start address of each sequence.
  - store user data
+
    00 dd length of 1st user data block
    04 dd length of 2nd user data block
    4n dd length of n+1 user data block
+
    This list has to be read sequentially to get the start address of each data block.
 
 2. Player changes to support the ASU format
@@ -35,7 +45,53 @@ Example
  - player reads the create target command with parameters ID of the synth adapter and ID of the user data block containing synth data bank with the instrument definitions
  - the synth adapter creates a synth object and adds the data bank from the user data block
 
-3. Create new adapters/objects
+3. Create "stream" player
+  - currently, the player/channel processes sequences with complex structures
+    - a sequence is an array of frames
+    - a frame consists of a time delta and an array of commands
+    - a command consists of a code and a variable length list of parameters
+  - add player to process byte stream sequences
+    - solution a,
+      - a sequence consists of an array of time delta and a command
+      Example
+        0000: time delta #1
+        01: command code #1
+        02,03,04: parameters #1
+
+        0002: time delta #2
+        02: command code #2
+        03,02: parameters #2
+        ...
+        0007: time delta #n
+        09: command code #n
+        01: parameters #n
+
+      - synchron commands are seperated with a time delta of 0
+      - pro: very simple structure, very simple logic to process
+      - contra: redundant time delta at synchron commands
+    - solution b,
+      - a sequence consists of an array of time delta, length and array of commands
+      Example
+        0000: delta time #1
+        01: length of command array #1
+          01: command code #1
+          02,03,04: parameters #1
+
+        0002: delta time #2
+        02: length of command array #2
+          02: command code #2
+          01,05: parameters #2
+          03: command code #3
+          04: parameters #3
+        ...
+        0004: delta time #n
+        01: length of command array #n
+          01: command code #n1
+          02,03,04: parameters #n
+      - pro: clear structure, simple loop to process the commands
+      - contra: single command frames contain extra byte for the command array length
+
+4. Create new adapters/objects
  - 2D objects
    - sprites
    - particles
