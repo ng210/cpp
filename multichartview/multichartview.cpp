@@ -53,7 +53,8 @@ MultiChartView::MultiChartView(Window* parent, size_t ctrlId) : Ctrl(parent, ctr
 	configuration_ = {
 		0x401000,		// background color
 		{ 8, 4 },		// stepsize
-		{ 8, 8 }		// grid
+		{ 8, 8 },		// grid
+		false			// canDrawWithoutSelection
 	};
 
 	// register class
@@ -79,6 +80,7 @@ MultiChartView::MultiChartView(Window* parent, size_t ctrlId) : Ctrl(parent, ctr
 	isSelecting_ = 0;
 	hSelectionBitmap_ = NULL;
 	selectedChannel_ = 0;
+	lastDrawX_ = 0;
 
 	hdc_ = NULL;
 	hBitmap_ = NULL;
@@ -151,12 +153,46 @@ void MultiChartView::draw(LPARAM lParam) {
 		cy = MULTICHARTVIEW_TOOLBARHEIGHT;
 	}
 	int ix = (int)CHART_FROM_X(cx);
+	lastDrawX_ = ix;
 	RECT rect;
 	SYSPR(GetClientRect(hWnd_, &rect));
 	double y = (double)(rect.bottom - cy) / (rect.bottom - rect.top - MULTICHARTVIEW_TOOLBARHEIGHT);
+	lastDrawY_ = y;
 	int at = 0;
-	if (true || selection_.binSearch(&ix, at, Collection::compareInt) != NULL) {
-		dataSeries_->set(ix, ch, y);
+	if (configuration_.canDrawWithoutSelection || selection_.binSearch(&ix, at, Collection::compareInt) != NULL) {
+		dataSeries_->set(ix, ch, &y);
+	}
+	InvalidateRect(hWnd_, NULL, false);
+}
+
+void MultiChartView::drawLine(LPARAM lParam) {
+	int ch = selectedChannel_;
+	// get x of mouse click
+	int cx = GET_X_LPARAM(lParam) + offsetX_;
+	// get y from data at mouse click
+	int cy = GET_Y_LPARAM(lParam);
+	if (cy < MULTICHARTVIEW_TOOLBARHEIGHT) {
+		cy = MULTICHARTVIEW_TOOLBARHEIGHT;
+	}
+	int ix = (int)CHART_FROM_X(cx);
+	int at = 0;
+	RECT rect;
+	SYSPR(GetClientRect(hWnd_, &rect));
+	double y = (double)(rect.bottom - cy) / (rect.bottom - rect.top - MULTICHARTVIEW_TOOLBARHEIGHT);
+	int x1 = lastDrawX_; double y1 = lastDrawY_;
+	int x2 = ix; double y2 = y;
+	if (x1 > x2) {
+		x2 = x1; x1 = ix;
+		y2 = y1; y1 = y;
+	}
+	double m = (y2 - y1) / (x2 - x1);
+	while (++x1 < x2) {
+		y1 += m;
+		if (configuration_.canDrawWithoutSelection || selection_.binSearch(&x1, at, Collection::compareInt) != NULL) {
+			lastDrawX_ = x1;
+			lastDrawY_ = y1;
+			dataSeries_->set(x1, ch, &y1);
+		}
 	}
 	InvalidateRect(hWnd_, NULL, false);
 }
@@ -192,9 +228,9 @@ void MultiChartView::drawChannel(HDC hdc, int chnId, RECT* rect, int dataStart, 
 	int gridX = dataStart % configuration_.grid.x;
 	int px = -1, py = 0;
 	for (int i = dataStart; i < dataRange; i++) {
-		double value;
+		double value[4];
 		if (dataSeries_->get(i, chnId, value)) {
-			int y = (int)(value * height);
+			int y = (int)(value[0] * height);
 			frameRect.left = (long)x;
 			frameRect.right = (long)(x + configuration_.stepSize.x * scaleX_);
 			HBRUSH br = brush;
@@ -219,6 +255,26 @@ void MultiChartView::drawChannel(HDC hdc, int chnId, RECT* rect, int dataStart, 
 				px = frameRect.right; py = cy;
 				SYSPR(FillRect(hdc, &frameRect, br));
 				break;
+			case CHART_PAINTMODE_BOX:
+				RECT rect;
+				rect.left = frameRect.left;
+				rect.right = frameRect.left + (int)(value[1] * configuration_.stepSize.x * scaleX_);
+				rect.top = cy+1 - (int)(configuration_.stepSize.y * scaleY_);
+				rect.bottom = cy-1 + (int)(configuration_.stepSize.y * scaleY_);
+				SYSPR(FillRect(hdc, &rect, br));
+				break;
+			case CHART_PAINTMODE_CUSTOM1:
+				configuration_.customDraw[0](hdc, &frameRect, i);
+				break;
+			case CHART_PAINTMODE_CUSTOM2:
+				configuration_.customDraw[1](hdc, &frameRect, i);
+				break;
+			case CHART_PAINTMODE_CUSTOM3:
+				configuration_.customDraw[2](hdc, &frameRect, i);
+				break;
+			case CHART_PAINTMODE_CUSTOM4:
+				configuration_.customDraw[3](hdc, &frameRect, i);
+				break;
 			}
 			// overpaint selection
 			int ix = 0;
@@ -237,12 +293,9 @@ void MultiChartView::drawChannel(HDC hdc, int chnId, RECT* rect, int dataStart, 
 	DeleteObject(gridBrush);
 }
 
-//void MultiChartView::setGrid(int x, int y) {
-//	gridX_ = x > 4 ? x < 16 ? x : 16 : 4;
-//	gridY_ = y > 4 ? y < 16 ? y : 16 : 4;
-//	InvalidateRect(hWnd_, NULL, true);
-//}
-
+///************************************
+/// WINDOW functions and event handlers
+///************************************
 LRESULT CALLBACK MultiChartView::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg) {
 		//case WM_SIZE:
@@ -284,9 +337,8 @@ LRESULT MultiChartView::onSize(WPARAM wParam, LPARAM lParam) {
 	// resize toolbar
 	SYSPR(SetWindowPos(toolbar_->hWnd(), NULL, 0, 0, width_, MULTICHARTVIEW_TOOLBARHEIGHT-3, SWP_SHOWWINDOW));
 	if (dataSeries_ != NULL) {
-		int maxWidth = (int)CHART_TO_X(dataSeries_->getLength());
-		maxX_ = maxWidth - width_;
-		offsetX_ = min(offsetX_, maxX_);
+		int maxWidth = (int)CHART_TO_X(dataSeries_->getLength()) + offsetX_;
+		maxPosX_ = maxWidth - width_;
 		SCROLLINFO si = {
 			sizeof(SCROLLINFO),				// cbSize
 			SIF_RANGE | SIF_PAGE | SIF_POS,	// fMask
@@ -306,39 +358,36 @@ LRESULT MultiChartView::onSize(WPARAM wParam, LPARAM lParam) {
 }
 
 void MultiChartView::onScrollX(WPARAM wParam, LPARAM lParam) {
-	int xDelta;
-	int xNewPos;
+	int posX;
 
 	int pageSize = (int)CHART_TO_X(4);
 	int lineSize = (int)CHART_TO_X(1);
 
 	switch (LOWORD(wParam)) {
 	case SB_PAGEUP:
-		xNewPos = offsetX_ - pageSize;
+		posX = offsetX_ - pageSize;
 		break;
 	case SB_PAGEDOWN:
-		xNewPos = offsetX_ + pageSize;
+		posX = offsetX_ + pageSize;
 		break;
 	case SB_LINEUP:
-		xNewPos = offsetX_ - lineSize;
+		posX = offsetX_ - lineSize;
 		break;
 	case SB_LINEDOWN:
-		xNewPos = offsetX_ + lineSize;
+		posX = offsetX_ + lineSize;
 		break;
 	case SB_THUMBPOSITION:
-		xNewPos = HIWORD(wParam);
+		posX = HIWORD(wParam);
 		break;
 	default:
-		xNewPos = offsetX_;
+		posX = offsetX_;
 	}
 
-	xNewPos = max(0, xNewPos);
-	xNewPos = min(maxX_, xNewPos);
+	posX = max(0, posX);
+	posX = min(maxPosX_, posX);
 
-	if (xNewPos != offsetX_) {
-		xDelta = xNewPos - offsetX_;
-		offsetX_ = xNewPos;
-		//ScrollWindowEx(hWnd_, -xDelta, 0, (CONST RECT *) NULL, (CONST RECT *) NULL, (HRGN)NULL, (PRECT)NULL, SW_INVALIDATE);
+	if (posX != offsetX_) {
+		offsetX_ = posX;
 		InvalidateRect(hWnd_, NULL, false);
 		UpdateWindow(hWnd_);
 
@@ -359,7 +408,6 @@ void MultiChartView::onLeftDown(WPARAM wParam, LPARAM lParam) {
 	if ((wParam & MK_CONTROL) == 0) {
 		selection_.clear();
 	}
-	//selectRect_.bottom = selectRect_.top = GET_Y_LPARAM(lParam) - MULTICHARTVIEW_TOOLBARHEIGHT;
 }
 
 void MultiChartView::onLeftUp(WPARAM wParam, LPARAM lParam) {
@@ -368,7 +416,11 @@ void MultiChartView::onLeftUp(WPARAM wParam, LPARAM lParam) {
 }
 
 void MultiChartView::onRightDown(WPARAM wParam, LPARAM lParam) {
-	draw(lParam);
+	if (wParam & MK_SHIFT) {
+		drawLine(lParam);
+	} else {
+		draw(lParam);
+	}
 }
 
 void MultiChartView::onRightUp(WPARAM wParam, LPARAM lParam) {
@@ -393,11 +445,6 @@ int MultiChartView::onPaint(HDC hdc, PAINTSTRUCT* ps) {
 		HBITMAP SYSFN(hBitmap, CreateCompatibleBitmap(hdc, width_, height_));
 		HBITMAP SYSFN(hBitmap_, (HBITMAP)SelectObject(hdc_, hBitmap));
 	}
-	//HDC SYSFN(hdc_, CreateCompatibleDC(hdc));
-	//int width = clientRect.right - clientRect.left;
-	//int height = clientRect.bottom - clientRect.top;
-	//HBITMAP SYSFN(hBitMap, CreateCompatibleBitmap(hdc, width, height));
-	//HBITMAP SYSFN(hBitMapOld, (HBITMAP)SelectObject(hdc_, hBitMap));
 
 	// create selection hdc and bitmap
 	if (hSelectionBitmap_ == NULL) {
@@ -418,7 +465,7 @@ int MultiChartView::onPaint(HDC hdc, PAINTSTRUCT* ps) {
 	if (dataSeries_ != NULL) {
 		// get x range
 		int dataStart = (int)CHART_FROM_X(offsetX_);
-		int dataRange = (int)CHART_FROM_X(width_) + dataStart;
+		int dataRange = (int)CHART_FROM_X(width_) + dataStart + 1;
 
 		// paint horizontal grid lines
 		float deltaY = (float)height_ / configuration_.grid.y;

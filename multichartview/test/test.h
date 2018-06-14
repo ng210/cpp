@@ -12,11 +12,14 @@
 
 NS_FW_BASE_USE
 
+
 class TestApp : public WinApp {
 	MultiChartView* multiChartView_;
 	Buffer log_;
 
 	DataSeries* dataSeries_;
+
+	static CHART_CUSTOM_DRAW drawBox;
 
 	LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 public:

@@ -42,15 +42,7 @@ WinApp* createApplication(HINSTANCE hInstance, Map* args) {
 
 TestApp::TestApp(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx) {
 	// prepare data and dataseries
-	Array* array = NEW_(Array, sizeof(TESTDATA));
-	for (int i = 0; i < SERIESLENGTH; i++) {
-		TESTDATA testData = {
-			(int)Utils::random(100),
-			(float)Utils::random()
-		};
-		array->add(&testData);
-	}
-	dataSeries_ = NEW_(TestSeries, array);
+	dataSeries_ = NEW_(TestSeries, SERIESLENGTH);
 	// put initialization code here
 	log_.append("", 1);
 	create(createStruct, wndClassEx);
@@ -92,38 +84,28 @@ LRESULT TestApp::onCreate() {
 	SYSPR(SetWindowText(hWnd_, "MultiChartView test"));
 	// create multichartview
 	multiChartView_ = NEW_(MultiChartView, this, MYCONTROLID);
-	CHARTCHANNELINFO* channels = MALLOC(CHARTCHANNELINFO, 3);
+	CHARTCHANNELINFO* channels = MALLOC(CHARTCHANNELINFO, 4);
 	int ci = 0;
 	channels[ci].min = 0.0f; channels[ci].max = 100.0f; channels[ci].color = 0xF00000;
-	channels[ci].paintMode = CHART_PAINTMODE_BAR; channels[ci].label = "Value";
+	channels[ci].paintMode = CHART_PAINTMODE_BAR; channels[ci].label = "Integer";
 	ci++;
 	channels[ci].min = 0.0f; channels[ci].max = 1.0f; channels[ci].color = 0x00F000;
-	channels[ci].paintMode = CHART_PAINTMODE_BAR; channels[ci].label = "Normalized";
+	channels[ci].paintMode = CHART_PAINTMODE_BAR; channels[ci].label = "Float";
 	ci++;
 	channels[ci].min = -1.0f; channels[ci].max = 1.0f; channels[ci].color = 0x0000F0;
 	channels[ci].paintMode = CHART_PAINTMODE_LINE; channels[ci].label = "Diff";
-	multiChartView_->setDataSource(dataSeries_, 3, channels);
-	//multiChartView_->configuration().stepSize.x = 2;
-	//multiChartView_->wndClass();
+	ci++;
+	channels[ci].min = 0.0f; channels[ci].max = 10.0f; channels[ci].color = 0x80F0F0;
+	channels[ci].paintMode = CHART_PAINTMODE_BOX; channels[ci].label = "Duration";
+	ci++;
+	multiChartView_->setDataSource(dataSeries_, ci, channels);
+	multiChartView_->configuration().customDraw[0] = &TestApp::drawBox;
 	RECT rect;
-	//multiChartView_ = NEW_(EditCtrl, this, MYCONTROLID);
 	SYSPR(GetClientRect(hWnd_, &rect));
 	SYSPR(SetWindowPos(multiChartView_->hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
-
-	//multiView = NEW_(MultiView, hwnd_, MYCONTROLID);
-	//multiView->create(hwnd_, MYCONTROLID);
-	//multiView->setPosition(0, 0);
-	//multiView->setSize(320, 200);
-	//SYS(ShowWindow(multiView->hwnd(), SW_SHOWNORMAL));
-	//SYS(UpdateWindow(multiView->hwnd()));
 	return 0;
 }
 
-//int TestApp::onPaint(HDC hdc, PAINTSTRUCT* ps) {
-//	return 1;
-//}
+void TestApp::drawBox(HDC hdc, RECT* rect, int ix) {
 
-//int TestApp::onDestroy() {
-//
-//	return 0;
-//}
+}
