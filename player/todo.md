@@ -46,7 +46,7 @@
     * a command consists of a code and a variable length list of parameters
   * add player to process byte stream sequences
     * solution a,
-      * a sequence consists of an array of time delta and a command<br/>
+     * a sequence consists of an array of time delta and a command<br/>
 #### Example
 >    0000: time delta #1<br/>
 >    01: command code #1<br/>
