@@ -28,10 +28,10 @@
  * manage user-data blocks
    an array of arrays
  * player command to create targets
-   * targets consist of an object and its adapter
-   * targets should be created by the player, not the context
-   * adapters should contain a factory method to create objects
-   * the user data blocks can provide the data for the creation/initialization<br/>
+  * targets consist of an object and its adapter
+  * targets should be created by the player, not the context
+  * adapters should contain a factory method to create objects
+  * the user data blocks can provide the data for the creation/initialization<br/>
 #### Example
  * the synth adapter creates the synth objects for each channel
  * the synth objects have data banks for their instrument settings
@@ -40,13 +40,13 @@
  * the synth adapter creates a synth object and adds the data bank from the user data block
 
 ## 3. Create "stream" player
-  * currently, the player/channel processes sequences with complex structures
-    * a sequence is an array of frames
-    * a frame consists of a time delta and an array of commands
-    * a command consists of a code and a variable length list of parameters
-  * add player to process byte stream sequences
-    * solution a,
-     * a sequence consists of an array of time delta and a command<br/>
+ * currently, the player/channel processes sequences with complex structures
+  * a sequence is an array of frames
+  * a frame consists of a time delta and an array of commands
+  * a command consists of a code and a variable length list of parameters
+ * add player to process byte stream sequences
+  * solution a,
+   * a sequence consists of an array of time delta and a command<br/>
 #### Example
 >    0000: time delta #1<br/>
 >    01: command code #1<br/>
@@ -60,11 +60,11 @@
 >    09: command code #n<br/>
 >    01: parameters #n<br/>
 
-      * synchron commands are seperated with a time delta of 0
-      * pro: very simple structure, very simple logic to process
-      * contra: redundant time delta at synchron commands
-    * solution b,
-      * a sequence consists of an array of time delta, length and array of commands<br/>
+   * synchron commands are seperated with a time delta of 0
+   * pro: very simple structure, very simple logic to process
+   * contra: redundant time delta at synchron commands
+  * solution b,
+   * a sequence consists of an array of time delta, length and array of commands<br/>
 #### Example
 >  0000: delta time #1<br/>
 >  01: length of command array #1<br/>
@@ -82,16 +82,14 @@
 >  01: length of command array #n<br/>
 >  01: command code #n1<br/>
 >  02,03,04: parameters #n<br/>
-      *pro: clear structure, simple loop to process the commands
-      *contra: single command frames contain extra byte for the command array length
+   * pro: clear structure, simple loop to process the commands
+    * contra: single command frames contain extra byte for the command array length
 
 ## 4. Create new adapters/objects
  * 2D objects
-   * sprites
-   * particles
+  * sprites
+  * particles
  * 3D objects
-   * objects
-   * particles
-   * heightmap
-
-
+  * objects
+  * particles
+  * heightmap
