@@ -26,16 +26,27 @@
 * compact and fast decoder
 * compact data
 ### Solution: simple structure
- a, Sequence = Collection{ delta, command }
-	* delta = 0 for synchron commands
-	* delta is redundant for synchron commands
- b, Sequence = Collection{ delta, count, command }
-	* count != 1 for synchron commands
-	* count is redundant for non-synchron commands
+* Sequence = Collection{ delta, command }
+  * delta = 0 for synchron commands
+  * delta is redundant for synchron commands
+* Sequence = Collection{ delta, count, command }
+  * count != 1 for synchron commands
+  * count is redundant for non-synchron commands
 
 ### Examples
- { 0000, [setTempo], 120.0 }, { 0000, [createChannel], 01, 01 }, {0040, [createChannel], 02, 02 }, { 0040, [end] }<br/>
- { 0000, [prgChange], 01 }, { 0000, [noteOn], [C5], 0.75 }, { 0004, [setControl], [FltCut], 40 }, { 0004, [noteOff], [C5] }, { 0004, [end] }<br/>
+<pre>
+Sequence1: {
+ { 0000, [setTempo], 120.0 }, { 0000, [createChannel], 01, 01 },
+ { 0040, [createChannel], 02, 02 },
+ { 0040, [end] }
+}
+Sequence2: {
+ { 0000, [prgChange], 01 }, { 0000, [noteOn], [C5], 0.75 },
+ { 0004, [setControl], [FltCut], 40 },
+ { 0004, [noteOff], [C5] },
+ { 0004, [end] }
+}
+</pre>
 
 ## Sequences for the editor 
 * easy manipulation: add/remove frames, add/remove commands, modify commands
@@ -44,19 +55,20 @@
 * split sequences into subsequences by command type, command parameter
 * Sequence = Collection{ Subsequence }
 * Subsequence = Collection{ frame, parameter(s) }
+* Sequence might store length (absolute position of the END command) instead of adding a subsequence with a single entry
 
 ### Examples
 <pre>
-{
-	[setTempo]: { 0000, 120.0 },
-	[createChannel]: { 0000, 01, 01 }, {0040, 02, 02 },
-	[end]: { 0040 }
+Sequence1: {
+ Subsequence11: { [setTempo]: { 0000, 120.0 },
+ Subsequence12: { [createChannel]: { 0000, 01, 01 }, {0040, 02, 02 },
+ Subsequence13: { [end]: { 0040 } }
 }
-{
-	[prgChange]: { 0000, 01 },
-	[noteOn]: { 0000, [C5], 0.75 },
-	[setControl, FltCut]: { 0004, 40 }, { 0002, 80 }, { 0002, C0 }, { 0002, FF },
-	[noteOff]: { 0004, [C5] },
-	[end]:{ 0004 }
+Sequence2: {
+ Subsequence21: { [prgChange]: { 0000, 01 },
+ Subsequence22: { [noteOn]: { 0000, [C5], 0.75 },
+ Subsequence23: { [setControl, FltCut]: { 0004, 40 }, { 0002, 80 }, { 0002, C0 }, { 0002, FF },
+ Subsequence24: { [noteOff]: { 0004, [C5] },
+ Subsequence25: { [end]:{ 0004 } }
 }
 </pre>
