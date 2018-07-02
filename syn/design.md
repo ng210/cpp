@@ -51,24 +51,23 @@ Sequence2: {
 ## Sequences for the editor 
 * easy manipulation: add/remove frames, add/remove commands, modify commands
 * visualization per sequence and per command
-## Solution: subsequence
-* split sequences into subsequences by command type, command parameter
-* Sequence = Collection{ Subsequence }
-* Subsequence = Collection{ frame, parameter(s) }
-* Sequence might store length (absolute position of the END command) instead of adding a subsequence with a single entry
+## Solution: complex structure
+* metadata (name)
+* array of Frame objects
+## Solution: split sequences
+* a subsequence contains only 1 type of command/subcommand
+* sequences are split accordingly into multiple sequences
+* sequences can be groupped freely
+* sequences can be merged together freely
 
 ### Examples
 <pre>
-Sequence1: {
- Subsequence11: { [setTempo]: { 0000, 120.0 },
- Subsequence12: { [createChannel]: { 0000, 01, 01 }, {0040, 02, 02 },
- Subsequence13: { [end]: { 0040 } }
-}
-Sequence2: {
- Subsequence21: { [prgChange]: { 0000, 01 },
- Subsequence22: { [noteOn]: { 0000, [C5], 0.75 },
- Subsequence23: { [setControl, FltCut]: { 0004, 40 }, { 0002, 80 }, { 0002, C0 }, { 0002, FF },
- Subsequence24: { [noteOff]: { 0004, [C5] },
- Subsequence25: { [end]:{ 0004 } }
-}
+Subsequence1: { frames: { [setTempo]: { 0000, 120.0 } },
+Subsequence2: { frames: { [createChannel]: { 0000, 01, 01 }, {0040, 02, 02 },
+
+Subsequence4: { [prgChange]: { 0000, 01 },
+Subsequence5: { [noteOn]: { 0000, [C5], 0.75 },
+Subsequence6: { [setControl, FltCut]: { 0004, 40 }, { 0002, 80 }, { 0002, C0 }, { 0002, FF },
+Subsequence7: { [noteOff]: { 0004, [C5] },
+Subsequence8: { [end]:{ 0004 } }
 </pre>
