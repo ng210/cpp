@@ -86,6 +86,20 @@ Sequence4: {
     { delta: 0004, commands: [noteOn, C5, 0.50] }
   ]
 }
-Sequence5: { frames: { [setControl, FltCut]: { 0004, 40 }, { 0002, 80 }, { 0002, C0 }, { 0002, FF },
-Sequence6: { frames: { [noteOff]: { 0004, [C5] },3
+Sequence5: {
+  frames: [
+    { delta: 0000, commands: [setControl, FltCut, 40] },
+    { delta: 0004, commands: [setControl, FltCut, 20] },
+    { delta: 0004, commands: [setControl, FltCut, 80] },
+    { delta: 0004, commands: [setControl, FltCut, 60] }
+  ]
+}
+Sequence6: {
+  frames: [
+    { delta: 0000, commands: [noteOff, C4] },
+    { delta: 0004, commands: [noteOff, C5] },
+    { delta: 0004, commands: [noteOff, C4] },
+    { delta: 0004, commands: [noteOff, C5] }
+  ]
+}
 </pre>
