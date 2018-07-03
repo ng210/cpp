@@ -62,12 +62,30 @@ Sequence2: {
 
 ### Examples
 <pre>
-Subsequence1: { frames: { [setTempo]: { 0000, 120.0 } },
-Subsequence2: { frames: { [createChannel]: { 0000, 01, 01 }, {0040, 02, 02 },
-
-Subsequence4: { [prgChange]: { 0000, 01 },
-Subsequence5: { [noteOn]: { 0000, [C5], 0.75 },
-Subsequence6: { [setControl, FltCut]: { 0004, 40 }, { 0002, 80 }, { 0002, C0 }, { 0002, FF },
-Subsequence7: { [noteOff]: { 0004, [C5] },
-Subsequence8: { [end]:{ 0004 } }
+Sequence1: {
+  frames: [
+    { delta: 0000, commands: [setTempo, 120.0] }
+  ]
+}
+Sequence2: {
+  frames: [
+    { delta: 0000, commands: [createChannel, 01, 01] },
+    { delta: 0040, commands: [createChannel, 02, 02] }
+  ]
+}
+Sequence3: {
+  frames: [
+    { delta: 0000, commands: [prgChange, 01] }
+  ]
+}
+Sequence4: {
+  frames: [
+    { delta: 0000, commands: [noteOn, C4, 0.75] },
+    { delta: 0004, commands: [noteOn, C5, 0.50] },
+    { delta: 0004, commands: [noteOn, C4, 0.75] },
+    { delta: 0004, commands: [noteOn, C5, 0.50] }
+  ]
+}
+Sequence5: { frames: { [setControl, FltCut]: { 0004, 40 }, { 0002, 80 }, { 0002, C0 }, { 0002, FF },
+Sequence6: { frames: { [noteOff]: { 0004, [C5] },3
 </pre>
