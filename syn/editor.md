@@ -13,9 +13,9 @@
 * store timelines of commands
 * rendered using the _MultiSeriesView_
 * operations
- * import from different formats
- * export
- * split and merge
+  * import from different formats
+  * export
+  * split and merge
 
 ## user data blocks ##
 * store data used by objects via adapters
