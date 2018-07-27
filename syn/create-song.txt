@@ -1,0 +1,49 @@
+Adapter: SynthAdapter
+Sequence: importFromXM
+UserDataBlock: adapter init data
+
+// register synth adapter before using it
+// this can be automatic processing the
+// plugin directory of the editor
+Asu::registerAdapter(SynthAdapter::Info)
+
+Asu::registerAdapter(AdapterInfo info)
+1. Asu::adapterMap.put(info.id, info)
+
+Asu* Asu::createSong(char* xmPath)
+1. var asu = new Asu();
+2. var sa = new SynthAdapter();
+// create init data using a dialog
+3. var length = createInitData(sa, out data);
+4. var udb = asu.addUserDataBlock(length, data)
+5. asu.addAdapter(SynthInfo::id, udb);
+// read xm file via dialog
+6. asu.importFromXM(xmPath);
+7. return asu
+
+UINT8 createInitData(out UINT8* data)
+1. var length = sizeof(bankCfg) + sizeof(synthCfg)
+2. data = alloc(length);
+3. memcpy(data, bankConfig)
+4. memcpy(data, synthConfig)
+5. return length
+
+UINT Asu::addUserDataBlock(size, data)
+// use map to reference data blocks
+// independenly from indices
+1. var id = this.userDataBlockMap.length
+2. var udb = new UserDataBlock(size, data)
+3. this.userDataBlockMap.put(id, udb)
+4. return id
+
+void Asu::addAdapter(int id, int udb)
+1. var adInfo = Asu::adapterMap.get(id)
+2. if !adInfo return InvalidAdapterError
+3. var ad = this.adapters.add(id)
+4. ad.initDataBlock = udb
+5. return ad
+
+
+createInitData
+- synth count
+- voice count
