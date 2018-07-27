@@ -50,7 +50,8 @@ DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
 	return 0;
 }
 
-HRESULT SoundPlayer::start(int sampleRate, int channels, FeedSample callback) {
+//HRESULT SoundPlayer::start(int sampleRate, int channels, FeedSample callback) {
+HRESULT SoundPlayer::start(int sampleRate, int channels, void (*callback)(short* buffer, int sampleCount)) {
 	HRESULT res = DS_OK;
 	LPDIRECTSOUNDBUFFER8 &buffer = SoundPlayer::secondaryBuffer_;
 	buffer = NULL;

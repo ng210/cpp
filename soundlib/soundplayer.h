@@ -38,7 +38,7 @@ private:
 	static DWORD WINAPI threadProc(LPVOID lpParameter);
 
 public:
-	static HRESULT start(int sampleRate, int channels, FeedSample callback);
+	static HRESULT start(int sampleRate, int channels, void(*callback)(short* buffer, int sampleCount));
 	static HRESULT stop();
 	static void setLatency(int ms);
 };
