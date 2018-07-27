@@ -31,7 +31,7 @@ int main(int argc, char* args[]) {
 
 	int passed = 0, failed = 0;
 
-	float f = 300.0f;
+	float f = 1000.0f;
 	printf("0x%0X\n", reinterpret_cast<int&>(f));
 	f = 100.0f;
 	printf("0x%0X\n", reinterpret_cast<int&>(f));

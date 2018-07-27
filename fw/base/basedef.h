@@ -8,6 +8,8 @@
 #define NULL 0
 #endif
 
+#define out
+
 #define ALIGN4(a) ALIGN(a, 4)
 #define ALIGN(a, n) (((size_t)a+n-1) & ~(n-1))
 

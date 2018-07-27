@@ -32,7 +32,8 @@ NS_FW_BASE_END
 #define LOG(format, ...) if (Debug::tracer_ != NULL) Debug::tracer_->log(format, __VA_ARGS__)
 
 #else
-#define SYS(var, fn) var = fn
+#define SYSPR(fn) fn
+#define SYSFN(var, fn) var = fn
 #define DEBUG(format, ...) 
 #define LOG(format, ...)
 #endif
