@@ -17,7 +17,7 @@ enum Player_Flags : UINT8 {
 	Player_Flg_Active = 0x80
 };
 
-class Player;
+//class Player;
 class AbstractChannel {
 //protected: PROP_R(AbstractPlayer*, player);
 protected: PROP_R(Target*, target);

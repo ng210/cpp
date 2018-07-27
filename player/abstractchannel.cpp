@@ -3,17 +3,16 @@
 
 NS_PLAYER_BEGIN
 
-AbstractChannel::AbstractChannel(/*AbstractPlayer* player,*/ size_t id, Target* target, PLAYER_SEQUENCE sequence) {
-	init(/*player,*/ id, target, sequence);
+AbstractChannel::AbstractChannel(size_t id, Target* target, PLAYER_SEQUENCE sequence) {
+	init(id, target, sequence);
 }
 
 AbstractChannel::~AbstractChannel() {
 
 }
 
-void AbstractChannel::init(/*AbstractPlayer* player,*/ size_t id, Target* target, PLAYER_SEQUENCE sequence, size_t status) {
-	reset();
-	assign(/*player,*/ target, sequence, status);
+void AbstractChannel::init(size_t id, Target* target, PLAYER_SEQUENCE sequence, size_t status) {
+	assign(target, sequence, status);
 	id_ = id;
 }
 
@@ -24,7 +23,7 @@ void AbstractChannel::reset() {
 	tick_ = 0;
 }
 
-void AbstractChannel::assign(/*AbstractPlayer* player,*/ Target* target, PLAYER_SEQUENCE sequence, size_t status) {
+void AbstractChannel::assign(Target* target, PLAYER_SEQUENCE sequence, size_t status) {
 	reset();
 	target_ = target;
 	sequence_ = sequence;

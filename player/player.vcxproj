@@ -128,7 +128,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="abstractadapter.h" />
+    <ClInclude Include="iadapter.h" />
     <ClInclude Include="abstractchannel.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="channel.h" />
@@ -140,7 +140,7 @@
     <ClInclude Include="target.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="abstractadapter.cpp" />
+    <ClCompile Include="iadapter.cpp" />
     <ClCompile Include="abstractchannel.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="channel.cpp" />

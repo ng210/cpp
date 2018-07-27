@@ -4,34 +4,40 @@
 #include "playerdef.h"
 #include "collection/parray.h"
 #include "abstractchannel.h"
-#include "abstractadapter.h"
+#include "iadapter.h"
 
 NS_FW_BASE_USE
 NS_PLAYER_BEGIN
 
-typedef struct PLAYER_USER_DATA_ {
-	UINT32 length;
-	void* data;
-} PLAYER_USER_DATA;
+typedef struct USER_DATA_BLOCK_ITEM_ {
+	size_t length;
+	void* userDataBlock;
+} USER_DATA_BLOCK_ITEM;
 
+class PlayerAdapter;
 class Player {
+	friend class PlayerAdapter;
 protected:	PROP_R(PArray*, adapters);
 protected:	PROP_R(PArray*, sequences);
-protected:	PROP_R(Array*, userData);
+protected:	PROP_R(Array*, userDataBlocks);
 protected:	PROP_R(PArray*, targets);
 protected:	PROP_R(PArray*, channels);
 protected:	PROP_R(AbstractChannel*, masterChannel);
 protected:	PROP_R(float, refreshRate);
 
+protected:
+	void addChannel(AbstractChannel* chn);
+	//void addTarget(void* object, IAdapter* adapter);
 public:
 	Player();
 	virtual ~Player();
 
+	void addAdapter(IAdapter* adapter, void* data = NULL);
 	void addSequence(PLAYER_SEQUENCE sequence);
-	void addUserData(UINT32 length, void* data);
+	void addUserDataBlock(size_t length, void* userData);
+	void addTarget(void* object, IAdapter* adapter);
 
-	void addTarget(void* target, AbstractAdapter* adapter);
-	void addChannel(AbstractChannel* chn);
+	/// TODO: turn into player command
 
 	virtual void run(size_t ticks);
 	void refreshRate(float ticksPerSecond);

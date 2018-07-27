@@ -5,13 +5,13 @@
 
 NS_PLAYER_BEGIN
 
-class AbstractAdapter;
+class IAdapter;
 class Target {
 public:
 	void* object;
-	AbstractAdapter* adapter;
+	IAdapter* adapter;
 public:
-	Target(void* o, AbstractAdapter* a) : object(o), adapter(a) {}
+	Target(void* o, IAdapter* a) : object(o), adapter(a) {}
 }; 
 
 NS_PLAYER_END

@@ -6,6 +6,9 @@
 
 NS_PLAYER_BEGIN
 
+Sequence::Sequence() : frames_(sizeof(Frame)) {
+}
+
 Sequence::~Sequence() {
 	ARRAY_FOREACH(&frames_, ((Frame*)value)->destroy(););
 }
@@ -23,7 +26,9 @@ Frame* Sequence::frame(int ix) {
 	return (Frame*)frames_.getAt(ix);
 }
 
-int Sequence::toStream(AbstractAdapter* adapter, Buffer* buffer) {
+#ifdef EDITOR_MODE
+
+int Sequence::toStream(IAdapter* adapter, Buffer* buffer) {
 	int totalLength = 0;
 	for (UINT32 i = 0; i < frames_.length(); i++) {
 		Frame* frame = (Frame*)frames_.getAt(i);
@@ -42,7 +47,7 @@ int Sequence::toStream(AbstractAdapter* adapter, Buffer* buffer) {
 }
 
 #ifdef _DEBUG
-void Sequence::print(AbstractAdapter* adapter) {
+void Sequence::print(IAdapter* adapter) {
 	int ts = 0;
 	for (UINT32 i = 0; i < frames_.length(); i++) {
 		Frame* frame = (Frame*)frames_.getAt(i);
@@ -58,6 +63,8 @@ void Sequence::print(AbstractAdapter* adapter) {
 	}
 	LOG("\n");
 }
+#endif
 
 #endif
+
 NS_PLAYER_END

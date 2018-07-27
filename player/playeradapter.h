@@ -1,7 +1,7 @@
 #ifndef __PLAYER_PLAYER_ADAPTER_H
 #define __PLAYER_PLAYER_ADAPTER_H
 
-#include "abstractadapter.h"
+#include "iadapter.h"
 
 NS_PLAYER_BEGIN
 
@@ -13,14 +13,14 @@ NS_PLAYER_BEGIN
 enum PlayerCommands : UINT8 {
 	Player_Cmd_setTempo,		// sets the frame rate (fps)
 	Player_Cmd_assign,			// assigns a sequence to a channel
+	Player_Cmd_create,			// create target
 
 	Player_Cmd_Count
 };
 
-typedef struct PLAYER_CMD_SET_TEMPO_ : ABSTRACT_ADAPTER_COMMAND_ {
-	float framePerMinute;
-	float ticksPerFrame;
-} PLAYER_CMD_SET_TEMPO;
+typedef struct PLAYER_CMD_TEMPO_ : ABSTRACT_ADAPTER_COMMAND_ {
+	float ticksPerMinute;
+} PLAYER_CMD_TEMPO;
 
 typedef struct PLAYER_CMD_ASSIGN_ : ABSTRACT_ADAPTER_COMMAND_ {
 	UINT8 target;
@@ -28,19 +28,33 @@ typedef struct PLAYER_CMD_ASSIGN_ : ABSTRACT_ADAPTER_COMMAND_ {
 	UINT8 status;
 } PLAYER_CMD_ASSIGN;
 
-class PlayerAdapter : public AbstractAdapter {
+//typedef struct PLAYER_CMD_CREATE_ : ABSTRACT_ADAPTER_COMMAND_ {
+//	UINT8 adapterId;
+//	UINT8 userDataBlockId;
+//} PLAYER_CMD_CREATE;
+
+typedef union PLAYER_COMMAND_ALL_ {
+	PLAYER_CMD_TEMPO* tempo;
+	PLAYER_CMD_ASSIGN* assign;
+	//PLAYER_CMD_CREATE* create;
+	PLAYER_COMMAND base;
+} PLAYER_COMMAND_ALL;
+
+class PlayerAdapter : public IAdapter {
 public:
-	PlayerAdapter();
-	int prepareObject(void* object);
+	int initialize(void* data, Player* player);
+	int getId();
 	int processCommand(void* object, PLAYER_COMMAND cmd);
 	void setTempo(void *object, float ticksPerSecond);
+	//Target* createTarget(void* initData);
+
+	// Misc. methods
 
 	PLAYER_COMMAND createCommand(int code, ...);
-#ifdef _DEBUG
+	int getCommandParameters(PLAYER_COMMAND cmd, double* parameters);
+	int matchCommand(int filter, PLAYER_COMMAND cmd);
 	char* logCommand(PLAYER_COMMAND command);
-#endif
 	int dumpCommand(PLAYER_COMMAND command, Buffer* buffer);
-	//int getArgCount(PLAYER_COMMAND cmd);
 };
 
 NS_PLAYER_END
