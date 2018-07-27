@@ -1,11 +1,12 @@
 #include <math.h>
 #include "mixer.h"
+#include "base/memory.h"
 
 NS_SSN1K_BEGIN
 
 Mixer::Mixer() {
 	inputCount_ = 0;
-	controls_ = Ctrl::createControls(SSN1K_CI_MIX_COUNT);
+	controls_ = Mdl::createControls(SSN1K_CI_MIX_COUNT);
 }
 
 Mixer::~Mixer() {
@@ -13,10 +14,10 @@ Mixer::~Mixer() {
 }
 
 void Mixer::writeSample(short* ptr, float smp) {
-	int out = (int)round(32767.0f * smp);
-	if (out > -32767) {
-		if (out < 32767) {
-			*ptr = out;
+	int output = (int)round(32767.0f * smp);
+	if (output > -32767) {
+		if (output < 32767) {
+			*ptr = output;
 		} else {
 			*ptr = 32767;
 		}
@@ -32,11 +33,11 @@ float Mixer::run(void* buffer, size_t start, size_t end) {
 		float right = 0.0f;
 		MixCtrls* ctrls = (MixCtrls*)controls_;
 		for (size_t j = 0; j < inputCount_; j++) {
-			if (ctrls->volume[j].i() == 0) {
+			if (ctrls->volume[j].i == 0) {
 				continue;
 			}
-			float smp = input_[j]->run() * ctrls->volume[j].f();
-			float balance = (ctrls->balance[j].f() + input_[j]->getControl(SSN1K_CI_SynthBal)->f()) / 2.0f;
+			float smp = input_[j]->run() * ctrls->volume[j].f;
+			float balance = (ctrls->balance[j].f + input_[j]->getControl(SSN1K_CI_SynthBal)->f) / 2.0f;
 			float lSmp = smp * balance;
 			left += lSmp;
 			right += smp - lSmp;
@@ -59,14 +60,13 @@ void Mixer::addInput(Synth* in) {
 void Mixer::setControls(UINT8* data) {
 	UINT8* ptr = data;
 	int ctrlId;
-	CtrlValue value;
 	while ((ctrlId = *ptr++) != 0xFF) {
 		Ctrl* ctrl = &controls_[ctrlId];
 		if (ctrlId == SSN1K_CI_MixMix) {
-			ctrl->set(*ptr++);
+			ctrl->i = *ptr++;
 		} else
 		if (ctrlId < SSN1K_CI_MIX_COUNT) {
-			ctrl->set((float)(*ptr++ / 255.0f));
+			ctrl->f = *ptr++ / 255.0f;
 		}
 	}
 }

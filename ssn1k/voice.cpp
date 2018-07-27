@@ -40,7 +40,7 @@ void Voice::noteOn(int note, float velocity) {
 	//printf("voice: %d, note: %d, velocity: %f, duration: %d\n", id_, note, velocity, duration);
 	SynthCtrls* controls = (SynthCtrls*)synth_->controls_;
 	//noteOff();
-	note_.set((float)note);
+	note_.f = (float)note;
 	// key on
 	velocity_ = velocity;
 	env1_.setGate(velocity);
@@ -66,11 +66,11 @@ float Voice::run() {
 	float pm = env2_.run() + lfo2;
 	float cut = env3_.run();
 	float fm = /*lfo1 +*/ env4_.run();
-	float tune = note_.f() + lfo1 + synth_->getControl(SSN1K_CI_Tune)->f();
+	float tune = note_.f + lfo1 + synth_->getControl(SSN1K_CI_Tune)->f;
 	float smp1 = osc1_.run(1.0f, tune, fm, pm);
 	float smp2 = osc2_.run(1.0f, tune, fm, pm, smp1);
-	float out = flt_.run(am*smp2, cut);
-	return out;
+	float output = flt_.run(am*smp2, cut);
+	return output;
 }
 bool Voice::isActive() {
 	return env1_.isActive();

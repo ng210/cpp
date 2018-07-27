@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Simple synth: in->osc->env->flt->out
+// Simple synth: in->osc->env->flt->output
 //*****************************************************************************
 
 #ifndef __SYNTH_H
@@ -11,6 +11,11 @@
 #include "flt.h"
 
 NS_SSN1K_BEGIN
+
+typedef struct SYNTH_BANK_ {
+	UINT8 instrumentCount;
+	UINT8 instrumentData;
+} SYNTH_BANK;
 
 struct SynthCtrls : public MdlCtrls {
 	Ctrl tune;
@@ -113,15 +118,15 @@ protected:
 	Voice* voices_[64];
 	UINT32 nextVoice_;
 	PROP_R(Voice*, activeVoice);
-	PROP_R(Ctrl**, bank);
+	PROP_R(Ctrl*, bank);
 	PROP_REF(float, ticksPerSample);
 	//UINT32 bankCount_;
 	UINT32 selectedBank_;
 	//Ctrl** banks_[4];
 	float overlayValue_;
-	void init(UINT32 voices);
+	void init(UINT8 voices);
 public:
-	Synth(UINT32 voices = 64);
+	Synth(UINT8 voices = 64);
 	~Synth();
 
 #ifdef _PROFILE
@@ -136,9 +141,9 @@ public:
 	void changeProgram(int prgId);
 	//void setCtrlSweep(int id, float fStart, float fEnd, int iCycles);
 	void ticksPerSample(float bpm);
-	void bank(Ctrl** bank);
-	
-	static void setControls(Ctrl* controls, UINT8* data);
+	void bank(Ctrl* bank);
+
+	static UINT8* setControls(Ctrl* controls, UINT8* data);
 };
 
 NS_SSN1K_END

@@ -293,7 +293,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ctrl.cpp" />
     <ClCompile Include="env.cpp" />
     <ClCompile Include="flt.cpp" />
     <ClCompile Include="mdl.cpp" />
@@ -303,10 +302,8 @@
     <ClCompile Include="synth.cpp" />
     <ClCompile Include="synthadapter.cpp" />
     <ClCompile Include="voice.cpp" />
-    <ClCompile Include="xmloader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ctrl.h" />
     <ClInclude Include="env.h" />
     <ClInclude Include="flt.h" />
     <ClInclude Include="mdl.h" />
@@ -317,7 +314,6 @@
     <ClInclude Include="synth.h" />
     <ClInclude Include="synthadapter.h" />
     <ClInclude Include="voice.h" />
-    <ClInclude Include="xmloader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

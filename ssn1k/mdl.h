@@ -8,14 +8,20 @@
 #define _USE_MATH_DEFINES
 
 #include "basedef.h"
-#include "types.h"
 #include "ssn1k.h"
-#include "ctrl.h"
 #include <stdio.h>
 
-//extern double SSN1K_THETA;
-
 NS_SSN1K_BEGIN
+
+typedef union CtrlUnion {
+	float f;
+	int i;
+	CtrlUnion() : i(0) {}
+	CtrlUnion(int v) : i(v) {}
+	CtrlUnion(float v) : f(v) {}
+} CtrlUnion;
+
+typedef CtrlUnion Ctrl;
 
 struct MdlCtrls {
 	Ctrl mix;
@@ -28,6 +34,7 @@ enum SSN1K_MixMode : UINT8 {
 	,SSN1K_MM_ADD	= 0x01	// add
 	,SSN1K_MM_MUL	= 0x02	// multiply
 	,SSN1K_MM_BPS	= 0x03	// bypass
+	,SSN1K_MM_MIX	= 0x04	// mix
 
 	,SSN1K_MM_COUNT	
 };
@@ -35,11 +42,13 @@ enum SSN1K_MixMode : UINT8 {
 class Mdl {
 protected:
 	float smp_;
-	float mix(float in1, float in2);
+	float mix(Ctrl in1, Ctrl in2);
 	void destroyControls();
 public:
 	Ctrl* controls_;
 	Ctrl* getControl(size_t id);
+
+	static Ctrl* createControls(size_t count);
 };
 
 NS_SSN1K_END

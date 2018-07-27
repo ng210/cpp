@@ -1,5 +1,5 @@
 #include "ssn1k.h"
-#include "ctrl.h"
+//#include "ctrl.h"
 #include "mdl.h"
 #include "env.h"
 #include "synth.h"

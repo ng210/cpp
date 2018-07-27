@@ -4,9 +4,6 @@
     <ClCompile Include="ssn1k.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ctrl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="env.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -31,18 +28,12 @@
     <ClCompile Include="voice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="xmloader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ssn1k.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ssn1klib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ctrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="env.h">
@@ -67,9 +58,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="voice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="xmloader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

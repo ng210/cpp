@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Simple synth: in->osc->env->flt->out
+// Simple synth: in->osc->env->flt->output
 //*****************************************************************************
 
 #include <math.h>
@@ -10,18 +10,18 @@
 NS_FW_BASE_USE
 NS_SSN1K_BEGIN
 
-Synth::Synth(UINT32 voices) {
+Synth::Synth(UINT8 voices) {
 	init(voices);
 }
 
-void Synth::init(UINT32 voices) {
+void Synth::init(UINT8 voices) {
 	smp_ = .0f;
 	ticksPerSample(60.0f);
 
 	voiceCount_ = voices > 64 ? 64 : voices;
 	//overlayValue_ = .0f;
 	// create controls
-	controls_ = Ctrl::createControls(SSN1K_CI_COUNT);
+	controls_ = Mdl::createControls(SSN1K_CI_COUNT);
 	//sweepCtrls = 0;
 	//paSweepCtrls = new Ctrl*[256];
 	// add voices
@@ -70,19 +70,19 @@ void Synth::run(void* buffer, UINT32 start, UINT32 end) {
 				smp += voices_[j]->run();
 			}
 		}
-		short out;
-		smp *= controls_[SSN1K_CI_SynthAmp].f();
+		short output;
+		smp *= controls_[SSN1K_CI_SynthAmp].f;
 		if (smp < 1.0f) {
 			if (smp > -1.0f) {
-				out = (short)round(32767.0f * smp);
+				output = (short)round(32767.0f * smp);
 			} else {
-				out = -32767;
+				output = -32767;
 			}
 		} else {
-			out = 32767;
+			output = 32767;
 		}
-		short left = (short)(controls_[SSN1K_CI_SynthBal].f() * out);
-		short right = (short)((1.0f - controls_[SSN1K_CI_SynthBal].f()) * out);
+		short left = (short)(controls_[SSN1K_CI_SynthBal].f * output);
+		short right = (short)((1.0f - controls_[SSN1K_CI_SynthBal].f) * output);
 		((short*)buffer)[2 * i] += left;
 		((short*)buffer)[2 * i + 1] += right;
 	}
@@ -100,7 +100,7 @@ void Synth::noteOff(int note) {
 	bool found = false;
 	for (UINT32 i = 0; i < voiceCount_; i++) {
 		Voice* voice = voices_[i];
-		if (voice->isActive() && voice->note().f() == note) {
+		if (voice->isActive() && voice->note().f == note) {
 			found = true;
 			voice->noteOff();
 		}
@@ -110,7 +110,7 @@ void Synth::noteOff(int note) {
 	}
 }
 void Synth::changeProgram(int prgId) {
-	UINT32* src = (UINT32*)bank_[prgId];
+	UINT32* src = (UINT32*)&bank_[prgId * SSN1K_CI_COUNT];
 	UINT32* dst = (UINT32*)controls_;
 	for (int i = 0; i < (sizeof(Ctrl) * SSN1K_CI_COUNT)>>2; i++) {
 		dst[i] = src[i];
@@ -127,11 +127,12 @@ void Synth::ticksPerSample(float bpm) {
 	ticksPerSample_ = bpm * SSN1K::getSampleRateR() / 60.0f;
 }
 
-void Synth::bank(Ctrl** bank) {
+void Synth::bank(Ctrl* bank) {
 	bank_ = bank;
 	changeProgram(0);
 }
-void Synth::setControls(Ctrl* controls, UINT8* data) {
+
+UINT8* Synth::setControls(Ctrl* controls, UINT8* data) {
 	UINT8* ptr = data;
 	int ctrlId;
 	while ((ctrlId = *ptr++) != 0xFF) {
@@ -157,7 +158,7 @@ void Synth::setControls(Ctrl* controls, UINT8* data) {
 		case SSN1K_CI_Lfo2Amp:
 		case SSN1K_CI_Lfo2Fre:
 			// set as float
-			ctrl->set(*(float*)ptr);
+			ctrl->f = *(float*)ptr;
 			ptr += sizeof(float);
 			break;
 		case SSN1K_CI_SynthMix:
@@ -172,15 +173,15 @@ void Synth::setControls(Ctrl* controls, UINT8* data) {
 		case SSN1K_CI_FltMix:
 		case SSN1K_CI_FltMode:
 			// set as UINT8
-			ctrl->set((int)*ptr++);
+			ctrl->i = (int)*ptr++;
 			break;
 		default:
 			// set as float from UINT8 / 255
-			ctrl->set((float)(*ptr++ / 255.0f));
+			ctrl->f = (float)(*ptr++ / 255.0f);
 			break;
 		}
 	}
+	return ptr;
 }
-
 
 NS_SSN1K_END

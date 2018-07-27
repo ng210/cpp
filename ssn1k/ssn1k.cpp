@@ -45,13 +45,17 @@ float SSN1K::get2PI() {
 	return SSN1K::_2PI;
 }
 
-float SSN1K::sinusoid(float x) {
-	return (float)(1.0f - cos(x * M_PI)) / 2;
+float SSN1K::sinusoid(float x, float min, float max) {
+	float length = max - min;
+	x = (x - min) / length;
+	return length*(float)(1.0f - cos(x * M_PI)) / 2 + min;
 }
-float SSN1K::smoothstep(float x) {
-	return x*x*(3 - 2 * x);
+float SSN1K::smoothstep(float x, float min, float max) {
+	float length = max - min;
+	x = (x - min) / length;
+	return length * x*x*(3 - 2 * x) + min;
 }
-float SSN1K::flat(float x) {
+float SSN1K::flat(float x, float min, float max) {
 	return x;
 }
 

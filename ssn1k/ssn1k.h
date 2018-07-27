@@ -14,7 +14,7 @@
 
 NS_SSN1K_BEGIN
 
-typedef float (INTERPOLATE)(float);
+typedef float (INTERPOLATE)(float x, float min, float max);
 
 
 #define C(o)	( 0 + o*12)
@@ -45,9 +45,9 @@ public:
 	static float get2PI();
 	static INTERPOLATE* interpolate;
 
-	static float sinusoid(float x);
-	static float smoothstep(float x);
-	static float flat(float x);
+	static float sinusoid(float x, float min, float max);
+	static float smoothstep(float x, float min, float max);
+	static float flat(float x, float min, float max);
 	static float rnd();
 };
 

@@ -23,11 +23,11 @@ float Flt::run(float in, float cut) {
 	SSN1K_PROFILER.enter(3);
 #endif
 	FltCtrls* ctrls = (FltCtrls*)controls_;
-	int mode = ctrls->mode.i();
-	float out = in;
+	int mode = ctrls->mode.i;
+	float output = in;
 	if (mode != 0) {
 		// Update filter coefficients
-		float res = (ctrls->res.i() == 0) ? 1.0f : 1.0f - ctrls->res.f();
+		float res = (ctrls->res.i == 0) ? 1.0f : 1.0f - ctrls->res.f;
 		float e = cut * SSN1K::getTheta();
 		//float e = (float)tan(cut*SSN1K::getTheta());
 		float g = (float)(-/*M_SQRT2 **/ res * e);
@@ -51,18 +51,18 @@ float Flt::run(float in, float cut) {
 		// hp outputs
 		this->hp[1] = this->hp[0]; this->hp[0] = hp;
 
-		out = 0.0f;
+		output = 0.0f;
 		if (mode & SSN1K_FM_LP) // lowpass
-			out += lp;
+			output += lp;
 		if (mode & SSN1K_FM_HP) // hipass
-			out += hp;
+			output += hp;
 	}
 //	else
 //		return in;
 #ifdef _PROFILE
 	SSN1K_PROFILER.leave(3);
 #endif
-	return out;
+	return output;
 }
 
 NS_SSN1K_END

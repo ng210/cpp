@@ -9,15 +9,16 @@
 #include "ssn1k/ssn1klib.h"
 #include "ssn1k/xmloader.h"
 #include "ssn1k/synthadapter.h"
-#include "player/player.h"
+#include "syn/synplayer.h"
 #include "player/playeradapter.h"
-#include "player/sequence.h"
+#include "syn/synsequence.h"
 
 #include "player/channel.h"
 
 NS_FW_BASE_USE
 NS_SSN1K_USE
 NS_PLAYER_USE
+NS_SYN_USE
 
 #define TPS (14*4)	// ticks per second
 #define TICKS 4*128
@@ -46,7 +47,6 @@ COORD* gotoxy(int x, int y) {
 }
 
 //*****************************************************************************
-
 
 BYTE chords[] = {
 	SSN1K_CI_SynthMix, SSN1K_MM_OVR,
@@ -593,31 +593,31 @@ BYTE saw[] = {
 };
 BYTE pls[] = {
 	SSN1K_CI_SynthMix, SSN1K_MM_OVR,
-	SSN1K_CI_SynthAmp, 0xFF,
+	SSN1K_CI_SynthAmp, 0x80,
 	SSN1K_CI_SynthBal, 0x80,
 	SSN1K_CI_Tune, dd2db(0x31C00000),
 
 	SSN1K_CI_Env1Amp, dd2db(0x3F800000),
 	SSN1K_CI_Env1Atk, 0x08,
-	SSN1K_CI_Env1Dec, 0x18,
+	SSN1K_CI_Env1Dec, 0x10,
 	SSN1K_CI_Env1Sus, 0x40,
-	SSN1K_CI_Env1Rel, 0x10,
+	SSN1K_CI_Env1Rel, 0x20,
 
-	SSN1K_CI_Env2Mix, dd2db(0x3F400000),
+	//SSN1K_CI_Env2Mix, dd2db(0),	//dd2db(0x3F400000),
 	SSN1K_CI_Env2Amp, dd2db(0x38800000),
 	//SSN1K_CI_Env2DC, dd2db(0x3F800000),
-	SSN1K_CI_Env2Atk, 0x00,
-	SSN1K_CI_Env2Dec, 0x20,
+	SSN1K_CI_Env2Atk, 0x01,
+	SSN1K_CI_Env2Dec, 0x10,
 	SSN1K_CI_Env2Sus, 0x40,
-	SSN1K_CI_Env2Rel, 0x10,
+	SSN1K_CI_Env2Rel, 0x20,
 
-	SSN1K_CI_Env3Mix, dd2db(0x3F600000),
+	SSN1K_CI_Env3Mix, dd2db(0x3F400000),
 	SSN1K_CI_Env3Amp, dd2db(0x447A0000),
-	SSN1K_CI_Env3DC, dd2db(0x437A0000),
-	SSN1K_CI_Env3Atk, 0x02,
-	SSN1K_CI_Env3Dec, 0x14,
-	SSN1K_CI_Env3Sus, 0x40,
-	SSN1K_CI_Env3Rel, 0x10,
+	SSN1K_CI_Env3DC, dd2db(0x447A0000),
+	SSN1K_CI_Env3Atk, 0x08,
+	SSN1K_CI_Env3Dec, 0x10,
+	SSN1K_CI_Env3Sus, 0xC0,
+	SSN1K_CI_Env3Rel, 0x02,
 
 
 	SSN1K_CI_Osc1Amp, 0x60,
@@ -631,7 +631,7 @@ BYTE pls[] = {
 
 	//SSN1K_CI_FltMix, SSN1K_MM_BPS,
 	SSN1K_CI_FltRes, 0x10,
-	SSN1K_CI_FltMode, SSN1K_FM_HP,
+	SSN1K_CI_FltMode, SSN1K_FM_LP,
 	0xFF
 };
 
@@ -646,7 +646,7 @@ BYTE* instruments[] = {
 	pls, saw
 };
 
-Ctrl** bank01 = NULL;
+Ctrl* bank01 = NULL;
 
 int startPattern = 0;
 int endPattern = 0;
@@ -655,9 +655,9 @@ int voiceCount[] = {
 	2, 2, 2, 2,  2, 2, 2, 2
 };
 BYTE mixerSettings[] = {
-	SSN1K_CI_MixVolume1,	0xC0,	SSN1K_CI_MixBalance1,	0xA0,
-	SSN1K_CI_MixVolume2,	0x80,	SSN1K_CI_MixBalance2,	0x60,
-	SSN1K_CI_MixVolume3,	0x60,	SSN1K_CI_MixBalance3,	0x40,
+	SSN1K_CI_MixVolume1,	0x80,	SSN1K_CI_MixBalance1,	0x60,
+	SSN1K_CI_MixVolume2,	0x40,	SSN1K_CI_MixBalance2,	0x40,
+	SSN1K_CI_MixVolume3,	0x40,	SSN1K_CI_MixBalance3,	0x80,
 	SSN1K_CI_MixVolume4,	0x20,	SSN1K_CI_MixBalance4,	0xC0,
 	SSN1K_CI_MixVolume5,	0x20,	SSN1K_CI_MixBalance5,	0x20,
 	SSN1K_CI_MixVolume6,	0x20,	SSN1K_CI_MixBalance6,	0xE0,
@@ -705,12 +705,12 @@ void setupSequences(Player* player) {
 	// create main sequence
 	sequences[0] = sequence = NEW_(Sequence);
 	frame = sequence->addFrame(0);
-	AbstractAdapter* adapter = (AbstractAdapter*)player->adapters()->getAt(0);
+	IAdapter* adapter = (IAdapter*)player->adapters()->getAt(0);
 	frame->addCommand(adapter->createCommand(Player_Cmd_setTempo, 120.0f, 8.0f));
 	frame->addCommand(adapter->createCommand(Player_Cmd_assign, 2, 1, Player_Flg_Active | 0x0f));
 	frame->addCommand(adapter->createCommand(Player_Cmd_assign, 2, 2, Player_Flg_Active | 0x03));
-	frame->addCommand(adapter->createCommand(Player_Cmd_assign, 1, 3, Player_Flg_Active | 0x03));
-	frame = sequence->addFrame(128);
+	//frame->addCommand(adapter->createCommand(Player_Cmd_assign, 1, 3, Player_Flg_Active | 0x03));
+	frame = sequence->addFrame(16);
 	frame->addCommand(adapter->createEndCommand());
 	player->addSequence(sequence);
 	AbstractChannel* chn = Player::createChannel();
@@ -719,41 +719,54 @@ void setupSequences(Player* player) {
 
 	// create bass sequence
 	sequences[1] = sequence = NEW_(Sequence);
+	//frame = sequence->addFrame(0);
+	//frame->addCommand(MAKE_COMMAND1(Synth_Cmd_prgChange, 3));
+	//frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(1), 0xC0));
+	//frame = sequence->addFrame(1);
+	//frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(1)));
+	//frame = sequence->addFrame(2);
+	//frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(2), 0xA0));
+	//frame = sequence->addFrame(3);
+	//frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(2)));
+	//frame = sequence->addFrame(4);
+	//frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(1), 0x80));
+	//frame = sequence->addFrame(5);
+	//frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(1)));
+	//frame = sequence->addFrame(6);
+	//frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(1), 0xA0));
+	//frame = sequence->addFrame(7);
+	//frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(1)));
+	//frame = sequence->addFrame(8);
+	//frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(2), 0xC0));
+	//frame = sequence->addFrame(9);
+	//frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(2)));
+	//frame = sequence->addFrame(10);
+	//frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(1), 0xA0));
+	//frame = sequence->addFrame(11);
+	//frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(1)));
+	//frame = sequence->addFrame(12);
+	//frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(1), 0x80));
+	//frame = sequence->addFrame(13);
+	//frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(1)));
+	//frame = sequence->addFrame(14);
+	//frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(2), 0xA0));
+	//frame = sequence->addFrame(15);
+	//frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(2)));
+	//frame = sequence->addFrame(16);
+	//frame->addCommand(MAKE_COMMAND0(Player_Cmd_end));
+
 	frame = sequence->addFrame(0);
-	frame->addCommand(MAKE_COMMAND1(Synth_Cmd_prgChange, 3));
-	frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(1), 0xC0));
-	frame = sequence->addFrame(1);
-	frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(1)));
+	frame->addCommand(MAKE_COMMAND1(Synth_Cmd_prgChange, 1));
+	frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(2), 0xFF));
 	frame = sequence->addFrame(2);
-	frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(2), 0xA0));
-	frame = sequence->addFrame(3);
 	frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(2)));
 	frame = sequence->addFrame(4);
-	frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(1), 0x80));
-	frame = sequence->addFrame(5);
-	frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(1)));
+	frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(3), 0xA0));
 	frame = sequence->addFrame(6);
-	frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(1), 0xA0));
-	frame = sequence->addFrame(7);
-	frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(1)));
+	frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(3)));
 	frame = sequence->addFrame(8);
-	frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(2), 0xC0));
-	frame = sequence->addFrame(9);
-	frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(2)));
-	frame = sequence->addFrame(10);
-	frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(1), 0xA0));
-	frame = sequence->addFrame(11);
-	frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(1)));
-	frame = sequence->addFrame(12);
-	frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(1), 0x80));
-	frame = sequence->addFrame(13);
-	frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(1)));
-	frame = sequence->addFrame(14);
-	frame->addCommand(MAKE_COMMAND2(Synth_Cmd_setNoteOn, C(2), 0xA0));
-	frame = sequence->addFrame(15);
-	frame->addCommand(MAKE_COMMAND1(Synth_Cmd_setNoteOff, C(2)));
-	frame = sequence->addFrame(16);
 	frame->addCommand(MAKE_COMMAND0(Player_Cmd_end));
+
 	player->addSequence(sequence);
 
 	// create bass transpose
@@ -794,17 +807,17 @@ void setupSequences(Player* player) {
 	frame->addCommand(MAKE_COMMAND0(Player_Cmd_end));
 	player->addSequence(sequence);
 }
-void createSoundBank() {
-	// create instrument bank
-	int count = arraysize(instruments);
-	bank01 = MALLOC(Ctrl*, count);
-	for (int i = 0; i < count; i++) {
-		// add an instrument
-		bank01[i] = Ctrl::createControls(SSN1K_CI_COUNT);
-		// setup instrument from byte data
-		Synth::setControls(bank01[i], instruments[i]);
-	}
-}
+//void createSoundBank() {
+//	// create instrument bank
+//	int count = arraysize(instruments);
+//	bank01 = MALLOC(Ctrl*, count);
+//	for (int i = 0; i < count; i++) {
+//		// add an instrument
+//		bank01[i] = Ctrl::createControls(SSN1K_CI_COUNT);
+//		// setup instrument from byte data
+//		Synth::setControls(bank01[i], instruments[i]);
+//	}
+//}
 void loadXm(const char* file, PlayerAdapter* playerAdapter, SynthAdapter* synthAdapter) {
 	PArray* sequences = NULL;
 	XmLoader xmLoader(playerAdapter, synthAdapter);
@@ -850,15 +863,15 @@ int _main(NS_FW_BASE::Map* args) {
 	Player::createChannel = createChannel;
 	player = NEW_(Player);
 	PlayerAdapter* playerAdapter = (PlayerAdapter*)player->adapters()->getAt(0);
-	synthAdapter = NEW_(SynthAdapter, player);
+	synthAdapter = NEW_(SynthAdapter);
 	player->adapters()->add(synthAdapter);
 	player->addUserData(sizeof(instruments), instruments);
 	// additional setup
-
 	//player->addUserData(synthBank01Size, synthBank01);
-
-	createSoundBank();
 	mixer = NEW_(Mixer);
+	int instrumentCount = arraysize(instruments);
+	bank01 = Synth::createBank(instrumentCount, instruments);
+	//createSoundBank();
 	mixer->setControls(mixerSettings);
 	for (int i = 0; i < 16; i++) {
 		synths[i] = NEW_(Synth, voiceCount[i]);
@@ -868,9 +881,9 @@ int _main(NS_FW_BASE::Map* args) {
 	}
 
 	SSN1K::setSampleRate((float)sampleRate);
-	SSN1K::interpolate = SSN1K::smoothstep;
+	//SSN1K::interpolate = SSN1K::smoothstep;
 	//SSN1K::interpolate = SSN1K::sinusoid;
-	//SSN1K::interpolate = SSN1K::flat;
+	SSN1K::interpolate = SSN1K::flat;
 
 	const char* file = (const char*)args->get("in");
 	if (file != NULL) {
@@ -885,9 +898,9 @@ int _main(NS_FW_BASE::Map* args) {
 #ifdef _DEBUG
 		LOG("#00 Sequence\n");
 		PArray* sequences = player->sequences();
-		((Sequence*)sequences->getAt(0))->print((AbstractAdapter*)player->adapters()->getAt(0));
+		((SynSequence*)sequences->getAt(0))->print((IAdapter*)player->adapters()->getAt(0));
 		for (UINT32 i = 1; i < sequences->length(); i++) {
-			Sequence* sequence = (Sequence*)sequences->getAt(i);
+			SynSequence* sequence = (SynSequence*)sequences->getAt(i);
 			LOG("#%02d Sequence\n", i);
 			sequence->print(synthAdapter);
 		}
@@ -909,15 +922,15 @@ int _main(NS_FW_BASE::Map* args) {
 			DWORD totalLength = 0;
 			// write adapter IDs
 			*ptr++ = player->adapters()->length();
-			ARRAY_FOREACH(player->adapters(), *ptr++ = ((AbstractAdapter*)value)->id(););
+			ARRAY_FOREACH(player->adapters(), *ptr++ = ((IAdapter*)value)->getId(););
 			// write sequence lengths
 			*(WORD*)ptr = player->sequences()->length(); ptr += sizeof(WORD);
 			// length of master sequence
-			totalLength += *(WORD*)ptr = ((Sequence*)player->sequences()->getAt(0))->toStream((AbstractAdapter*)player->adapters()->getAt(0), body); ptr += sizeof(WORD);
+			totalLength += *(WORD*)ptr = ((SynSequence*)player->sequences()->getAt(0))->toStream((IAdapter*)player->adapters()->getAt(0), body); ptr += sizeof(WORD);
 			for (UINT32 i = 1; i < player->sequences()->length(); i++) {
 				// lengths of the other sequences (adapter dependant)
 				int adapterId = 1;
-				totalLength += *(WORD*)ptr = ((Sequence*)player->sequences()->getAt(i))->toStream((AbstractAdapter*)player->adapters()->getAt(adapterId), body);
+				totalLength += *(WORD*)ptr = ((SynSequence*)player->sequences()->getAt(i))->toStream((IAdapter*)player->adapters()->getAt(adapterId), body);
 				ptr += sizeof(WORD);
 			}
 			// write user data lengths
@@ -959,19 +972,21 @@ int _main(NS_FW_BASE::Map* args) {
 		}
 		printf("\n\nExiting\n");
 	}
-	DEL_(synthAdapter);
+
+	//int count = arraysize(instruments);
+	//for (int i = 0; i < count; i++) {
+	//	FREE(bank01[i]);
+	//}
+	FREE(bank01);
+
 	DEL_(mixer);
+
+	DEL_(synthAdapter);
 	for (int i = 0; i < 16; i++) {
 		DEL_(synths[i]);
 	}
 	ARRAY_FOREACH(player->sequences(), DEL_((Sequence*)value));
 	DEL_(player);
-
-	int count = arraysize(instruments);
-	for (int i = 0; i < count; i++) {
-		FREE(bank01[i]);
-	}
-	FREE(bank01);
 
 	console.showCursor(true);
 
