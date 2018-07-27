@@ -12,7 +12,6 @@
 
 NS_FW_BASE_USE
 
-
 class TestApp : public WinApp {
 	MultiChartView* multiChartView_;
 	Buffer log_;
