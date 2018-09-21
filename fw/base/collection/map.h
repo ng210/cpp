@@ -36,6 +36,7 @@ public:
 	void compare(CollectionCallback callback);
 	void hashing(HashingFunction callback);
 
+	bool containsKey(void* key);
 	//void cleanUp();
 	void* get(void* key);
 	void* put(KeyValuePair* keyValue);
@@ -45,9 +46,9 @@ public:
 	static HashingFunction hashingStr;
 };
 
-#define MAP_FOREACH(map, ACTION) for (UINT32 i = 0; i < map->keys()->length(); i++) { \
-	void* key = map->keys()->getAt(i);	\
-	void* value = map->get(key); \
+#define MAP_FOREACH(map, ACTION) for (UINT32 i = 0; i < (map)->keys()->length(); i++) { \
+	void* key = (map)->keys()->getAt(i);	\
+	void* value = (map)->get(key); \
 	ACTION; \
 }
 

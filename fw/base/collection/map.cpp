@@ -101,6 +101,10 @@ Map::~Map() {
 //	}
 //}
 
+bool Map::containsKey(void* key) {
+	int ix;
+	return keys_->binSearch(key, ix, Collection::compareInt);
+}
 void Map::compare(CollectionCallback callback) {
 	keys_->compare(callback);
 	ARRAY_FOREACH(bucketList_, ((Array*)value)->compare(callback));

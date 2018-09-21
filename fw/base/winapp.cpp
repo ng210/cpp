@@ -28,7 +28,7 @@ extern int APIENTRY WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cm
 	//DEL_(workingDir);
 
 	// get command line arguments
-	char** args_ = str_split_(cmdLine, " ");
+	char** args_ = str_split(cmdLine, " ");
 	Map* args = NEW_(Map, MAP_USE_REF, MAP_USE_REF, Map::hashingStr, Collection::compareStr);
 	for (int i = 0; args_[i] != NULL; i++) {
 		size_t pos = strcspn(args_[i], "=");

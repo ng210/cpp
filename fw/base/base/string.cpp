@@ -2,9 +2,8 @@
 #include "base/str.h"
 #include "base/string.h"
 #include <string.h>
+#include <stdio.h>
 //#include "collection/array.h"
-
-//#include <stdio.h>
 
 NS_FW_BASE_BEGIN
 
@@ -184,7 +183,7 @@ char* str_replace(const char* str, const char* oldValue, const char* newValue) {
 	strncpy(ptr, len1 - offset, &str[offset]);
 	return buffer;
 }
-char** str_split_(const char* str, const char* splitter) {
+char** str_split(const char* str, const char* splitter) {
 	char* parts[128];
 	UINT32 count = 0;
 	UINT32 offs = 0;
@@ -254,6 +253,15 @@ char* str_trim(const char* str, const char* part) {
 	size_t end = strrspn(str, part);
 	return start < end ? str_substring(str, (int)start, (int)end) : strdup("");
 }
+char* str_format(const char* format, ...) {
+	char* buffer = MALLOC(char, 4096);
+	va_list args;
+	va_start(args, format);
+	int length = vsprintf_s(buffer, 4096, format, args) + 1;
+	REALLOC(buffer, char, length);
+	return buffer;
+}
+
 //
 //String* String::substring(long long start, long long end) {
 //	if (start < 0) start = 0;

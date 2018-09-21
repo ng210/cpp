@@ -6,7 +6,7 @@ NS_FW_BASE_USE
 static char* workingDir_;
 Console console;
 
-char* getWorkingDir() {
+const char* getWorkingDir() {
 	return workingDir_;
 }
 
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 //*****************************************************************************
 Console::Console() {
 	hConsole_ = GetStdHandle(STD_OUTPUT_HANDLE);
-	consoleBuffer_ = MALLOC(char, 65536);
+	consoleBuffer_ = MALLOC(char, CONSOLE_BUFFER_LENGTH);
 	GetConsoleScreenBufferInfo(hConsole_, &consoleScreenBufferInfo_);
 }
 Console::~Console() {
@@ -67,8 +67,14 @@ void Console::showCursor(bool status) {
 	consoleCursorInfo_.bVisible = status;
 	SYSPR(SetConsoleCursorInfo(hConsole_, &consoleCursorInfo_));
 }
+void Console::printf(const char* const format, ...) {
+	va_list args;
+	va_start(args, format);
+	vprintf(format, args);
+	va_end(args);
+}
 void Console::vprintf(const char* const format, va_list args) {
-	vsprintf_s(consoleBuffer_, 65536, format, args);
+	vsprintf_s(consoleBuffer_, CONSOLE_BUFFER_LENGTH, format, args);
 	DWORD dwBytesWritten = 0;
 	DWORD reserved;
 	SYSPR(WriteConsole(hConsole_, consoleBuffer_, NS_FW_BASE::strlen(consoleBuffer_), (LPDWORD)&dwBytesWritten, &reserved));

@@ -18,10 +18,11 @@ char*	str_replace(const char* str, const char* oldStr, const char* newStr);
 int		str_starts(const char* str, const char* part);
 char*	str_substr(const char* str, int start, int end = 0);
 char*	str_substring(const char* str, int start, int length = 0x3ffffff);
-char**	str_split_(const char* str, const char* splitter);
+char**	str_split(const char* str, const char* splitter);
 char*	str_ltrim(const char* src, const char* str = " \t\n");
 char*	str_rtrim(const char* src, const char* str = " \t\n");
 char*	str_trim(const char* src, const char* str = " \t\n");
+char*	str_format(const char* format, ...);
 
 NS_FW_BASE_END
 
