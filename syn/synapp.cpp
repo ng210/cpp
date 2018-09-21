@@ -1,13 +1,13 @@
 #include "synapp.h"
 #include "resource.h"
-//#include "bank.h"
-//#include "seqseries.h"
 #include "utils/utils.h"
-#include "soundlib/soundplayer.h"
+#include "utils/directory.h"
 
-const int SynApp::sampleRate_ = 48000;
+PArray SynApp::adapters_;
+PArray SynApp::adapterInfos_;
+Array SynApp::createMenuIds_(sizeof(UINT32));
 
-SynApp* SynApp::instance_ = NULL;
+WinApp* instance_ = NULL;
 
 WinApp* createApplication(HINSTANCE hInstance, Map* args) {
 	// Load menu
@@ -41,29 +41,63 @@ WinApp* createApplication(HINSTANCE hInstance, Map* args) {
 										NULL,							// LPCSTR      lpszMenuName;
 										"SynWClass",					// LPCSTR      lpszClassName;
 																		/* Win 4.0 */
-																		NULL							// HICON       hIconSm;
+NULL							// HICON       hIconSm;
 	};
-	return SynApp::createInstance(&createStruct, &wndClassEx);
+	instance_ = NEW_(SynApp, &createStruct, &wndClassEx);
+	return instance_;
 }
 
 SynApp::SynApp(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx) {
 	// put initialization code here
-	synthAdapter_ = NULL;
 	player_ = NULL;
-	isPlaying_ = false;
 	// allocate resources
 	log_.append("ctor\n", 5);
 	create(createStruct, wndClassEx);
 }
 
 SynApp::~SynApp() {
-	if (isPlaying_) {
-		SoundPlayer::stop();
-	}
 	log_.append("dtor\n", 5);
 	// free resources
 	DEL_(asu_);
 	DEL_(player_);
+}
+
+/// <summary>
+/// Read DLL files from plugin folder
+/// Activate each plugin by calling the entry function
+/// Register adapters defined by the plugins
+/// </summary>
+void SynApp::registerPlugins() {
+	const char* dirName = "test\\plugins\\";
+	size_t dirNameLength = NS_FW_BASE::strlen(dirName);
+	// Get adapter plugins
+	Array* files = Directory::getFiles(dirName, ".dll");
+	for (UINT32 i = 0; i < files->length(); i++) {
+		char* fileName = (char*)files->getAt(i);
+		char path[MAX_PATH];
+		strncpy(path, dirNameLength, dirName);
+		strncpy(&path[dirNameLength], MAX_PATH - dirNameLength, fileName);
+		HMODULE SYSFN(lib, LoadLibrary(path));
+		// implicit call to DllMain
+		GETADAPTERINFOS* SYSFN(getAdapterInfos, (GETADAPTERINFOS*)GetProcAddress(lib, "getAdapterInfos"));
+		if (getAdapterInfos != NULL) {
+			// get all adapters
+			Array* adapterInfos = getAdapterInfos();
+			for (UINT32 j = 0; j < adapterInfos->length(); j++) {
+				ADAPTER_INFO* info = (ADAPTER_INFO*)adapterInfos->getAt(j);
+				info->initialize();
+				Asu::registerAdapter(info);
+				SynApp::adapterInfos_.add(info);
+				SynApp::adapters_.add(info->create(NULL));
+				// get all target types
+				for (UINT32 k = 0; k < info->targetTypes->values()->length(); k++) {
+					ADAPTER_TARGET_TYPE* targetType = (ADAPTER_TARGET_TYPE*)info->targetTypes->values()->getAt(k);
+					UINT32 key = (j << 8) | k;
+					createMenuIds_.add(&key);
+				}
+			}
+		}
+	}
 }
 
 LRESULT CALLBACK SynApp::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -84,14 +118,10 @@ LRESULT CALLBACK SynApp::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		rect.top += 2; rect.bottom -= 4;
 		//SYSFN(ret, SetWindowPos(multiChartView_->hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 		break;
-	case WM_LBUTTONUP:
-		if (isPlaying_) {
-			SoundPlayer::stop();
-		}
-		else {
-			SoundPlayer::start(sampleRate_, 1, soundCallback);
-		}
-		break;
+		//case WM_MENUCOMMAND:
+		//	// menu items added dynamically
+		//	onMenuCommand((int)wParam, (HMENU)lParam);
+		//	break;
 
 	default:
 		ret = Window::wndProc(hWnd, uMsg, wParam, lParam);
@@ -99,130 +129,96 @@ LRESULT CALLBACK SynApp::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	return ret;
 }
 
-SynApp* SynApp::createInstance(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx) {
-	SynApp::instance_ = NEW_(SynApp, createStruct, wndClassEx);
-	return SynApp::instance_;
+void SynApp::createMenu() {
+	// build "Create" menu
+	HMENU SYSFN(hMenu, GetMenu(hWnd_));
+	HMENU SYSFN(hCreateMenu, CreateMenu());
+	MENUITEMINFO mii;
+	memset(&mii, 0, sizeof(MENUITEMINFO));
+	mii.cbSize = sizeof(MENUITEMINFO);
+	char menuItemString[64];
+	mii.fMask = MIIM_SUBMENU;
+	mii.hSubMenu = hCreateMenu;
+	BOOL SYSFN(success, SetMenuItemInfo(hMenu, ID_CREATE, false, &mii));
+
+	if (success) {
+		int adapterId = -1;
+		ADAPTER_INFO* info = NULL;
+		int adapterCount = 0;
+		int targetCount = 0;
+		HMENU hSubmenu;
+		for (UINT32 i = 0; i < SynApp::createMenuIds_.length(); i++) {
+			UINT32 id = *(UINT32*)SynApp::createMenuIds_.getAt(i);
+			UINT32 newAdapterId = id >> 8;
+			if (adapterId != newAdapterId) {
+				adapterId = newAdapterId;
+				info = (ADAPTER_INFO*)SynApp::adapterInfos_.getAt(adapterId);
+				// add submenu
+				SYSFN(hSubmenu, CreateMenu());
+				// add submenu to create menu
+				mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_SUBMENU;
+				mii.fType = MFT_STRING;
+				mii.wID = info->id;
+				mii.dwTypeData = info->name;
+				mii.hSubMenu = hSubmenu;
+				SYSPR(InsertMenuItem(hCreateMenu, adapterCount++, true, &mii));
+				targetCount = 0;
+			}
+			int targetId = id & 0xff;
+			ADAPTER_TARGET_TYPE* targetType = (ADAPTER_TARGET_TYPE*)info->targetTypes->values()->getAt(targetId);
+			mii.fMask = MIIM_TYPE | MIIM_ID;
+			mii.fType = MFT_STRING;
+			mii.wID = ID_CREATE + i;
+			mii.dwTypeData = targetType->name;
+			SYSPR(InsertMenuItem(hSubmenu, targetCount++, true, &mii));
+		}
+
+		//// get all adapters
+		//UINT32 SYSFN(ix, GetMenuItemCount(hCreateMenu));
+		//Array* infos = Asu::getAdapterInfoList();
+		//for (UINT32 i = 0; i < infos->length(); i++) {
+		//	ADAPTER_INFO* info = (ADAPTER_INFO*)infos->getAt(i);
+		//	// add menu entries
+		//	HMENU SYSFN(hSubmenu, CreateMenu());
+		//	// add submenu to create menu
+		//	mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_SUBMENU;
+		//	mii.fType = MFT_STRING;
+		//	mii.wID = info->id;
+		//	mii.dwTypeData = info->name;
+		//	mii.hSubMenu = hSubmenu;
+		//	SYSPR(InsertMenuItem(hCreateMenu, ix++, true, &mii));
+		//	for (UINT32 j = 0; j < info->targetTypes->values()->length(); j++) {
+		//		UINT32 key = j + (i<<8);
+		//		ADAPTER_TARGET_TYPE* targetType = (ADAPTER_TARGET_TYPE*)info->targetTypes->values()->getAt(j);
+		//		mii.fMask = MIIM_TYPE | MIIM_ID;
+		//		mii.fType = MFT_STRING;
+		//		mii.wID = ID_CREATE + j;
+		//		mii.dwTypeData = targetType->name;
+		//		SYSPR(InsertMenuItem(hSubmenu, j, true, &mii));
+		//	}
+		//}
+		//DEL_(infos);
+	}
 }
 
 LRESULT SynApp::onCreate() {
+	registerPlugins();
+	createMenu();
 	//SYSPR(SetWindowText(hWnd_, "MultiChartView test"));
 	asu_ = NEW_(Asu);
-	createTestSong();
 	return 0;
 }
 
 LRESULT SynApp::onCommand(WPARAM wParam, LPARAM lParam) {
-	LRESULT res = 0;
+	LRESULT res = 1;
 	WORD cmd = LOWORD(wParam);
-	switch (cmd) {
-		// File
-		case ID_FILE_OPEN:
-			openFile();
-			break;
-		case ID_FILE_SAVE:
-			saveFile();
-			break;
-		case ID_FILE_SAVEAS:
-			saveFileAs();
-			break;
-		case ID_FILE_IMPORT:
-			importFile();
-			break;
-		case ID_FILE_EXPORT:
-			exportFile();
-			break;
-		case ID_FILE_EXIT:
-			PostQuitMessage(0);
-			break;
-		// Edit
-		case ID_EDIT_ADDADAPTER:
-			addAdapter();
-			break;
-		case ID_EDIT_ADDSEQUENCE:
-			addSequence();
-			break;
-		case ID_EDIT_ADDUSERDATA:
-			addUserDataBlock();
-			break;
-			
-
-		// Play
-		case ID_PLAY_START:
-			if (isPlaying_) {
-				res = SoundPlayer::stop();
-				// reset ssn
-			}
-			else {
-				if (asu_ != NULL) {
-					res = SoundPlayer::start(sampleRate_, 1, soundCallback);
-				}
-			}
-			isPlaying_ = !isPlaying_;
-			break;
+	while (true) {
+		if (processFileCommands(cmd, wParam, lParam)) break;
+		if (processEditCommands(cmd, wParam, lParam)) break;
+		if (processCreateCommands(cmd, wParam, lParam)) break;
+		// else
+		res = 0;
+		break;
 	}
 	return res;
-}
-
-#include "bank.h"
-
-static int createInitDataForSynthAdapter(out void*& data) {
-	// create init data for 16 synths
-	UINT32 length = 1 + 16 + 1;
-	int instrumentCount = arraysize(instruments_);
-	for (int i = 0; i < instrumentCount; i++) {
-		length += instrumentSizes_[i];
-	}
-	UINT8* ptr = MALLOC(UINT8, length);
-	data = ptr;
-	*ptr++ = instrumentCount;
-	for (int i = 0; i < instrumentCount; i++) {
-		int size = instrumentSizes_[i];
-		memcpy(ptr, instruments_[i], size); ptr += size;
-	}
-	// use 4 synths
-	*ptr++ = 4;
-	UINT8 voiceCount[16] = { 3, 2, 1, 2,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1 };
-	length = sizeof(voiceCount);
-	memcpy(ptr, voiceCount, length); ptr += length;
-	return length;
-}
-
-static char* testSongPath = "min.xm";
-
-void SynApp::createTestSong() {
-	Player* ply = asu_->player();
-	// create synth adapter
-	SynthAdapter* adapter = NEW_(SynthAdapter);
-	// create init data
-	void* ptr = NULL;
-	int length = createInitDataForSynthAdapter(ptr);
-	// add adapter and initialization data
-	asu_->addAdapter(adapter, length, ptr);
-	// read xm and import sequences
-	int start = 0;
-	if (asu_->importXm(testSongPath, start) == 0) {
-		// import error
-		MessageBox(hWnd_, "File read import error!", "Error", MB_OK);
-	}
-
-	//// add user data blocks:
-	////  - create 16 synths
-	//UINT32 length = 1 + 16 * 2;
-	//UINT8* ptr = MALLOC(UINT8, length);
-	//UINT8 voiceCount[16] = { 3, 2, 1, 2,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1 };
-	//for (int i = 0; i < 16; i++) {
-	//	*ptr++ = voiceCount[i];	// voice count
-	//	*ptr++ = 1;				// user block id for sound bank
-	//}
-	//ply->addUserDataBlock(length, ptr);
-	////  - create sound bank
-	//SYNTH_BANK* bank = MALLOC(SYNTH_BANK, 1);
-	//bank->instrumentCount = 4;
-	//bank->instrumentData = instruments;
-	//ply->addUserDataBlock(sizeof(bank), bank);
-
-	//// add synthadapter with user data block #0
-	//SynthAdapter* adapter = NEW_(SynthAdapter);
-	//adapter->initialize(0, ply);
-	//ply->addAdapter(adapter);
 }

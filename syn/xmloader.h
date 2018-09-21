@@ -6,7 +6,7 @@
 #include "sequence.h"
 #include "collection/parray.h"
 #include "playeradapter.h"
-#include "synthadapter.h"
+#include "ssn1k/synthadapter.h"
 
 NS_FW_BASE_USE
 NS_PLAYER_USE

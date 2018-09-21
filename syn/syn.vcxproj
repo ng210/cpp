@@ -85,8 +85,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -147,28 +146,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="asu.cpp" />
-    <ClCompile Include="editmenu.cpp" />
-    <ClCompile Include="filemenu.cpp" />
-    <ClCompile Include="functions.cpp" />
-    <ClCompile Include="seqseries.cpp" />
-    <ClCompile Include="sound.cpp" />
-    <ClCompile Include="synsequence.cpp" />
+    <ClCompile Include="createcommands.cpp" />
+    <ClCompile Include="editcommands.cpp" />
+    <ClCompile Include="filecommands.cpp" />
     <ClCompile Include="synapp.cpp" />
+    <ClCompile Include="synsequence.cpp" />
     <ClCompile Include="xmloader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asu.h" />
-    <ClInclude Include="bank.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="synsequence.h" />
-    <ClInclude Include="syndef.h" />
-    <ClInclude Include="synplayer.h" />
-    <ClInclude Include="seqseries.h" />
     <ClInclude Include="synapp.h" />
+    <ClInclude Include="synsequence.h" />
     <ClInclude Include="xmloader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="design.md" />
+    <None Include="editor.md" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="syn.rc" />
@@ -176,6 +170,9 @@
   <ItemGroup>
     <Image Include="small.ico" />
     <Image Include="test.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="create-song.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

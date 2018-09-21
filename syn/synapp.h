@@ -5,89 +5,75 @@
 #include "asu.h"
 #include "utils/buffer.h"
 
-//#include "multichartview/multichartview.h"
-//#include "seqseries.h"
-//
-//#include "soundlib/SoundPlayer.h"
-//#include "soundlib/WavFmt.h"
-//
-//#include "ssn1k/ssn1klib.h"
-#include "ssn1k/synthadapter.h"
-//
-//#include "syn/synplayer.h"
-//#include "player/playeradapter.h"
-//#include "syn/synsequence.h"
-//#include "player/channel.h"
-//#include "xmloader.h"
-
 NS_FW_BASE_USE
-NS_SSN1K_USE
-//NS_PLAYER_USE
+NS_PLAYER_USE
 
-void soundCallback(short* buffer, int sampleCount);
+WinApp* createApplication(HINSTANCE hInstance, Map* args);
 
+extern WinApp* instance_;
+
+/// <summary>
+/// Application for creating and editing asu content.
+/// Main functions
+///  - load adapters dynamically
+///  - create sequences, commands defined by adapters
+///  - create objects via adapters
+///  - create user data blocks via adapters
+/// </summary>
 class SynApp : public WinApp {
-	static const int sampleRate_;
-	static SynApp* instance_;
-	Player* player_;
-	//PlayerAdapter* playerAdapter_;
-	//PArray* sequences_;
-	//PArray* series_;
-
-	bool isPlaying_;
-
+	static PArray adapters_;
+	static PArray adapterInfos_;
+	static Array createMenuIds_;
+	// main document
 	Asu* asu_;
+	// main playback
+	Player* player_;
 
-	SynthAdapter* synthAdapter_;
-	//Synth* synths[16];
-	//Mixer* mixer;
+	// register plugins of adapters
+	void registerPlugins();
 
 	//MultiChartView* multiChartView_;
 	//DataSeries* dataSeries_;
 
 	Buffer log_;
 
-	void setupSound();
-
 	LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-	SynApp(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx);
+	// Menu handling
+	void createMenu();
+	// file menu
+	BOOL processFileCommands(UINT32 cmd, WPARAM wParam, LPARAM lParam);
+	LRESULT openFile();
+	LRESULT saveFile();
+	LRESULT saveFileAs();
+	LRESULT importFile();
+	// edit menu
+	BOOL processEditCommands(UINT32 cmd, WPARAM wParam, LPARAM lParam);
+	// create menu
+	BOOL processCreateCommands(UINT32 cmd, WPARAM wParam, LPARAM lParam);
+
 public:
-	static SynApp* createInstance(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx);
-	static SynApp* instance() {
-		return SynApp::instance_;
-	}
+	SynApp(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx);
 	~SynApp();
 
 	LRESULT onCreate();
 	LRESULT onCommand(WPARAM wParam, LPARAM lParam);
 
-	void feedSample(short* buffer, int sampleCount);
-
-	// file menu
-	LRESULT openFile();
-	LRESULT saveFile();
-	LRESULT saveFileAs();
-	LRESULT importFile();
-	LRESULT exportFile();
+	//LRESULT exportFile();
 
 	// edit menu
-	LRESULT addAdapter();
-	LRESULT addSequence();
-	LRESULT addUserDataBlock();
+	//LRESULT copy();
+	//LRESULT cut();
+	//LRESULT paste();
+	//LRESULT undo();
+	//LRESULT redo();
 
-
-	void createTestSong();
-
-
-	//PArray* importSequencesFromXM(const char* path);
-	//void freeSequences(PArray* sequences);
-	//void createSeries(PArray* sequences);
-	//void prepareViews();
-	//void preparePlayer();
-	//	
-	//PArray* createSequences();
-
+	// create
+	// adapters are submenus
+	// sub-submenus
+	LRESULT addTarget(int id);
+	LRESULT addSequence(int id);
+	LRESULT addUserDataBlock(int id);
 };
 
 #endif

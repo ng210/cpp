@@ -14,8 +14,8 @@ public:
 	//Frame* addFrame(int time);
 	//Frame* frame(int ix);
 
-	int toStream(IAdapter* adapter, Buffer* buffer);
-	void print(IAdapter* adapter, Buffer* buffer);
+	//static int toStream(Sequence* sequence, IAdapter* adapter, Buffer* buffer);
+	char* info(IAdapter* adapter);
 };
 
 NS_SYN_END
