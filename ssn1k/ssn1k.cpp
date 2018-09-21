@@ -12,14 +12,13 @@ float SSN1K::sampleRate = 48000.0f;
 float SSN1K::sampleRateR = 1.0f/48000.0f;
 float SSN1K::theta = (float)(2*M_PI / 48000.0f);
 INTERPOLATE* SSN1K::interpolate = SSN1K::flat;
-float SSN1K::_2PI = 0.0f;
+float SSN1K::_2PI = (float)(2.0 * M_PI);
 
 
 void SSN1K::setSampleRate(float value) {
 	SSN1K::sampleRate = value;
 	SSN1K::sampleRateR = 1.0f / value;
 	SSN1K::theta = (float)(2*M_PI / value);
-	SSN1K::_2PI = (float)(2.0 * M_PI);
 }
 float SSN1K::getSampleRate() {
 	return SSN1K::sampleRate;

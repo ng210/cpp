@@ -2,15 +2,17 @@
 #define __SSN1K_H
 
 #define NS_SSN1K ssn1k
-#define NS_SSN1K_BEGIN  namespace NS_SSN1K {
+#define NS_SSN1K_BEGIN namespace NS_SSN1K {
 #define NS_SSN1K_END }
-#define NS_SSN1K_USE  using namespace NS_SSN1K;
+#define NS_SSN1K_USE using namespace NS_SSN1K;
 
 #ifndef offsetof
 #define offsetof(t, f) ((int)&((t*)0)->f)
 #endif
 
 #define DWtoDB(w) (unsigned char)(w & 0xff), (unsigned char)(w>>8 & 0xff)
+
+//#include "basedef.h"
 
 NS_SSN1K_BEGIN
 

@@ -1,12 +1,15 @@
 //#include "base/consoleapp.h"
 #include <windows.h>
 #include "runtime.h"
+#include "utils/directory.h"
+#include "consoleapp.h"
 
 NS_FW_BASE_USE
 
 int testUtils();
 int testBuffer();
 int testFile();
+int testDirectory();
 int testPathInfo();
 int testStr();
 int testString();
@@ -17,7 +20,8 @@ int testTree();
 
 #define TEST(t) t() ? failed++ : passed++;
 
-int main(int argc, char* args[]) {
+int _main(NS_FW_BASE::Map* args) {
+//int main(int argc, char* args[]) {
 	#ifdef _DEBUG
 	Debug::initialize(/*DEBUG_UNICODE | DEBUG_MEMORY*/);
 	#endif
@@ -31,23 +35,18 @@ int main(int argc, char* args[]) {
 
 	int passed = 0, failed = 0;
 
-	float f = 1000.0f;
-	printf("0x%0X\n", reinterpret_cast<int&>(f));
-	f = 100.0f;
-	printf("0x%0X\n", reinterpret_cast<int&>(f));
-	return 0;
-
 	//TEST(testUtils);
 	//TEST(testBuffer);
 	//TEST(testFile);
+	TEST(testDirectory);
 	//TEST(testPathInfo);
 	//TEST(testStr);
 	//TEST(testString);
 	//TEST(testArray);
 	//TEST(testPArray);
 	//TEST(testMap);
-	TEST(testTree);
-
+	//TEST(testTree);
+	
 	//WORD buffer[48000];
 	//for (int i = 0; i < 48000; i++) {
 	//	buffer[i] = (WORD)Utils::random(65536);
@@ -61,9 +60,6 @@ int main(int argc, char* args[]) {
 	printf("****************\n\nFinal results: %d/%d=%.02f%%\n\n********************************\n\n",
 		passed, (passed + failed), (100.0f*passed) / (passed + failed));
 
-#ifdef _DEBUG
-	MemoryMgr::checkMemDbgInfo(0, NULL);
-#endif
 	return 0;
 }
 
@@ -200,6 +196,39 @@ int testFile() {
 		passed, (passed + failed), (100.0f*passed) / (passed + failed));
 	return failed;
 }
+int testDirectory() {
+	int passed = 0;
+	int failed = 0;
+	LOG("********************************\nDirectory tests\n********\n");
+
+	char* files[] = {
+		"main.cpp",
+		"test.dat",
+		"test.vcxproj",
+		"test.vcxproj.filters",
+		"test.vcxproj.user"
+	};
+
+	char* path = str_substr(getWorkingDir(), 0, str_indexOf(getWorkingDir(), "test") + 4);
+
+	Array* entries = Directory::getFiles(path);
+	int notFound = arraysize(files);
+	for (int i = 0; i < arraysize(files); i++) {
+		int ix = 0;
+		if (entries->findIndex(files[i], Collection::compareStr) != -1) {
+			LOG("-%s\n", files[i]);
+			notFound--;
+		}
+	}
+	notFound == 0 ? passed++ : failed++;
+
+	DEL_(entries);
+	FREE(path);
+
+	LOG("****************\n\nResults: %d/%d=%.02f%%\n\n********************************\n\n",
+		passed, (passed + failed), (100.0f*passed) / (passed + failed));
+	return failed;
+}
 int testPathInfo() {
 	int passed = 0;
 	int failed = 0;
@@ -287,7 +316,7 @@ int testString() {
 	str = str_substring(term1, -107, -111);
 	ASSERT("substr(-107, -111) should return ''", strncmp(str, "") == 0);
 	FREE(str);
-	char** arr = str_split_(term1, "red");
+	char** arr = str_split(term1, "red");
 	ASSERT("split should return at #0 'The '", strncmp(arr[0], "The ") == 0);
 	ASSERT("split should return at #1 ' fox jumps over a '", strncmp(arr[1], " fox jumps over a ") == 0);
 	ASSERT("split should return at #2 ' fence.'", strncmp(arr[2], " fence.") == 0);
@@ -299,14 +328,13 @@ int testString() {
 		FREE(str);
 	}
 	FREE(arr);
-	arr = str_split_(" Hello world! ", " ");
+	arr = str_split(" Hello world! ", " ");
 	ASSERT("split should return at #0 'Hello'", strncmp(arr[0], "Hello") == 0);
 	ASSERT("split should return at #1 'world!'", strncmp(arr[1], "world!") == 0);
 	for (int i = 0; (str = arr[i]) != NULL; i++) {
 		FREE(str);
 	}
 	FREE(arr);
-
 
 	const char* term2 = " \t Hello \t world!\n \t ";
 	str = str_ltrim(term2);

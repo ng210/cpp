@@ -3,22 +3,15 @@
 #include <conio.h>
 
 #include "consoleapp.h"
-#include "soundlib/SoundPlayer.h"
-#include "soundlib/WavFmt.h"
+#include "soundlib/soundplayer.h"
+#include "soundlib/wavfmt.h"
 
 #include "ssn1k/ssn1klib.h"
-#include "ssn1k/xmloader.h"
-#include "ssn1k/synthadapter.h"
-#include "syn/synplayer.h"
-#include "player/playeradapter.h"
-#include "syn/synsequence.h"
-
-#include "player/channel.h"
+#include "syn/asu.h"
 
 NS_FW_BASE_USE
 NS_SSN1K_USE
 NS_PLAYER_USE
-NS_SYN_USE
 
 #define TPS (14*4)	// ticks per second
 #define TICKS 4*128
