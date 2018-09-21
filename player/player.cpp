@@ -34,10 +34,10 @@ Player::~Player() {
 	DEL_(adapters_);
 }
 
-void Player::addAdapter(IAdapter* adapter, void* data) {
-	targets_->add(adapter);
-	adapter->initialize(data, this);
-}
+//void Player::addAdapter(IAdapter* adapter, void* data) {
+//	targets_->add(adapter);
+//	//adapter->initialize((UINT8*)data);
+//}
 
 void Player::addSequence(PLAYER_SEQUENCE sequence) {
 	sequences_->add(sequence);

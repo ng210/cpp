@@ -41,20 +41,26 @@ typedef union PLAYER_COMMAND_ALL_ {
 } PLAYER_COMMAND_ALL;
 
 class PlayerAdapter : public IAdapter {
+	static const ADAPTER_INFO adapterInfo_;
+	static void initialize();
+	static void destroy();
+	static IAdapter* create(UINT8** data);
 public:
-	int initialize(void* data, Player* player);
-	int getId();
+	const ADAPTER_INFO* getInfo();
+
 	int processCommand(void* object, PLAYER_COMMAND cmd);
 	void setTempo(void *object, float ticksPerSecond);
-	//Target* createTarget(void* initData);
+	size_t fill(void* buffer, size_t start, size_t end);
 
 	// Misc. methods
-
 	PLAYER_COMMAND createCommand(int code, ...);
 	int getCommandParameters(PLAYER_COMMAND cmd, double* parameters);
 	int matchCommand(int filter, PLAYER_COMMAND cmd);
 	char* logCommand(PLAYER_COMMAND command);
 	int dumpCommand(PLAYER_COMMAND command, Buffer* buffer);
+
+	// Editor
+	Target* createTarget(int id, UINT8* data);
 };
 
 NS_PLAYER_END

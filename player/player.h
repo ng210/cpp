@@ -2,9 +2,8 @@
 #define __PLAYER_ABSTRACT_PLAYER_H
 
 #include "playerdef.h"
-#include "collection/parray.h"
-#include "abstractchannel.h"
 #include "iadapter.h"
+#include "abstractchannel.h"
 
 NS_FW_BASE_USE
 NS_PLAYER_BEGIN
@@ -32,7 +31,7 @@ public:
 	Player();
 	virtual ~Player();
 
-	void addAdapter(IAdapter* adapter, void* data = NULL);
+	//void addAdapter(IAdapter* adapter, void* data = NULL);
 	void addSequence(PLAYER_SEQUENCE sequence);
 	void addUserDataBlock(size_t length, void* userData);
 	void addTarget(void* object, IAdapter* adapter);

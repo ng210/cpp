@@ -5,12 +5,27 @@
 
 NS_PLAYER_BEGIN
 
-int PlayerAdapter::initialize(void* data, Player* player) {
-	return 0;
+const ADAPTER_INFO PlayerAdapter::adapterInfo_ = {
+	0x504C5900,		// PLY+00
+	"PLY00",
+	PlayerAdapter::initialize,
+	PlayerAdapter::destroy,
+	PlayerAdapter::create,
+	NULL
+};
+IAdapter* PlayerAdapter::create(UINT8** data) {
+	IAdapter* adapter = NEW_(PlayerAdapter);
+	// initialize adapter
+	return adapter;
 }
 
-int PlayerAdapter::getId() {
-	return PLAYER_ADAPTER_ID;
+const ADAPTER_INFO* PlayerAdapter::getInfo() {
+	return &PlayerAdapter::adapterInfo_;
+}
+void PlayerAdapter::initialize() {
+}
+
+void PlayerAdapter::destroy() {
 }
 
 int PlayerAdapter::processCommand(void* object, PLAYER_COMMAND command) {
@@ -55,10 +70,9 @@ int PlayerAdapter::processCommand(void* object, PLAYER_COMMAND command) {
 void PlayerAdapter::setTempo(void *object, float ticksPerSecond) {
 	((Player*)object)->refreshRate(ticksPerSecond);
 }
-//Target* PlayerAdapter::createTarget(void* player) {
-//	Target* target = NEW_(Target, player, this);
-//	return target;
-//}
+size_t PlayerAdapter::fill(void* buffer, size_t start, size_t end) {
+	return 0;
+}
 
 // Misc. methods
 PLAYER_COMMAND PlayerAdapter::createCommand(int code, ...) {
@@ -168,5 +182,11 @@ int PlayerAdapter::dumpCommand(PLAYER_COMMAND command, Buffer* buffer) {
 	}
 	return length;
 }
+
+// Editor
+Target* PlayerAdapter::createTarget(int id, UINT8* data) {
+	return NULL;
+}
+
 
 NS_PLAYER_END

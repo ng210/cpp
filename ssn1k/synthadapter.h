@@ -8,8 +8,6 @@
 NS_PLAYER_USE
 NS_SSN1K_BEGIN
 
-#define SYNTH_ADAPTER_ID 0x10
-
 /******************************************************************************
 * Commands used by the player adapter
 *****************************************************************************/
@@ -47,35 +45,49 @@ typedef struct SYNTH_CMD_PRG_CHNG_ : ABSTRACT_ADAPTER_COMMAND_ {
 	UINT8 id;
 } SYNTH_CMD_PRG_CHNG;
 
-typedef struct SYNTH_CREATE_TARGET_ {
-	UINT8 voiceCount;
-	SYNTH_BANK* bank;
-} SYNTH_CREATE_TARGET;
+enum SYNTHADAPTER_TARGET {
+	POLYSYNTH01,
+	MONOSYNTH01
+};
+
+//typedef struct SYNTH_CREATE_TARGET_ {
+//	UINT8 voiceCount;
+//	SYNTH_BANK* bank;
+//} SYNTH_CREATE_TARGET;
 
 class SynthAdapter : public IAdapter {
 	Mixer* mixer_;
 	UINT8 synthCount_;
 	Synth* synths_[16];
 
+	static Map targetTypes_;
+
+	static const ADAPTER_INFO adapterInfo_;
+	static void initialize();
+	static void destroy();
+	static IAdapter* create(UINT8** data);
+
 	static int createBank(SYNTH_BANK* bankConfig, out Ctrl*& bank);
 public:
 	SynthAdapter();
 	virtual ~SynthAdapter();
 
-	int initialize(void* data, Player* player);
-	int getId();
+	static const ADAPTER_INFO& adapterInfo();
+	const ADAPTER_INFO* getInfo();
+
 	int processCommand(void* object, PLAYER_COMMAND command);
 	void setTempo(void *object, float ticksPerSecond);
-	Target* createTarget(void* initData);
-	PLAYER_COMMAND createCommand(int code, ...);
-#ifdef _DEBUG
-	char* logCommand(PLAYER_COMMAND command);
-#endif
-	int dumpCommand(PLAYER_COMMAND cmd, Buffer* buffer);
-	int matchCommand(int filter, PLAYER_COMMAND cmd);
-	int getCommandParameters(PLAYER_COMMAND cmd, double* parameters);
+	size_t fill(void* buffer, size_t start, size_t end);
 
-	void run(void* buffer, size_t start, size_t end);
+	// Misc. methods
+	PLAYER_COMMAND createCommand(int code, ...);
+	int getCommandParameters(PLAYER_COMMAND cmd, double* parameters);
+	int matchCommand(int filter, PLAYER_COMMAND cmd);
+	char* logCommand(PLAYER_COMMAND command);
+	int dumpCommand(PLAYER_COMMAND cmd, Buffer* buffer);
+
+	// Editor
+	Target* createTarget(int id, UINT8* data);
 };
 
 NS_SSN1K_END

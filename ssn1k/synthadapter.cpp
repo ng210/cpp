@@ -6,21 +6,76 @@
 
 NS_SSN1K_BEGIN
 
-
 static char* NOTES[] = { "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "H-" };
 
-
 static UINT8  mixerSettings_[] = {
-	SSN1K_CI_MixVolume1,	0x80,	SSN1K_CI_MixBalance1,	0x60,
-	SSN1K_CI_MixVolume2,	0x40,	SSN1K_CI_MixBalance2,	0x40,
-	SSN1K_CI_MixVolume3,	0x40,	SSN1K_CI_MixBalance3,	0x80,
-	SSN1K_CI_MixVolume4,	0x20,	SSN1K_CI_MixBalance4,	0xC0,
-	SSN1K_CI_MixVolume5,	0x20,	SSN1K_CI_MixBalance5,	0x20,
-	SSN1K_CI_MixVolume6,	0x20,	SSN1K_CI_MixBalance6,	0xE0,
-	SSN1K_CI_MixVolume7,	0x00,	SSN1K_CI_MixBalance7,	0x20,
-	SSN1K_CI_MixVolume8,	0x00,	SSN1K_CI_MixBalance8,	0x80,
+	SSN1K_CI_MixVolume1,	0x28,	SSN1K_CI_MixBalance1,	0x60,
+	SSN1K_CI_MixVolume2,	0x28,	SSN1K_CI_MixBalance2,	0x40,
+	SSN1K_CI_MixVolume3,	0x28,	SSN1K_CI_MixBalance3,	0x80,
+	SSN1K_CI_MixVolume4,	0x60,	SSN1K_CI_MixBalance4,	0xC0,
+	SSN1K_CI_MixVolume5,	0x40,	SSN1K_CI_MixBalance5,	0x20,
+	SSN1K_CI_MixVolume6,	0x50,	SSN1K_CI_MixBalance6,	0xE0,
+	SSN1K_CI_MixVolume7,	0x60,	SSN1K_CI_MixBalance7,	0x20,
+	SSN1K_CI_MixVolume8,	0x50,	SSN1K_CI_MixBalance8,	0x80,
 	0xFF
 };
+
+Map SynthAdapter::targetTypes_(sizeof(UINT32), sizeof(ADAPTER_TARGET_TYPE), Map::hashingItem, Collection::compareInt);
+
+const ADAPTER_INFO SynthAdapter::adapterInfo_ = {
+	('S'<<0) + ('Y'<<8) + ('N'<<16) + (0<<24),		// SYN+00
+	"SYN00",
+	SynthAdapter::initialize,
+	SynthAdapter::destroy,
+	SynthAdapter::create,
+	&SynthAdapter::targetTypes_
+};
+
+void SynthAdapter::initialize() {
+	ADAPTER_TARGET_TYPE targetType;
+	targetType.id = SYNTHADAPTER_TARGET::POLYSYNTH01;
+	strncpy(targetType.name, 32, "Poly-Synth01");
+	targetTypes_.put(&targetType.id, &targetType);
+
+	targetType.id = SYNTHADAPTER_TARGET::MONOSYNTH01;
+	strncpy(targetType.name, 32, "Mono-Synth02");
+	targetTypes_.put(&targetType.id, &targetType);
+
+}
+
+void SynthAdapter::destroy() {
+	MAP_FOREACH(&SynthAdapter::targetTypes_, FREE(value));
+}
+
+IAdapter* SynthAdapter::create(UINT8** data) {
+	SynthAdapter* adapter = NEW_(SynthAdapter);
+	if (data != NULL) {
+		// initialize adapter from the data
+		// count of instruments
+		// array of instrument config
+		// count of synths
+		// array of voice count
+		UINT8* ptr = *data;
+
+		// create sound bank
+		Ctrl* bank = NULL;
+		ptr += createBank((SYNTH_BANK*)ptr, bank);
+
+		adapter->synthCount_ = *ptr++;
+		// create synth, specify voice count
+		for (int si = 0; si < adapter->synthCount_; si++) {
+			Synth* synth = adapter->synths_[si] = NEW_(Synth, *ptr++);
+			adapter->mixer_->addInput(synth);
+			synth->bank(bank);
+		}
+		*data = ptr;
+	}
+	return adapter;
+}
+
+const ADAPTER_INFO& SynthAdapter::adapterInfo() {
+	return SynthAdapter::adapterInfo_;
+}
 
 SynthAdapter::SynthAdapter() {
 	synthCount_ = 0;
@@ -37,35 +92,8 @@ SynthAdapter::~SynthAdapter() {
 	DEL_(mixer_);
 }
 
-
-typedef struct SYNTH_USER_BLOCK_BANK_ {
-	int userDataBlockId;
-	Ctrl* soundBank;
-} SYNTH_USER_BLOCK_BANK;
-int SynthAdapter::initialize(void* data, Player* player) {
-	// count of instruments
-	// array of instrument config
-	// count of synths
-	// array of voice count
-	UINT8* ptr = (UINT8*)data;
-
-	// create sound bank
-	Ctrl* bank = NULL;
-	createBank((SYNTH_BANK*)ptr, bank);
-
-	int synthCount = *ptr++;
-	// create synth, specify voice count
-	for (int si = 0; si < synthCount; si++) {
-		Synth* synth = NEW_(Synth, *ptr++);
-		synth->bank(bank);
-		player->addTarget(synth, this);
-	}
-
-	return 0;
-}
-
-int SynthAdapter::getId() {
-	return SYNTH_ADAPTER_ID;
+const ADAPTER_INFO* SynthAdapter::getInfo() {
+	return &SynthAdapter::adapterInfo_;
 }
 
 int SynthAdapter::processCommand(void* object, PLAYER_COMMAND command) {
@@ -123,19 +151,10 @@ int SynthAdapter::processCommand(void* object, PLAYER_COMMAND command) {
 void SynthAdapter::setTempo(void *object, float ticksPerSecond) {
 	((Synth*)object)->ticksPerSample(ticksPerSecond*SSN1K::getSampleRateR());
 }
-//Target* SynthAdapter::createTarget(void* initData) {
-//	SYNTH_CREATE_TARGET* data = (SYNTH_CREATE_TARGET*)initData;
-//	Synth* synth = NEW_(Synth, data->voiceCount);
-//	Target* target = NEW_(Target, synth, this);
-//	// initialize synth from initData
-//	if (data->bank != NULL) {
-//		synth->bank(synth->createBank(data->bank));
-//	}
-//	mixer_->addInput(synth);
-//	synthCount++;
-//	// connect synth to mixer
-//	return target;
-//}
+size_t SynthAdapter::fill(void* buffer, size_t start, size_t end) {
+	mixer_->run(buffer, start, end);
+	return end - start;
+}
 
 // Misc. methods
 PLAYER_COMMAND SynthAdapter::createCommand(int code, ...) {
@@ -300,20 +319,35 @@ int SynthAdapter::getCommandParameters(PLAYER_COMMAND cmd, double* parameters) {
 	return count;
 }
 
-void SynthAdapter::run(void* buffer, size_t start, size_t end) {
-	mixer_->run(buffer, start, end);
+// Editor
+Target* SynthAdapter::createTarget(int id, UINT8* data) {
+	void* obj = NULL;
+	switch (id) {
+		case SYNTHADAPTER_TARGET::POLYSYNTH01:
+			obj = NEW_(Synth, data != NULL ? data[0] : 16);
+			// add sound bank
+			break;
+		case SYNTHADAPTER_TARGET::MONOSYNTH01:
+			obj = NEW_(Synth, 1);
+			// add sound bank
+			break;
+
+	}
+	Target* target = (obj != NULL) ? NEW_(Target, obj, this) : NULL;
+	return target;
 }
 
 int SynthAdapter::createBank(SYNTH_BANK* bankConfig, out Ctrl*& bank) {
-	int length = SSN1K_CI_COUNT * bankConfig->instrumentCount;
-	bank = MALLOC(Ctrl, length);
-	memset(bank, 0, length);
+	int count = SSN1K_CI_COUNT * bankConfig->instrumentCount;
+	bank = MALLOC(Ctrl, count);
+	memset(bank, 0, sizeof(Ctrl)*count);
 	UINT8* ptr = &bankConfig->instrumentData;
+	Ctrl* bankPtr = bank;
 	for (int i = 0; i < bankConfig->instrumentCount; i++) {
 		// setup instrument from byte data
-		ptr = Synth::setControls(bank, ptr);
-		bank += SSN1K_CI_COUNT;
+		ptr = Synth::setControls(bankPtr, ptr);
+		bankPtr += SSN1K_CI_COUNT;
 	}
-	return length;
+	return (int)(ptr - (UINT8*)bankConfig);
 }
 NS_SSN1K_END

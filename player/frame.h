@@ -1,7 +1,6 @@
 #ifndef __PLAYER_FRAME_H
 #define __PLAYER_FRAME_H
 
-#include "collection/parray.h"
 #include "playerdef.h"
 
 NS_FW_BASE_USE
