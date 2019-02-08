@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.329
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "socialnetwork", "socialnetwork.vcxproj", "{C5BC64A5-38AF-42ED-83E5-D0C88986D47C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C5BC64A5-38AF-42ED-83E5-D0C88986D47C}.Debug|x64.ActiveCfg = Debug|x64
+		{C5BC64A5-38AF-42ED-83E5-D0C88986D47C}.Debug|x64.Build.0 = Debug|x64
+		{C5BC64A5-38AF-42ED-83E5-D0C88986D47C}.Debug|x86.ActiveCfg = Debug|Win32
+		{C5BC64A5-38AF-42ED-83E5-D0C88986D47C}.Debug|x86.Build.0 = Debug|Win32
+		{C5BC64A5-38AF-42ED-83E5-D0C88986D47C}.Release|x64.ActiveCfg = Release|x64
+		{C5BC64A5-38AF-42ED-83E5-D0C88986D47C}.Release|x64.Build.0 = Release|x64
+		{C5BC64A5-38AF-42ED-83E5-D0C88986D47C}.Release|x86.ActiveCfg = Release|Win32
+		{C5BC64A5-38AF-42ED-83E5-D0C88986D47C}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3EAEE9A1-3F39-44B3-B827-AA5B5BFF373C}
+	EndGlobalSection
+EndGlobal
