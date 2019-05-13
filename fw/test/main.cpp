@@ -37,8 +37,8 @@ int _main(NS_FW_BASE::Map* args) {
 
 	//TEST(testUtils);
 	//TEST(testBuffer);
-	//TEST(testFile);
-	TEST(testDirectory);
+	TEST(testFile);
+	//TEST(testDirectory);
 	//TEST(testPathInfo);
 	//TEST(testStr);
 	//TEST(testString);
@@ -186,11 +186,30 @@ int testFile() {
 	int failed = 0;
 	LOG("********************************\nFile tests\n********\n");
 
-	char* buffer = "Hello world! This is a test for the File static class.";
-	File::write("test.dat", (BYTE*)buffer, NS_FW_BASE::strlen(buffer));
-	BYTE* buf1 = File::read("test.dat");
-	ASSERT("buffer should be written to file", NS_FW_BASE::strncmp(buffer, (const char*)buf1) == 0);
-	FREE(buf1);
+	char* data = "Hello world! This is a test for the File static class.";
+	char* data2 = &data[10];
+	File::write("test.dat", (BYTE*)data, NS_FW_BASE::strlen(data));
+	BYTE* bytes = NULL;
+	size_t bytesRead = File::read("test.dat", &bytes);
+	ASSERT("byte buffer should be written into an read from file", NS_FW_BASE::strncmp(data, (const char*)bytes, bytesRead) == 0);
+	FREE(bytes); bytes = NULL;
+	bytesRead = File::read("test.dat", &bytes, 10, 0);
+	ASSERT("file from an offset should be read into byte buffer", NS_FW_BASE::strncmp(data2, (const char*)bytes, bytesRead) == 0);
+	FREE(bytes); bytes = NULL;
+	bytesRead = File::read("test.dat", &bytes, 10, 10);
+	ASSERT("10 bytes were read from file", bytesRead == 10);
+	ASSERT("chunk of file should be read into byte buffer", NS_FW_BASE::strncmp(data2, (const char*)bytes, 10) == 0);
+	FREE(bytes); bytes = NULL;
+
+	Buffer* buffer = NEW_(Buffer);
+	buffer->append(data, fmw::strlen(data));
+	File::write("test2.dat", buffer);
+	buffer->clear();
+	bytesRead = File::read("test2.dat", buffer);
+	bytes = buffer->getByteBuffer();
+	ASSERT("buffer contents should be written into an read from file", NS_FW_BASE::strncmp(data, (const char*)bytes, bytesRead) == 0);
+	FREE(bytes);
+	DEL_(buffer);
 
 	LOG("****************\n\nResults: %d/%d=%.02f%%\n\n********************************\n\n",
 		passed, (passed + failed), (100.0f*passed) / (passed + failed));
@@ -202,16 +221,17 @@ int testDirectory() {
 	LOG("********************************\nDirectory tests\n********\n");
 
 	char* files[] = {
-		"main.cpp",
-		"test.dat",
-		"test.vcxproj",
-		"test.vcxproj.filters",
-		"test.vcxproj.user"
+		//"1asu.xm",
+		//"test.dat",
+		//"ENGLISH.PAK",
+		"chapter7.pak"
 	};
+	char* basePath = str_substr(getWorkingDir(), 0, str_indexOf(getWorkingDir(), "test") + 4);
+	char* path = str_concat(basePath, "\\data");
+	FREE(basePath);
 
-	char* path = str_substr(getWorkingDir(), 0, str_indexOf(getWorkingDir(), "test") + 4);
-
-	Array* entries = Directory::getFiles(path);
+	Array* entries = Directory::getFiles(path, true, ".pak");
+	ARRAY_FOREACH(entries, printf("%s\n", (char*)value));
 	int notFound = arraysize(files);
 	for (int i = 0; i < arraysize(files); i++) {
 		int ix = 0;
@@ -687,7 +707,7 @@ int testMap() {
 	strncpy(testData.name, 4, "a16"); testData.id = 16; ASSERT("'a16' should return NULL", map3->get(&testData) == NULL);
 
 	DEL_(map1);
-	MAP_FOREACH(map2, FREE((char*)key));
+	MAP_FOREACH(map2, FREE((char*)key););
 	DEL_(map2);
 	DEL_(map3);
 
