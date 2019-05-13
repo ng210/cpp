@@ -285,10 +285,10 @@ public:
 				}
 				else {
 					error_ = 0;
-					char* out = out_->str_join("\n");
-					size_t len = NS_FW_BASE::strlen(out);
-					File::write(output_, (BYTE*)out, len);
-					FREE(out);
+					char* output = out_->str_join("\n");
+					size_t len = NS_FW_BASE::strlen(output);
+					File::write(output_, (BYTE*)output, len);
+					FREE(output);
 				}
 			}
 		}
@@ -297,7 +297,7 @@ public:
 };
 
 int _main(NS_FW_BASE::Map* args) {
-	//MemoryMgr::isDebugOn = true;
+	MemoryMgr::isDebugOn = false;
 	JsBuild app;
 	int error = app.main(args);
 	if (error != 0) {

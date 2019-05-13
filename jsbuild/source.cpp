@@ -25,9 +25,10 @@ Source::~Source(void) {
 	DEL_(name_);
 }
 void Source::init(const char* name) {
-	name_ = name;
+	name_ = strdup(name);
 	flag_ = 0;
-	BYTE* buf = File::read(name_);
+	BYTE* buf = NULL;
+	File::read(name_, &buf);
 	content_ = NULL;
 	if (buf != NULL) {
 		content_ = PArray::str_split((const char*)buf, "\n");
