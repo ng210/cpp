@@ -1,0 +1,5 @@
+@echo off
+rem Run this in the VS command line to have the necessary environment
+echo Compiling...
+cl.exe /GL /W3 /Gy /Gm- /O2 /D "_CRT_SECURE_NO_WARNINGS" /Gd /Oi /MT /nologo /Ot /Femicrodoc.exe main.cpp bigfloat.cpp
+del *.obj

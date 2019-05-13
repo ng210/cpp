@@ -35,6 +35,9 @@ Solution contains 2 features
 #define PRINT(t, n) { char* __print_str = n.toString(0); printf(t " %s\n", __print_str); delete[]__print_str; }
 #define DBG(t, n) { char* __print_str = n.toString(0); printf(t " %s(%d)\n", __print_str, n.length()); delete[]__print_str; }
 
+// this is for g++, exception handling not used
+void * __gxx_personality_v0 = 0;
+
 // few primary tests
 void tests() {
 	// test1
@@ -76,70 +79,76 @@ void microDoc(const char* fileName) {
 	// open file to read
 	FILE* fp = fopen(fileName, "rb");
 
-	// allocate working buffer of predefined size
-	char c, *buffer = new char[BUFFER_SIZE];
-	char line[LINE_SIZE];
-	int bufferIx, lineIx = 0, lineNumber = 1;
-	int skip = 0;
-	size_t length;
-	BigFloat total;
-	BigFloat count;
+	if (fp != NULL) {
+		// allocate working buffer of predefined size
+		char c, *buffer = new char[BUFFER_SIZE];
+		char line[LINE_SIZE];
+		int bufferIx, lineIx = 0, lineNumber = 1;
+		int skip = 0;
+		size_t length;
+		BigFloat total;
+		BigFloat count;
 
-	do {
-		// fill buffer
-		length = fread(buffer, 1, BUFFER_SIZE, fp);
-		bufferIx = 0;
+		do {
+			// fill buffer
+			length = fread(buffer, 1, BUFFER_SIZE, fp);
+			bufferIx = 0;
 
-		// process buffer
-		while (bufferIx < length) {
-			c = buffer[bufferIx++];
-			// read to end of line (CR LF or NL)
-			if (c == '\n' || c == '\r') {
-				if (!skip) {
-					c = buffer[bufferIx];
-					// skip CR LF (Windows)
-					if (c == '\n' || c == '\r') {
-						bufferIx++;
-					}
-					if (lineIx > 0) {
-						// calculate sum
-						line[lineIx++] = '\0';
-						BigFloat operand(line);
-						//PRINT("operand=", operand);
-						total += operand;
-						//PRINT("total  =", total);
-						count++;
-						lineIx = 0;
-					}
-					lineNumber++;
-				} else {
-					// skip line
-					while (bufferIx < length) {
-						c = buffer[bufferIx++];
-						if (c != '\n' && c != '\r') {
-							lineNumber++;
+			// process buffer
+			while (bufferIx < (int)length) {
+				c = buffer[bufferIx++];
+				// read to end of line (CR LF or NL)
+				if (c == '\n' || c == '\r') {
+					if (!skip) {
+						c = buffer[bufferIx];
+						// skip CR LF (Windows)
+						if (c == '\n' || c == '\r') {
+							bufferIx++;
+						}
+						if (lineIx > 0) {
+							// calculate sum
+							line[lineIx++] = '\0';
+							BigFloat operand(line);
+							//PRINT("operand=", operand);
+							total += operand;
+							//PRINT("total  =", total);
+							count++;
 							lineIx = 0;
-							skip = 0;
-							break;
+						}
+						lineNumber++;
+					}
+					else {
+						// skip line
+						while (bufferIx < (int)length) {
+							c = buffer[bufferIx++];
+							if (c != '\n' && c != '\r') {
+								lineNumber++;
+								lineIx = 0;
+								skip = 0;
+								break;
+							}
 						}
 					}
 				}
-			} else {
-				if (!skip) {
-					line[lineIx++] = c;
-					if (lineIx == LINE_SIZE) {
-						printf("Overflow at %d.\n", lineNumber);
-						skip = 1;
+				else {
+					if (!skip) {
+						line[lineIx++] = c;
+						if (lineIx == LINE_SIZE) {
+							printf("Overflow at %d.\n", lineNumber);
+							skip = 1;
+						}
 					}
 				}
 			}
-		}
-	} while (length == BUFFER_SIZE);
-	fclose(fp);
-	PRINT("Sum=", total);
-	PRINT("Count=", count);
-	BigFloat median(total / count);
-	PRINT("Median=", median);
+		} while (length == BUFFER_SIZE);
+		fclose(fp);
+		PRINT("Sum=", total);
+		PRINT("Count=", count);
+		BigFloat median(total / count);
+		PRINT("Median=", median);
+	} else {
+		printf("File not found of read error!\n");
+	}
 }
 
 int main(int argc, const char** argv) {
