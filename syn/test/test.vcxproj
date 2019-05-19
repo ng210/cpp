@@ -107,12 +107,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\code\git\cpp;C:\code\git\cpp\fw\base;C:\code\git\cpp\player</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\fw\src;..\..\player;..\..</AdditionalIncludeDirectories>
       <OmitFramePointers>false</OmitFramePointers>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>C:\code\git\cpp\ssn1k\$(PlatformName)\$(Configuration);C:\code\git\cpp\soundlib\$(PlatformName)\$(Configuration);C:\code\git\cpp\fw\$(PlatformName)\$(Configuration);C:\code\git\cpp\player\$(PlatformName)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\ssn1k\$(PlatformName)\$(Configuration);..\..\soundlib\$(PlatformName)\$(Configuration);..\..\fw\$(PlatformName)\$(Configuration);..\..\player\$(PlatformName)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>base.lib;ssn1k.lib;soundlib.lib;player.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <MapFileName>$(OutDir)$(ProjectName).map</MapFileName>
       <GenerateMapFile>true</GenerateMapFile>
@@ -167,15 +167,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\asu.cpp" />
-    <ClCompile Include="..\synsequence.cpp" />
-    <ClCompile Include="..\xmloader.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\asu.h" />
-    <ClInclude Include="..\synsequence.h" />
-    <ClInclude Include="..\xmloader.h" />
     <ClInclude Include="data.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
