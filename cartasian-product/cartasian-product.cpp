@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <map>
 #include <ctime>
 #include <thread>
 
@@ -74,41 +75,88 @@ void print_result(std::vector<std::vector<short int>> table) {
 
 }
 
-int main() {
-    std::cout << "Cartasian product\n";
-
-	// functional test
-	std::vector<short int> a = { 1, 2 };
-	std::vector<short int> b = { 3, 4, 5 };
-	std::vector<short int> c = { 6 };
-	std::vector<short int> d = { 7, 8 };
-
-	std::vector<std::vector<short int>> arrays = { a, b, c, d };
-
-	auto product = cartasian_product(arrays, 0, 10000);
-	print_result(product);
-
-	product = cartasian_product(arrays, 5, 10);
-	print_result(product);
-
-
-	// performance test
+std::vector<std::vector<short int>> createTestData(int arrayCount, int entryCount, int& length) {
 	std::vector<std::vector<short int>> table;
 	short int v = 0;
-	size_t length = 1;
-	for (int i = 0; i < 10; i++) {
+	length = 1;
+	for (int i = 0; i < arrayCount; i++) {
 		std::vector<short int> row;
-		int size = 4;
-		length *= size;
-		for (int j = 0; j < size; j++) {
+		length *= entryCount;
+		for (int j = 0; j < entryCount; j++) {
 			row.push_back(v++);
 		}
 		table.push_back(row);
 	}
+	return table;
+}
+
+
+void functionalTest() {
+	int length;
+	auto arrays = createTestData(3, 3, length);
+
+	// test to generate all entries
+	auto product = cartasian_product(arrays, 0, 10000);
+	print_result(product);
+
+	// test to generate entries in the range [5, 10]
+	product = cartasian_product(arrays, 5, 10);
+	print_result(product);
+}
+
+void performanceTestSingleThread() {
+	int length;
+	auto arrays = createTestData(12, 4, length);
 
 	clock_t begin = clock();
-	product = cartasian_product(table, 0, length);
+	auto product = cartasian_product(arrays, 0, length);
 	clock_t end = clock();
 	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 	std::cout << "Generated " << product.size() << " entries in " << elapsed_secs << " seconds\n";
+}
+
+void performanceTestMultiThread() {
+	int length;
+	auto arrays = createTestData(12, 4, length);
+
+	int threadCount = std::thread::hardware_concurrency();
+	int entriesPerThread = length / threadCount;
+
+	std::cout << "Starting " << threadCount << " threads\n";
+
+	clock_t beginTime = clock();
+	int start = 0, end = entriesPerThread;
+	// running threads
+	std::thread* threads = new std::thread[threadCount];
+	// container of results
+	std::vector<std::vector<short int>>* results = new std::vector<std::vector<short int>>[threadCount];
+
+	for (int ti = 0; ti < threadCount; ti++) {
+		// "capture" variables by reference except ti, start and end, they are copied (pass by value)
+		threads[ti] = std::thread([&, ti, start, end]()->void { results[ti] = cartasian_product(arrays, start, end); });
+		start = end;
+		end += entriesPerThread;
+	}
+
+	// wait for threads
+	size_t sum = 0;
+	for (int ti = 0; ti < threadCount; ti++) {
+		threads[ti].join();
+		sum += results[ti].size();
+	}
+
+	clock_t endTime = clock();
+	double elapsed_secs = double(endTime - beginTime) / CLOCKS_PER_SEC;
+	
+	std::cout << "Generated " << sum << " entries in " << elapsed_secs << " seconds\n";
+}
+
+int main() {
+    std::cout << "Cartasian product\n";
+
+	functionalTest();
+
+	performanceTestSingleThread();
+
+	performanceTestMultiThread();
 }
