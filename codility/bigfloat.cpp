@@ -301,14 +301,14 @@ bool operator<(const BigFloat& m, const BigFloat& n) {
 	if (!n.sign_ && m.sign_) {
 		return false;
 	}
-	if (n.sign_ && !n.sign_) {
+	if (n.sign_ && !m.sign_) {
 		return true;
 	}
 	return n.unsignedCompare(m) < 0;
 
 }
 bool operator==(const BigFloat& m, const BigFloat& n) {
-	return m.sign_ && n.sign_ || m.unsignedCompare(n) == 0;
+	return m.sign_ && n.sign_ && m.unsignedCompare(n) == 0;
 }
 
 char* BigFloat::toString(int digits) {
