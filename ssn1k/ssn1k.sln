@@ -1,20 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.13
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29020.237
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ssn1k", "ssn1k.vcxproj", "{33AD8286-5F82-46A7-8C1D-7144D6BF5CF4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7770991E-7F2A-4BB7-A2E1-434EB3709F46} = {7770991E-7F2A-4BB7-A2E1-434EB3709F46}
+		{684D0DC4-EF17-4854-AAAD-B1431B632EB5} = {684D0DC4-EF17-4854-AAAD-B1431B632EB5}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "soundlib", "..\soundlib\soundlib.vcxproj", "{684D0DC4-EF17-4854-AAAD-B1431B632EB5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "player", "..\player\player.vcxproj", "{7770991E-7F2A-4BB7-A2E1-434EB3709F46}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "syn", "..\syn\syn.vcxproj", "{2D270033-1079-4DB4-8658-66FE65049EFA}"
-	ProjectSection(ProjectDependencies) = postProject
-		{7770991E-7F2A-4BB7-A2E1-434EB3709F46} = {7770991E-7F2A-4BB7-A2E1-434EB3709F46}
-		{33AD8286-5F82-46A7-8C1D-7144D6BF5CF4} = {33AD8286-5F82-46A7-8C1D-7144D6BF5CF4}
-		{684D0DC4-EF17-4854-AAAD-B1431B632EB5} = {684D0DC4-EF17-4854-AAAD-B1431B632EB5}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "..\syn\test\test.vcxproj", "{55501E33-29F7-42D8-9627-5C9DC094B14E}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -25,6 +22,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "..\syn\test\test.vc
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "adapterlib", "..\syn\test\adapterlib\adapterlib.vcxproj", "{26BB5786-DBAC-486E-8B90-6693DB8E6E58}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7770991E-7F2A-4BB7-A2E1-434EB3709F46} = {7770991E-7F2A-4BB7-A2E1-434EB3709F46}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,18 +73,6 @@ Global
 		{7770991E-7F2A-4BB7-A2E1-434EB3709F46}.Release|Win32.Build.0 = Release|Win32
 		{7770991E-7F2A-4BB7-A2E1-434EB3709F46}.Release|x64.ActiveCfg = Release|x64
 		{7770991E-7F2A-4BB7-A2E1-434EB3709F46}.Release|x64.Build.0 = Release|x64
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug_CRT|Win32.ActiveCfg = Debug|Win32
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug_CRT|Win32.Build.0 = Debug|Win32
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug_CRT|x64.ActiveCfg = Debug|x64
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug_CRT|x64.Build.0 = Debug|x64
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug|Win32.ActiveCfg = Debug|Win32
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug|Win32.Build.0 = Debug|Win32
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug|x64.ActiveCfg = Debug|x64
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Debug|x64.Build.0 = Debug|x64
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Release|Win32.ActiveCfg = Release|Win32
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Release|Win32.Build.0 = Release|Win32
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Release|x64.ActiveCfg = Release|x64
-		{2D270033-1079-4DB4-8658-66FE65049EFA}.Release|x64.Build.0 = Release|x64
 		{55501E33-29F7-42D8-9627-5C9DC094B14E}.Debug_CRT|Win32.ActiveCfg = Debug|Win32
 		{55501E33-29F7-42D8-9627-5C9DC094B14E}.Debug_CRT|Win32.Build.0 = Debug|Win32
 		{55501E33-29F7-42D8-9627-5C9DC094B14E}.Debug_CRT|x64.ActiveCfg = Debug|x64
@@ -112,5 +100,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {71CE4DAD-4E5F-4EFE-95C4-4D203007F088}
 	EndGlobalSection
 EndGlobal

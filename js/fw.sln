@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.13
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj", "{E75CA2AF-CBCC-49BB-8C10-1FB346F27B5E}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -9,6 +9,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj",
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "managed", "managed\managed.vcxproj", "{B796AF4C-CFFC-4594-988D-4CB8A6B44CBA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6BEA24DB-2028-4CF7-936D-DB21A9316431} = {6BEA24DB-2028-4CF7-936D-DB21A9316431}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base", "base\base.vcxproj", "{6BEA24DB-2028-4CF7-936D-DB21A9316431}"
 EndProject
@@ -47,5 +50,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9DD83ECE-78FF-4343-8855-4A3F5AB30E61}
 	EndGlobalSection
 EndGlobal

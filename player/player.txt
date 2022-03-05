@@ -1,0 +1,19 @@
+Static
+- Player: Channel[]
+- Channel: Sequence, Target
+- StructuredSequence: Frame[]
+- Frame: Command[]
+- Command: byte[]
+- BinarySequence: byte[]
+- Target: Adapter, Object
+
+Dynamic
+- Player.run: run every Channel
+- Channel.run: get next command from sequence and send to Adapter
+- Sequence.fetch: get next command
+- Adapter.processCommand: execute command on Object
+
+
+Sequence.bin: uint16 delta, uint8 cmd, uint8 arg[]
+Sequence.str: Frame frames[]
+Frame: uint16 delta, uint8* commands[]

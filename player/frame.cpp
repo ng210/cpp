@@ -1,4 +1,4 @@
-#include <stdarg.h>
+//#include <stdarg.h>
 #include "frame.h"
 #include "base/memory.h"
 
@@ -9,22 +9,19 @@ Frame::Frame() {
 	commands_ = NEW_(PArray);
 }
 Frame::~Frame() {
-	//DEL_(commands_);
-}
-
-void Frame::destroy() {
 	empty();
 	DEL_(commands_);
 }
 
-void Frame::addCommand(PLAYER_COMMAND cmd) {
-	commands_->add(cmd);
-}
-
 void Frame::empty() {
+	// commands_->clear()
 	ARRAY_FOREACH(commands_, FREE(value););
 }
 
+#ifdef _EDITOR	// _EDITOR extensions
+void Frame::addCommand(UINT8* cmd) {
+	commands_->add(cmd);
+}
 PLAYER_COMMAND Frame::makeCommand(int code, int argc, ...) {
 	UINT8* cmd = MALLOC(UINT8, (1 + argc) * sizeof(UINT8));
 	cmd[0] = code;
@@ -36,5 +33,6 @@ PLAYER_COMMAND Frame::makeCommand(int code, int argc, ...) {
 	va_end(args);
 	return cmd;
 }
+#endif
 
 NS_PLAYER_END

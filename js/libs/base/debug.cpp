@@ -4,7 +4,7 @@
 #ifdef _DEBUG
 #include <windows.h>
 #include "base/debug.h"
-#include "base/MemoryMgr.h"
+#include "base/tracer.h"
 
 NS_FW_BASE_BEGIN
 
@@ -46,7 +46,7 @@ void Tracer::debugA(LPCSTR format, LPCSTR file, int line, ...) {
 	char buffer[1024];
 	va_list args;
 	va_start(args, line);
-	vsprintf(buffer, format, args);
+	vsprintf_s(buffer, 1024, format, args);
 	logA("1>%s(%d): %s", file, line, buffer);
 }
 
@@ -62,7 +62,7 @@ void TracerWin::logA(LPCSTR format, ...) {
 	char message[1024];
 	va_list args;
 	va_start(args, format);
-	vsprintf(message, format, args);
+	vsprintf_s(message, 1024, format, args);
 	OutputDebugStringA(message);
 }
 

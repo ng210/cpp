@@ -1,26 +1,22 @@
 #include "adapterlib.h"
-#include "collection/array.h"
 #include "base/memory.h"
+#include "collection/array.h"
 #include "ssn1k/synthadapter.h"
 
 NS_FW_BASE_USE
 NS_PLAYER_USE
 NS_SSN1K_USE
 
-static PArray* adapters_ = NULL;
-static Array* adapterInfos_ = NULL;
+//void addAdapter(IAdapter* adapter) {
+//	AdapterLib::addAdapter(adapter);
+//}
 
-ADAPTER_INFO* addAdapter(IAdapter* adapter) {
-	if (adapters_ == NULL) {
-		adapters_ = NEW_(PArray);
-		adapterInfos_ = NEW_(Array, sizeof(ADAPTER_INFO));
-	}
-	adapters_->add(adapter);
-	return (ADAPTER_INFO*)adapterInfos_->add((void*)adapter->getInfo());
+IAdapter* getAdapter(int uid) {
+	return AdapterLib::getAdapter(uid);
 }
 
-Array* getAdapterInfos() {
-	return adapterInfos_;
+Map& getAdapters() {
+	return AdapterLib::getAdapters();
 }
 
 BOOL WINAPI DllMain(
@@ -34,7 +30,7 @@ BOOL WINAPI DllMain(
 			// Initialize once for each new process.
 			// Return FALSE to fail DLL load.
 			// prepare adapters list
-			addAdapter(NEW_(SynthAdapter));
+			AdapterLib::addAdapter(NEW_(SynthAdapter));
 			break;
 
 		case DLL_THREAD_ATTACH:
@@ -47,8 +43,6 @@ BOOL WINAPI DllMain(
 
 		case DLL_PROCESS_DETACH:
 			// Perform any necessary cleanup.
-			ARRAY_FOREACH(adapters_, DEL_((IAdapter*)value); );
-			DEL_(adapters_);
 			break;
 	}
 	return TRUE;

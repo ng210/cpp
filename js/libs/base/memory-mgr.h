@@ -3,13 +3,6 @@
 
 #include "base/Object.h"
 
-#ifdef UNICODE
-#include <wchar.h>
-#define TCHAR wchar_t
-#else
-#define TCHAR char
-#endif
-
 NS_FW_BASE_BEGIN
 
 #ifdef _DEBUG

@@ -32,8 +32,8 @@ public:
 
 class TracerWin : public Tracer {
 public:
-	void logW(const wchar_t* format, ...);
-	void logA(const char* format, ...);
+	void logW(const wchar_t* format, ...) = 0;
+	void logA(const char* format, ...) = 0;
 	const wchar_t* getLastErrorW();
 	const char* getLastErrorA();
 };

@@ -2,8 +2,8 @@ include('sourceH.js');
 
 //This is source G
 (function() {
+	function SourceG() {
+	}
 	
-	module.export = {
-		ns: 'SourceG'
-	};
+	publish(SourceG, 'SourceG');
 })();

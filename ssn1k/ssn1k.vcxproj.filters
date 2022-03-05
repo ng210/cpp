@@ -68,5 +68,8 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{02d9fb97-bb46-4f70-a348-ec9930f7a362}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{68e1eb71-84af-4206-a01c-f82ee097abfd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

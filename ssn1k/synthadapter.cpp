@@ -1,8 +1,10 @@
-#include <stdarg.h>
+#include "base/memory.h"
 #include "synthadapter.h"
-#include "player.h"
 #include "voice.h"
-#include "collection/map.h"
+
+//#include <stdarg.h>
+//#include "player.h"
+//#include "collection/map.h"
 
 NS_SSN1K_BEGIN
 
@@ -20,143 +22,146 @@ static UINT8  mixerSettings_[] = {
 	0xFF
 };
 
-Map SynthAdapter::targetTypes_(sizeof(UINT32), sizeof(ADAPTER_TARGET_TYPE), Map::hashingItem, Collection::compareInt);
-
 const ADAPTER_INFO SynthAdapter::adapterInfo_ = {
 	('S'<<0) + ('Y'<<8) + ('N'<<16) + (0<<24),		// SYN+00
-	"SYN00",
-	SynthAdapter::initialize,
-	SynthAdapter::destroy,
-	SynthAdapter::create,
-	&SynthAdapter::targetTypes_
+	"SYN00"
 };
+SynthAdapter SynthAdapter::instance_;
 
-void SynthAdapter::initialize() {
-	ADAPTER_TARGET_TYPE targetType;
-	targetType.id = SYNTHADAPTER_TARGET::POLYSYNTH01;
-	strncpy(targetType.name, 32, "Poly-Synth01");
-	targetTypes_.put(&targetType.id, &targetType);
-
-	targetType.id = SYNTHADAPTER_TARGET::MONOSYNTH01;
-	strncpy(targetType.name, 32, "Mono-Synth02");
-	targetTypes_.put(&targetType.id, &targetType);
-
+SynthAdapter::SynthAdapter() {
+	banks_ = NEW_(PArray);
+	//synths_ = NEW_(PArray);
+}
+SynthAdapter::~SynthAdapter() {
+	//for (int i = 0; i < 16; i++) {
+	//	DEL_(synths_[i]);
+	//}
 }
 
-void SynthAdapter::destroy() {
-	MAP_FOREACH(&SynthAdapter::targetTypes_, FREE(value));
-}
+void SynthAdapter::createObjects(PArray* targets, void* data) {
+	// create main mixer
+	mixer_ = NEW_(Mixer);
+	targets->add(mixer_);
+	//mixer_->setControls(mixerSettings_);
 
-IAdapter* SynthAdapter::create(UINT8** data) {
-	SynthAdapter* adapter = NEW_(SynthAdapter);
+	// create and initialize objects
 	if (data != NULL) {
-		// initialize adapter from the data
-		// count of instruments
-		// array of instrument config
-		// count of synths
-		// array of voice count
-		UINT8* ptr = *data;
-
-		// create sound bank
-		Ctrl* bank = NULL;
-		ptr += createBank((SYNTH_BANK*)ptr, bank);
-
-		adapter->synthCount_ = *ptr++;
-		// create synth, specify voice count
-		for (int si = 0; si < adapter->synthCount_; si++) {
-			Synth* synth = adapter->synths_[si] = NEW_(Synth, *ptr++);
-			adapter->mixer_->addInput(synth);
-			synth->bank(bank);
+		SYNTH_CREATE_OBJECTS* objData = (SYNTH_CREATE_OBJECTS*)data;
+		UINT8 count = objData->count;
+		UINT8* ptr = (UINT8*)&objData->objects;
+		void* target = NULL;
+		Synth* synth = NULL;
+		for (UINT8 i = 0; i < count; i++) {
+			UINT8 type = ((SYNTH_CREATE_GENERIC*)ptr)->type;
+			switch (type) {
+				case POLYSYNTH01:
+					synth = NEW_(Synth, ((SYNTH_CREATE_SYNTH*)ptr)->voiceCount);
+					target = synth;
+					mixer_->addInput(synth);
+					synth->bank((Ctrl*)banks_->getAt(((SYNTH_CREATE_SYNTH*)ptr)->bankId));
+					ptr += sizeof SYNTH_CREATE_SYNTH;
+					break;
+				case MONOSYNTH01:
+					target = NEW_(Synth, 1);
+					mixer_->addInput(synth);
+					synth->bank((Ctrl*)banks_->getAt(((SYNTH_CREATE_SYNTH*)ptr)->bankId));
+					ptr += sizeof SYNTH_CREATE_SYNTH;
+					break;
+			}
+			if (target != NULL) {
+				targets->add(target);
+			}
 		}
-		*data = ptr;
 	}
-	return adapter;
 }
 
-const ADAPTER_INFO& SynthAdapter::adapterInfo() {
+const ADAPTER_INFO& SynthAdapter::getInfo() {
 	return SynthAdapter::adapterInfo_;
 }
 
-SynthAdapter::SynthAdapter() {
-	synthCount_ = 0;
-	for (int i = 0; i < 16; i++) {
-		synths_[i] = NULL;
-	}
-	mixer_ = NEW_(Mixer);
-	mixer_->setControls(mixerSettings_);
-}
-SynthAdapter::~SynthAdapter() {
-	for (int i = 0; i < 16; i++) {
-		DEL_(synths_[i]);
-	}
-	DEL_(mixer_);
+const IAdapter& SynthAdapter::getInstance() {
+	return SynthAdapter::instance_;
 }
 
-const ADAPTER_INFO* SynthAdapter::getInfo() {
-	return &SynthAdapter::adapterInfo_;
+void SynthAdapter::prepareContext(void* data) {
+	if (data  != NULL) {
+		SYNTH_PREPARE_CONTEXT* bankData = (SYNTH_PREPARE_CONTEXT*)data;
+		// create banks from data
+		UINT8 count = bankData->bankCount;
+		UINT8* ptr = (UINT8*)&bankData->banks;
+		for (UINT8 i = 0; i < count; i++) {
+			Ctrl* bank = NULL;
+			ptr += createBank((SYNTH_BANK*)ptr, bank);
+			banks_->add(bank);
+		}
+	}
 }
 
-int SynthAdapter::processCommand(void* object, PLAYER_COMMAND command) {
-	Synth* synth = (Synth*)object;
-	unsigned char* args = &command[1];
+int SynthAdapter::processCommand(void* target, PLAYER_COMMAND_U data) {
+	Synth* synth = (Synth*)target;
+	unsigned char* args = data.s->args;
 	int ctrlId;
 #ifdef _DEBUG
 	//char *str = logCommand(command);
 	//printf("%s\n", str);
 	//FREE(str);
 #endif
-	switch (command[0]) {
-		case Synth_Cmd_setNoteOn:		// note, duration, velocity
-			SYNTH_CMD_SET_NOTE_ON* cmdNoteOn;
-			cmdNoteOn = (SYNTH_CMD_SET_NOTE_ON*)command;
-			synth->noteOn(cmdNoteOn->note, cmdNoteOn->velocity / 255.0f);
-			break;
-		case Synth_Cmd_setNoteOff:
-			synth->noteOff(((SYNTH_CMD_SET_NOTE_OFF*)command)->note);
-			break;
-		case Synth_Cmd_setControl:	// id, value:UINT8->float
-			SYNTH_CMD_SET_CTRL* cmdCtrl;
-			cmdCtrl = (SYNTH_CMD_SET_CTRL*)command;
-			ctrlId = cmdCtrl->id;
-			synth->getControl(ctrlId)->f = (float)(cmdCtrl->value / 255.0f);
-			break;
-		case Synth_Cmd_setControlB:	// id, value:UINT8
-			SYNTH_CMD_SET_CTRL* cmdCtrlB;
-			cmdCtrlB = (SYNTH_CMD_SET_CTRL*)command;
-			ctrlId = cmdCtrlB->id;
-			synth->getControl(ctrlId)->i = cmdCtrlB->value;
-			break;
-		case Synth_Cmd_setControlF:	// id, value:float
-			SYNTH_CMD_SET_CTRLF* cmdCtrlF;
-			cmdCtrlF = (SYNTH_CMD_SET_CTRLF*)command;
-			Ctrl* ctrl;
-			ctrlId = cmdCtrlF->id;
-			switch (ctrlId) {
-				case SSN1K_CI_Tune:
-					ctrl = &synth->activeVoice()->note();
-					break;
-				default:
-					ctrl = synth->getControl(ctrlId);
-					break;
-			}
-			ctrl->f = (float)cmdCtrlF->value;
-			break;
-		case Synth_Cmd_prgChange:	// prg id
-			int prgId = ((SYNTH_CMD_PRG_CHNG*)command)->id;
-			synth->changeProgram(prgId);
-			break;
+	switch (data.s->cmdId) {
+	case Synth_Cmd_setNoteOn:		// note, duration, velocity
+		SYNTH_CMD_SET_NOTE_ON* cmdNoteOn;
+		cmdNoteOn = (SYNTH_CMD_SET_NOTE_ON*)data.s;
+		synth->noteOn(cmdNoteOn->note, cmdNoteOn->velocity / 255.0f);
+		break;
+	case Synth_Cmd_setNoteOff:
+		synth->noteOff(((SYNTH_CMD_SET_NOTE_OFF*)data.s)->note);
+		break;
+	case Synth_Cmd_setControl:	// ctrlId, value:UINT8->float
+		SYNTH_CMD_SET_CTRL* cmdCtrl;
+		cmdCtrl = (SYNTH_CMD_SET_CTRL*)data.s;
+		ctrlId = cmdCtrl->ctrlId;
+		synth->getControl(ctrlId)->f = (float)(cmdCtrl->value / 255.0f);
+		break;
+	case Synth_Cmd_setControlB:	// ctrlId, value:UINT8
+		SYNTH_CMD_SET_CTRL* cmdCtrlB;
+		cmdCtrlB = (SYNTH_CMD_SET_CTRL*)data.s;
+		ctrlId = cmdCtrlB->ctrlId;
+		synth->getControl(ctrlId)->i = cmdCtrlB->value;
+		break;
+	case Synth_Cmd_setControlF:	// ctrlId, value:float
+		SYNTH_CMD_SET_CTRLF* cmdCtrlF;
+		cmdCtrlF = (SYNTH_CMD_SET_CTRLF*)data.s;
+		Ctrl* ctrl;
+		ctrlId = cmdCtrlF->ctrlId;
+		switch (ctrlId) {
+			case SSN1K_CI_Tune:
+				ctrl = &synth->activeVoice()->note();
+				break;
+			default:
+				ctrl = synth->getControl(ctrlId);
+				break;
+		}
+		ctrl->f = (float)cmdCtrlF->value;
+		break;
+	case Synth_Cmd_prgChange:	// prg id
+		int prgId = ((SYNTH_CMD_PRG_CHNG*)data.s)->prgId;
+		synth->changeProgram(prgId);
+		break;
 	}
 	return 1;
 }
-void SynthAdapter::setTempo(void *object, float ticksPerSecond) {
-	((Synth*)object)->ticksPerSample(ticksPerSecond*SSN1K::getSampleRateR());
-}
-size_t SynthAdapter::fill(void* buffer, size_t start, size_t end) {
-	mixer_->run(buffer, start, end);
-	return end - start;
+
+void SynthAdapter::updateRefreshRate(void* target, float ticksPerSecond) {
+	((Synth*)target)->ticksPerSample(ticksPerSecond * SSN1K::getSampleRateR());
 }
 
-// Misc. methods
+
+//size_t SynthAdapter::fill(void* buffer, size_t start, size_t end) {
+//	mixer_->run(buffer, start, end);
+//	return end - start;
+//}
+
+#ifdef _EDITOR
+	// editor extensions
 PLAYER_COMMAND SynthAdapter::createCommand(int code, ...) {
 	PLAYER_COMMAND cmd = NULL;
 	va_list args;
@@ -318,8 +323,6 @@ int SynthAdapter::getCommandParameters(PLAYER_COMMAND cmd, double* parameters) {
 	}
 	return count;
 }
-
-// Editor
 Target* SynthAdapter::createTarget(int id, UINT8* data) {
 	void* obj = NULL;
 	switch (id) {
@@ -336,6 +339,16 @@ Target* SynthAdapter::createTarget(int id, UINT8* data) {
 	Target* target = (obj != NULL) ? NEW_(Target, obj, this) : NULL;
 	return target;
 }
+#endif
+
+//HWND SynthAdapter::createTargetDialog(HINSTANCE hInstance, HWND hWnd, int id, Target* target) {
+//	return NULL;	// CreateDialogIndirect(hInstance, SYNTH_CREATE_TARGET_DIALOG, hWnd, SynthAdapter::createTargetDialogProc);
+//}
+//
+//INT_PTR SynthAdapter::createTargetDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+//	return 0;
+//}
+
 
 int SynthAdapter::createBank(SYNTH_BANK* bankConfig, out Ctrl*& bank) {
 	int count = SSN1K_CI_COUNT * bankConfig->instrumentCount;

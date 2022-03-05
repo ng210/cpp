@@ -220,6 +220,53 @@ int main()
 {
     std::cout << "Social network\nUnit tests\n";
 
+#define SIZE 10
+#define STEP 6
+	std::vector<int> A(SIZE);
+
+	std::cout << "[";
+	for (int i = 0; i < SIZE; i++) {
+		A[i] = -0x3f00000 - 0x1000 * i;	//(rand() + (rand()<<15)) % 0x7ffffff - 0x4000000;
+		std::cout << A[i];
+		if (i < SIZE - 1) std::cout << ", ";
+	}
+	std::cout << "]\n";
+
+	int i = 0;
+	int sum = 0;
+	while (i != A.size() - 1) {
+		std::cout << i << ". " << A[i] << "\n";
+		sum += A[i];
+		int candidate = i + 1;
+		bool useCandidate = false;
+		for (int j = 1; j <= STEP; j++) {
+			std::cout << " j: " << j << "\n";
+			int k = i + j;
+			if (k == (int)A.size() - 1) {
+				sum += A[k];
+				i = k;
+				useCandidate = false;
+				break;
+			}
+			if (A[k] >= 0) {
+				i = k;
+				useCandidate = false;
+				break;
+			}
+			useCandidate = true;
+			if (A[candidate] < A[k]) {
+				candidate = k;
+			}
+		}
+		if (useCandidate) {
+			i = candidate;
+		}
+	}
+	std::cout << i << ". " << A[i] << "\n";
+	std::cout << "Sum: " << sum << "\n";
+
+	return 0;
+
 	// #1. Add user
 	testAddUser();
 	testCount++;

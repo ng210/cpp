@@ -8,7 +8,7 @@ NS_FW_BASE_USE
 
 class Source {
 private: PROP_R(const char*, name);
-private: PROP_R(PArray, includes);
+//private: PROP_R(PArray, includes);
 private: PROP(size_t, flag);
 private: PROP_R(PArray*, content);
 public:
@@ -16,9 +16,9 @@ public:
 	Source(const char* name);
 	~Source(void);
 	void init(const char* name);
-	void addInclude(Source *inc);
-	size_t hasIncludes();
-	Source* getInclude(UINT32 ix);
+	//void addInclude(Source *inc);
+	//size_t hasIncludes();
+	//Source* getInclude(UINT32 ix);
 };
 
 #endif

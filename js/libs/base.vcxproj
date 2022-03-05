@@ -19,89 +19,49 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="base\base_defs.h" />
-    <ClInclude Include="base\Boolean.h" />
-    <ClInclude Include="base\debug.h" />
-    <ClInclude Include="base\Function.h" />
-    <ClInclude Include="base\MemoryMgr.h" />
-    <ClInclude Include="base\Integer.h" />
-    <ClInclude Include="base\Number.h" />
-    <ClInclude Include="base\Object.h" />
-    <ClInclude Include="base\str.h" />
-    <ClInclude Include="base\String.h" />
-    <ClInclude Include="base\Float.h" />
-    <ClInclude Include="Collection.h" />
-    <ClInclude Include="collection\Map.h" />
-    <ClInclude Include="collection\Tree.h" />
-    <ClInclude Include="utils\Buffer.h" />
-    <ClInclude Include="collection\Array.h" />
-    <ClInclude Include="consoleapp.h" />
-    <ClInclude Include="utils\File.h" />
-    <ClInclude Include="runtime.h" />
-    <ClInclude Include="base\Type.h" />
-    <ClInclude Include="utils\PathInfo.h" />
-    <ClInclude Include="utils\utils.h" />
-    <ClInclude Include="winapp.h" />
-    <ClInclude Include="base\WindowWrapper.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="base\Boolean.cpp" />
-    <ClCompile Include="base\debug.cpp" />
-    <ClCompile Include="base\Function.cpp" />
-    <ClCompile Include="base\MemoryMgr.cpp" />
-    <ClCompile Include="base\Number.cpp" />
-    <ClCompile Include="base\Object.cpp" />
-    <ClCompile Include="base\runtime.cpp" />
-    <ClCompile Include="base\str.cpp" />
-    <ClCompile Include="base\String.cpp" />
-    <ClCompile Include="base\Type.cpp" />
-    <ClCompile Include="base\Float.cpp" />
-    <ClCompile Include="collection\Map.cpp" />
-    <ClCompile Include="collection\Tree.cpp" />
-    <ClCompile Include="utils\Buffer.cpp" />
-    <ClCompile Include="collection\Array.cpp" />
-    <ClCompile Include="consoleapp.cpp" />
-    <ClCompile Include="base\Integer.cpp" />
-    <ClCompile Include="utils\File.cpp" />
-    <ClCompile Include="utils\PathInfo.cpp" />
-    <ClCompile Include="utils\utils.cpp" />
-    <ClCompile Include="winapp.cpp" />
-    <ClCompile Include="base\WindowWrapper.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="design.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="base\base_defs.h" />
+    <ClInclude Include="base\debug.h" />
+    <ClInclude Include="base\tracer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="base\debug.cpp" />
+    <ClCompile Include="base\runtime.cpp" />
+    <ClCompile Include="base\tracer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{6BEA24DB-2028-4CF7-936D-DB21A9316431}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>base</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
@@ -147,6 +107,7 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -18,54 +18,66 @@
     <ClInclude Include="playerdef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="channel.h">
+    <ClInclude Include="iadapter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="abstractchannel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="playeradapter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="target.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sequence.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="frame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="file.h">
+    <ClInclude Include="adapterlib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="iadapter.h">
+    <ClInclude Include="sequence.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sequencebin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="channel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="channelbase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="channelbin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sequencebase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="frame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="playeradapter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="channel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="abstractchannel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="playeradapter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sequence.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="frame.cpp">
+    <ClCompile Include="adapterlib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="iadapter.cpp">
+    <ClCompile Include="sequence.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sequencebin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="channel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="channelbase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="channelbin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="frame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="playeradapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

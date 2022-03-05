@@ -7,74 +7,59 @@ NS_PLAYER_BEGIN
 
 const ADAPTER_INFO PlayerAdapter::adapterInfo_ = {
 	0x504C5900,		// PLY+00
-	"PLY00",
-	PlayerAdapter::initialize,
-	PlayerAdapter::destroy,
-	PlayerAdapter::create,
-	NULL
+	"PLY00"
 };
-IAdapter* PlayerAdapter::create(UINT8** data) {
-	IAdapter* adapter = NEW_(PlayerAdapter);
-	// initialize adapter
-	return adapter;
+
+PlayerAdapter PlayerAdapter::instance_;
+
+void PlayerAdapter::createObjects(PArray* targets, void* data) {
+	;
 }
 
-const ADAPTER_INFO* PlayerAdapter::getInfo() {
-	return &PlayerAdapter::adapterInfo_;
-}
-void PlayerAdapter::initialize() {
+const ADAPTER_INFO& PlayerAdapter::getInfo() {
+	return PlayerAdapter::adapterInfo_;
 }
 
-void PlayerAdapter::destroy() {
+const IAdapter& PlayerAdapter::getInstance() {
+	return PlayerAdapter::instance_;
 }
 
-int PlayerAdapter::processCommand(void* object, PLAYER_COMMAND command) {
-	Player* player = (Player*)object;
+void PlayerAdapter::prepareContext(void* data) {
+	;
+}
+int PlayerAdapter::processCommand(void* playerObject, PLAYER_COMMAND_U data) {
+	Player* player = (Player*)playerObject;
 	PLAYER_COMMAND_ALL cmd;
-	Target* target;
 	size_t ix = -1;
-	AbstractChannel* chn = NULL;
-	cmd.base = command;
-	switch (cmd.base[0]) {
-	case Player_Cmd_setTempo:	// tpm
-		float refreshRate;
-		refreshRate = cmd.tempo->ticksPerMinute / 60.0f;
-		ARRAY_FOREACH(player->channels(), Target* target = ((AbstractChannel*)value)->target(); target->adapter->setTempo(target->object, refreshRate));
-		break;
-	case Player_Cmd_assign:		// target, sequence, status
-		target = (Target*)player->targets()->getAt(cmd.assign->target);
-		PLAYER_SEQUENCE sequence;
-		sequence = (UINT8*)player->sequences()->getAt(cmd.assign->sequence);
-		// get an inactive channel
-		ARRAY_FOREACH(player->channels(), if (!((AbstractChannel*)value)->isActive()) { ix = i; chn = (AbstractChannel*)value; break; });
-		if (ix == -1) {
-			// create new channel
-			chn = Player::createChannel();
-			chn->init(player->channels()->length(), target, sequence, cmd.assign->status);
-			player->addChannel(chn);
-		} else {
-			chn->assign(target, sequence, cmd.assign->status);
-		}
-		break;
-	//case Player_Cmd_create:		// adapter id, user data block id
-	//	IAdapter* adapter = (IAdapter*)player->adapters_->getAt(cmd.create->adapterId);
-	//	if (adapter != NULL) {
-	//		void* userDataBlock = player->userDataBlocks_->getAt(cmd.create->userDataBlockId);
-	//		Target* target = adapter->createTarget(userDataBlock);
-	//		player->targets_->add(target);
-	//	}
-	//	break;
+	ChannelBase* chn = NULL;
+	cmd.base = data;
+	switch (cmd.base.s->cmdId) {
+		case Player_Cmd_setTempo:	// tpm
+			float refreshRate;
+			refreshRate = cmd.tempo->ticksPerMinute / 60.0f;
+			ARRAY_FOREACH(player->channels(), ChannelBase* chn = ((ChannelBase*)value); chn->adapter().updateRefreshRate(chn->target(), refreshRate));
+			break;
+		case Player_Cmd_assign:		// target, adapter, sequence, status
+			ChannelBase& chn = player->getFreeChannel();
+			void* target = player->targets()->getAt(cmd.assign->target);
+			SequenceBase* sequence = (SequenceBase*)player->sequences()->getAt(cmd.assign->sequence);
+			IAdapter* adapter = (IAdapter*)player->adapters()->getAt(cmd.assign->adapter);
+			chn.assign(target, *adapter, sequence, cmd.assign->status);
+			break;
 	}
 	return 0;
 }
-void PlayerAdapter::setTempo(void *object, float ticksPerSecond) {
-	((Player*)object)->refreshRate(ticksPerSecond);
-}
-size_t PlayerAdapter::fill(void* buffer, size_t start, size_t end) {
-	return 0;
+
+void PlayerAdapter::updateRefreshRate(void* target, float ticksPerSecond) {
+	((Player*)target)->refreshRate(ticksPerSecond);
 }
 
-// Misc. methods
+//size_t PlayerAdapter::fill(void* buffer, size_t start, size_t end) {
+//	return 0;
+//}
+
+#ifdef _EDITOR
+	// editor extensions
 PLAYER_COMMAND PlayerAdapter::createCommand(int code, ...) {
 	PLAYER_COMMAND_ALL cmd;
 	cmd.base = NULL;
@@ -187,6 +172,6 @@ int PlayerAdapter::dumpCommand(PLAYER_COMMAND command, Buffer* buffer) {
 Target* PlayerAdapter::createTarget(int id, UINT8* data) {
 	return NULL;
 }
-
+#endif
 
 NS_PLAYER_END

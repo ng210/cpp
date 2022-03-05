@@ -19,24 +19,221 @@ class JsBuild {
 	FILE* fout_;
 	PArray* out_;
 
-public:
-	JsBuild(void) {
-		error_ = 0;
-		sourceTree_ = NEW_(Tree);
-		sourceTree_->deleteNodeHandler = deleteNodeHandler;
-		out_ = NEW_(PArray);
+private:
+	static char* parseSymbol(char* pos, char* separators) {
+		// match /[A-Za-z0-9_]+/
+		char ch = 0;
+		while ((ch = *pos) != '\0') {
+			if (strchr(separators, ch)) break;
+			if (ch == '_' || ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z') {
+				pos++;
+			} else {
+				pos = NULL;
+				break;
+			}
+		}
+		return pos;
 	}
-	~JsBuild(void) {
-		//ARRAY_FOREACH(sources_->nodes(), DEL_((Source*)value));
-		//ARRAY_FOREACH(sources_->edges(), DEL_((Source*)value));
-		//sources_->cleanUp();
-		DEL_(sourceTree_)
-		DEL_(inputPathInfo_);
-		//ARRAY_FOREACH(out_, FREE(value));
-		DEL_(out_);
-		DEL_(basePath_);
-		FREE(output_);
-		//FREE(input_);
+	
+	void addHeader(const char* fileName, PArray* content) {
+		char header[] = "/* ***************************************************************************/";
+		size_t len = NS_FW_BASE::strlen(fileName);
+		memcpy(&header[3], fileName, len);
+		header[3 + len] = ' ';
+		content->insertAt(0, NS_FW_BASE::strdup((const char*)& header));
+	}
+
+	static PArray* declaresPublish(char* line) {
+		// match /^\s*publish\s*(\s*<symbol>\s*,\s*<name>\s*,\s*<context>/
+		//	symbol: [A-Za-z0-9_]+
+		//	name: '[^']+'
+		//	context: [A-Za-z0-9_]+
+		char* pos = line;
+		char* pre = NULL;
+		char* symbol = NULL;
+		char* name = NULL;
+		char* context = NULL;
+		PArray* publish = NULL;
+		while (true) {
+			// match: ^\s*
+			pos += strspn(pos, " \t");
+			pre = pos;
+			// match: publish
+			if (NS_FW_BASE::strncmp(pos, "publish", 7) != 0) break;
+			pos += 7;
+			// match: \s*(\s*
+			pos += strspn(pos, " \t");
+			if (*pos++ != '(') break;
+			pos += strspn(pos, " \t");
+			// match: symbol
+			symbol = pos;
+			if (!(pos = parseSymbol(pos, " \t,"))) break;
+			symbol = substr(symbol, 0, pos - symbol);
+			// match: \s*,\s*
+			pos += strspn(pos, " \t");
+			if (*pos++ != ',') break;
+			pos += strspn(pos, " \t");
+			// match: name
+			if (*pos++ != '\'') break;
+			name = pos;
+			size_t len = strcspn(pos, "'");
+			if (len == 0) break;
+			pos += len;
+			if (*pos++ != '\'') break;
+			name = substr(name, 0, len);
+			publish = NEW_(PArray, 4);
+			pre = substr(line, 0, pre - line);
+			publish->add(pre);
+			publish->add(symbol);
+			publish->add(name);
+			// context is optional
+			// match: \s*,\s*
+			pos += strspn(pos, " \t");
+			if (*pos++ != ',') break;
+			pos += strspn(pos, " \t");
+			// match: context
+			context = pos;
+			if (!(pos = parseSymbol(pos, "),"))) break;
+			context = substr(context, 0, pos - context);
+			publish->add(context);
+			break;
+		}
+		return publish;
+	}
+
+	char* declaresInclude(char* line) {
+		// match: /^\s*include\s*(\s*'<path>'\s*)/
+		//  path: [^']
+		char* pos = line;
+		char* path = NULL;
+		while (true) {
+			// match: ^\s*
+			pos += strspn(pos, " \t");
+			// match: include
+			if (NS_FW_BASE::strncmp(pos, "include", 7) != 0) break;
+			pos += 7;
+			// match: \s*(\s*
+			pos += strspn(pos, " \t");
+			if (*pos++ != '(') break;
+			pos += strspn(pos, " \t");
+			// match: name
+			if (*pos++ != '\'') break;
+			char* start = pos;
+			size_t len = strcspn(pos, "'");
+			if (len == 0) break;
+			pos += len;
+			if (*pos++ != '\'') break;
+			// match: \s*)
+			pos += strspn(pos, " \t");
+			if (*pos++ != ')') break;
+			path = substr(start, 0, len);
+			break;
+		}
+		return path;
+	}
+
+	const char* processPublish(PArray* publish) {
+		char* pre = (char*)publish->getAt(0);
+		char* symbol = (char*)publish->getAt(1);
+		char* name = (char*)publish->getAt(2);
+		char* context = (char*)publish->getAt(3);
+		// context = context || self;
+		if (context == NULL) {
+			context = "self";
+		}
+		// mdl.symbols[name] = obj;
+
+		// context[name] = obj;
+		const char format[] = "%s%s['%s'] = %s;";	// <context>['<name>'] = <symbol>;
+		size_t length = sizeof(format) - 8 + NS_FW_BASE::strlen(pre) + NS_FW_BASE::strlen(context) + NS_FW_BASE::strlen(name) + NS_FW_BASE::strlen(symbol) + 1;
+		char* newLine = MALLOC(char, length);
+		snprintf(newLine, length - 1, format, pre, context, name, symbol);
+		if (this->verbose_) printf(" Added line: >%s<\n", newLine);
+		return newLine;
+	}
+
+	bool getInclude(char* path, Node*& node) {
+		bool isNew = false;
+		node = NULL;
+		// check include in tree of processed sources
+		int ix = 0;
+		node = (Node*)sourceTree_->nodes()->binSearch(path, ix, CompareSourceName);
+		if (node == NULL) {
+			// check file
+			if (File::exists(path)) {
+				isNew = true;
+			}
+		}
+		return isNew;
+	}
+
+	void processInclude(char* path, Node* node) {
+		PathInfo includePathInfo(path);
+		Node* includeNode = NULL;
+		char* includePath = NULL;
+
+		bool isNew = false;
+		while (true) {
+			// 1st attempt: inputPath
+			if (NS_FW_BASE::strlen(this->inputPathInfo_->path()) > 0) {
+				char* tmp1 = str_concat(3, this->inputPathInfo_->path(), "\\", path);
+				includePath = str_replace(tmp1, "/", "\\");
+				FREE(tmp1);
+				isNew = getInclude(includePath, includeNode);
+				if (isNew || includeNode != NULL) break;
+				FREE(includePath);
+			}
+			// 2nd attempt: basePath
+			if (NS_FW_BASE::strlen(this->basePath_) > 0) {
+				char* tmp1 = str_concat(3, this->basePath_, "\\", path);
+				includePath = str_replace(tmp1, "/", "\\");
+				FREE(tmp1);
+				isNew = getInclude(includePath, includeNode);
+				if (isNew || includeNode != NULL) break;
+				FREE(includePath);
+			}
+			break;
+		}
+
+		Source* include = NULL;
+		if (isNew) {
+			include = this->createSource(includePath);
+			this->sourceTree_->addNode(node, include);
+		} else if (includeNode != NULL) {
+			this->sourceTree_->addEdge(node, includeNode, NULL);
+			include = (Source*)includeNode->value();
+		}
+		if (include != NULL) {
+			if (this->verbose_) printf(" - includes '%s'\n", includePath);
+			//((Source*)node->value())->addInclude(include);
+		} else {
+			// include source does not exist
+			this->error_ = 3;
+		}
+		FREE(includePath);
+	}
+
+	void processContentLine(Source* source, Node* node, UINT32& lineNumber, char* line) {
+		PArray* content = source->content();
+		const char* fileName = source->name();
+		PArray* publish = declaresPublish(line);
+		if (publish != NULL) {
+			char* newLine = str_concat("// ", line);
+			FREE(line);
+			content->setAt(lineNumber, newLine);
+			content->insertAt(++lineNumber, (void*)processPublish(publish));
+			ARRAY_FOREACH(publish, FREE(value));
+			DEL_(publish);
+		} else {
+			char* includePath = declaresInclude(line);
+			if (includePath != NULL) {
+				char* newLine = str_concat("// ", line);
+				FREE(line);
+				content->setAt(lineNumber, newLine);
+				processInclude(includePath, node);
+				FREE(includePath);
+			}
+		}
 	}
 
 	Source* createSource(char* name) {
@@ -49,82 +246,10 @@ public:
 		return source;
 	}
 
-	Node* findSource(char* name) {
-		Node* res = NULL;
-		for (UINT32 i = 0; i < sourceTree_->nodes()->length(); i++) {
-			Node* node = (Node*)sourceTree_->nodes()->getAt(i);
-			Source* source = (Source*)node->value();
-			if (strncmp(name, source->name()) == 0) {
-				res = node;
-				break;
-			}
-		}
-		return res;
-	}
-
-	static char* declaresInclude(const char* line) {
-		char *include = NULL;
-		//^\s*include\s*(\s*['"]\w+['"]\s*)\s*$
-		const char *pos = line;
-		// ^\s*
-		size_t len = strspn(pos, " \t");
-		pos += len;
-		//include
-		if (NS_FW_BASE::strncmp(pos, "include", 7) == 0) {
-			// \s*
-			pos += 7;
-			size_t len = strspn(pos, " \t");
-			pos += len;
-			// (
-			if (*pos == '(') {
-				pos++;
-				// \s*
-				size_t len = strspn(pos, " \t");
-				pos += len;
-				char quote = *pos;
-				// ['"]
-				if (quote == '\'' || quote == '\"') {
-					pos++;
-					const char *start = pos;
-					// \w+
-					pos = strchr(pos, quote);
-					if (pos != NULL) {
-						len = pos - start;
-						include = MALLOC(char, len + 1);
-						strncpy(include, len, start);
-					}
-				}
-			}
-		}
-		return include;
-	}
-
-	static const char* declaresExports(char* line) {
-		const char *res = NULL;
-		// if line is ^\s*module.exports\s*=\s*(.+)
-		const char *pos = line;
-		// ^\s*
-		size_t len = strspn(pos, " \t");
-		pos += len;
-		// module.exports
-		if (NS_FW_BASE::strncmp(pos, "module.exports", 14) == 0) {
-			pos += 14;
-			// \s*
-			len = strspn(pos, " \t");
-			pos += len;
-			// =
-			if (*pos == '=') {
-				pos++;
-				// \s*
-				len = strspn(pos, " \t");
-				pos += len;
-				// (.+) => $1
-				res = pos;
-				//pos = strchr(pos, ';');
-				//*(char*)pos = '\0';
-			}
-		}
-		return res;
+	static int CompareSourceName(void* item, unsigned int ix, Collection* array, void* key) {
+		Node* node = (Node*)item;
+		Source* source = (Source*)node->value();
+		return strncmp(source->name(), (char*)key);
 	}
 
 	static int deleteNodeHandler(void* node, size_t argc, ...) {
@@ -137,72 +262,13 @@ public:
 		va_start(args, argc);
 		Node* node = (Node*)item;
 		JsBuild* app = va_arg(args, JsBuild*);
+		Source* source = (Source*)node->value();
+		if (app->verbose_) printf("Processing %s\n", source->name());
 
-		Source *source = (Source*)node->value();
 		// Process file and get includes
-		const char* fileName = source->name();
-		if (app->verbose_) printf(" processing %s\n", fileName);
-		PArray* sourceContent = source->content();
-		if (sourceContent != NULL) {
-			char header[] = "/* ***************************************************************************/";
-			size_t len = NS_FW_BASE::strlen(fileName);
-			memcpy(&header[3], fileName, len);
-			//size_t i = 0;
-			//for (; i < len; i++) {
-			//	line[3 + i] = fileName[i];
-			//}
-			header[3 + len] = ' ';
-			sourceContent->insertAt(0, NS_FW_BASE::strdup((const char*)&header));
-			//Array newContent;
-			for (UINT32 i = 1; i < sourceContent->length(); i++) {
-				char* line = (char*)sourceContent->getAt(i);
-				const char* exports = declaresExports(line);
-				if (exports != NULL) {
-					const char* format = "module['%s']=%s";
-					size_t length = 20 + NS_FW_BASE::strlen(exports);
-					char* moduleRef = str_replace(&fileName[NS_FW_BASE::strlen(app->basePath_) - 1], "\\", "/");
-					length += NS_FW_BASE::strlen(moduleRef);
-					char* newLine = MALLOC(char, length);
-					// change into module[<moduleRef>]=<exports>
-					snprintf(newLine, length-1, format, moduleRef, exports);
-					FREE(moduleRef);
-					if (app->verbose_) printf(" export '%s'\n", newLine);
-					sourceContent->setAt(i, newLine);
-					FREE(line);
-				}
-				char *includeNameBuf = declaresInclude(line);
-				if (includeNameBuf != NULL) {
-					PathInfo includePathInfo(includeNameBuf);
-					// basePath + (inputPath) + includeName
-					char* tmp = NULL;
-					if (NS_FW_BASE::strlen(includePathInfo.path()) == 0 && NS_FW_BASE::strlen(app->inputPathInfo_->path()) > 0) {
-						tmp = str_concat(4, app->basePath_, app->inputPathInfo_->path(), "\\", includeNameBuf);
-					} else {
-						tmp = str_concat(2, app->basePath_, includeNameBuf);
-					}
-					char* includeName = str_replace(tmp, "/", "\\");
-					FREE(tmp);
-					FREE(includeNameBuf);
-					if (app->verbose_) printf(" includes '%s'\n", includeName);
-					Node* include = app->findSource(includeName);
-					if (include == NULL) {
-						Source* includeSource = app->createSource(includeName);
-						if (includeSource == NULL) {
-							app->error_ = 3;
-						} else {
-							app->sourceTree_->addNode(node, includeSource);
-						}
-					} else {
-						app->sourceTree_->addEdge(node, include, NULL);
-						FREE(includeName);
-					}
-					char* removed = (char*)sourceContent->getAt(i);
-					sourceContent->removeAt(i);
-					FREE(removed);
-					i--;
-					//(*str) = "";
-				}
-			}
+		if (source->content() != NULL) {
+			app->addHeader(source->name(), source->content());
+			ARRAY_FOREACH(source->content(), app->processContentLine(source, node, i, (char*)value));
 			//input->cleanUp();
 		}
 
@@ -217,9 +283,12 @@ public:
 
 		//Object* res = NULL;
 		Source* source = (Source*)node->value();
-		const char *file = source->name();
-		app->out_->join(source->content());
-		if (app->verbose_) printf(" added %s\n", file);
+		if (source->flag() == 0) {
+			const char* file = source->name();
+			app->out_->join(source->content());
+			if (app->verbose_) printf("Added %s\n", file);
+			source->flag(1);
+		}
 		return NULL;
 	}
 
@@ -235,35 +304,62 @@ public:
 
 		if (basePath_ == NULL || NS_FW_BASE::strlen(basePath_) == 0) {
 			if (verbose_) printf("No base path defined.\n");
-			basePath_ = "";
-		} else {
+			basePath_ = NS_FW_BASE::strdup("");
+		}
+		else {
 			char* tmp = str_replace(basePath_, "/", "\\");
 			if (!str_ends(tmp, "\\")) {
 				basePath_ = str_concat(tmp, "\\");
 				FREE(tmp);
-			} else {
+			}
+			else {
 				basePath_ = tmp;
 			}
 		}
-		
+
 		if (inputFile == NULL || NS_FW_BASE::strlen(inputFile) == 0) {
 			error_ = 2;
-		} else {
-			if (!str_starts(inputFile, basePath_)) {
-				input_ = str_concat(basePath_, inputFile);
-			} else {
-				input_ = NS_FW_BASE::strdup(inputFile);
-			}
+		}
+		else {
+			input_ = NS_FW_BASE::strdup(inputFile);
 			inputPathInfo_ = NEW_(PathInfo, input_);
 
 			if (outputFile == NULL || NS_FW_BASE::strlen(outputFile) == 0) {
 				char* tmp = str_join(4, "", inputPathInfo_->path(), "\\", inputPathInfo_->fileName(), ".out.js");
 				output_ = str_replace(tmp, "/", "\\");
 				FREE(tmp);
-			} else {
+			}
+			else {
 				output_ = str_replace(outputFile, "/", "\\");
 			}
 		}
+	}
+
+
+public:
+	JsBuild(void) {
+		error_ = 0;
+		inputPathInfo_ = NULL;
+		basePath_ = NULL;
+		input_ = NULL;
+		output_ = NULL;
+		verbose_ = false;
+		sourceTree_ = NEW_(Tree);
+		sourceTree_->deleteNodeHandler = deleteNodeHandler;
+		fout_ = NULL;
+		out_ = NEW_(PArray);
+	}
+	~JsBuild(void) {
+		//ARRAY_FOREACH(sources_->nodes(), DEL_((Source*)value));
+		//ARRAY_FOREACH(sources_->edges(), DEL_((Source*)value));
+		//sources_->cleanUp();
+		DEL_(sourceTree_)
+		DEL_(inputPathInfo_);
+		//ARRAY_FOREACH(out_, FREE(value));
+		DEL_(out_);
+		DEL_(basePath_);
+		FREE(output_);
+		//FREE(input_);
 	}
 
 	int main(Map* args) {
@@ -272,7 +368,7 @@ public:
 			if (verbose_) {
 				printf("Base path: %s\n", basePath_);
 				printf("Input: %s\n", input_);
-				printf("Output: %s\n", output_);
+				printf("Output: %s\n\n", output_);
 			}
 			char* buf = NULL;
 			Source* source = createSource(input_);
@@ -292,6 +388,7 @@ public:
 				}
 			}
 		}
+		FREE(input_);
 		return error_;
 	}
 };

@@ -1,10 +1,13 @@
-include('sourceC.js'); 
-include('sourceF.js'); 
+// include('sourceC.js');
+// include('sourceF.js');
 
 //This is source D
 (function() {
+	function SourceD() {
+	}
+	function SourceD1() {
+	}
 	
-	module.export = {
-		ns: 'SourceD'
-	};
+	publish(SourceD, 'SourceD');
+	publish(SourceD1, 'SourceD1');
 })();

@@ -32,7 +32,7 @@ float Mixer::run(void* buffer, size_t start, size_t end) {
 		float left = 0.0f;
 		float right = 0.0f;
 		MixCtrls* ctrls = (MixCtrls*)controls_;
-		for (size_t j = 0; j < inputCount_; j++) {
+		for (int j = 0; j < inputCount_; j++) {
 			if (ctrls->volume[j].i == 0) {
 				continue;
 			}

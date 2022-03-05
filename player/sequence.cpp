@@ -1,8 +1,8 @@
 #include <stdarg.h>
 #include "sequence.h"
 #include "base/memory.h"
-#include "utils/buffer.h"
-#include "base/debug.h"
+//#include "utils/buffer.h"
+//#include "base/debug.h"
 
 NS_PLAYER_BEGIN
 
@@ -10,9 +10,15 @@ Sequence::Sequence() : frames_(sizeof(Frame)) {
 }
 
 Sequence::~Sequence() {
-	ARRAY_FOREACH(&frames_, ((Frame*)value)->destroy(););
+	//ARRAY_FOREACH(&frames_, ((Frame*)value)->destroy(););
+	ARRAY_FOREACH(&frames_, DEL_((Frame*)value););
 }
 
+Frame* Sequence::frame(int ix) {
+	return (Frame*)frames_.getAt(ix);
+}
+
+#ifdef _EDITOR	// Editor extensions
 Frame* Sequence::addFrame(int time) {
 	int pos = frames_.length();
 	int elapsed = 0;
@@ -22,13 +28,24 @@ Frame* Sequence::addFrame(int time) {
 	return (Frame*)frames_.insertAt(pos, &frame);
 }
 
-Frame* Sequence::frame(int ix) {
-	return (Frame*)frames_.getAt(ix);
+Sequence::fromStream(UINT8* bytes, IAdapter* adapter) {
+	// create from binary sequence
+	PLAYER_FRAME_BIN_U stream;
+	stream.bytes = bytes;
+	PLAYER_COMMAND_U cmd;
+	Frame* frame;
+	do {
+		frame = NEW_(Frame);
+		// write first delta into frame.delta
+		frame->delta_ = stream.frame->delta;
+		do {
+
+		} while (stream.frame->delta == 0);
+
+	} while (cmd.s.id != Player_Cmd_end);
 }
 
-#ifdef EDITOR_MODE
-
-int Sequence::toStream(IAdapter* adapter, Buffer* buffer) {
+int Sequence::toStream(IAdapter* adapter, UINT8* stream) {
 	int totalLength = 0;
 	for (UINT32 i = 0; i < frames_.length(); i++) {
 		Frame* frame = (Frame*)frames_.getAt(i);

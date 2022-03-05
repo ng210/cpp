@@ -18,49 +18,48 @@ enum PlayerCommands : UINT8 {
 	Player_Cmd_Count
 };
 
-typedef struct PLAYER_CMD_TEMPO_ : ABSTRACT_ADAPTER_COMMAND_ {
+typedef struct PLAYER_CMD_TEMPO_ : ADAPTER_COMMAND_BASE {
 	float ticksPerMinute;
 } PLAYER_CMD_TEMPO;
 
-typedef struct PLAYER_CMD_ASSIGN_ : ABSTRACT_ADAPTER_COMMAND_ {
+typedef struct PLAYER_CMD_ASSIGN_ : ADAPTER_COMMAND_BASE {
 	UINT8 target;
+	UINT8 adapter;
 	UINT8 sequence;
 	UINT8 status;
 } PLAYER_CMD_ASSIGN;
 
-//typedef struct PLAYER_CMD_CREATE_ : ABSTRACT_ADAPTER_COMMAND_ {
-//	UINT8 adapterId;
-//	UINT8 userDataBlockId;
-//} PLAYER_CMD_CREATE;
-
 typedef union PLAYER_COMMAND_ALL_ {
 	PLAYER_CMD_TEMPO* tempo;
 	PLAYER_CMD_ASSIGN* assign;
-	//PLAYER_CMD_CREATE* create;
-	PLAYER_COMMAND base;
+	PLAYER_COMMAND_U base;
 } PLAYER_COMMAND_ALL;
 
 class PlayerAdapter : public IAdapter {
 	static const ADAPTER_INFO adapterInfo_;
-	static void initialize();
-	static void destroy();
-	static IAdapter* create(UINT8** data);
+	//static void initialize();
+	//static void destroy();
+	//static IAdapter* create(UINT8** data);
+	static PlayerAdapter instance_;
 public:
-	const ADAPTER_INFO* getInfo();
+	void createObjects(PArray* targets, void* data);
+	const ADAPTER_INFO& getInfo();
+	static const IAdapter& getInstance();
+	void prepareContext(void* data);
+	int processCommand(void* target, PLAYER_COMMAND_U data);
+	void updateRefreshRate(void* target, float data);
 
-	int processCommand(void* object, PLAYER_COMMAND cmd);
-	void setTempo(void *object, float ticksPerSecond);
-	size_t fill(void* buffer, size_t start, size_t end);
+	//size_t fill(void* buffer, size_t start, size_t end);
 
-	// Misc. methods
+#ifdef _EDITOR
+	// editor extensions
 	PLAYER_COMMAND createCommand(int code, ...);
 	int getCommandParameters(PLAYER_COMMAND cmd, double* parameters);
 	int matchCommand(int filter, PLAYER_COMMAND cmd);
 	char* logCommand(PLAYER_COMMAND command);
 	int dumpCommand(PLAYER_COMMAND command, Buffer* buffer);
-
-	// Editor
 	Target* createTarget(int id, UINT8* data);
+#endif
 };
 
 NS_PLAYER_END

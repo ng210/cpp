@@ -1,6 +1,8 @@
 #ifndef __XMLOADER_H
 #define __XMLOADER_H
 
+//#include <windows.h>
+
 #include "basedef.h"
 #include "collection/map.h"
 #include "sequence.h"

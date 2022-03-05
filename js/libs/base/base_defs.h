@@ -64,11 +64,15 @@
 #endif
 
 #ifdef UNICODE
+//#include <wchar.h>
 #define __TFILE__ __WFILE__
 #define __TDATE__ __WDATE__
+#define TCHAR wchar_t
+#define vprintf vwprintf
 #else
 #define __TFILE__ __FILE__
 #define __TDATE__ __DATE__
+#define TCHAR char
 #endif
 
 //*********************************************************

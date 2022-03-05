@@ -2,7 +2,7 @@
 #define __ADAPTER_LIB_H
 
 #include <windows.h>
-#include "player/iadapter.h"
+#include "player/adapterlib.h"
 
 NS_FW_BASE_USE
 NS_PLAYER_USE
@@ -11,8 +11,9 @@ NS_PLAYER_USE
 extern "C" {
 #endif
 
-	__declspec(dllexport) ADAPTER_INFO* addAdapter(IAdapter* adapter);
-	__declspec(dllexport) Array* getAdapterInfos();
+	//__declspec(dllexport) void addAdapter(IAdapter* adapter);
+	__declspec(dllexport) IAdapter* getAdapter(int uid);
+	__declspec(dllexport) Map& getAdapters();
 
 	BOOL WINAPI DllMain(
 		_In_ HINSTANCE hinstDLL,
