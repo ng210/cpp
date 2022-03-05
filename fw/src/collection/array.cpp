@@ -26,7 +26,7 @@ void Array::init(UINT32 itemSize, UINT32 capacity, void* items) {
 		itemSize_ = itemSize;
 		capacity_ = capacity;
 		extendSize_ = capacity;
-		data_ = (void**)MALLOC(char, capacity_ * itemSize);
+		data_ = (void**)MALLOC(char, (size_t)capacity_ * itemSize);
 		length_ = 0;
 	}
 }
@@ -45,7 +45,7 @@ void* Array::insertAt(int ix, void* item) {
 			// increase capacity
 			capacity_ += extendSize_;
 			// realloc data
-			data_ = (void**)REALLOC(data_, char, capacity_ * itemSize_);
+			data_ = (void**)REALLOC(data_, char, (size_t)capacity_ * itemSize_);
 		}
 		dst = &((char*)data_)[i*itemSize_];
 		// shift items beyond ix up
@@ -67,11 +67,11 @@ void Array::removeAt(int ix) {
 		// shift items beyond ix down
 		char* dst = &((char*)data_)[i*itemSize_];
 		length_--;
-		memcpy(dst, dst + itemSize_, (length_ - i) * itemSize_);
+		memcpy(dst, dst + itemSize_, (size_t)(length_ - i) * itemSize_);
 		if (length_ < capacity_ - extendSize_) {
 			// decrease capacity
 			capacity_ -= extendSize_;
-			data_ = (void**)REALLOC(data_, char, capacity_ * itemSize_);
+			data_ = (void**)REALLOC(data_, char, (size_t)capacity_ * itemSize_);
 		}
 	}
 }
@@ -92,9 +92,9 @@ int Array::join(ArrayBase* array) {
 	if (itemSize_ == array->itemSize()) {
 		if (length_ > capacity_) {
 			capacity_ = (length_ / extendSize_ + 1) * extendSize_;
-			data_ = (void**)REALLOC(data_, char, capacity_ * itemSize_);
+			data_ = (void**)REALLOC(data_, char, (size_t)capacity_ * itemSize_);
 		}
-		memcpy(&((char*)data_)[len*itemSize_], array->data(), array->length()*array->itemSize());
+		memcpy(&((char*)data_)[len*itemSize_], array->data(), (size_t)array->length() * array->itemSize());
 		res = length_;
 	}
 	return res;
@@ -185,7 +185,7 @@ void* Array::search(void* key, int& ix, CollectionCallback* compare) {
 	return value;
 }
 char* Array::str_join(const char* filler) {
-	char** parts = MALLOC(char*, length_ + 1);
+	char** parts = MALLOC(char*, (size_t)length_ + 1);
 	for (int i = 0; i < (int)length_; i++) {
 		parts[i] = &((char*)data_)[i*itemSize_];
 	}

@@ -35,17 +35,17 @@ int _main(NS_FW_BASE::Map* args) {
 
 	int passed = 0, failed = 0;
 
-	//TEST(testUtils);
-	//TEST(testBuffer);
+	TEST(testUtils);
+	TEST(testBuffer);
 	TEST(testFile);
-	//TEST(testDirectory);
-	//TEST(testPathInfo);
-	//TEST(testStr);
-	//TEST(testString);
-	//TEST(testArray);
-	//TEST(testPArray);
-	//TEST(testMap);
-	//TEST(testTree);
+	TEST(testDirectory);
+	TEST(testPathInfo);
+	TEST(testStr);
+	TEST(testString);
+	TEST(testArray);
+	TEST(testPArray);
+	TEST(testMap);
+	TEST(testTree);
 	
 	//WORD buffer[48000];
 	//for (int i = 0; i < 48000; i++) {
@@ -147,9 +147,9 @@ int testBuffer() {
 	LOG("********************************\nBuffer tests\n********\n");
 
 	Buffer* buf1 = NEW_(Buffer);
+	UINT32* buffer = new UINT32[50000];
 	UINT32 number = 0;
 	for (UINT32 i = 0; i < 20; i++) {
-		UINT32 buffer[50000];
 		for (UINT32 j = 0; j < 50000; j++) {
 			buffer[j] = number++;
 		}
@@ -167,7 +167,7 @@ int testBuffer() {
 	if (errors != 0) {
 		LOG(" errors: %d\n", errors);
 	}
-	UINT32* buffer = buf1->getBufferAsType<UINT32>();
+	buffer = buf1->getBufferAsType<UINT32>();
 	errors = 0;
 	number = 0;
 	for (UINT32 i = 0; i < 20 * 50000; i++) {
@@ -191,7 +191,7 @@ int testFile() {
 	File::write("test.dat", (BYTE*)data, NS_FW_BASE::strlen(data));
 	BYTE* bytes = NULL;
 	size_t bytesRead = File::read("test.dat", &bytes);
-	ASSERT("byte buffer should be written into an read from file", NS_FW_BASE::strncmp(data, (const char*)bytes, bytesRead) == 0);
+	ASSERT("byte buffer should be written into a file", NS_FW_BASE::strncmp(data, (const char*)bytes, bytesRead) == 0);
 	FREE(bytes); bytes = NULL;
 	bytesRead = File::read("test.dat", &bytes, 10, 0);
 	ASSERT("file from an offset should be read into byte buffer", NS_FW_BASE::strncmp(data2, (const char*)bytes, bytesRead) == 0);
@@ -207,7 +207,7 @@ int testFile() {
 	buffer->clear();
 	bytesRead = File::read("test2.dat", buffer);
 	bytes = buffer->getByteBuffer();
-	ASSERT("buffer contents should be written into an read from file", NS_FW_BASE::strncmp(data, (const char*)bytes, bytesRead) == 0);
+	ASSERT("buffer contents should be written into a file", NS_FW_BASE::strncmp(data, (const char*)bytes, bytesRead) == 0);
 	FREE(bytes);
 	DEL_(buffer);
 
@@ -221,10 +221,8 @@ int testDirectory() {
 	LOG("********************************\nDirectory tests\n********\n");
 
 	char* files[] = {
-		//"1asu.xm",
-		//"test.dat",
-		//"ENGLISH.PAK",
-		"chapter7.pak"
+		"1.pak",
+		"2.pak"
 	};
 	char* basePath = str_substr(getWorkingDir(), 0, str_indexOf(getWorkingDir(), "test") + 4);
 	char* path = str_concat(basePath, "\\data");
@@ -520,24 +518,24 @@ int testArray() {
 	int pos = 0;
 	LOG(" arr1 array<short int>\n");
 	arr1->search(arr1->getAt(8), pos, compareWord);
-	ASSERT("item 508 should be #8", pos = 8);
+	ASSERT("item 508 should be #8", pos == 8);
 	LOG(" arr2 array<char*>\n");
 	arr2->search(arr2->getAt(8), pos);
-	ASSERT("item 's08' should be #8", pos = 8);
+	ASSERT("item 's08' should be #8", pos == 8);
 	LOG(" arr3 array<TEST_DATA>\n");
 	arr3->search(arr3->getAt(8), pos, compareObj);
-	ASSERT("item 's08' should be #8", pos = 8);
+	ASSERT("item 's08' should be #8", pos == 8);
 
 	LOG(" BINSEARCH\n");
 	LOG(" arr1 array<short int>\n");
 	arr1->binSearch(arr1->getAt(8), pos, compareWord);
-	ASSERT("item 508 should be #8", pos = 8);
+	ASSERT("item 508 should be #8", pos == 8);
 	LOG(" arr2 array<char*>\n");
 	arr2->binSearch(arr2->getAt(8), pos);
-	ASSERT("item 's08' should be #8", pos = 8);
+	ASSERT("item 's08' should be #8", pos == 8);
 	LOG(" arr3 array<TEST_DATA>\n");
 	arr3->binSearch(arr3->getAt(8), pos, compareObj);
-	ASSERT("item 's08' should be #8", pos = 8);
+	ASSERT("item 's08' should be #8", pos == 8);
 
 	LOG(" REMOVE\n");
 	//ASSERT("TODO", false);
@@ -629,12 +627,12 @@ int testPArray() {
 	int pos = 0;
 	LOG(" arr1 array<char*>\n");
 	arr1->search(arr1->getAt(8), pos);
-	ASSERT("item 's08' should be #8", pos = 8);
+	ASSERT("item 's08' should be #8", pos == 8);
 
 	LOG(" BINSEARCH\n");
 	LOG(" arr1 array<char*>\n");
 	arr1->binSearch(arr1->getAt(8), pos);
-	ASSERT("item 's08' should be #8", pos = 8);
+	ASSERT("item 's08' should be #8", pos == 8);
 
 	LOG(" REMOVE\n");
 	while (arr1->length() > 0) {

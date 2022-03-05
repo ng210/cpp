@@ -45,6 +45,7 @@ WinApp* createApplication(HINSTANCE hInstance, Map* args) {
 
 TestApp::TestApp(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx) {
 	// put initialization code here
+	logControl_ = NULL;
 	char eos = '\0';
 	state_ = 0;
 	log_.append(&eos, 1);

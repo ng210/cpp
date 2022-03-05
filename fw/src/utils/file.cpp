@@ -4,6 +4,11 @@
 
 NS_FW_BASE_BEGIN
 
+bool File::exists(const char* path) {
+	FILE* fp = NULL;
+	return fopen_s(&fp, path, "r") == 0 && fp != NULL;
+}
+
 size_t File::read(const char* path, UINT8** ptr, size_t offset, size_t byteCount) {
 	size_t bytesRead = -1;
 	FILE* fp = NULL;
@@ -11,7 +16,7 @@ size_t File::read(const char* path, UINT8** ptr, size_t offset, size_t byteCount
 	if (fopen_s(&fp, path, "rb") == 0 && fp != NULL) {
 		// get file size
 		fseek(fp, 0, SEEK_END);
-		size_t length = ftell(fp);
+		size_t length = (size_t)ftell(fp) + 1;	// add 1 byte to ensure EOF
 		// byteCount = 0 reads whole file
 		if (byteCount == 0) {
 			byteCount = length;
@@ -33,6 +38,7 @@ size_t File::read(const char* path, UINT8** ptr, size_t offset, size_t byteCount
 			UINT8* buffer = *ptr;
 			bytesRead = fread(buffer, sizeof(char), byteCount, fp);
 			fclose(fp);
+			buffer[length-1] = '\0';
 		}
 	}
 	return bytesRead;

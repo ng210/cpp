@@ -150,8 +150,8 @@ void PArray::sort_(int min, int max, CollectionCallback* compare) {
 void* PArray::search(void* key, int& ix, CollectionCallback* compare) {
 	void* value = NULL;
 	if (compare == NULL) compare = this->compare();
-	void** item = (void**)getAt(0);
 	for (UINT32 i = 0; i < length_; i++) {
+		void* item = data_[i];
 		int res = compare(item, i, this, key);
 		if (res == 0) {
 			value = item;
@@ -162,12 +162,11 @@ void* PArray::search(void* key, int& ix, CollectionCallback* compare) {
 		//	ix = i;
 		//	break;
 		//}
-		item++;
 	}
 	return value;
 }
 char* PArray::str_join(const char* filler) {
-	char** parts = MALLOC(char*, length_ + 1);
+	char** parts = MALLOC(char*, (size_t)length_ + 1);
 	memcpy(parts, data_, sizeof(char*) * length_);
 	parts[length_] = NULL;
 	char* str = NS_FW_BASE::str_join(parts, filler);

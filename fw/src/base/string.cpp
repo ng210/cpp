@@ -168,7 +168,7 @@ char* str_replace(const char* str, const char* oldValue, const char* newValue) {
 		offsets[count++] = offset;
 		i = offset + len2;
 	}
-	char *buffer = MALLOC(char, len + 1);
+	char *buffer = MALLOC(char, (size_t)len + 1);
 	buffer[0] = '\0';
 	UINT32 offset = 0;
 	char *ptr = buffer;
@@ -191,12 +191,12 @@ char** str_split(const char* str, const char* splitter) {
 	UINT32 splitLen = strlen(splitter);
 	size_t size = 0;
 	for (UINT32 i = 0; i < len; ) {
-		int ix = str_indexOf(str, splitter, i);
+		UINT32 ix = str_indexOf(str, splitter, i);
 		if (ix == -1) {
 			ix = len;
 		}
 		if (i != ix) {
-			parts[count++] = substr(str, i, ix - i);
+			parts[count++] = substr(str, i, (size_t)(ix - i));
 		}
 		i = ix + splitLen;
 	}
@@ -230,7 +230,7 @@ char* str_substring(const char* str, int start, int end) {
 	}
 	char* buffer = NULL;
 	if (start < end) {
-		size_t remains = end - start;
+		size_t remains = (size_t)end - start;
 		buffer = MALLOC(char, remains + 1);
 		strncpy(buffer, remains, &str[start]);
 	} else {

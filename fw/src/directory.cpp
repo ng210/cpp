@@ -35,7 +35,7 @@ void Directory::enumEntries(const char* path, ENUMDIRENTRYPROC* proc, bool isRec
 		BOOL hasNext = true;
 		char fileName[MAX_PATH];
 		HANDLE SYSFN(hFile, FindFirstFile(fullPath, &findFileData));
-		if (hFile != INVALID_HANDLE_VALUE) {
+		if (hFile != NULL && hFile != INVALID_HANDLE_VALUE) {
 			while (hasNext) {
 				// check for recursion
 				if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
@@ -69,13 +69,14 @@ void Directory::enumEntries(const char* path, ENUMDIRENTRYPROC* proc, bool isRec
 				}
 				SYSFN(hasNext, FindNextFile(hFile, &findFileData));
 			}
+			SYSPR(FindClose(hFile));
 		}
 		else {
 			// no matching file found!
 			;
 		}
 		// findclose
-		SYSPR(FindClose(hFile));
+		//SYSPR(FindClose(hFile));
 		//while ((filter = filters[fi++]) != NULL) {
 		//	// findfirst
 		//	HANDLE SYSFN(hFile, FindFirstFile(fullPath, &findFileData));

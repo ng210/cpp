@@ -40,19 +40,20 @@
 // declare a field with inline getter and setter
 // arguments: type, name
 #define PROP(t, n) \
-	private: t n##_; \
+			t n##_; \
 	public: inline t n() { return n##_; };\
 			inline void n(t v) { n##_ = v; };
+	
 //*********************************************************
 // declare a readonly field with getter only
 #define PROP_R(t, n)\
-	t n##_;\
-	public: inline t n() { return n##_; };
+	public: inline t n() { return n##_; } \
+		t n##_
+	
 // declare a field with a reference getter
 #define PROP_REF(t, n)\
-	t n##_;\
-	public: inline t& n() { return n##_; };
-
+			t n##_; \
+	public: inline t& n() { return n##_; }
 #endif
 
 #define TMPL(X, R, U) template <typename U> R X<U>

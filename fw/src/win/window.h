@@ -28,11 +28,11 @@ typedef union WINDOWCLASS_ {
 } WINDOWCLASS;
 
 class Window {
-	protected: PROP_R(HINSTANCE, hInstance);
-	protected: PROP_R(HWND, hWnd);
-	protected: PROP_R(RECT, rect);
-	protected: PROP_R(int, width);
-	protected: PROP_R(int, height);
+	protected: PROP_R(HINSTANCE, hInstance) = NULL;
+	protected: PROP_R(HWND, hWnd) = NULL;
+	protected: PROP_R(RECT, rect) = {};
+	protected: PROP_R(int, width) = 0;
+	protected: PROP_R(int, height) = 0;
 protected:
 	WINDOWCLASS wndClass_;
 

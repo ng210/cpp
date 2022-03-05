@@ -9,11 +9,11 @@ NS_FW_WIN_USE
 
 class WinApp : public Window {
 protected: PROP_R(char*, workingDir);
-	//virtual HACCEL getAcceleratorTable();
+		 //virtual HACCEL getAcceleratorTable();
 protected:
 	virtual void update();
 public:
-	WinApp() {};
+	WinApp();
 	virtual ~WinApp();
 	virtual int main(Map* args);
 

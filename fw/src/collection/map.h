@@ -26,7 +26,7 @@ protected:
 	Array* bucketList_;
 	//static void initialize();
 	//static void shutDown();
-	Map() {};
+	Map() : keys_(NULL), values_(NULL), size_(0), bucketList_(NULL), hashing_(NULL) { };
 	void init(UINT32 keySize, UINT32 valueSize, HashingFunction hashing, CollectionCallback* compare);
 public:
 	Map(UINT32 keySize, UINT32 valueSize = sizeof(void*), HashingFunction hashing = Map::hashingStr, CollectionCallback* compare = Collection::compareByRef);

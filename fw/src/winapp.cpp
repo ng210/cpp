@@ -6,7 +6,7 @@ NS_FW_BASE_USE
 NS_FW_WIN_USE
 
 // Entry point
-extern int APIENTRY WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdShow) {
+extern INT WINAPI WinMain(HINSTANCE instance, HINSTANCE pprevInstance, char* cmdLine, int nShowCmd) {
 	int error = 0;
 #ifdef _DEBUG
 	//MemoryMgr::isDebugOn = true;
@@ -55,6 +55,10 @@ extern int APIENTRY WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cm
 	MemoryMgr::checkMemDbgInfo(0, NULL);
 #endif
 	return error;
+}
+
+WinApp::WinApp() {
+	this->workingDir_ = "";
 }
 
 WinApp::~WinApp() {
