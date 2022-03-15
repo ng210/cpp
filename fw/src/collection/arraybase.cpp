@@ -3,6 +3,10 @@
 
 NS_FW_BASE_BEGIN
 
+ArrayBase::ArrayBase() {
+	compare_ = NULL;
+}
+
 ArrayBase::~ArrayBase() {
 	FREE(data_);
 }

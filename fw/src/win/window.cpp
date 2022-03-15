@@ -17,6 +17,11 @@ static int wm_sizing_wparam[] = {
 };
 
 Window::Window(CREATESTRUCT* createStruct, Window* parent, WNDCLASSEX* wndClassEx) {
+	hInstance_ = NULL;
+	hWnd_ = NULL;
+	rect_ = {};
+	width_ = 0;
+	height_ = 0;
 	create(createStruct, parent, wndClassEx);
 }
 

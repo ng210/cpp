@@ -36,19 +36,21 @@
 #define NS_FW_BASE_END }
 #define NS_FW_BASE_USE using namespace NS_FW_BASE;
 
+#define var auto
+
 //*********************************************************
 // declare a field with inline getter and setter
 // arguments: type, name
 #define PROP(t, n) \
 			t n##_; \
-	public: inline t n() { return n##_; };\
-			inline void n(t v) { n##_ = v; };
+	public: inline t& n() { return n##_; }\
+			inline void n(t v) { n##_ = v; }
 	
 //*********************************************************
 // declare a readonly field with getter only
 #define PROP_R(t, n)\
-	public: inline t n() { return n##_; } \
-		t n##_
+			t n##_; \
+	public: inline t& n() { return n##_; }
 	
 // declare a field with a reference getter
 #define PROP_REF(t, n)\

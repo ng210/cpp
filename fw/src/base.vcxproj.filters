@@ -169,9 +169,6 @@
     <ClCompile Include="collection\parray.cpp">
       <Filter>collection\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="arraybase.cpp">
-      <Filter>collection\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="winapp.cpp" />
     <ClCompile Include="win\window.cpp">
       <Filter>win\Source Files</Filter>
@@ -193,6 +190,9 @@
     </ClCompile>
     <ClCompile Include="utils\file.cpp">
       <Filter>utils\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\arraybase.cpp">
+      <Filter>collection\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

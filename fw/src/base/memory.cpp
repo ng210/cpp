@@ -30,6 +30,10 @@ int MemoryMgr::nMemDbgInfos_ = 0;
 bool MemoryMgr::isDebugOn = false;
 
 void MemoryMgr::initialize_() {
+	if (MemoryMgr::memDbgInfos_ != NULL) {
+		free(MemoryMgr::memDbgInfos_);
+	}
+
 	size_t iSize = sizeof(_MEM_DBG_INFO) * _MEM_DBG_SIZE;
 	_MEM_DBG_INFO* p = (_MEM_DBG_INFO*)malloc(iSize);
 	memset(p, 0, iSize);
@@ -40,6 +44,7 @@ void MemoryMgr::initialize_() {
 	p[i].ptr.next = NULL;
 	MemoryMgr::nextFreeEntry_ = p;
 	MemoryMgr::memDbgInfos_ = p;
+	MemoryMgr::nMemDbgInfos_ = 0;
 }
 
 void* MemoryMgr::addMemDbgInfo(void *p, const char *szFile, int iLine, void *old) {
@@ -133,11 +138,16 @@ void MemoryMgr::checkMemDbgInfo(size_t count, void** exceptions) {
 		}
 	}
 }
+
 //*********************************************************
 #else
 void MemoryMgr::initialize_() {
 }
 #endif
+
+void MemoryMgr::resetMemDbgInfo() {
+	MemoryMgr::initialize_();
+}
 
 NS_FW_BASE_END
 

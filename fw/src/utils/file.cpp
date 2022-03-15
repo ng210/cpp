@@ -67,7 +67,7 @@ size_t File::write(const char* path, Buffer* buffer) {
 	FILE* fp = NULL;
 	if (fopen_s(&fp, path, "wb") == 0 && fp != NULL) {
 		size_t remainingBytes = buffer->length();
-		for (UINT32 i = 0; i < buffer->chunks()->length(); i++) {
+		for (int i = 0; i < buffer->chunks()->length(); i++) {
 			BufferChunk* chunk = (BufferChunk*)buffer->chunks()->getAt(i);
 			size_t length = chunk->byteCount() < remainingBytes ? chunk->byteCount() : remainingBytes;
 			fwrite(chunk->buffer(), sizeof(UINT8), length, fp);

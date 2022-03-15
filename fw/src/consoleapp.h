@@ -7,13 +7,25 @@
 //*****************************************************************************
 // CONSOLE
 //*****************************************************************************
+#define CONSOLE_BUFFER_LENGTH 1024*1024
+
+typedef enum ConsoleColors {
+	black = 0,
+	blue = 1,
+	green = 2,
+	cyan = 3,
+	red = 4,
+	magenta = 5,
+	yellow = 6,
+	gray = 7
+} ConsoleColors;
+
+
 class Console {
 protected: PROP_R(HANDLE, hConsole);
 protected: PROP_R(CONSOLE_SCREEN_BUFFER_INFO, consoleScreenBufferInfo);
 protected: PROP_R(CONSOLE_CURSOR_INFO, consoleCursorInfo);
 protected: PROP_R(char*, consoleBuffer);
-
-#define CONSOLE_BUFFER_LENGTH 1024*1024
 
 public:
 	Console();
@@ -23,13 +35,15 @@ public:
 	void printf(const char* const format, ...);
 	void vprintf(const char* const format, va_list args);
 	COORD* gotoxy(int x, int y);
+	COORD* movexy(int x, int y);
+	void setcolor(int col);
+	void clearscreen();
 };
-
-extern Console console;
 
 extern int _main(NS_FW_BASE::Map* args);
 
-const char* getWorkingDir();
+const char*& getWorkingDir();
+Console* const getConsole();
 
 int main(int, char**);
 

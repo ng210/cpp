@@ -62,7 +62,7 @@ UINT32 Buffer::read(void* targetBuffer, UINT32 byteCount, UINT32 from, UINT32 to
 	//	readFrom -= chunk->byteCount();
 	//}
 	// copy data
-	for (; chunkIndex < chunks_->length(); chunkIndex++) {
+	for (; chunkIndex < (UINT32)chunks_->length(); chunkIndex++) {
 		BufferChunk* chunk = (BufferChunk*)chunks_->getAt(chunkIndex);
 		UINT32 remainingBytes = chunk->byteCount() - readFrom;
 		UINT32 readLength = length < remainingBytes ? length : remainingBytes;
@@ -82,7 +82,7 @@ UINT8* Buffer::getByteBuffer() {
 	UINT8* buffer = MALLOC(UINT8, length_);
 	UINT32 length = length_;
 	UINT32 writeTo = 0;
-	for (UINT32 i = 0; i < chunks_->length(); i++) {
+	for (UINT32 i = 0; i < (UINT32)chunks_->length(); i++) {
 		BufferChunk* chunk = (BufferChunk*)chunks_->getAt(i);
 		UINT32 writeLength = length < chunk->byteCount() ? length : chunk->byteCount();
 		for (UINT32 j = 0; j < writeLength; j++) {
@@ -97,7 +97,7 @@ UINT32 Buffer::seek(UINT32 to, UINT32& offset) {
 	offset = to;
 	if (to <= length_) {
 		// seek the first chunk
-		for (; chunkIndex < chunks_->length(); chunkIndex++) {
+		for (; chunkIndex < (UINT32)chunks_->length(); chunkIndex++) {
 			BufferChunk* chunk = (BufferChunk*)chunks_->getAt(chunkIndex);
 			if (offset < chunk->byteCount()) {
 				break;
@@ -119,7 +119,7 @@ UINT32 Buffer::write(void* data, UINT32 byteCount, UINT32 from, UINT32 to) {
 	UINT32 length = to;
 	UINT32 chunkIndex = seek(to, writeTo);
 	// write part of data that fits into the last buffer chunk
-	for (UINT32 i=chunkIndex; i<chunks_->length(); i++) {
+	for (UINT32 i=chunkIndex; i<(UINT32)chunks_->length(); i++) {
 		BufferChunk* chunk = (BufferChunk*)chunks_->getAt(chunkIndex);
 		UINT32 freeBytesInChunk = chunk->byteCount() - writeTo;
 		UINT32 writeLength = remainingBytes < freeBytesInChunk ? remainingBytes : freeBytesInChunk;
@@ -154,7 +154,7 @@ UINT32 Buffer::write(Buffer* buffer, UINT32 byteCount, UINT32 from, UINT32 to) {
 	UINT32 offset = 0;
 	UINT32 chunkIndex = seek(to, writeTo);
 	// write part of data that fits into the last buffer chunk
-	if (chunkIndex < chunks_->length()) {
+	if (chunkIndex < (UINT32)chunks_->length()) {
 		BufferChunk* chunk = (BufferChunk*)chunks_->getAt(chunkIndex);
 		UINT32 freeBytesInChunk = chunk->byteCount() - writeTo;
 		UINT32 writeLength = remainingBytes < freeBytesInChunk ? remainingBytes : freeBytesInChunk;

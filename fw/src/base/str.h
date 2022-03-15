@@ -15,10 +15,9 @@ char* strncpy(char *dst, size_t len, const char *src);
 int strncmp(const char *left, const char *right, size_t len = -1);
 void strnncpy(char*& dst, size_t& size, size_t start, const char* src, const size_t length, const size_t offset = 0);
 void memset(void *dst, const char value, size_t len);
+void* memcpy(void* dest, const void* src, size_t count);
 
 #ifdef _CRT
-void* memcpy(void *dest, const void *src, size_t count);
-
 char* strchr(const char* str, char ch);
 size_t strspn(const char *dest, const char *src);
 size_t strcspn(const char *dest, const char *src);

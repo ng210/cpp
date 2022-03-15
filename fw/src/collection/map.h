@@ -46,7 +46,7 @@ public:
 	static HashingFunction hashingStr;
 };
 
-#define MAP_FOREACH(map, ACTION) for (UINT32 i = 0; i < (map)->keys()->length(); i++) { \
+#define MAP_FOREACH(map, ACTION) for (int i = 0; i < (map)->keys()->length(); i++) { \
 	void* key = (map)->keys()->getAt(i);	\
 	void* value = (map)->get(key); \
 	ACTION \

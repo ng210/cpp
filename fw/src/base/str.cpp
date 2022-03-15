@@ -59,8 +59,6 @@ void memset(void *dst, const char value, size_t len) {
 	}
 }
 //*********************************************************
-
-#ifdef _CRT
 void* memcpy(void *dest, const void *src, size_t count) {
 /*	if (count > 16) {
 		size_t dwCount = count >> 2;
@@ -87,6 +85,8 @@ void* memcpy(void *dest, const void *src, size_t count) {
 	}
 	return dest;
 }
+#ifdef _CRT
+
 //*********************************************************
 char* strchr(const char* str, char ch) {
 	char* pos = NULL;

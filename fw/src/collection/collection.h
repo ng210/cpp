@@ -10,7 +10,7 @@ NS_FW_BASE_BEGIN
 // Base class collection
 //*****************************************************************************
 class Collection {
-protected: PROP_R(UINT32, length);
+protected: PROP_R(int, length);
 protected:
 public:
 	virtual void* add(void* item = NULL) = 0;

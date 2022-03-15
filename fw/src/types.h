@@ -12,7 +12,7 @@ typedef unsigned __int64    UINT64, *PUINT64;
 #define byte BYTE
 #define WORD UINT16
 #define word WORD
-#define DWORD UINT32
+#define DWORD unsigned long
 #define dword DWORD
 #define QWORD UINT64
 #define qword QWORD

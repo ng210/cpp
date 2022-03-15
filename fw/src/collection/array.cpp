@@ -12,6 +12,10 @@
 
 NS_FW_BASE_BEGIN
 
+Array::Array() {
+	data_ = NULL;
+}
+
 Array::Array(UINT32 itemSize, UINT32 capacity) {
 	data_ = NULL;
 	init(itemSize, capacity);
@@ -38,7 +42,7 @@ void* Array::add(void* item) {
 	return insertAt(length_, item);
 }
 void* Array::insertAt(int ix, void* item) {
-	UINT32 i = ix < 0 ? ix + length_ : ix;
+	int i = ix < 0 ? ix + length_ : ix;
 	char* dst = NULL;
 	if (i <= length_) {
 		if (length_ == capacity_) {
@@ -62,13 +66,13 @@ void* Array::insertAt(int ix, void* item) {
 	return dst;
 }
 void Array::removeAt(int ix) {
-	UINT32 i = ix < 0 ? ix + length_ : ix;
+	int i = ix < 0 ? ix + length_ : ix;
 	if (i < length_) {
 		// shift items beyond ix down
 		char* dst = &((char*)data_)[i*itemSize_];
 		length_--;
 		memcpy(dst, dst + itemSize_, (size_t)(length_ - i) * itemSize_);
-		if (length_ < capacity_ - extendSize_) {
+		if ((UINT32)length_ < capacity_ - extendSize_) {
 			// decrease capacity
 			capacity_ -= extendSize_;
 			data_ = (void**)REALLOC(data_, char, (size_t)capacity_ * itemSize_);
@@ -76,7 +80,7 @@ void Array::removeAt(int ix) {
 	}
 }
 void* Array::getAt(int ix) {
-	UINT32 i = ix < 0 ? ix + length_ : ix;
+	int i = ix < 0 ? ix + length_ : ix;
 	return i < length_ ? (void*)&((char*)data_)[i*itemSize_] : NULL;
 }
 void Array::setAt(int ix, void* item) {
@@ -90,7 +94,7 @@ int Array::join(ArrayBase* array) {
 	UINT32 len = length_;
 	length_ = length_ + array->length();
 	if (itemSize_ == array->itemSize()) {
-		if (length_ > capacity_) {
+		if ((UINT32)length_ > capacity_) {
 			capacity_ = (length_ / extendSize_ + 1) * extendSize_;
 			data_ = (void**)REALLOC(data_, char, (size_t)capacity_ * itemSize_);
 		}
@@ -101,7 +105,7 @@ int Array::join(ArrayBase* array) {
 }
 int Array::forEach(CollectionCallback* action, void* args) {
 	void* item = &((char*)data_)[0];
-	UINT32 i = 0;
+	int i = 0;
 	int hasFound = 0;
 	while (i < length_) {
 		if (!action(item, i, this, args)) {
@@ -167,9 +171,9 @@ void Array::sort_(int min, int max, CollectionCallback* compare) {
 //}
 void* Array::search(void* key, int& ix, CollectionCallback* compare) {
 	void* value = NULL;
-	if (compare == NULL) compare = this->compare();
+	if (compare == NULL) compare = compare_;
 	void* item = getAt(0);
-	for (UINT32 i = 0; i < length_; i++) {
+	for (int i = 0; i < length_; i++) {
 		int res = compare(item, i, this, key);
 		if (res == 0) {
 			ix = i;

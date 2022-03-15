@@ -1,3 +1,4 @@
+#include <Windows.h>
 #include "utils/directory.h"
 #include "base/memory.h"
 #include "base/string.h"

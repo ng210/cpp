@@ -19,4 +19,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="data\test.dat" />
+    <CopyFileToFolders Include="data\pakreader\1.pak" />
+    <CopyFileToFolders Include="data\1.pak" />
+    <CopyFileToFolders Include="data\2.pak" />
+  </ItemGroup>
 </Project>

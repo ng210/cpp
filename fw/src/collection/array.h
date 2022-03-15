@@ -20,6 +20,7 @@ protected:
 	//void* binSearch_(void* key, int& ix, CollectionCallback* compare);
 	//PROP(CollectionCallback*, compare);
 public:
+	Array();
 	Array(UINT32 itemSize, UINT32 capacity = ARRAY_DEFAULT_CAPACITY);
 	//virtual ~Array();
 	void init(UINT32 itemSize, UINT32 capacity, void* items = NULL);

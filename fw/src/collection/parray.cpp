@@ -37,7 +37,7 @@ void* PArray::add(void* item) {
 	return insertAt(length_, item);
 }
 void* PArray::insertAt(int ix, void* item) {
-	UINT32 i = ix < 0 ? ix + length_ : ix;
+	int i = ix < 0 ? ix + length_ : ix;
 	if (i <= length_) {
 		if (length_ == capacity_) {
 			// increase capacity
@@ -55,12 +55,12 @@ void* PArray::insertAt(int ix, void* item) {
 	return item;
 }
 void PArray::removeAt(int ix) {
-	UINT32 i = ix < 0 ? ix + length_ : ix;
+	int i = ix < 0 ? ix + length_ : ix;
 	if (i < length_) {
 		// shift items beyond i down
 		length_--;
 		memcpy(&data_[i], &data_[i + 1], (length_ - i) * ITEMSIZE);
-		if (length_ < capacity_ - extendSize_) {
+		if ((UINT32)length_ < capacity_ - extendSize_) {
 			// decrease capacity
 			capacity_ -= extendSize_;
 			data_ = REALLOC(data_, void*, capacity_);
@@ -68,19 +68,19 @@ void PArray::removeAt(int ix) {
 	}
 }
 void* PArray::getAt(int ix) {
-	UINT32 i = ix < 0 ? ix + length_ : ix;
+	int i = ix < 0 ? ix + length_ : ix;
 	return i < length_ ? (void*)data_[i] : NULL;
 }
 void PArray::setAt(int ix, void* item) {
-	UINT32 i = ix < 0 ? ix + length_ : ix;
+	int i = ix < 0 ? ix + length_ : ix;
 	if (i < length_) {
 		data_[i] = item;
 	}
 }
 int PArray::join(ArrayBase* array) {
-	UINT32 len = length_;
+	int len = length_;
 	length_ = length_ + array->length();
-	if (length_ > capacity_) {
+	if ((UINT32)length_ > capacity_) {
 		capacity_ = (length_ / extendSize_ + 1) * extendSize_;
 		data_ = REALLOC(data_, void*, capacity_);
 	}
@@ -88,7 +88,7 @@ int PArray::join(ArrayBase* array) {
 	return length_;
 }
 int PArray::forEach(CollectionCallback* action, void* args) {
-	UINT32 i = 0;
+	int i = 0;
 	int hasFound = 0;
 	while (i < length_) {
 		if (!action(data_[i], i, this, args)) {
@@ -150,7 +150,7 @@ void PArray::sort_(int min, int max, CollectionCallback* compare) {
 void* PArray::search(void* key, int& ix, CollectionCallback* compare) {
 	void* value = NULL;
 	if (compare == NULL) compare = this->compare();
-	for (UINT32 i = 0; i < length_; i++) {
+	for (int i = 0; i < length_; i++) {
 		void* item = data_[i];
 		int res = compare(item, i, this, key);
 		if (res == 0) {

@@ -33,11 +33,15 @@ NS_FW_BASE_BEGIN
 #else
 	#define NEW_(T,...) new T(__VA_ARGS__)
 	#define NEWARR(T,s) new T[s]
-	#define DEL_(v) delete v;
+	#define DELARR(v) delete[] v
+	#define DEL_(v) delete v
 	#define MALLOC(t, s) (t*)MemoryMgr::alloc(sizeof(t)*s)
 	#define REALLOC(p, t, s) (t*)MemoryMgr::realloc(p, sizeof(t)*s)
 	#define FREE(p) MemoryMgr::free(p)
 #endif
+
+	#define READ(p, t) *(t*)p; p += sizeof(t)
+	#define WRITE(p, v, t) *(t*)p = v; p += sizeof(t)
 
 class MemoryMgr {
 	static void initialize_();
@@ -53,6 +57,8 @@ public:
 	static void checkMemDbgInfo(size_t, void**);
 #endif
 public:
+	static void resetMemDbgInfo();
+
 	static void* alloc(size_t size);
 	static void* realloc(void* p, size_t size);
 	static void free(void *p);

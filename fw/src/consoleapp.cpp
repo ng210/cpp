@@ -1,15 +1,16 @@
+#include <windows.h>
 #include "consoleapp.h"
 #include <stdio.h>
 
 NS_FW_BASE_USE
 
-static char* workingDir_;
+static const char* workingDir_;
 Console* console_;
 
-const char* getWorkingDir() {
+const char*& getWorkingDir() {
 	return workingDir_;
 }
-
+Console* const getConsole() { return console_; }
 int main(int argc, char** argv) {
 	int error = 0;
 #ifdef _DEBUG
@@ -17,6 +18,7 @@ int main(int argc, char** argv) {
 	//MemoryMgr::isDebugOn = true;
 #endif
 	//RunTime::initialize();
+	MemoryMgr::resetMemDbgInfo();
 	console_ = NEW_(Console);
 
 	Map* args = NEW_(Map, MAP_USE_REF, MAP_USE_REF, Map::hashingStr, Collection::compareStr);
@@ -82,8 +84,40 @@ void Console::vprintf(const char* const format, va_list args) {
 }
 COORD* Console::gotoxy(int x, int y) {
 	SYSPR(GetConsoleScreenBufferInfo(hConsole_, &consoleScreenBufferInfo_));
+	consoleScreenBufferInfo_.dwCursorPosition.X = x;
+	consoleScreenBufferInfo_.dwCursorPosition.Y = y;
+	SYSPR(SetConsoleCursorPosition(hConsole_, consoleScreenBufferInfo_.dwCursorPosition));
+	return &consoleScreenBufferInfo_.dwCursorPosition;
+}
+COORD* Console::movexy(int x, int y) {
+	SYSPR(GetConsoleScreenBufferInfo(hConsole_, &consoleScreenBufferInfo_));
 	consoleScreenBufferInfo_.dwCursorPosition.X += x;
 	consoleScreenBufferInfo_.dwCursorPosition.Y += y;
 	SYSPR(SetConsoleCursorPosition(hConsole_, consoleScreenBufferInfo_.dwCursorPosition));
 	return &consoleScreenBufferInfo_.dwCursorPosition;
+}
+
+void Console::setcolor(int col) {
+	SetConsoleTextAttribute(hConsole_, col & 0x0f);
+}
+
+void Console::clearscreen() {
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	int result;
+	SYSFN(result, GetConsoleScreenBufferInfo(hConsole_, &csbi));
+	if (result) {
+		var size = csbi.dwSize.X * csbi.dwSize.Y;
+		unsigned long count = 0;
+		COORD topLeft = { 0, 0 };
+		SYSFN(result, FillConsoleOutputCharacter(hConsole_, (TCHAR)' ', size, topLeft, &count));
+		if (result) {
+			SYSFN(result, GetConsoleScreenBufferInfo(hConsole_, &csbi));
+			if (result) {
+				SYSFN(result, FillConsoleOutputAttribute(hConsole_, csbi.wAttributes, size, topLeft, &count));
+				if (result) {
+					SYSFN(result, SetConsoleCursorPosition(hConsole_, topLeft));
+				}
+			}
+		}
+	}
 }

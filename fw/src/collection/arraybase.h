@@ -14,6 +14,7 @@ protected:
 	virtual void* binSearch_(void* key, int& ix, CollectionCallback* compare);
 protected: PROP(CollectionCallback*, compare);
 public:
+	ArrayBase();
 	virtual ~ArrayBase();
 	void* binSearch(void* key, int& ix, CollectionCallback* compare = NULL);
 	int findIndex(void* key, CollectionCallback* compare = NULL);
@@ -25,7 +26,7 @@ public:
 	virtual char* str_join(const char* filler) = 0;
 };
 
-#define ARRAY_FOREACH(array, ACTION) for (UINT32 i = 0; i < (array)->length(); i++) { \
+#define ARRAY_FOREACH(array, ACTION) for (int i = 0; i < (array)->length(); i++) { \
 	void* value = (array)->getAt(i);	\
 	ACTION; \
 }
