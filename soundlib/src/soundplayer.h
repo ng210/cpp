@@ -1,24 +1,17 @@
 #ifndef __SOUNDPLAYER_H
 #define __SOUNDPLAYER_H
 
-//#include <windows.h>
 #include "dsound.h"
-#ifdef __CRT
-#include "crt\crt.h"
-#endif
 
-//#include "base/memory.h"
-//#include "types.h"
-
-//#define USE_DOUBLE_BUFFER
-
-typedef void (*FeedSample)(short*, int);
+typedef void (*FeedSample)(short*, int, void*);
 
 class SoundPlayer {
 private:
-	static const int channels_;
-	static const int bitsPerSample_;
-	static const int bufferSize_;
+	static int channels_;
+	static int channelsLog2_;
+	static int bitsPerSample_;
+	static int sampleSizeLog2_;
+	static int bufferSize_;
 
 	static DWORD sampleRate_;
 	static DWORD latency_;
@@ -38,7 +31,7 @@ private:
 	static DWORD WINAPI threadProc(LPVOID lpParameter);
 
 public:
-	static HRESULT start(int sampleRate, int channels, void(*callback)(short* buffer, int sampleCount));
+	static HRESULT start(int sampleRate, int channels, FeedSample callback, void* context = NULL);
 	static HRESULT stop();
 	static void setLatency(int ms);
 };

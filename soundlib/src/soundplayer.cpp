@@ -5,9 +5,11 @@
 #include "Mmreg.h"
 #include <stdio.h>
 
-const int SoundPlayer::channels_ = 2;
-const int SoundPlayer::bitsPerSample_ = 16;
-const int SoundPlayer::bufferSize_ = 65536;
+int SoundPlayer::channels_ = 2;
+int SoundPlayer::channelsLog2_ = 1;
+int SoundPlayer::bitsPerSample_ = 16;
+int SoundPlayer::sampleSizeLog2_ = 2;	// 8bit stereo = 2*2 = 4 byte per sample
+int SoundPlayer::bufferSize_ = 65536;
 DWORD SoundPlayer::sampleRate_ = 48000;
 
 LPDIRECTSOUND8 SoundPlayer::device_ = NULL;
@@ -28,19 +30,21 @@ DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 	DWORD writePosition = 2048;
 	DWORD playPosition = 0;
-	DWORD sampleCount = SoundPlayer::bufferSize_ >> 2;
+	DWORD sampleCount = SoundPlayer::bufferSize_ >> SoundPlayer::sampleSizeLog2_;
 	DWORD mask = sampleCount - 1;
 	while (!SoundPlayer::isTerminating_) {
 		SoundPlayer::secondaryBuffer_->GetCurrentPosition(&playPosition, 0);
-		playPosition >>= 2;
+		playPosition >>= SoundPlayer::sampleSizeLog2_;
 		DWORD aheadPosition = playPosition + SoundPlayer::latency_;
 		if (playPosition > writePosition) {
 			writePosition += sampleCount;
 		}
+		int count = 256 * SoundPlayer::channels_;
 		while (aheadPosition > writePosition) {
 			DWORD ix = writePosition & mask;
-			SoundPlayer::callback_(&((short*)SoundPlayer::sampleBuffer_)[ix*2], 256);
-			writePosition += 256;
+			ix <<= SoundPlayer::channelsLog2_;
+			SoundPlayer::callback_(&((short*)SoundPlayer::sampleBuffer_)[ix], count, lpParameter);
+			writePosition += count;
 		}
 		writePosition &= mask;
 		Sleep(6);
@@ -50,11 +54,15 @@ DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
 	return 0;
 }
 
-//HRESULT SoundPlayer::start(int sampleRate, int channels, FeedSample callback) {
-HRESULT SoundPlayer::start(int sampleRate, int channels, void (*callback)(short* buffer, int sampleCount)) {
+HRESULT SoundPlayer::start(int sampleRate, int channels, FeedSample callback, void* context) {
 	HRESULT res = DS_OK;
 	LPDIRECTSOUNDBUFFER8 &buffer = SoundPlayer::secondaryBuffer_;
 	buffer = NULL;
+	channels = channels < 2 ? 1 : 2;
+	SoundPlayer::channels_ = channels;
+	SoundPlayer::channelsLog2_ = channels < 2 ? 0 : 1;
+	SoundPlayer::sampleRate_ = sampleRate;
+	SoundPlayer::sampleSizeLog2_ = channels;	// 2 byte * channel count
 	while (true) {
 		// load dll
 		HMODULE dll = LoadLibraryA("dsound.dll");
@@ -77,11 +85,11 @@ HRESULT SoundPlayer::start(int sampleRate, int channels, void (*callback)(short*
 		WAVEFORMATEX wfx;
 		wfx.cbSize = sizeof(WAVEFORMATEX);
 		wfx.wFormatTag = WAVE_FORMAT_PCM;
-		wfx.nSamplesPerSec = sampleRate;
+		wfx.nSamplesPerSec = SoundPlayer::sampleRate_;
 		wfx.nChannels = SoundPlayer::channels_;
 		wfx.wBitsPerSample = SoundPlayer::bitsPerSample_;
-		wfx.nBlockAlign = SoundPlayer::channels_*(SoundPlayer::bitsPerSample_ >> 3);
-		wfx.nAvgBytesPerSec = sampleRate * wfx.nBlockAlign;
+		wfx.nBlockAlign = SoundPlayer::channels_ *(SoundPlayer::bitsPerSample_ >> 3);
+		wfx.nAvgBytesPerSec = SoundPlayer::sampleRate_ * wfx.nBlockAlign;
 		// set up DSBUFFERDESC structure
 		DSBUFFERDESC dsbdesc;
 		dsbdesc.dwSize = sizeof(DSBUFFERDESC);
@@ -111,11 +119,10 @@ HRESULT SoundPlayer::start(int sampleRate, int channels, void (*callback)(short*
 		if ((res = buffer->Play(0, 0, DSBPLAY_LOOPING)) != DS_OK) {
 			break;
 		}
-		SoundPlayer::sampleRate_ = sampleRate;
 		SoundPlayer::callback_ = callback;
 		// create audio thread
 		DWORD id = 0;
-		CreateThread(0, 0x1000, &SoundPlayer::threadProc, NULL, 0, &id);
+		CreateThread(0, 0x1000, &SoundPlayer::threadProc, context, 0, &id);
 		setLatency(SoundPlayer::latency_);
 		break;
 	}
