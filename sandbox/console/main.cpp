@@ -38,7 +38,14 @@ long long _linearSearch(int* list, size_t count, int key) {
 
 #define SIZE 64
 
-int main(int argc, char *argv[]) {
+typedef struct AdapterInfo {
+	const char* name;
+	int id;
+	AdapterInfo(const char n[], int i) { name = n; id = i; }
+} AdapterInfo;
+
+
+void stuff1() {
 	long long sum = 0;
 
 	int* list = (int*)malloc(sizeof(int) * SIZE);
@@ -66,6 +73,18 @@ int main(int argc, char *argv[]) {
 	}
 	printf("%lld\n", sum);
 	free(list);
+}
 
+
+void stuff2() {
+
+	AdapterInfo info("Hello", 0);
+
+	printf("%s", info.name);
+}
+
+int main(int argc, char *argv[]) {
+	//stuff1();
+	stuff2();
 	return 0;
 }
