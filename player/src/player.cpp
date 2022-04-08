@@ -155,7 +155,7 @@ namespace PLAYER {
 
         // add adapters, prepare context
         count = READ(adapterTable, byte);
-        adapters_.init(sizeof(AdapterDataItem), count);
+         adapters_.init(sizeof(AdapterDataItem), count);
         AdapterDataItem adapterData = { this, 0 };
         adapters_.add(&adapterData);
         prepareContext(((UserDataBlockItem*)userDataBlocks_.getAt(0))->userDataBlock);
@@ -276,6 +276,12 @@ namespace PLAYER {
         return adapter;
     }
 
+    Adapter* Player::getAdapter(int adapterId) {
+        int ix = -1;
+        var adi = (AdapterDataItem*)adapters_.search(&adapterId, ix, CompareAdapters);
+        return adi != NULL ? adi->adapter : NULL;
+    }
+
     UserDataBlockItem* Player::addDatablock(byte* stream, int length) {
         UserDataBlockItem udbi(length, stream);
         return (UserDataBlockItem*)userDataBlocks_.add(&udbi);
@@ -317,46 +323,45 @@ namespace PLAYER {
         return ((Channel*)channels_.getAt(0))->isActive();
     }
 
-    byte* Player::makeCommand(byte command, Sequence* sequence, byte* cursor) {
-        var stream = MALLOC(byte, 256);
-        //var stream = new Stream(128);
-        //if (typeof command == 'string') {
-        //    command = Ps.Player.Commands[command.toUpperCase()];
-        //}
-        //stream.writeUint8(command);
-        //var inputStream = null;
-        //if (arguments[1] instanceof Ps.Sequence) inputStream = arguments[1].stream;
-        //else if (arguments[1] instanceof Stream) inputStream = arguments[1];
-        //switch (command) {
-        //case Ps.Player.Commands.Assign:
-        //    if (inputStream) {
-        //        stream.writeStream(inputStream, arguments[2], 4);
-        //    }
-        //    else {
-        //        stream.writeUint8(arguments[1]);    // channel id
-        //        stream.writeUint8(arguments[2]);    // sequence id
-        //        stream.writeUint8(arguments[3]);    // device id
-        //        stream.writeUint8(arguments[4]);    // loop count
-        //    }
-        //    break;
-        //case Ps.Player.Commands.Tempo:
-        //    if (inputStream) {
-        //        stream.writeStream(inputStream, arguments[2], 4);
-        //    }
-        //    else {
-        //        stream.writeFloat32(arguments[1]);
-        //    }
-        //    break;
-        //case Ps.Player.Commands.EOF:
-        //    //stream.writeUint8(Ps.Player.Commands.EOF);
-        //    break;
-        //case Ps.Player.Commands.EOS:
-        //    //stream.writeUint8(Ps.Player.Commands.EOS);
-        //    break;
-        //}
-
-        //stream.buffer = stream.buffer.slice(0, stream.length);
+    Stream* Player::makeCommand(byte command, ...) {
+        var stream = NEW_(Stream, 2);
+        va_list args;
+        va_start(args, command);
+        stream->writeByte(command);
+        switch ((PlayerCommands)command) {
+        case CmdAssign:
+            stream->writeByte(va_arg(args, int));
+            stream->writeByte(va_arg(args, int));
+            stream->writeByte(va_arg(args, int));
+            stream->writeByte(va_arg(args, int));
+            break;
+        case CmdTempo:
+            stream->writeFloat(va_arg(args, float));
+            break;
+        case CmdEOF:
+            break;
+        case CmdEOS:
+            break;
+        }
+        va_end(args);
         return stream;
+    }
+
+    int Player::getCommandArgsSize(byte command, byte* stream) {
+        var length = 0;
+        switch ((PlayerCommands)command) {
+        case CmdAssign:
+            length += 4 * sizeof(byte);
+            break;
+        case CmdTempo:
+            length += sizeof(float);
+            break;
+        case CmdEOF:
+            break;
+        case CmdEOS:
+            break;
+        }
+        return length;
     }
 
     // static members

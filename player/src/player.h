@@ -72,11 +72,13 @@ namespace PLAYER {
 		inline bool isActive();
 
 		Adapter* addAdapter(int adapterType, int datablockId);
+		Adapter* getAdapter(int adapterId);
 		UserDataBlockItem* addDatablock(byte* stream, int length);
 		int createStream(byte*& stream, Array* adapters = NULL, PArray* sequences = NULL, Array* userDataBlocks = NULL);
 		size_t save(const char* path);
 		Sequence* createSequence(byte* stream, int length);
-		byte* makeCommand(byte command, Sequence* sequence, byte* cursor);
+		Stream* makeCommand(byte command, ...);
+		int getCommandArgsSize(byte command, byte* stream);
 
         // static members
 	private:

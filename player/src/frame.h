@@ -8,7 +8,7 @@ NS_FW_BASE_USE
 namespace PLAYER {
 
     typedef struct Frame {
-        word delta_;
+        word delta_ = 0;
         PArray commands_;
         inline Frame* addCommand(byte* command) {
             commands_.add(command);

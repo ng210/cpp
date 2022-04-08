@@ -133,6 +133,7 @@
     <ClInclude Include="adapter.h" />
     <ClInclude Include="channel.h" />
     <ClInclude Include="device.h" />
+    <ClInclude Include="frame.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="sequence.h" />
   </ItemGroup>

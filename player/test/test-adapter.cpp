@@ -2,6 +2,7 @@
 #include "test-adapter.h"
 #include "base/memory.h"
 #include "channel.h"
+#include "stream.h"
 
 
 Cons::Cons() {}
@@ -66,31 +67,39 @@ byte* TestAdapter::processCommand(Channel* channel, byte command) {
 	return NULL;
 }
 
-byte* TestAdapter::makeCommand(byte command, Sequence* sequence, byte* cursor) {
-    //var stream = new Stream(128);
-    //stream.writeUint8(command);
-    //var inputStream = null;
-    //if (arguments[1] instanceof Ps.Sequence) inputStream = arguments[1].stream;
-    //else if (arguments[1] instanceof Stream) inputStream = arguments[1];
-    //switch (command) {
-    //case TestAdapter.SetText:
-    //    if (inputStream) {
-    //        stream.writeString(inputStream.readString(arguments[2]));
-    //    }
-    //    else {
-    //        stream.writeString(arguments[1]);
-    //    }
-    //    break;
-    //case TestAdapter.SetInk:
-    //    if (inputStream) {
-    //        stream.writeUint8(inputStream.readUint8(arguments[2]));
-    //    }
-    //    else {
-    //        stream.writeUint8(arguments[1]);
-    //    }
-    //    break;
-    //}
-	return NULL;
+Stream* TestAdapter::makeCommand(byte command, ...) {
+    var stream = NEW_(Stream, 2);
+    va_list args;
+    va_start(args, command);
+    stream->writeByte(command);
+    switch ((PlayerCommands)command) {
+    case CmdSetText:
+        stream->writeString(va_arg(args, char*));
+        break;
+    case CmdSetInk:
+        stream->writeByte(va_arg(args, int));
+        break;
+    case CmdMoveTo:
+        stream->writeByte(va_arg(args, int));
+        stream->writeByte(va_arg(args, int));
+        break;
+    }
+    return stream;
+}
+int TestAdapter::getCommandArgsSize(byte command, byte* stream) {
+    var length = 0;
+    switch ((PlayerCommands)command) {
+    case CmdSetText:
+        length += fmw::strlen((const char*)stream) + 1;
+        break;
+    case CmdSetInk:
+        length++;
+        break;
+    case CmdMoveTo:
+        length += 2;
+        break;
+    }
+    return length;
 }
 
 Adapter* TestAdapter::creator(Player* player) {

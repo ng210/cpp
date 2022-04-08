@@ -10,7 +10,7 @@ NS_FW_BASE_USE
 namespace PLAYER {
 	class Sequence : public Stream {
 	private: PROP_R(Adapter*, adapter);
-	private: PROP_R(PArray, frames);
+	private: PROP_R(PArray*, frames);
 	public:
 		Sequence();
 		Sequence(Adapter* adapter);
@@ -39,6 +39,7 @@ namespace PLAYER {
 
 		PArray* toFrames();
 		static Sequence* fromFrames(Collection* frames, Adapter* adapter);
+		char* print();
 	};
 }
 

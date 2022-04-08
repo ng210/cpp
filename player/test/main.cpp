@@ -9,9 +9,11 @@ using namespace PLAYER;
 int testCreatePlayer();
 int testCreateSequence();
 int testCreateChannel();
+int testCreateFrames();
 int testChannelRun();
 int testSave();
 int testLoad();
+int testPrintSequence();
 //int testPlayerRun();
 
 void createSequences(Player * player) {
@@ -162,11 +164,13 @@ int _main(NS_FW_BASE::Map* args) {
     LOG("Player tests\n");
     int passed = 0, failed = 0;
 
-    TEST(testCreatePlayer);
-    TEST(testCreateSequence);
-    TEST(testCreateChannel);
-    TEST(testSave);
-    TEST(testLoad);
+    //TEST(testCreatePlayer);
+    //TEST(testCreateSequence);
+    //TEST(testCreateChannel);
+    //TEST(testCreateFrames);
+    //TEST(testSave);
+    //TEST(testLoad);
+    TEST(testPrintSequence);
     
     printf("*** Final results: %d/%d=%.02f%%\n\n", passed, (passed + failed), (100.0f*passed) / (passed + failed));
     return 0;
@@ -226,6 +230,31 @@ int testCreateChannel() {
         var seq1 = (Sequence*)player->sequences().getAt(1);
         ASSERT("Should assign sequence #1", channel->sequence() == seq1);
         ASSERT("Should reset channel", channel->cursor() == seq1->data() + 15);
+    }
+    DEL_(player);
+
+    RESULTS();
+    return failed;
+}
+
+int testCreateFrames() {
+    HEADER("Create frames");
+    Player* player = NULL;
+    Adapter* testAdapter = NULL;
+    Cons* cons = NULL;
+    Channel* channel = NULL;
+    var result = setupAll(player, testAdapter, cons, channel);
+    if (result > 0) {
+        LOG("Setup failed, error code %d\n", result);
+    }
+    else {
+        var frames = channel->toFrames();
+        ASSERT("Should have 6 frames", frames->length() == 6);
+        int count = 0;
+        for (var i = 0; i < frames->length(); i++) {
+            count += ((Frame*)frames->getAt(i))->commands_.length();
+        }
+        ASSERT("Should have correct number of commands", count == 14);
     }
     DEL_(player);
 
@@ -324,6 +353,27 @@ int testLoad() {
         var p = (Player*)args;
         return p->run(1) ? 0 : 1;
         }, player);
+
+    DEL_(player);
+    RESULTS();
+    return failed;
+}
+
+int testPrintSequence() {
+    HEADER("Print sequence");
+
+    // register TestAdapter
+    Player::registerAdapter(TestAdapter::Info);
+    var player = (Player*)Player::creator(NULL);
+    player->addAdapter(TestAdapter::Info.id, 0);
+    createSequences(player);
+
+    var seq = (Sequence*)player->sequences().getAt(1);
+    var text = seq->print();
+    printf("%s", text);
+    var expected = "Adapter: TestAdapter\nFrames\n #00 [000] 02(53 65 71 31 2E 31 00) 04(FA 00)\n #01 [020] 03(01) 02(53 65 71 31 2E 32 00) 04(FA 00)\n #02 [020] 03(02) 02(53 65 71 31 2E 33 00) 04(FA 00)\n #03 [020] 03(03) 02(53 65 71 31 2E 34 00) 04(FA 01)\n #04 [020] 03(04) 02(45 6E 64 0A 00)\n #05 [020] 03(0F) 01()\n";
+    ASSERT("Should print sequence", strcmp(text, expected) == 0);
+    FREE(text);
 
     DEL_(player);
     RESULTS();

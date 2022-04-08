@@ -1,6 +1,7 @@
 #include "base/memory.h"
 #include "sequence.h"
 #include "player.h"
+#include "stdio.h"
 
 NS_FW_BASE_USE
 using namespace PLAYER;
@@ -20,13 +21,20 @@ Sequence::Sequence(Adapter* adapter, byte* stream, int offset, int length) {
 }
 
 Sequence::~Sequence() {
-	;
+	if (frames_) {
+		var frame0 = (Frame*)frames_->getAt(0);
+		var cmd0 = frame0->commands_.getAt(0);
+		FREE(cmd0);
+		ARRAY_FOREACH(frames_, DEL_((Frame*)value));
+		DEL_(frames_);
+	}
 }
 
 void Sequence::init(int length) {
 	size_ = 0;
 	ensureSize(length);
 	cursor_ = data_;
+	frames_ = NULL;
 }
 
 //byte Sequence::getByte(byte*& cursor) { var data = *(byte*)cursor; cursor += sizeof(byte); return data; }
@@ -55,10 +63,11 @@ Sequence* Sequence::writeEOF() { writeByte(PlayerCommands::CmdEOF); return this;
 Sequence* Sequence::writeEOS() { writeByte(PlayerCommands::CmdEOS); return this; };
 
 PArray* Sequence::toFrames() {
-	var frames = NEW_(PArray);
+	frames_ = NEW_(PArray);
 	reset();
 	cursor_++;
 	//var cursor = data_ + 1;         // skip 1st byte adapter id
+	var stream = NEW_(Stream, 256);
 	while (true) {
 		var frame = NEW_(Frame);
 		frame->delta_ = readWord();
@@ -66,24 +75,25 @@ PArray* Sequence::toFrames() {
 		while (true) {
 			// read command code byte
 			cmd = readByte();
-			if (cmd > PlayerCommands::CmdEOS) {
-				var command = adapter_->makeCommand(cmd, this, cursor_);
-				frame->addCommand(command);
+			if (cmd > CmdEOS) {
+				frame->addCommand(stream->cursor());
+				stream->writeByte(cmd);
+				var len = adapter_->getCommandArgsSize(cmd, cursor_);
+				stream->writeBytes(cursor_, len);
+				cursor_ += len;
 			}
-			else {
-				if (cmd == PlayerCommands::CmdEOF && frame->commands_.length() == 0) {
-					var command = MALLOC(byte, 1); command[0] = cmd;
-					frame->addCommand(command);
-				}
-				break;
-			}
+			else break;
 		}
-		frames->add(frame);
-		if (cmd == PlayerCommands::CmdEOS) {
+		frames_->add(frame);
+		if (cmd == CmdEOS) {
+			frame->addCommand(stream->cursor());
+			stream->writeByte(CmdEOS);
 			break;
 		}
 	}
-	return frames;
+	stream->extract();
+	DEL_(stream);
+	return frames_;
 }
 
 Sequence* Sequence::fromFrames(Collection* frames, Adapter* adapter) {
@@ -126,4 +136,60 @@ Sequence* Sequence::fromFrames(Collection* frames, Adapter* adapter) {
 	// resize stream to match the exact length
 	sequence->data_ = REALLOC(sequence->data_, byte, sequence->length());
 	return sequence;
+}
+
+char* Sequence::print() {
+	var stream = NEW_(Stream, 64);
+	// write adapter
+	stream->writeString("Adapter: ", false);
+	stream->writeString((char*)adapter_->info()->name, false);
+	stream->writeString("\n", false);
+	// write frames
+	stream->writeString("Frames\n", false);
+	var hasFrames = frames_ != NULL;
+	if (!hasFrames) {
+		toFrames();
+	}
+
+	char str[128];
+	const char* hexDigits = "0123456789ABCDEF";
+	for (var i = 0; i < frames_->length(); i++) {
+		var frame = (Frame*)frames_->getAt(i);
+		sprintf_s(str, 64, " #%02d [%03d] ", i, frame->delta_);
+		stream->writeString(str, false);
+		for (var j = 0; j < frame->commands_.length(); j++) {
+			var cmd = (byte*)frame->commands_.getAt(j);
+			var code = *cmd++;
+			var len = adapter_->getCommandArgsSize(code, cmd);
+			// hexdump command
+			var n = 0;
+			str[n++] = hexDigits[code >> 4];
+			str[n++] = hexDigits[code & 0x0f];
+			str[n++] = '(';
+			for (var k = 0; k < len; k++) {
+				var b = *cmd++;
+				str[n++] = hexDigits[b >> 4];
+				str[n++] = hexDigits[b & 0x0f];
+				if (k < len-1) str[n++] = ' ';
+			}
+			str[n++] = ')';
+			if (j < frame->commands_.length() - 1) {
+				str[n++] = ' ';
+			}
+			str[n] = '\0';
+			stream->writeString(str, false);
+		}
+		stream->writeString("\n", false);
+	}
+	stream->writeByte(0);
+
+	if (!hasFrames) {
+		FREE(((Frame*)frames_->getAt(0))->commands_.getAt(0));
+		ARRAY_FOREACH(frames_, DEL_((Frame*)value));
+		DEL_(frames_);
+		frames_ = NULL;
+	}
+	var data = (char*)stream->extract();
+	DEL_(stream);
+	return data;
 }

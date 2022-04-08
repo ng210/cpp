@@ -21,8 +21,8 @@ public:
 	AdapterInfo* info();
 	Device* createDeviceImpl(int deviceType, byte** initData);
 	byte* processCommand(Channel* channel, byte command);
-	byte* makeCommand(byte command, Sequence* sequence, byte* cursor);
-
+	Stream* makeCommand(byte command, ...);
+	int getCommandArgsSize(byte command, byte* stream);
 public:
 	static AdapterInfo Info;
 
