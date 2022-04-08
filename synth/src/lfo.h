@@ -8,7 +8,7 @@ NS_FW_BASE_USE
 namespace SYNTH {
 
     typedef struct LfoCtrls_ : MdlCtrls {
-        PotF dc;
+        //PotF dc;
         PotF fre;
     } LfoCtrls;
 

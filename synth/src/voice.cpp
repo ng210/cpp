@@ -47,7 +47,7 @@ void Voice::setSamplingRate(float* samplingRate) {
 float Voice::run() {
     // run LFOs
     // var am = lfos[0].run();
-    var amp =lfos[0].controls()->amp.value_.f;
+    var amp = lfos[0].controls()->amp.value_.f;
     //var am = (lfos[0].run() + amp)/2.0f + (1.0f-amp);
     var am = (lfos[0].run() - amp)/2.0f + 1.0f;
     var fm = lfos[1].run();

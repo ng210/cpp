@@ -145,7 +145,8 @@
       <OmitFramePointers>true</OmitFramePointers>
       <ExceptionHandling>false</ExceptionHandling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
+      <ForceConformanceInForLoopScope>
+      </ForceConformanceInForLoopScope>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -158,7 +159,7 @@
       <AdditionalDependencies>base.lib;synth.lib;soundlib.lib;player.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\code\git\cpp\player\bin\$(IntDir);$(OutDir);D:\code\git\cpp\soundlib\$(IntDir);D:\code\git\cpp\fw\bin\$(IntDir)</AdditionalLibraryDirectories>
       <TurnOffAssemblyGeneration>false</TurnOffAssemblyGeneration>
-      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <EnableUAC>false</EnableUAC>
       <GenerateMapFile>true</GenerateMapFile>
       <DataExecutionPrevention>false</DataExecutionPrevention>
@@ -167,6 +168,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="test.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="min.xm" />
+    <None Include="test-data.bin" />
+    <None Include="test-data2.bin" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

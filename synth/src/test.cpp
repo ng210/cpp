@@ -535,9 +535,6 @@ include('/lib/synth/synth-adapter-ext.js');
         channel.assign(0, player.sequences[1]);
         channel.loopCount = 4;
 
-        // var stream = Ps.Player.createBinaryData(player);
-        // stream.toFile('test-data.bin', 'application/octet-stream');
-
         await run((left, right, bufferSize) => channelBasedFillBuffer(left, right, bufferSize, channel));
     }
 

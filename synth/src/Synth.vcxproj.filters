@@ -45,6 +45,9 @@
     <ClCompile Include="synth-device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="xmloader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="synth.h">
@@ -78,6 +81,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="synth-device.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xmloader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

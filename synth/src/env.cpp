@@ -42,7 +42,7 @@ void Env::setGate(byte v) {
             timer = 0;
             ticks_ = 0;
             gate = 1;
-            //velocity = v/255.0f;
+            velocity = v/255.0f;
         }            
     } else {
         if (v <= 0) {
@@ -102,7 +102,7 @@ float Env::run(void* params) {
             break;
     }
     ticks_++;
-    return (float)(controls_->amp.value_.f * timer + controls_->dc.value_.f);
+    return (float)(controls_->amp.value_.f * timer * this->velocity + controls_->dc.value_.f);
 }
 
 //Env.createControls = function createControls() {

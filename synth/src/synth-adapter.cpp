@@ -9,7 +9,7 @@ NS_FW_BASE_USE
 using namespace SYNTH;
 using namespace PLAYER;
 
-AdapterInfo SynthAdapter::Info = { "SynthAdapter", 0, SynthAdapter::creator, SynthAdapter::initializer };
+AdapterInfo SynthAdapter::Info = { "SynthAdapter", 1, SynthAdapter::creator, SynthAdapter::initializer };
 
 AdapterInfo* SynthAdapter::info() { return &SynthAdapter::Info; };
 SynthAdapter::SynthAdapter(Player* player) {
@@ -25,7 +25,7 @@ void SynthAdapter::prepareContext(byte* data) {
 	samplingRate_ = READ(data, word);
 
 	// default bpm = 80
-	samplePerFrame_ = samplingRate_ * 3.75f / 80;
+	setRefreshRate(80.0f);
 	Adapter::prepareContext(data);
 
 	//SoundPlayer::start(samplingRate_, 2, SynthAdapter::fillSoundBuffer, this);
@@ -94,12 +94,54 @@ byte* SynthAdapter::processCommand(Channel* channel, byte command) {
 	channel->cursor(cursor);
 	return cursor;
 }
-void SynthAdapter::setRefreshRate(float fps) {
-	samplePerFrame_ = samplingRate_ / fps;
+void SynthAdapter::setRefreshRate(float bpm) {
+	samplePerFrame_ = samplingRate_ * 3.75f / bpm;
 }
 
-byte* SynthAdapter::makeCommand(byte command, Sequence* sequence, byte* cursor) {
-	return NULL;
+Stream* SynthAdapter::makeCommand(byte command, ...) {
+	var stream = NEW_(Stream, 2);
+	va_list args;
+	va_start(args, command);
+	stream->writeByte(command);
+	switch ((PlayerCommands)command) {
+	case CmdSetNote:
+		stream->writeByte(va_arg(args, int));	// note
+		stream->writeByte(va_arg(args, int));	// velocity
+		break;
+	case CmdSetProgram:
+		stream->writeByte(va_arg(args, int));	// program id
+		break;
+	case CmdSetUint8:
+	case CmdSetFloat8:
+		stream->writeByte(va_arg(args, int));	// ctrlId
+		stream->writeByte(va_arg(args, int));	// value
+		break;
+	case CmdSetFloat:
+		stream->writeByte(va_arg(args, int));		// ctrlId
+		stream->writeFloat(va_arg(args, float));	// value
+		break;
+	}
+	va_end(args);
+	return stream;
+}
+int SynthAdapter::getCommandArgsSize(byte command, byte* stream) {
+	var length = 0;
+	switch ((PlayerCommands)command) {
+	case CmdSetNote:
+		length = 2*sizeof(byte);
+		break;
+	case CmdSetProgram:
+		length = sizeof(byte);
+		break;
+	case CmdSetUint8:
+	case CmdSetFloat8:
+		length = 2*sizeof(byte);
+		break;
+	case CmdSetFloat:
+		length = sizeof(byte) + sizeof(float);
+		break;
+	}
+	return length;
 }
 
 void SynthAdapter::fillSoundBuffer(short* buffer, int bufferSize, void* args) {

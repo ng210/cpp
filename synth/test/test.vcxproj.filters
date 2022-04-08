@@ -19,4 +19,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="test-data.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="test-data2.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="min.xm">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
