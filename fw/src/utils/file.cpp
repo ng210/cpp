@@ -52,28 +52,59 @@ size_t File::read(const char* path, Buffer* buffer, size_t offset, size_t byteCo
 	return length;
 }
 
-size_t File::write(const char* path, UINT8* buffer, size_t length) {
+size_t File::write(FILE* fp, UINT8* buffer, size_t byteCount) {
+	return fwrite(buffer, sizeof(UINT8), byteCount, fp);
+}
+
+size_t File::write(FILE* fp, Buffer* buffer) {
+	size_t byteCount = 0;
+	size_t remainingBytes = buffer->length();
+	for (int i = 0; i < buffer->chunks()->length(); i++) {
+		BufferChunk* chunk = (BufferChunk*)buffer->chunks()->getAt(i);
+		size_t length = chunk->byteCount() < remainingBytes ? chunk->byteCount() : remainingBytes;
+		byteCount += write(fp, chunk->buffer(), length);
+		remainingBytes -= chunk->byteCount();
+	}
+	return byteCount;
+}
+
+size_t File::write(const char* path, UINT8* buffer, size_t length, bool update) {
 	size_t byteCount = 0;
 	FILE* fp = NULL;
-	if (fopen_s(&fp, path, "wb") == 0 && fp != NULL) {
-		byteCount = fwrite(buffer, sizeof(char), length, fp);
+	char* mode = !update ? "wb" : "r+b";
+	if (fopen_s(&fp, path, mode) == 0 && fp != NULL) {
+		byteCount = write(fp, buffer, length);
 		fclose(fp);
 	}
 	return byteCount;
 }
 
-size_t File::write(const char* path, Buffer* buffer) {
+size_t File::write(const char* path, Buffer* buffer, bool update) {
 	size_t byteCount = 0;
 	FILE* fp = NULL;
-	if (fopen_s(&fp, path, "wb") == 0 && fp != NULL) {
-		size_t remainingBytes = buffer->length();
-		for (int i = 0; i < buffer->chunks()->length(); i++) {
-			BufferChunk* chunk = (BufferChunk*)buffer->chunks()->getAt(i);
-			size_t length = chunk->byteCount() < remainingBytes ? chunk->byteCount() : remainingBytes;
-			fwrite(chunk->buffer(), sizeof(UINT8), length, fp);
-			byteCount += length;
-			remainingBytes -= chunk->byteCount();
-		}
+	char* mode = !update ? "wb" : "r+b";
+	if (fopen_s(&fp, path, mode) == 0 && fp != NULL) {
+		byteCount = write(fp, buffer);
+		fclose(fp);
+	}
+	return byteCount;
+}
+
+size_t File::append(const char* path, UINT8* buffer, size_t length) {
+	size_t byteCount = 0;
+	FILE* fp = NULL;
+	if (fopen_s(&fp, path, "ab") == 0 && fp != NULL) {
+		byteCount = fwrite(buffer, sizeof(UINT8), length, fp);
+		fclose(fp);
+	}
+	return byteCount;
+}
+
+size_t File::append(const char* path, Buffer* buffer) {
+	size_t byteCount = 0;
+	FILE* fp = NULL;
+	if (fopen_s(&fp, path, "ab") == 0 && fp != NULL) {
+		byteCount = write(fp, buffer);
 		fclose(fp);
 	}
 	return byteCount;

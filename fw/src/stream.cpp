@@ -37,6 +37,7 @@ byte* Stream::ensureSize(long delta) {
 	if (size_ < l + delta) {
 		size_ = l + delta;
 		data_ = REALLOC(data_, byte, size_);
+		cursor_ = data_ + l;
 	}
 	return data_;
 }
@@ -113,8 +114,9 @@ Stream* Stream::writeDouble(double v) {
 	cursor_ += sizeof(v);
 	return this;
 }
-Stream* Stream::writeString(char* s) {
-	var len = strlen(s) + 1;
+Stream* Stream::writeString(char* s, bool addEnding) {
+	var len = strlen(s);
+	if (addEnding) len++;
 	return writeBytes((byte*)s, len);
 }
 Stream* Stream::writeBytes(byte* data, long length, long offset) {
@@ -128,4 +130,12 @@ Stream* Stream::writeStream(Stream* s, long length, long offset) {
 	if (length == 0) length = s->length();
 	length -= offset;
 	return writeBytes(s->data_, length, offset);
+}
+
+byte* Stream::extract(long offset, long length) {
+	var data = data_;
+	size_ = 0;
+	cursor_ = NULL;
+	data_ = NULL;
+	return data;
 }

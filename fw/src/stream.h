@@ -38,9 +38,10 @@ public:
 	Stream* writeQWord(qword qw);
 	Stream* writeFloat(float f);
 	Stream* writeDouble(double d);
-	Stream* writeString(char* s);
+	Stream* writeString(char* s, bool addEnding = true);
 	Stream* writeBytes(byte* data, long length, long offset = 0);
-	Stream* writeStream(Stream* s, long length, long offset = 0);
+	Stream* writeStream(Stream* s, long length = 0, long offset = 0);
+	byte* extract(long offset = 0, long length = 0);
 };
 
 
