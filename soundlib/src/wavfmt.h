@@ -7,7 +7,8 @@
 #else
 	#include "base/string.h"
 	#include "collection/array.h"
-	#include "utils/buffer.h"
+	#include <stdio.h>
+	//#include "utils/buffer.h"
 #endif
 
 NS_FW_BASE_USE
@@ -41,18 +42,18 @@ typedef struct WAVEHEADER_ {
 class WaveFmt {
 	WAVEHEADER* header_;
 	char* fileName_;
-	Buffer* buffer_;
-private: PROP_R(size_t, length);
+	FILE* fp_;
+private: PROP_R(size_t, sizeInBytes);
 
 	static WAVEHEADER* createHeader(int sampleRate, int channelCount, int bitsPerSample);
 public:
 	WaveFmt(char* path, int sampleRate, int channelCount, int bitsPerSample);
 	~WaveFmt();
 	//size_t write(Buffer& data, size_t length, size_t offset = 0);
-	size_t write(const char* data, UINT32 length, UINT32 offset = 0);
+	size_t write(byte* buffer, int length);
 	size_t close();
 
-	static size_t write(const char* path, int sampleRate, int channelCount, int bitsPerSample, UINT8* data, UINT32 byteCount);
+	static size_t write(const char* path, int sampleRate, int channelCount, int bitsPerSample, byte* data, int byteCount);
 };
 
 #endif

@@ -1,7 +1,9 @@
 #include "soundplayer.h"
+#include "wavfmt.h"
 #include "consoleapp.h"
 #include <stdio.h>
 #include <math.h>
+#include "base/memory.h"
 
 NS_FW_BASE_USE
 
@@ -10,9 +12,20 @@ void soundCallback(short* pBuffer, int iSamples, void* context);
 int _main(NS_FW_BASE::Map* args) {
 	printf("SoundPlayer test\n");
 	if (SoundPlayer::start(48000, 2, soundCallback) == 0) {
-		Sleep(4000);
+		Sleep(1000);
 		SoundPlayer::stop();
 	}
+
+	printf("Wavefmt test\n");
+	var wave = NEW_(WaveFmt, "test.wav", 48000, 2, 16);
+	const int size = 16000;
+	var buffer = MALLOC(short, 2*size);
+	for (var i = 0; i < 48000/size; i++) {
+		soundCallback(buffer, size, NULL);
+		wave->write((byte*)buffer, sizeof(word) * size);
+	}
+	wave->close();
+	FREE(buffer);
 	return 0;
 }
 

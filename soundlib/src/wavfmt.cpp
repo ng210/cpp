@@ -1,7 +1,6 @@
 #include "wavfmt.h"
 
 #include "base/memory.h"
-#include "utils/file.h"
 
 #pragma warning( disable : 4996)
 
@@ -9,14 +8,12 @@ NS_FW_BASE_USE
 
 WaveFmt::WaveFmt(char* path, int sampleRate, int channelCount, int bitsPerSample) {
 	fileName_ = path;
-	length_ = 0;
-	buffer_ = NEW_(Buffer);
+	fopen_s(&fp_, path, "wb");
+	sizeInBytes_ = 0;
 	header_ = createHeader(sampleRate, channelCount, bitsPerSample);
-	buffer_->write(header_, sizeof(WAVEHEADER));
 }
 
 WaveFmt::~WaveFmt() {
-	DEL_(buffer_);
 	DEL_(header_);
 }
 
@@ -36,38 +33,32 @@ WAVEHEADER* WaveFmt::createHeader(int sampleRate, int channelCount, int bitsPerS
 	return header;
 }
 
-size_t WaveFmt::write(const char* data, UINT32 length, UINT32 offset) {
-	length_ += length;
-	return buffer_->append((void*)data, length, offset);
+size_t WaveFmt::write(byte* buffer, int byteCount) {
+	if (sizeInBytes_ == 0) {
+		fwrite(header_, sizeof(WAVEHEADER), 1, fp_);
+	}
+	sizeInBytes_ += byteCount;
+	return fwrite(buffer, sizeof(byte), byteCount, fp_);
 }
 
 size_t WaveFmt::close() {
-	size_t byteCount = header_->SubChunk1.nBlockAlign * length_;
-	header_->chunkSize = (long)(sizeof(WAVEHEADER) - offsetof(WAVEHEADER, format) + byteCount);
-	header_->SubChunk2.subchunk2Size = (long)byteCount;
-
-	buffer_->write((char*)header_, sizeof(WAVEHEADER));
-	//buffer_->append(buffer, byteCount);
-	File::write(fileName_, buffer_);
-	return byteCount;
+	header_->chunkSize = (long)(sizeof(WAVEHEADER) - offsetof(WAVEHEADER, format) + sizeInBytes_);
+	header_->SubChunk2.subchunk2Size = (long)sizeInBytes_;
+	fseek(fp_, 0, SEEK_SET);
+	fwrite(header_, sizeof(WAVEHEADER), 1, fp_);
+	fclose(fp_);
+	return sizeInBytes_;
 }
 
-size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bitsPerSample, UINT8* data, UINT32 byteCount) {
+size_t WaveFmt::write(const char* path, int sampleRate, int channelCount, int bitsPerSample, UINT8* data, int byteCount) {
+	var fp = fopen(path, "wb");
 	WAVEHEADER* header = WaveFmt::createHeader(sampleRate, channelCount, bitsPerSample);
 	header->chunkSize = (long)(sizeof(WAVEHEADER) - offsetof(WAVEHEADER, format) + byteCount);
 	header->SubChunk2.subchunk2Size = (long)byteCount;
-	size_t length = sizeof(WAVEHEADER) + byteCount;
 
-	UINT8* buffer = MALLOC(UINT8, length);
-	size_t i = 0;
-	for (; i < sizeof(WAVEHEADER); i++) {
-		buffer[i] = ((char*)header)[i];
-	}
-	for (size_t j = 0; j < byteCount; j++) {
-		buffer[i + j] = data[j];
-	}
-	File::write(path, buffer, length);
-	FREE(buffer);
+	var length = fwrite(header, sizeof(WAVEHEADER), 1, fp);
+	length += fwrite(data, sizeof(byte), byteCount, fp);
+	fclose(fp);
 	FREE(header);
 	return length;
 }

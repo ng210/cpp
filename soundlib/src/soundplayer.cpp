@@ -43,7 +43,9 @@ DWORD WINAPI SoundPlayer::threadProc(LPVOID lpParameter) {
 		while (aheadPosition > writePosition) {
 			DWORD ix = writePosition & mask;
 			ix <<= SoundPlayer::channelsLog2_;
-			SoundPlayer::callback_(&((short*)SoundPlayer::sampleBuffer_)[ix], count, lpParameter);
+			short* start = &((short*)SoundPlayer::sampleBuffer_)[ix];
+			for (int i = 0; i < count; i++) start[i] = 0;
+			SoundPlayer::callback_(start, count, lpParameter);
 			writePosition += count;
 		}
 		writePosition &= mask;
