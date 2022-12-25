@@ -7,6 +7,8 @@
 
 #include "collection/array.h"
 #include "voice.h"
+#include "module.h"
+#include "synth-controls.h"
 
 NS_FW_BASE_USE
 namespace SYNTH {
@@ -38,34 +40,34 @@ namespace SYNTH {
 
     #define SynthCtrlCount (sizeof(SynthCtrls)/sizeof(Pot*))
 
-    class Synth : public Mdl {
+    class Synth : public Module {
     private: SynthCtrls controls_;
     private: PROP_R(float, samplingRate);
     private: double omega;
     private: Voice* nextVoice;
     private: PROP_R(Array, voices);
     private: PROP(byte*, soundBank);
+    private: PROP(int, program);
 
     public:
         bool isActive;
 
-        Synth(float samplingRate, int voiceCount);
+        Synth(float* samplingRate, int voiceCount = 1);
         virtual ~Synth();
 
+        void initialize(byte** pData);
+        void connectInput(int id, float* buffer);
+        inline float* getOutput(int id);
+        void run(int start, int end);
+
+        void initialize(float* samplingRate, int voiceCount);
         inline SynthCtrls controls() { return controls_;  }
 
-        void assignControls(Pot* controls);
-        void setFromStream(byte* stream);
-        float run(void* params);
-
-        void samplingRate(float samplingRate);
+        void samplingRate(float* smpRate);
         void setVoiceCount(int voiceCount);
 
-        PotBase* getControl(int controlId);
         void setNote(byte note, byte velocity);
         void setProgram(int prgId);
-
-        void run(short* buffer, int start, int end);
     };
 }
 

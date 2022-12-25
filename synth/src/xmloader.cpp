@@ -7,11 +7,8 @@
 #include <stdio.h>
 #include <math.h>
 #include "base/memory.h"
-
-#include "xmloader.h"
-#include "base/memory.h"
 #include "utils/file.h"
-
+#include "xmloader.h"
 #include "synth-controls.h"
 
 #define SAMPLING_RATE 48000
@@ -84,13 +81,13 @@ public:
 
 static XmEffectMap* xmEffectMap_ = NULL;
 
-XmLoader::XmLoader(Player* player, Stream* soundBank) {
+XmLoader::XmLoader(PlayerDevice* playerDevice, Stream* soundBank) {
 	bpm_ = 120;
 	channelCount_ = 4;
 	ticks_ = 4;
-	player_ = player;
+	playerDevice_ = playerDevice;
 	soundBank_ = soundBank;
-	synthAdapter_ = player->getAdapter(SynthAdapter::Info.id);
+	synthDevice_ = playerDevice->getDevice(DeviceSynth);
 	patternOrder_.init(sizeof(byte), 256);
 	patterns_.init(256);
 	//instruments_.init(sizeof(XmInstrument), 64);
@@ -101,7 +98,7 @@ XmLoader::XmLoader(Player* player, Stream* soundBank) {
 
 XmLoader::~XmLoader(void) {
 	ARRAY_FOREACH(&patterns_, FREE(value));
-	//DEL_(xmEffectMap_);
+	DEL_(xmEffectMap_);
 
 }
 
@@ -175,16 +172,20 @@ XmPattern* XmLoader::readPattern(XmFilePattern* ptr) {
 }
 
 void XmLoader::process() {
-	// create an array of sequences, a sequence for each instrument
-	var arr = NEW_(PArray, instruments_.length());
+	// create an array of instrument info
+	// - sequence
+	// - voice count
+	var instrumentInfo = NEW_(Array, sizeof(InstrumentInfo), instruments_.length());
 	for (var i = 0; i < instruments_.length(); i++) {
-		var seq = NEW_(Sequence, synthAdapter_);
-		var cmd = synthAdapter_->makeCommand(CmdSetProgram, i);
+		var seq = NEW_(Sequence, synthDevice_);
+		var cmd = synthDevice_->makeCommandAsStream(CmdSetProgram, i);
 		seq->writeHeader()->writeDelta(0)->writeStream(cmd);
-		arr->add(seq);
+		InstrumentInfo info = { seq, 0 };
+		instrumentInfo->add(&info);
 		DEL_(cmd);
 	}
 
+	#pragma region Sequences
 	// walk through the pattern order, like playing back the track
 	// and create commands for each instrument in its sequence
 	// each channel has to remember the last note, instrument, effect and parameter
@@ -195,7 +196,7 @@ void XmLoader::process() {
 	word tickOffset = 0;
 	word currentTick = 0;
 	memset(lastTick, 0, sizeof(word) * instruments_.length());
-	var data = (Sequence**)arr->data();
+	var data = (InstrumentInfo**)instrumentInfo->data();
 	for (var i = 0; i < patternOrder_.length(); i++) {
 		var pi = *(byte*)patternOrder_.getAt(i);
 		var pattern = (XmPattern*)patterns_.getAt(pi);
@@ -209,7 +210,9 @@ void XmLoader::process() {
 					var inst = xmNote.instrument;
 					if (inst == 0xff) inst = channelInfo[ci].instrument;
 					else channelInfo[ci].instrument = inst;
-					var seq = data[inst];
+					var info = (InstrumentInfo*)instrumentInfo->getAt(inst);
+
+					var seq = info->sequence;
 					word delta = currentTick - lastTick[inst];
 
 					var note = xmNote.note;
@@ -228,25 +231,27 @@ void XmLoader::process() {
 					if (note != 0xff) {
 						if (note == 0x60) {
 							// note off
-							var stream = synthAdapter_->makeCommand(CmdSetNote, channelInfo[ci].note, 0);
+							var stream = synthDevice_->makeCommandAsStream(CmdSetNote, channelInfo[ci].note, 0);
 							channelInfo[ci].note = 0x60;
 							seq->writeStream(stream);
 							DEL_(stream);
+							if (info->voiceCount > 0) info->voiceCount--;
 							volume = 0xff;
 						} else if (xmNote.instrument != 0xff) {
 							// set note
 							var velocity = volume < 0x3f ? volume << 2 : 255;
-							var stream = synthAdapter_->makeCommand(CmdSetNote, note, velocity);
+							var stream = synthDevice_->makeCommandAsStream(CmdSetNote, note, velocity);
 							seq->writeStream(stream);
 							DEL_(stream);
+							info->voiceCount++;
 							channelInfo[ci].note = note;
 							volume = 0xff;
 						} else {
 							// setController(note)
-							var stream = synthAdapter_->makeCommand(CmdSetUint8, SCosc1note, xmNote.note);
+							var stream = synthDevice_->makeCommandAsStream(CmdSetUint8, SCosc1note, xmNote.note);
 							seq->writeStream(stream);
 							DEL_(stream);
-							stream = synthAdapter_->makeCommand(CmdSetUint8, SCosc2note, xmNote.note);
+							stream = synthDevice_->makeCommandAsStream(CmdSetUint8, SCosc2note, xmNote.note);
 							seq->writeStream(stream);
 							DEL_(stream);
 						}
@@ -255,7 +260,7 @@ void XmLoader::process() {
 					if (volume != 0xff) {
 						// setController(amp)
 						var volume = xmNote.volume < 0x40 ? xmNote.volume << 2 : 0xff;
-						var stream = synthAdapter_->makeCommand(CmdSetFloat8, SCamp, volume);
+						var stream = synthDevice_->makeCommandAsStream(CmdSetFloat8, SCamp, volume);
 						seq->writeStream(stream);
 						DEL_(stream);
 					}
@@ -275,56 +280,55 @@ void XmLoader::process() {
 	}
 	length = currentTick;
 	// write EOS
-	for (var i = 0; i < arr->length(); i++) {
-		((Sequence*)arr->getAt(i))->writeEOS();
+	for (var i = 0; i < instrumentInfo->length(); i++) {
+		((Sequence*)instrumentInfo->getAt(i))->writeEOS();
 	}
 
 	// create master sequence at #0
-	var master = NEW_(Sequence, player_);
+	var master = NEW_(Sequence, playerDevice_);
 	master->writeHeader()->writeDelta(0);
-	for (var i = 0; i < arr->length(); i++) {
+	for (var i = 0; i < instrumentInfo->length(); i++) {
 		var n = i + 1;
-		var seq = (Sequence*)arr->getAt(i);
+		var seq = (Sequence*)instrumentInfo->getAt(i);
 		if (seq->length() > 1 + 2 + 2 + 1) {
-			var cmd = player_->makeCommand(CmdAssign, n, n, i, 0);
+			var cmd = playerDevice_->makeCommandAsStream(CmdAssign, n, n, i, 0);
 			master->writeStream(cmd);
 			DEL_(cmd);
 		}
 	}
 	master->writeEOF()->writeDelta(length)->writeEOS();
-	arr->insertAt(0, master);
-	ARRAY_FOREACH(arr, player_->sequences().add(value));
-	DEL_(arr);
+	instrumentInfo->insertAt(0, master);
+	ARRAY_FOREACH(instrumentInfo, playerDevice_->sequences().add(value));
+	DEL_(instrumentInfo);
+	#pragma endregion
 
-	// create user datablocks
-	var streamPlayer = NEW_(Stream, 2);
-	streamPlayer->writeByte(instruments_.length());
-	var streamSynth = NEW_(Stream, 2);
-	streamSynth->writeWord(SAMPLING_RATE);
-	streamSynth->writeByte(instruments_.length());
-	byte voiceCount = 1;
-	byte soundBankId = 2;
-	for (var i = 0; i < instruments_.length(); i++) {
-		streamPlayer->writeByte(DevChannel);
-		streamSynth->writeByte(DevSynth)->writeByte(voiceCount)->writeByte(soundBankId);
+	#pragma region Devices
+	// create devices and their init blocks
+	// - block = { device type, voice count, data block id }
+	var stream = NEW_(Stream, 2 * instruments_.length() * sizeof(byte));
+	byte soundBankId = 3;
+	for (var i = 0; i < instrumentInfo->length(); i++) {
+		var info = (InstrumentInfo*)instrumentInfo->getAt(i);
+		DataBlockItem dbi(2, stream->cursor(), DataBlockItemFlag::None);
+		stream->writeByte(info->voiceCount)->writeByte(soundBankId);
+		playerDevice_->addDevice(DeviceSynth, &dbi);
+
+		var instr = (XmInstrument*)instruments_.getAt(i);
+		var name = instr->header.name;
+		if (name == NULL || strlen(name) == 0) {
+			char str[16] = "";
+			sprintf_s(str, 15, "Inst%02d", i);
+			name = &str[0];
+		}
+		Channel ch(name);
+		playerDevice_->channels().add(&ch);
 	}
+	playerDevice_->addDataBlock(stream->extract(), stream->length());
+	DEL_(stream);
+	#pragma endregion
 
-	var dbPlayerLength = streamPlayer->length();
-	var dbPlayer = streamPlayer->extract();
-	player_->addDatablock(dbPlayer, dbPlayerLength);
-	DEL_(streamPlayer);
-
-	var dbSynthLength = streamSynth->length();
-	var dbSynth = streamSynth->extract();
-	player_->addDatablock(dbSynth, dbSynthLength);
-	DEL_(streamSynth);
-
-	// add sound bank
-	player_->addDatablock(soundBank_->extract(), soundBank_->length());
+	playerDevice_->addDataBlock(soundBank_->extract(), soundBank_->length());
 	DEL_(soundBank_);
-
-	player_->prepareContext(dbPlayer);
-	synthAdapter_->prepareContext(dbSynth);
 }
 
 #ifdef _DEBUG

@@ -1,7 +1,7 @@
 #ifndef __FLT_H
 #define __FLT_H
 
-#include "mdl.h"
+#include "elem.h"
 
 NS_FW_BASE_USE
 namespace SYNTH {
@@ -16,8 +16,8 @@ namespace SYNTH {
     } FltMode;
 
 
-    typedef struct FltCtrls_ : MdlCtrls {
-        PotF8 cut;
+    typedef struct FltCtrls_ {
+        Pot cut;
         PotF8 res;
         PotF8 mod;
         Pot mode;
@@ -35,7 +35,7 @@ namespace SYNTH {
 
     #define FltCtrlCount (sizeof(FltCtrls)/sizeof(Pot*))
 
-    class Flt : public Mdl {
+    class Flt : public Elem {
     private: PROP_R(FltCtrls*, controls);
     private: FltCoeffs coeffs;
     private: PROP_R(float, theta);
@@ -43,9 +43,12 @@ namespace SYNTH {
         Flt();
         void samplingRate(float* smpRate);
         void update(float cut);
-        void assignControls(Pot* controls);
+        void assignControls(PotBase* controls);
         void setFromStream(byte* stream);
-        float run(void* params);
+        float run(Arg params = (void*)NULL);
+
+        static float cutoffTable[256];
+        static void initialize(float smpRate);
     };
 }
 

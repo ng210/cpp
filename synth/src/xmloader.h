@@ -2,7 +2,7 @@
 #define __XMLOADER_H
 
 #include "player/src/player.h"
-#include "synth-adapter.h"
+#include "device/synth-device.h"
 
 NS_FW_BASE_USE
 namespace SYNTH {
@@ -86,6 +86,11 @@ namespace SYNTH {
 		XmNote* notes;
 	} XmPattern;
 
+	typedef struct InstrumentInfo {
+		Sequence* sequence;
+		int voiceCount;
+	} InstrumentInfo;
+
 	class XmLoader {
 		static Map effects_;
 
@@ -94,8 +99,8 @@ namespace SYNTH {
 		int channelCount_;
 		Array patternOrder_;
 		Array instruments_;
-		Adapter* synthAdapter_;
-		Player* player_;
+		Device* synthDevice_;
+		PlayerDevice* playerDevice_;
 		Stream* soundBank_;
 
 		void getVolumeEffect(byte code, byte*& ptr, XmNote* xmNote);
@@ -106,7 +111,7 @@ namespace SYNTH {
 		void process();
 	public:
 		PROP_R(PArray, patterns);
-		XmLoader(Player* player, Stream* soundBank = NULL);
+		XmLoader(PlayerDevice* playerDevice, Stream* soundBank = NULL);
 		virtual ~XmLoader(void);
 
 		int load(const char* path);

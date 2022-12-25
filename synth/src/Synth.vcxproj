@@ -115,7 +115,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PLAYER_EDIT_MODE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>D:\code\git\cpp\fw\src;D:\code\git\cpp</AdditionalIncludeDirectories>
     </ClCompile>
@@ -157,34 +157,50 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="env.cpp" />
-    <ClCompile Include="flt.cpp" />
-    <ClCompile Include="lfo.cpp" />
-    <ClCompile Include="mdl.cpp" />
-    <ClCompile Include="osc.cpp" />
-    <ClCompile Include="pot.cpp" />
-    <ClCompile Include="synth-adapter.cpp" />
-    <ClCompile Include="synth-device.cpp" />
-    <ClCompile Include="synth.cpp" />
-    <ClCompile Include="voice.cpp" />
-    <ClCompile Include="xmloader.cpp">
-      <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Fast</FloatingPointModel>
-      <ConformanceMode Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ConformanceMode>
-    </ClCompile>
+    <ClCompile Include="device\distort-device.cpp" />
+    <ClCompile Include="device\stereo-delay-device.cpp" />
+    <ClCompile Include="elem\clp.cpp" />
+    <ClCompile Include="elem\dly.cpp" />
+    <ClCompile Include="elem\elem.cpp" />
+    <ClCompile Include="elem\env.cpp" />
+    <ClCompile Include="elem\flt.cpp" />
+    <ClCompile Include="elem\lfo.cpp" />
+    <ClCompile Include="elem\osc.cpp" />
+    <ClCompile Include="elem\pot.cpp" />
+    <ClCompile Include="device\synth-adapter.cpp" />
+    <ClCompile Include="device\mixer-device.cpp" />
+    <ClCompile Include="device\module-device.cpp" />
+    <ClCompile Include="device\synth-device.cpp" />
+    <ClCompile Include="module\distort.cpp" />
+    <ClCompile Include="module\stereo-delay.cpp" />
+    <ClCompile Include="module\mixer.cpp" />
+    <ClCompile Include="module\module.cpp" />
+    <ClCompile Include="module\synth.cpp" />
+    <ClCompile Include="module\voice.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="env.h" />
-    <ClInclude Include="flt.h" />
-    <ClInclude Include="lfo.h" />
-    <ClInclude Include="osc.h" />
-    <ClInclude Include="pot.h" />
-    <ClInclude Include="mdl.h" />
-    <ClInclude Include="synth-adapter.h" />
-    <ClInclude Include="synth-controls.h" />
-    <ClInclude Include="synth-device.h" />
-    <ClInclude Include="synth.h" />
-    <ClInclude Include="voice.h" />
-    <ClInclude Include="xmloader.h" />
+    <ClInclude Include="device\distort-device.h" />
+    <ClInclude Include="device\stereo-delay-device.h" />
+    <ClInclude Include="elem\clp.h" />
+    <ClInclude Include="elem\dly.h" />
+    <ClInclude Include="elem\elem.h" />
+    <ClInclude Include="elem\env.h" />
+    <ClInclude Include="elem\flt.h" />
+    <ClInclude Include="elem\lfo.h" />
+    <ClInclude Include="elem\osc.h" />
+    <ClInclude Include="elem\pot.h" />
+    <ClInclude Include="device\synth-adapter.h" />
+    <ClInclude Include="device\module-device.h" />
+    <ClInclude Include="device\mixer-device.h" />
+    <ClInclude Include="device\synth-device.h" />
+    <ClInclude Include="module\module.h" />
+    <ClInclude Include="module\distort.h" />
+    <ClInclude Include="module\stereo-delay.h" />
+    <ClInclude Include="module\mixer.h" />
+    <ClInclude Include="module\mixer-controls.h" />
+    <ClInclude Include="module\synth-controls.h" />
+    <ClInclude Include="module\synth.h" />
+    <ClInclude Include="module\voice.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

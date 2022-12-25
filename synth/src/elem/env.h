@@ -1,7 +1,7 @@
 #ifndef __ENV_H
 #define __ENV_H
 
-#include "mdl.h"
+#include "elem.h"
 
 NS_FW_BASE_USE
 namespace SYNTH {
@@ -16,17 +16,17 @@ namespace SYNTH {
         Idle = 7
     } EnvPhase;
 
-    typedef struct EnvCtrls_ : MdlCtrls {
-        PotF  dc;
-        PotF8 atk;
-        PotF8 dec;
+    typedef struct EnvCtrls_ : ElemCtrls {
+        PotF dc;
+        Pot atk;
+        Pot dec;
         PotF8 sus;
-        PotF8 rel;
+        Pot rel;
     } EnvCtrls;
 
     #define EnvCtrlCount (sizeof(EnvCtrls) / sizeof(Pot))
 
-    class Env : public Mdl {
+    class Env : public Elem {
     private: PROP_R(EnvCtrls*, controls);
     private: byte gate;
     private: float velocity;
@@ -37,12 +37,14 @@ namespace SYNTH {
     public:
         Env();
 
-        void assignControls(Pot* controls);
+        void assignControls(PotBase* controls);
         void setFromStream(byte* stream);
-        float run(void* params);
+        float run(Arg params = (void*)NULL);
 
         void setGate(byte velocity);
         inline bool isActive() { return phase_ < EnvPhase::Idle; }
+
+        static void initialize(float samplingRate);
     };
 }
 #endif

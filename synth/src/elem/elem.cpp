@@ -1,11 +1,11 @@
-#include "mdl.h"
+#include "elem.h"
 #include "math.h"
 #include "base/memory.h"
 
 NS_FW_BASE_USE
 using namespace SYNTH;
 
-float Mdl::FrequencyTable[128];
+float Elem::FrequencyTable[128];
 const float DefaultSamplingRate = 48000.0f;
 //   0 = 0Hz
 //   9
@@ -15,17 +15,17 @@ const double FreqC0 = 440.0 / pow(2.0, 5.0) * pow(2.0, 3.0 / 12.0);     // C fre
 // 00 01 02 03 04 05 06 07 08 09 10 11 12
 // C  C# D  D# E  F  F# G  G# A  A# H  C'
 // 0 = 0, 1 = C-1, 70 = A4 = 440Hz
-void Mdl::createFrequencyTable() {
-	Mdl::FrequencyTable[0] = 0.0f;
+void Elem::createFrequencyTable() {
+	Elem::FrequencyTable[0] = 0.0f;
 	for (var i = 0; i < 127; i++) {
 		var oi = trunc(i / 12.0);
 		var ti = (i % 12) - 9;
 		var base = 440.0 * pow(2.0, oi - 5.0);
-		Mdl::FrequencyTable[i + 1] = (float)(base * pow(2.0, ti / 12.0));
+		Elem::FrequencyTable[i + 1] = (float)(base * pow(2.0, ti / 12.0));
 	}
 }
 
-Mdl::Mdl() {
+Elem::Elem() {
 	samplingRate_ = &DefaultSamplingRate;
 }
 
@@ -49,16 +49,25 @@ Mdl::Mdl() {
 //	return smp;
 //}
 
-void Mdl::assignControls(Pot* controls) {}
+float Elem::run(Arg params) {
+	return 0.0f;
+}
 
-void Mdl::setFromStream(byte* stream) {}
+void Elem::assignControls(PotBase* controls) {}
 
-void Mdl::setFromStream(byte*& stream, Pot* target) {
-	var ctrls = (MdlCtrls*)target;
+void Elem::setFromStream(byte* stream) {}
+
+void Elem::setFromStream(byte*& stream, Pot* target) {
+	var ctrls = (ElemCtrls*)target;
 	ctrls->amp.setFromStream(stream);
 }
 
-float Mdl::p2f(float p) {
+void Elem::connect(int id, void* input) { }
+
+//void Elem::run(float* buffer, int start, int end) {
+//}
+
+float Elem::p2f(float p) {
 	//if (p > 1.0f) {
 	//	var i = (int)p;
 	//	var f = (double)p - i;
@@ -72,3 +81,15 @@ float Mdl::p2f(float p) {
 
 	return p == 0.0f ? 0.0f : (float)(pow(2.0, p / 12.0) * FreqC0);
 };
+
+void Elem::createBezierTable(float* table, float px, int steps, FloatInt2Float transform) {
+	var py = 1 - px;
+	var ax = 1 - 2 * px, ay = 1 - 2 * py;
+	var bx = 2 * px, by = 2 * py;
+	for (var i = 0; i <= steps; i++) {
+		var x = (float)i / steps;
+		var r = (-bx + (float)sqrt(bx * bx + 4 * ax * x)) / (2 * ax);
+		var y = r * r * ay + by * r;
+		table[i] = transform(y, i);
+	}
+}

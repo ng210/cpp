@@ -2,8 +2,8 @@
 // Base module
 //*****************************************************************************
 
-#ifndef __MDL_H
-#define __MDL_H
+#ifndef __ELEM_H
+#define __ELEM_H
 
 #include "basedef.h"
 #include "pot.h"
@@ -15,6 +15,14 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
+	typedef union Arg {
+		float f;
+		void* p;
+		Arg(float v) : f(v) {}
+		Arg(void* v) : p(v) {}
+		Arg() : p(NULL) {}
+	} Arg;
+
 	//typedef union CtrlUnion {
 	//	float f;
 	//	int i;
@@ -25,7 +33,9 @@ namespace SYNTH {
 
 	//typedef CtrlUnion Ctrl;
 
-	struct MdlCtrls {
+	typedef float FloatInt2Float(float y, int ix);
+
+	struct ElemCtrls {
 		PotF amp;
 	};
 
@@ -39,20 +49,23 @@ namespace SYNTH {
 	//,	SSN1K_MM_COUNT
 	//};
 
-	class Mdl {
+	class Elem {
 	protected: PROP(const float*, samplingRate);
 	public:
-		Mdl();
+		Elem();
 
 		void setFromStream(byte*& stream, Pot* target);
 
-		virtual void assignControls(Pot* controls) = 0;
+		virtual void assignControls(PotBase* controls) = 0;
 		virtual void setFromStream(byte* stream);
-		virtual float run(void* params) = 0;
+		virtual void connect(int id, void* input);
+		virtual float run(Arg params = (void*)NULL);
+		//virtual void run(float* buffer, int start, int end);
 
 		static float FrequencyTable[128];
 		static void createFrequencyTable();
 		static float p2f(float p);
+		static void createBezierTable(float* table, float px, int steps, FloatInt2Float transform);
 	};
 
 }

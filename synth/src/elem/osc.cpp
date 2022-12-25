@@ -5,7 +5,7 @@
 NS_FW_BASE_USE
 using namespace SYNTH;
 
-Osc::Osc() : Mdl() {
+Osc::Osc() : Elem() {
     reset();
 }
 
@@ -16,18 +16,18 @@ void Osc::reset() {
 
 // float params[] = { 0.0f, 1.0f, 0.0f };
 // run(&params);
-float Osc::run(void* params) {
-    var am = ((float*)params)[0];
-    var fm = ((float*)params)[1];
-    var pm = ((float*)params)[2];
-    var pitch = note->value_.b + controls_->tune.value_.b;
-    var delta = (controls_->fre.value_.f + fm + Mdl::p2f((float)pitch)) / *samplingRate_;
+float Osc::run(Arg params) {
+    var am = ((float*)params.p)[0];
+    var fm = ((float*)params.p)[1];
+    var pm = ((float*)params.p)[2];
+    var pitch = note->value.b + controls_->tune.value.b;
+    var delta = (controls_->fre.value.f + fm + Elem::p2f((float)pitch)) / *samplingRate_;
     if (delta >= 1.0) {
         delta = 0.99999999f;
     }
-    var psw = pm + controls_->psw.value_.f;
+    var psw = pm + controls_->psw.value.f;
     var smp = 0.0;
-    var wf = controls_->wave.value_.b;
+    var wf = controls_->wave.value.b;
     var wfc = 0;
     if ((wf & WfSinus) != 0) {
         smp += sin(SYNTH_THETA * timer);
@@ -60,10 +60,10 @@ float Osc::run(void* params) {
     if (timer > 1.0) {
         timer -= 1.0;
     }
-    return (float)(controls_->amp.value_.f * am * smp);
+    return (float)(controls_->amp.value.f * am * smp);
 }
 
-void Osc::assignControls(Pot* controls) {
+void Osc::assignControls(PotBase* controls) {
     controls_ = (OscCtrls*)controls;
     controls_->amp.init(0.0f, 1.0f, 0.01f, 1.0f);
     controls_->fre.init(0.0f, 0.5f * *samplingRate_, 100.0f, 0.0f);
@@ -74,7 +74,7 @@ void Osc::assignControls(Pot* controls) {
 }
 
 void Osc::setFromStream(byte* stream) {
-    Mdl::setFromStream(stream, (Pot*)controls_);
+    Elem::setFromStream(stream, (Pot*)controls_);
     controls_->fre.setFromStream(stream);
     controls_->note.setFromStream(stream);
     controls_->tune.setFromStream(stream);

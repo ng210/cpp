@@ -13,78 +13,153 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\elem">
+      <UniqueIdentifier>{ef02e68b-c815-4209-bd7b-f22bdd513149}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\elem">
+      <UniqueIdentifier>{03bdb2bc-8321-41c5-ad1c-ba388a933961}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\module">
+      <UniqueIdentifier>{cd0cda2d-16a3-4d0c-a73c-604dab4a2ff7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\device">
+      <UniqueIdentifier>{4f0996bd-ccc7-4d34-8316-1066d37afd22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\device">
+      <UniqueIdentifier>{981e290e-337f-45d6-9111-f643e495c4cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\module">
+      <UniqueIdentifier>{4d172c77-876c-48bd-8ed9-78b3bde2ce7c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="synth.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="elem\elem.cpp">
+      <Filter>Source Files\elem</Filter>
     </ClCompile>
-    <ClCompile Include="voice.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="elem\env.cpp">
+      <Filter>Source Files\elem</Filter>
     </ClCompile>
-    <ClCompile Include="mdl.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="elem\flt.cpp">
+      <Filter>Source Files\elem</Filter>
     </ClCompile>
-    <ClCompile Include="env.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="elem\lfo.cpp">
+      <Filter>Source Files\elem</Filter>
     </ClCompile>
-    <ClCompile Include="pot.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="elem\osc.cpp">
+      <Filter>Source Files\elem</Filter>
     </ClCompile>
-    <ClCompile Include="osc.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="module\distort.cpp">
+      <Filter>Source Files\module</Filter>
     </ClCompile>
-    <ClCompile Include="lfo.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="module\mixer.cpp">
+      <Filter>Source Files\module</Filter>
     </ClCompile>
-    <ClCompile Include="flt.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="elem\pot.cpp">
+      <Filter>Source Files\elem</Filter>
     </ClCompile>
-    <ClCompile Include="synth-adapter.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="module\synth.cpp">
+      <Filter>Source Files\module</Filter>
     </ClCompile>
-    <ClCompile Include="synth-device.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="device\synth-adapter.cpp">
+      <Filter>Source Files\device</Filter>
     </ClCompile>
-    <ClCompile Include="xmloader.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="device\module-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="module\voice.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="device\synth-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="module\module.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="device\mixer-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="device\distort-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="module\stereo-delay.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="device\stereo-delay-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="elem\dly.cpp">
+      <Filter>Source Files\elem</Filter>
+    </ClCompile>
+    <ClCompile Include="elem\clp.cpp">
+      <Filter>Source Files\elem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="synth.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="elem\elem.h">
+      <Filter>Header Files\elem</Filter>
     </ClInclude>
-    <ClInclude Include="voice.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="elem\env.h">
+      <Filter>Header Files\elem</Filter>
     </ClInclude>
-    <ClInclude Include="mdl.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="elem\flt.h">
+      <Filter>Header Files\elem</Filter>
     </ClInclude>
-    <ClInclude Include="env.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="elem\lfo.h">
+      <Filter>Header Files\elem</Filter>
     </ClInclude>
-    <ClInclude Include="pot.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="elem\osc.h">
+      <Filter>Header Files\elem</Filter>
     </ClInclude>
-    <ClInclude Include="osc.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="module\distort.h">
+      <Filter>Header Files\module</Filter>
     </ClInclude>
-    <ClInclude Include="lfo.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="module\stereo-delay.h">
+      <Filter>Header Files\module</Filter>
     </ClInclude>
-    <ClInclude Include="flt.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="module\mixer.h">
+      <Filter>Header Files\module</Filter>
     </ClInclude>
-    <ClInclude Include="synth-controls.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="module\mixer-controls.h">
+      <Filter>Header Files\module</Filter>
     </ClInclude>
-    <ClInclude Include="synth-adapter.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="device\mixer-device.h">
+      <Filter>Header Files\device</Filter>
     </ClInclude>
-    <ClInclude Include="synth-device.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="elem\pot.h">
+      <Filter>Header Files\elem</Filter>
     </ClInclude>
-    <ClInclude Include="xmloader.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="module\synth.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="device\synth-adapter.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\module-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\synth-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="module\voice.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="module\synth-controls.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="module\module.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="device\distort-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\stereo-delay-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="elem\dly.h">
+      <Filter>Header Files\elem</Filter>
+    </ClInclude>
+    <ClInclude Include="elem\clp.h">
+      <Filter>Header Files\elem</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

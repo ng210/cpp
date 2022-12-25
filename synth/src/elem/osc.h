@@ -1,7 +1,7 @@
 #ifndef __OSC_H
 #define __OSC_H
 
-#include "mdl.h"
+#include "elem.h"
 
 NS_FW_BASE_USE
 namespace SYNTH {
@@ -15,7 +15,7 @@ namespace SYNTH {
         WfNoise = 16
     } OscWaveform;
 
-    typedef struct OscCtrls_ : MdlCtrls {
+    typedef struct OscCtrls_ : ElemCtrls {
         PotF fre;
         Pot note;
         Pot tune;
@@ -25,7 +25,7 @@ namespace SYNTH {
 
     #define OscCtrlCount (sizeof(OscCtrls) / sizeof(Pot*))
 
-    class Osc : public Mdl {
+    class Osc : public Elem {
     private: PROP_R(OscCtrls*, controls);
     private: Pot* note;
     private: float smp;
@@ -33,9 +33,9 @@ namespace SYNTH {
     public:
         Osc();
         void reset();
-        void assignControls(Pot* controls);
+        void assignControls(PotBase* controls);
         void setFromStream(byte* stream);
-        float run(void* params);
+        float run(Arg params = (void*)NULL);
         void setNoteControl(Pot* note);
     };
 }

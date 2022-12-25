@@ -6,6 +6,8 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
+    #define SAMPLE_BUFFER_SIZE 256
+
     typedef union S {
         float f;
         byte b;
@@ -18,10 +20,10 @@ namespace SYNTH {
 
     class PotBase {
     public:
-        S min_;
-        S max_;
-        S step_;
-        S value_;
+        S min;
+        S max;
+        S step;
+        S value;
         PotBase();
         PotBase(S min, S max, S step, S value);
         virtual void init(S min, S max, S step, S value);

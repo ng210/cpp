@@ -49,8 +49,7 @@ typedef enum SynthCtrlId_ {
 	SCosc2psw,
 	SCosc2wave,
 
-	SCflt1amp,	// 41
-	SCflt1cut,
+	SCflt1cut,	// 41
 	SCflt1res,
 	SCflt1mod,
 	SCflt1mode

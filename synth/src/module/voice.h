@@ -2,11 +2,11 @@
 #define __VOICE_H
 
 
-#include "mdl.h"
-#include "env.h"
-#include "osc.h"
-#include "lfo.h"
-#include "flt.h"
+#include "../elem/elem.h"
+#include "../elem/env.h"
+#include "../elem/osc.h"
+#include "../elem/lfo.h"
+#include "../elem/flt.h"
 #include "synth.h"
 
 NS_FW_BASE_USE
