@@ -7,6 +7,7 @@ typedef void (*FeedSample)(short*, int, void*);
 
 class SoundPlayer {
 private:
+	static const int defaultLatency_;
 	static int channels_;
 	static int channelsLog2_;
 	static int bitsPerSample_;
@@ -15,6 +16,8 @@ private:
 
 	static DWORD sampleRate_;
 	static DWORD latency_;
+	static DWORD threadId_;
+	static LPVOID threadContext_;
 
 	static short* sampleBuffer_;
 	//static LPVOID callbackBuffer_;
@@ -28,11 +31,14 @@ private:
 	static bool isTerminating_;
 	static bool isPlaying_;
 
+	static HRESULT initialize(int sampleRate, int channels);
+
 	static DWORD WINAPI threadProc(LPVOID lpParameter);
 
 public:
 	static HRESULT start(int sampleRate, int channels, FeedSample callback, void* context = NULL);
 	static HRESULT stop();
 	static void setLatency(int ms);
+	static void destroy();
 };
 #endif
