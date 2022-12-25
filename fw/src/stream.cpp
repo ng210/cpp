@@ -4,7 +4,7 @@
 NS_FW_BASE_USE
 
 Stream::Stream() {
-	init(1024);
+	init();
 }
 
 Stream::Stream(long size) {
@@ -18,9 +18,10 @@ Stream::Stream(byte* source, long length) {
 
 void Stream::init(long size) {
 	data_ = NULL;
-	cursor_ = NULL;
 	size_ = 0;
+	length_ = 0;
 	cursor_ = ensureSize(size);
+	length_ = 0;
 }
 
 Stream::~Stream() {
@@ -29,16 +30,18 @@ Stream::~Stream() {
 
 void Stream::cursor(byte* p) {
 	if (p < data_) cursor_ = data_;
-	else if (p < cursor_) cursor_ = p;
+	else if (p < data_ + length_) cursor_ = p;
 }
 
 byte* Stream::ensureSize(long delta) {
-	var l = length();
-	if (size_ < l + delta) {
-		size_ = l + delta;
+	var diff = delta - (size_ - length_);
+	if (diff > 0) {
+		size_ += delta < STREAM_DEFAULT_SIZE ? STREAM_DEFAULT_SIZE : delta;
+		var curPos = cursor_ - data_;
 		data_ = REALLOC(data_, byte, size_);
-		cursor_ = data_ + l;
+		cursor_ = data_ + curPos;
 	}
+	length_ += delta;
 	return data_;
 }
 
@@ -133,9 +136,27 @@ Stream* Stream::writeStream(Stream* s, long length, long offset) {
 }
 
 byte* Stream::extract(long offset, long length) {
-	var data = data_;
+	var data = REALLOC(data_, byte, length_);
 	size_ = 0;
 	cursor_ = NULL;
 	data_ = NULL;
+	length_ = 0;
 	return data;
+}
+
+byte* Stream::readBytesFromFile(const char* path, size_t byteCount, size_t offset) {
+	var fp = File::open(path);
+	return readBytesFromFile(fp, byteCount, offset);
+}
+
+byte* Stream::readBytesFromFile(FILE* fp, size_t byteCount, size_t offset) {
+	var curr = fseek(fp, 0, SEEK_CUR);
+	var length = fseek(fp, 0, SEEK_END);
+	fseek(fp, curr + (long)offset, SEEK_SET);
+	var bytesAhead = length - (curr + offset);
+	if (byteCount > bytesAhead) byteCount = bytesAhead;
+	ensureSize((long)byteCount);
+	var cursor = cursor_;
+	cursor_ += fread_s(cursor_, byteCount, sizeof(byte), byteCount, fp);
+	return cursor;
 }

@@ -4,12 +4,16 @@
 #include "basedef.h"
 #include "types.h"
 #include "base/str.h"
+#include "utils/file.h"
 
 NS_FW_BASE_BEGIN
+
+#define STREAM_DEFAULT_SIZE 256
 
 class Stream {
 protected:PROP_R(long, size);
 protected: byte* data_;
+protected: PROP_R(long, length);
 protected:PROP_R(byte*, cursor);
 protected:byte* ensureSize(long delta);
 public:
@@ -17,7 +21,7 @@ public:
 	Stream(long size);
 	Stream(byte* source, long size);
 	virtual ~Stream();
-	void init(long size);
+	void init(long size = STREAM_DEFAULT_SIZE);
 
 	void cursor(byte* p);
 	inline byte* const data() { return data_; }
@@ -30,7 +34,6 @@ public:
 	double readDouble();
 	char* readString();
 
-	inline long length() { return (long)(cursor_ - data_); }
 	inline void reset() { cursor_ = data_; }
 	Stream* writeByte(byte b);
 	Stream* writeWord(word w);
@@ -42,6 +45,9 @@ public:
 	Stream* writeBytes(byte* data, long length, long offset = 0);
 	Stream* writeStream(Stream* s, long length = 0, long offset = 0);
 	byte* extract(long offset = 0, long length = 0);
+
+	byte* readBytesFromFile(const char* path, size_t byteCount, size_t offset);
+	byte* readBytesFromFile(FILE* fp, size_t byteCount, size_t offset);
 };
 
 

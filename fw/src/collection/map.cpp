@@ -52,7 +52,7 @@ int Map::compareWrapper_(void* item, UINT32 ix, Collection* collection, void* ke
 }
 
 Map::Map(UINT32 keySize, UINT32 valueSize, HashingFunction hashing, CollectionCallback* compare) {
-	init(keySize, valueSize, hashing, compare);
+	initialize(keySize, valueSize, hashing, compare);
 }
 //Map::Map(Array* array, const char* separator) {
 //	init();
@@ -69,7 +69,7 @@ Map::Map(UINT32 keySize, UINT32 valueSize, HashingFunction hashing, CollectionCa
 //	}
 //}
 
-void Map::init(UINT32 keySize, UINT32 valueSize, HashingFunction hashing, CollectionCallback* compare) {
+void Map::initialize(UINT32 keySize, UINT32 valueSize, HashingFunction hashing, CollectionCallback* compare) {
 	if (keySize == MAP_USE_REF) keys_ = NEW_(PArray, MAP_ITEM_COUNT);
 	else keys_= NEW_(Array, keySize, MAP_ITEM_COUNT);
 	keys_->compare(compare);
@@ -135,6 +135,7 @@ void* Map::put(void* key, void* value) {
 		kvp.index_ = ix;
 		bucket->insertAt(pos, &kvp);
 		size_++;
+		res = kvp.value_;
 	} else {
 		// key already exists
 		res = keyValue->value_;

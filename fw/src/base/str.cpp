@@ -85,6 +85,17 @@ void* memcpy(void *dest, const void *src, size_t count) {
 	}
 	return dest;
 }
+//*********************************************************
+int memcmp(byte* src, byte* dst, int length, int& ix) {
+	var result = true;
+	for (ix = 0; ix < length; ix++) {
+		if (src[ix] != dst[ix]) {
+			result = false;
+			break;
+		}
+	}
+	return result;
+}
 #ifdef _CRT
 
 //*********************************************************

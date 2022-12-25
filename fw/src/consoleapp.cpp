@@ -57,6 +57,7 @@ int main(int argc, char** argv) {
 //*****************************************************************************
 Console::Console() {
 	hConsole_ = GetStdHandle(STD_OUTPUT_HANDLE);
+	consoleCursorInfo_ = {};
 	consoleBuffer_ = MALLOC(char, CONSOLE_BUFFER_LENGTH);
 	GetConsoleScreenBufferInfo(hConsole_, &consoleScreenBufferInfo_);
 }
@@ -119,5 +120,27 @@ void Console::clearscreen() {
 				}
 			}
 		}
+	}
+}
+
+void Console::dump(const byte* const data, int length, int width) {
+	var count = 0;
+	char line[1024];
+	int size = 1023;
+	var p = line;
+	for (var i = 0; i < length; i++) {
+		unsigned char db = data[i];
+		sprintf_s(p, size, "%02x ", db);
+		size -= 3;
+		p += 3;
+		if (count++ == width) {
+			printf("%s\n", line);
+			p = line;
+			size = 1023;
+			count = 0;
+		}
+	}
+	if (p != line) {
+		printf("%s\n", line);
 	}
 }

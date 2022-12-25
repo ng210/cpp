@@ -5,6 +5,8 @@ NS_FW_BASE_BEGIN
 
 ArrayBase::ArrayBase() {
 	compare_ = NULL;
+	data_ = NULL;
+	itemSize_ = 0;
 }
 
 ArrayBase::~ArrayBase() {

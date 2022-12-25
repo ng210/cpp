@@ -15,6 +15,7 @@ int testArray();
 int testPArray();
 int testMap();
 int testTree();
+int testRatio();
 
 #define TEST(t) t() ? failed++ : passed++;
 
@@ -33,18 +34,20 @@ int _main(NS_FW_BASE::Map* args) {
 
 	int passed = 0, failed = 0;
 
-	TEST(testUtils);
-	TEST(testBuffer);
-	TEST(testFile);
-	TEST(testDirectory);
-	TEST(testPathInfo);
-	TEST(testStr);
-	TEST(testString);
-	TEST(testArray);
-	TEST(testPArray);
+	//TEST(testUtils);
+	//TEST(testBuffer);
+	//TEST(testFile);
+	//TEST(testDirectory);
+	//TEST(testPathInfo);
+	//TEST(testStr);
+	//TEST(testString);
+	//TEST(testArray);
+	//TEST(testPArray);
 	TEST(testMap);
-	TEST(testTree);
+	//TEST(testTree);
 	
+	//testRatio();
+
 	//WORD buffer[48000];
 	//for (int i = 0; i < 48000; i++) {
 	//	buffer[i] = (WORD)Utils::random(65536);
@@ -771,4 +774,21 @@ int testTree() {
 		passed, (passed + failed), (100.0f*passed) / (passed + failed));
 	return failed;
 
+}
+
+int testRatio() {
+	int a = 100, b = 16;
+	int q = (a-1) / b;
+	int r = (a-1) % b;
+	int e = 0;
+	int y = 0;
+	for (var x = 0; x < a; x+=q) {
+		if (e >= b) {
+			e -= b;
+			x++;
+		}
+		printf("%d. %2d\n", y++, x);
+		e += r;
+	}
+	return 0;
 }

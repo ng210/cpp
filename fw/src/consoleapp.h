@@ -34,6 +34,7 @@ public:
 	void showCursor(bool status);
 	void printf(const char* const format, ...);
 	void vprintf(const char* const format, va_list args);
+	void dump(const byte* const data, int length, int width = 8);
 	COORD* gotoxy(int x, int y);
 	COORD* movexy(int x, int y);
 	void setcolor(int col);

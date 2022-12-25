@@ -16,6 +16,7 @@ int strncmp(const char *left, const char *right, size_t len = -1);
 void strnncpy(char*& dst, size_t& size, size_t start, const char* src, const size_t length, const size_t offset = 0);
 void memset(void *dst, const char value, size_t len);
 void* memcpy(void* dest, const void* src, size_t count);
+int memcmp(byte* src, byte* dst, int length, int& ix);
 
 #ifdef _CRT
 char* strchr(const char* str, char ch);

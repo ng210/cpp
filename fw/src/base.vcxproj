@@ -131,6 +131,7 @@
     <ClInclude Include="base\tracer-win.h" />
     <ClInclude Include="base\tracer.h" />
     <ClInclude Include="stream.h" />
+    <ClInclude Include="test.h" />
     <ClInclude Include="utils\directory.h" />
     <ClInclude Include="win\comboboxctrl.h" />
     <ClInclude Include="win\ctrl.h" />
@@ -164,6 +165,7 @@
     <ClCompile Include="base\tracer.cpp" />
     <ClCompile Include="directory.cpp" />
     <ClCompile Include="stream.cpp" />
+    <ClCompile Include="test.cpp" />
     <ClCompile Include="win\comboboxctrl.cpp" />
     <ClCompile Include="win\ctrl.cpp" />
     <ClCompile Include="win\editctrl.cpp" />

@@ -26,13 +26,14 @@ protected:
 	Array* bucketList_;
 	//static void initialize();
 	//static void shutDown();
-	Map() : keys_(NULL), values_(NULL), size_(0), bucketList_(NULL), hashing_(NULL) { };
-	void init(UINT32 keySize, UINT32 valueSize, HashingFunction hashing, CollectionCallback* compare);
 public:
+	Map() : keys_(NULL), values_(NULL), size_(0), bucketList_(NULL), hashing_(NULL) { };
 	Map(UINT32 keySize, UINT32 valueSize = sizeof(void*), HashingFunction hashing = Map::hashingStr, CollectionCallback* compare = Collection::compareByRef);
 	//Map(Array*, const char* = "=");
 	//Map(Array*, const wchar_t* = L"=");
 	virtual ~Map();
+	void initialize(UINT32 keySize, UINT32 valueSize, HashingFunction hashing, CollectionCallback* compare);
+
 	void compare(CollectionCallback callback);
 	void hashing(HashingFunction callback);
 

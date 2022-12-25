@@ -13,6 +13,8 @@
 NS_FW_BASE_BEGIN
 
 Array::Array() {
+	capacity_ = ARRAY_DEFAULT_CAPACITY;
+	extendSize_ = ARRAY_DEFAULT_CAPACITY;
 	data_ = NULL;
 }
 

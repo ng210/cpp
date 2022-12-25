@@ -120,4 +120,15 @@ size_t File::getSize(const char* path) {
 	return length;
 }
 
+FILE* File::open(const char* path, const char* mode) {
+	FILE* fp = NULL;
+	if (mode == NULL) mode = "rb";
+	fopen_s(&fp, path, mode);
+	return fp;
+}
+
+int File::seek(FILE* fp, long offset, int origin) {
+	return fseek(fp, offset, origin);
+}
+
 NS_FW_BASE_END

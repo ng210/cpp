@@ -124,6 +124,7 @@
     <ClInclude Include="stream.h">
       <Filter>base\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="test.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\memory.cpp">
@@ -200,5 +201,6 @@
     <ClCompile Include="stream.cpp">
       <Filter>base\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test.cpp" />
   </ItemGroup>
 </Project>
