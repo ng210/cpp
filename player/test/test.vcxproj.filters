@@ -18,12 +18,18 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test-adapter.cpp">
+    <ClCompile Include="cons-device.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cons-adapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="test-adapter.h">
+    <ClInclude Include="cons-device.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cons-adapter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

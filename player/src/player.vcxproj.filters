@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="adapter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="device.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -33,11 +30,23 @@
     <ClInclude Include="frame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="player-device.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="player-defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="player-lib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="adapter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="player-adapter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="adapter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sequence.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -45,6 +54,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="player-device.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="device.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="adapter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="player-adapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -2,96 +2,66 @@
 #define __PLAYER_PLAYER_H
 
 #include "collection/map.h"
-#include "channel.h"
+#include "stream.h"
+#include "player-device.h"
 
 NS_FW_BASE_USE
 
 namespace PLAYER {
 
-	typedef enum PlayerCommands {
-		CmdEOF = 0,
-		CmdEOS = 1,
-		CmdAssign = 2, // Parameters: channel id, sequence id, device id, loop count
-		CmdTempo = 3
-	} PlayerCommands;
+	class Player {
+		static Map* adapters_;
+	public:
+		static Adapter* addAdapter(Adapter*);
+		static Adapter* getAdapter(int type);
+		static void cleanUp();			
 
-	typedef enum PlayerDevices {
-		DevPlayer = 0,
-		DevChannel = 1
-	} PlayerDevices;
-
-	class Player;
-
-	typedef void* (PlayerEnumerator)(Player*);
-
-	typedef struct AdapterDataItem {
-		Adapter* adapter;
-		int userDataBlock;
-		AdapterDataItem(Adapter* a, int d) : adapter(a), userDataBlock(d) {}
-	} AdapterDataItem;
-
-	typedef struct UserDataBlockItem {
-		int length;
-		byte* userDataBlock;
-		UserDataBlockItem(int l, byte* data) : length(l), userDataBlock(data) {}
-	} UserDataBlockItem;
-
-	typedef struct PlayerBinaryHeader {
-		word headerSize;
-		word adapterTableOffset;
-		word sequenceTableOffset;
-		word dataBlockTableOffset;
-	} PlayerBinaryHeader;
-
-	class Player : public Adapter, public Device {
-	protected:	PROP_R(Array, adapters);
-	protected:	PROP_R(PArray, sequences);
-	protected:	PROP_R(Array, userDataBlocks);
+#pragma region Resources
 	protected:	PROP_R(PArray, channels);
+	protected:	PROP_R(PArray, devices);
+	protected:	PROP_R(PArray, sequences);
+	protected:	PROP_R(Array, dataBlocks);
 	protected:	PROP_R(Channel*, masterChannel);
 	protected:	PROP_R(float, refreshRate);
-	
+	protected:	PROP_R(DataBlockItem, initData);
+
+	DataBlockItem* addDataBlock(byte* stream, int length, DataBlockItemFlag flag = DataBlockItemFlag::Allocated);
+	Sequence* addSequence(Sequence* sequence);
+	Sequence* addSequence(byte* stream, int length);
+	Device* addDevice(Adapter* adapter, int deviceType, byte** pData = NULL);
+#pragma endregion
+
+#pragma region Threading
+	private:
+		DWORD threadId_;
+		HANDLE hThread_;
+		bool isTerminating_;
+		bool isPlaying_;
+		static DWORD threadProc(void* lpParameter);
+	public:
+		void useThread();
+		void start();
+		void stop();
+#pragma endregion
+
+#pragma region Player
+	private:
+		PROP_R(PlayerDevice*, masterDevice);
 	public:
 		Player();
 		~Player();
 
-        void initialize(void* args);
+		void masterDevice(PlayerDevice* device);
+		void assignChannel(int channelId, Sequence* sequence, int deviceId, int loopCount);
+		void initialize(byte** pData);
+		void clear();
+		int run(int ticks);
 
-        // Adapter implementation
-		AdapterInfo* info();
-        Device* createDeviceImpl(int deviceType, byte** initData);
-        byte* processCommand(Channel* channel, byte command);
-        void setRefreshRate(float fps);
+		void load(byte** pData);
+		Stream* save();
 
-        // Player methods
-        int load(const char* path);
-        int load(byte* stream);
+#pragma endregion
 
-		bool run(int ticks);
-		void reset();
-		inline bool isActive();
-
-		Adapter* addAdapter(int adapterType, int datablockId);
-		Adapter* getAdapter(int adapterId);
-		UserDataBlockItem* addDatablock(byte* stream, int length);
-		int createStream(byte*& stream, Array* adapters = NULL, PArray* sequences = NULL, Array* userDataBlocks = NULL);
-		size_t save(const char* path);
-		Sequence* createSequence(byte* stream, int length);
-		Stream* makeCommand(byte command, ...);
-		int getCommandArgsSize(byte command, byte* stream);
-
-        // static members
-	private:
-		static Map adapterTypes_;
-	public:
-		static AdapterInfo Info;
-
-		static void registerAdapter(AdapterInfo& info);
-        static AdapterInfo* getAdapterInfoByName(const char* name);
-		
-		static Map& adapterTypes();
-        static Adapter* creator(Player* player);
-		static void initializer(void* args);
 	};
 }
 

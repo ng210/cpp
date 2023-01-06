@@ -92,6 +92,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>D:\code\git\cpp\fw\src</AdditionalIncludeDirectories>
       <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <PreprocessorDefinitions>PLAYER_EDIT_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -115,7 +116,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>D:\code\git\cpp\fw\src</AdditionalIncludeDirectories>
-      <DebugInformationFormat>None</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <ExceptionHandling>false</ExceptionHandling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -123,6 +124,7 @@
       <EnforceTypeConversionRules>false</EnforceTypeConversionRules>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <OpenMPSupport>false</OpenMPSupport>
+      <PreprocessorDefinitions>PLAYER_EDIT_MODE</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -131,17 +133,24 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="adapter.h" />
-    <ClInclude Include="channel.h" />
-    <ClInclude Include="device.h" />
+    <ClInclude Include="player-adapter.h" />
+    <ClInclude Include="player-defs.h" />
     <ClInclude Include="frame.h" />
-    <ClInclude Include="player.h" />
     <ClInclude Include="sequence.h" />
+    <ClInclude Include="channel.h" />
+    <ClInclude Include="player.h" />
+    <ClInclude Include="device.h" />
+    <ClInclude Include="player-device.h" />
+    <ClInclude Include="player-lib.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="adapter.cpp" />
+    <ClCompile Include="player-adapter.cpp" />
+    <ClCompile Include="sequence.cpp" />
     <ClCompile Include="channel.cpp" />
     <ClCompile Include="player.cpp" />
-    <ClCompile Include="sequence.cpp" />
+    <ClCompile Include="device.cpp" />
+    <ClCompile Include="player-device.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

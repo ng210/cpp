@@ -118,7 +118,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PLAYER_EDIT_MODE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)src;D:\code\git\cpp\fw\src</AdditionalIncludeDirectories>
       <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
@@ -139,7 +139,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PLAYER_EDIT_MODE;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)src;D:\code\git\cpp\fw\src</AdditionalIncludeDirectories>
     </ClCompile>
@@ -153,11 +153,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="cons-adapter.cpp" />
+    <ClCompile Include="cons-device.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="test-adapter.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="test-adapter.h" />
+    <ClInclude Include="cons-adapter.h" />
+    <ClInclude Include="cons-device.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
