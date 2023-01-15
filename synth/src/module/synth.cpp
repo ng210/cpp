@@ -1,141 +1,85 @@
-#include "synth.h"
-#include "voice.h"
 #include "base/memory.h"
+#include "synth/src/module/synth.h"
 
 NS_FW_BASE_USE
 using namespace SYNTH;
 
-Synth::Synth(float* smpRate, int voiceCount) {
-    pControls_ = (PotBase**)&controls_;
-    voices_.init(sizeof(Voice), 32);
-    initialize(smpRate, voiceCount);
-    controls_.amp.value = 1.0f;
+Synth::Synth(float* pSmpRate, int count) {
+    setupVoice = (PVOICEHANDLER)&Synth::setupVoiceHandler;
+    renderVoice = (PVOICERENDERER)&Synth::renderVoiceHandler;
+    freeVoice = (PVOICEHANDLER)&Synth::freeVoiceHandler;
+    setNoteVoice = (PVOICESETNOTEHANDLER)&Synth::setNoteVoiceHandler;
+    SynthBase::initialize(pSmpRate, count);
+    pControls_ = (PotBase*)&controls_;
     program_ = -1;
     createOutputBuffers(1);
     isMono_ = true;
 }
 
 Synth::~Synth() {
-    var i = voices_.length();
-    while (i-- > 0) {
-        ((Voice*)voices_.getAt(0))->freeResources();
-        voices_.removeAt(0);
-    }
 }
 
-#pragma region Module
+// Voice handling
+void Synth::setupVoiceHandler(Voice& v) {
+    // Envelopes
+    v.envelopes = NEWARR(Env, 4);
+    v.envelopes[0].assignControls((PotBase*)&controls_.amEnv);
+    v.envelopes[1].assignControls((PotBase*)&controls_.fmEnv);
+    v.envelopes[2].assignControls((PotBase*)&controls_.pmEnv);
+    v.envelopes[3].assignControls((PotBase*)&controls_.ftEnv);
+    // LFOs
+    v.lfos = NEWARR(Lfo, 2);
+    v.lfos[0].assignControls((PotBase*)&controls_.lfo1);
+    v.lfos[1].assignControls((PotBase*)&controls_.lfo2);
+    // Oscillators
+    v.oscillators = NEWARR(Osc, 2);
+    v.oscillators[0].setNoteControl(&v.note);
+    v.oscillators[1].setNoteControl(&v.note);
+    v.oscillators[0].assignControls((PotBase*)&controls_.osc1);
+    v.oscillators[1].assignControls((PotBase*)&controls_.osc2);
+    // Filter
+    v.filters = NEWARR(Flt, 1);
+    v.filters[0].createStages(3);
+    v.filters[0].assignControls((PotBase*)&controls_.flt1);
+}
+void Synth::renderVoiceHandler(Voice& v, float* buffer, int start, int end) {
+    for (var i = start; i < end; i++) {
+        // run LFOs
+        var lfo = v.lfos[0].run();
+        var amp = v.lfos[0].controls()->amp.value.f;
+        var am = (lfo - amp) / 2.0f + 1.0f;
+        var fm = v.lfos[1].run();
+
+        // run envelopes
+        am *= v.envelopes[0].run();
+        fm += v.envelopes[1].run();
+        var pm = v.envelopes[2].run();
+        var cut = v.envelopes[3].run();
+
+        // run oscillators
+        float args[3] = { am, fm, pm };
+        var smp = v.oscillators[0].run(args);
+        smp += v.oscillators[1].run(args);
+
+        // run filter
+        v.filters[0].update(cut);
+        buffer[i] += v.filters[0].run(smp);
+    }
+}
+void Synth::freeVoiceHandler(Voice& v) {
+    DELARR(v.envelopes);
+    DELARR(v.lfos);
+    DELARR(v.oscillators);
+    DELARR(v.filters);
+}
+void Synth::setNoteVoiceHandler(Voice& v, byte note, byte velocity) {
+    v.velocity.value = velocity / 255.0f;
+    v.note.value = note;
+    for (var i = 0; i < 2; i++) v.lfos[i].reset();
+    for (var i = 0; i < 4; i++) v.envelopes[i].setGate(velocity);
+}
+
+//Module
 void Synth::initialize(byte** pData) {
 
 }
-
-void Synth::connectInput(int id, float* buffer) {
-    if (id == 0) inputs_[0] = buffer;
-}
-
-float* Synth::getOutput(int id) {
-    return outputs_[0];
-}
-
-void Synth::run(int start, int end) {
-    if (isActive) {
-        for (var i = start; i < end; i++) {
-            var smp = 0.0f;
-            for (int j = 0; j < voices_.length(); j++) {
-                var voice = (Voice*)voices_.getAt(j);
-                if (voice->isActive()) {
-                    smp += voice->run();
-                }
-            }
-            outputs_[0][i] = smp * controls_.amp.value.f;
-        }
-    }
-}
-#pragma endregion
-
-#pragma region Synth
-void Synth::initialize(float* smpRate, int voiceCount) {
-    samplingRate(smpRate);
-    setVoiceCount(voiceCount);
-}
-
-void Synth::samplingRate(float* value) {
-    samplingRate_ = *value;
-    omega = SYNTH_THETA / (double)samplingRate_;
-    voices_.forEach([](void* p, UINT32 ix, Collection* array, void* samplingRate) {
-        ((Voice*)p)->setSamplingRate((float*)samplingRate);
-        return 1;
-    }, &samplingRate_);
-    Env::initialize(samplingRate_);
-    Flt::initialize(samplingRate_);
-
-}
-
-void Synth::setVoiceCount(int voiceCount) {
-    var count = voiceCount;
-    var oldCount = voices_.length();
-    if (oldCount < count) {
-        var pots = (Pot**)&controls_;
-        Voice voice;
-        for (var i=oldCount; i< count; i++) {
-            var vp = (Voice*)voices_.add(&voice); new (vp) Voice();
-            vp->envelopes[0].assignControls((Pot*)&controls_.env1);
-            vp->envelopes[1].assignControls((Pot*)&controls_.env2);
-            vp->envelopes[2].assignControls((Pot*)&controls_.env3);
-            vp->envelopes[3].assignControls((Pot*)&controls_.env4);
-            vp->lfos[0].assignControls((Pot*)&controls_.lfo1);
-            vp->lfos[1].assignControls((Pot*)&controls_.lfo2);
-            vp->oscillators[0].assignControls((Pot*)&controls_.osc1);
-            vp->oscillators[1].assignControls((Pot*)&controls_.osc2);
-            vp->filters[0].assignControls((Pot*)&controls_.flt1);
-        }
-    } else {
-        for (var i = oldCount; i > count; --i) {
-            voices_.removeAt(i);
-        }
-    }
-}
-
-void Synth::setNote(byte note, byte velocity) {
-    if (velocity != 0) {
-        // get free voice
-        var candidate = (Voice*)voices_.getAt(0);
-        for (int i=0; i<voices_.length(); i++) {
-            var voice = (Voice*)voices_.getAt(i);
-            if (candidate->getTicks() < voice->getTicks()) {
-                candidate = voice;
-            }
-            if (!voice->isActive()) {
-                candidate = voice;
-                break;
-            }
-        }
-        candidate->setNote(note, velocity);
-    } else {
-        for (int i=0; i<voices_.length(); i++) {
-            var voice = (Voice*)voices_.getAt(i);
-            if (voice->envelopes[0].phase() < EnvPhase::Down && voice->note().value.b == note) {
-                voice->setNote(note, 0);
-                break;
-            }
-        }
-    }
-}
-
-void Synth::setProgram(int prgId) {
-    var sb = soundBank_;
-    program_ = prgId;
-    isActive = true;
-    var count = (int)*sb;
-    if (prgId < count) {
-        var offset = *(short*)(sb + 1 + 16 * prgId + 14);
-        sb += offset;
-        count = *sb++;
-        for (var i = 0; i < count; i++) {
-            var iid = *sb++;
-            var pot = getControl(iid);
-            pot->setFromStream(sb);
-        }
-    }
-}
-
-#pragma endregion

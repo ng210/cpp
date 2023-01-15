@@ -79,9 +79,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(IncludePath)</IncludePath>
+    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -117,7 +119,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>PLAYER_EDIT_MODE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\code\git\cpp\fw\src;D:\code\git\cpp</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,7 +136,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\code\git\cpp\fw\src;D:\code\git\cpp</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
@@ -157,8 +159,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="device\bass-device.cpp" />
     <ClCompile Include="device\distort-device.cpp" />
     <ClCompile Include="device\stereo-delay-device.cpp" />
+    <ClCompile Include="device\synth-base-device.cpp" />
     <ClCompile Include="elem\clp.cpp" />
     <ClCompile Include="elem\dly.cpp" />
     <ClCompile Include="elem\elem.cpp" />
@@ -171,16 +175,19 @@
     <ClCompile Include="device\mixer-device.cpp" />
     <ClCompile Include="device\module-device.cpp" />
     <ClCompile Include="device\synth-device.cpp" />
+    <ClCompile Include="module\bass.cpp" />
     <ClCompile Include="module\distort.cpp" />
     <ClCompile Include="module\stereo-delay.cpp" />
     <ClCompile Include="module\mixer.cpp" />
     <ClCompile Include="module\module.cpp" />
+    <ClCompile Include="module\synth-base.cpp" />
     <ClCompile Include="module\synth.cpp" />
-    <ClCompile Include="module\voice.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="device\bass-device.h" />
     <ClInclude Include="device\distort-device.h" />
     <ClInclude Include="device\stereo-delay-device.h" />
+    <ClInclude Include="device\synth-base-device.h" />
     <ClInclude Include="elem\clp.h" />
     <ClInclude Include="elem\dly.h" />
     <ClInclude Include="elem\elem.h" />
@@ -193,14 +200,15 @@
     <ClInclude Include="device\module-device.h" />
     <ClInclude Include="device\mixer-device.h" />
     <ClInclude Include="device\synth-device.h" />
+    <ClInclude Include="module\bass.h" />
     <ClInclude Include="module\module.h" />
     <ClInclude Include="module\distort.h" />
     <ClInclude Include="module\stereo-delay.h" />
     <ClInclude Include="module\mixer.h" />
     <ClInclude Include="module\mixer-controls.h" />
-    <ClInclude Include="module\synth-controls.h" />
+    <ClInclude Include="module\synth-base.h" />
+    <ClInclude Include="module\synth-def.h" />
     <ClInclude Include="module\synth.h" />
-    <ClInclude Include="module\voice.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

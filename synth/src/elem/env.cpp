@@ -21,7 +21,7 @@ Env::Env() {
 
 void Env::assignControls(PotBase* controls) {
     controls_ = (EnvCtrls*)controls;
-    controls_->amp.init(0.0f, 1.0f, 0.01f, 1.0f);
+    controls_->amp.init(0.0f, 1.0f, 0.01f, 0.0f);
     controls_->dc.init( 0.0f, 1.0f, 0.01f, 0.0f);
     controls_->atk.init(0, 255, 1,  4);
     controls_->dec.init(0, 255, 1, 16);
@@ -30,7 +30,7 @@ void Env::assignControls(PotBase* controls) {
 }
 
 void Env::setFromStream(byte* stream) {
-    Elem::setFromStream(stream, (Pot*)controls_);
+    controls_->amp.setFromStream(stream);
     controls_->dc.setFromStream(stream);
     controls_->atk.setFromStream(stream);
     controls_->dec.setFromStream(stream);

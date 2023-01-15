@@ -32,6 +32,7 @@ namespace SYNTH {
 		void makeCommandImpl(int command, byte*& stream, va_list args);
 		int getCommandSize(byte cmd, byte* args);
 #endif
+		static int compareToModule(void* moduleDevice, UINT32 ix, Collection* collection, void* module);
 
 	};
 }

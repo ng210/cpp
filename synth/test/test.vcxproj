@@ -79,10 +79,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -119,13 +123,13 @@
       </SDLCheck>
       <PreprocessorDefinitions>PLAYER_EDIT_MODE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\code\git\cpp\player\src;D:\code\git\cpp;D:\code\git\cpp\fw\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\code\git\cpp\player\bin\$(IntDir);$(OutDir);D:\code\git\cpp\soundlib\$(IntDir);D:\code\git\cpp\fw\bin\$(IntDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>base.lib;synth.lib;soundlib.lib;player.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\fw\$(Platform)\$(Configuration);$(SolutionDir)..\player\$(Platform)\$(Configuration);$(SolutionDir)..\soundlib\$(Platform)\$(Configuration);$(SolutionDir)$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fw.lib;synth.lib;soundlib.lib;player.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -138,7 +142,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <Optimization>MinSpace</Optimization>
-      <AdditionalIncludeDirectories>D:\code\git\cpp\player\src;D:\code\git\cpp;D:\code\git\cpp\fw\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <DiagnosticsFormat>Classic</DiagnosticsFormat>
@@ -156,8 +160,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>base.lib;synth.lib;soundlib.lib;player.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>D:\code\git\cpp\player\bin\$(IntDir);$(OutDir);D:\code\git\cpp\soundlib\$(IntDir);D:\code\git\cpp\fw\bin\$(IntDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fw.lib;synth.lib;soundlib.lib;player.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\fw\$(Platform)\$(Configuration);$(SolutionDir)..\player\$(Platform)\$(Configuration);$(SolutionDir)..\soundlib\$(Platform)\$(Configuration);$(SolutionDir)$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <TurnOffAssemblyGeneration>false</TurnOffAssemblyGeneration>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <EnableUAC>false</EnableUAC>

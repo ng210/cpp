@@ -6,7 +6,7 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
-	typedef struct ClpCtrls_ {
+	typedef struct ClpCtrls {
 		PotF amp;
 		PotF8 lvl;
 	} ClpCtrls;

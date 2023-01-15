@@ -21,7 +21,7 @@ float Osc::run(Arg params) {
     var fm = ((float*)params.p)[1];
     var pm = ((float*)params.p)[2];
     var pitch = note->value.b + controls_->tune.value.b;
-    var delta = (controls_->fre.value.f + fm + Elem::p2f((float)pitch)) / *samplingRate_;
+    var delta = (controls_->fre.value.f + fm + Elem::p2f((float)pitch)) / *Osc::samplingRate;
     if (delta >= 1.0) {
         delta = 0.99999999f;
     }
@@ -66,15 +66,15 @@ float Osc::run(Arg params) {
 void Osc::assignControls(PotBase* controls) {
     controls_ = (OscCtrls*)controls;
     controls_->amp.init(0.0f, 1.0f, 0.01f, 1.0f);
-    controls_->fre.init(0.0f, 0.5f * *samplingRate_, 100.0f, 0.0f);
-    controls_->note.init(0, 255, 1, 24);
+    controls_->fre.init(0.0f, 0.5f * *Osc::samplingRate, 100.0f, 0.0f);
+    controls_->note.init(0, 255, 1, 0);
     controls_->tune.init(0, 255, 1, 0);
     controls_->psw.init(0.0f, 1.0f, 0.01f, 0.5f);
     controls_->wave.init(0, 255, 1, WfSaw);
 }
 
 void Osc::setFromStream(byte* stream) {
-    Elem::setFromStream(stream, (Pot*)controls_);
+    controls_->amp.setFromStream(stream);
     controls_->fre.setFromStream(stream);
     controls_->note.setFromStream(stream);
     controls_->tune.setFromStream(stream);
@@ -84,4 +84,10 @@ void Osc::setFromStream(byte* stream) {
 
 void Osc::setNoteControl(Pot* note) {
     this->note = note;
+}
+
+float* Osc::samplingRate = NULL;
+
+void Osc::initialize(float* smpRate) {
+    Osc::samplingRate = smpRate;
 }

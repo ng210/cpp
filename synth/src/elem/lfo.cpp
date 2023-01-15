@@ -1,4 +1,5 @@
 #include "lfo.h"
+#include "lfo.h"
 #include "math.h"
 
 NS_FW_BASE_USE
@@ -20,14 +21,14 @@ void Lfo::assignControls(PotBase* controls) {
 }
 
 void Lfo::setFromStream(byte* stream) {
-    Elem::setFromStream(stream, (Pot*)controls_);
     //controls_->dc.setFromStream(stream);
+    controls_->amp.setFromStream(stream);
     controls_->fre.setFromStream(stream);
 }
 
 float Lfo::run(Arg params) {
     var smp = sin(SYNTH_THETA * timer);
-    var delta = controls_->fre.value.f / *samplingRate_;
+    var delta = controls_->fre.value.f / *Lfo::samplingRate;
     if (delta >= 1.0) {
         delta = 0.99999999f;
     }
@@ -37,4 +38,10 @@ float Lfo::run(Arg params) {
     }
 
     return (float)(controls_->amp.value.f * smp/* + controls_->dc.value.f*/);
+}
+
+float* Lfo::samplingRate = NULL;
+
+void Lfo::initialize(float* smpRate) {
+    Lfo::samplingRate = smpRate;
 }

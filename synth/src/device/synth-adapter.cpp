@@ -1,12 +1,13 @@
 #include <windows.h>
 #include "base/memory.h"
-#include "synth-adapter.h"
 #include "player/src/player.h"
 #include "soundlib/src/soundplayer.h"
-#include "synth-device.h"
-#include "mixer-device.h"
-#include "distort-device.h"
-#include "stereo-delay-device.h"
+#include "synth/src/device/synth-adapter.h"
+#include "synth/src/device/synth-device.h"
+#include "synth/src/device/bass-device.h"
+#include "synth/src/device/mixer-device.h"
+#include "synth/src/device/distort-device.h"
+#include "synth/src/device/stereo-delay-device.h"
 
 NS_FW_BASE_USE
 using namespace SYNTH;
@@ -36,6 +37,9 @@ Device* SynthAdapter::createDevice(int deviceType) {
 	switch (deviceType) {
 	case SynthDevices::DeviceSynth:
 		device = NEW_(SynthDevice, this);
+		break;
+	case SynthDevices::DeviceBass:
+		device = NEW_(BassDevice, this);
 		break;
 	case SynthDevices::DeviceMixer:
 		device = NEW_(MixerDevice, this);

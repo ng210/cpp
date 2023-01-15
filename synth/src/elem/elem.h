@@ -17,8 +17,10 @@ namespace SYNTH {
 
 	typedef union Arg {
 		float f;
+		int i;
 		void* p;
 		Arg(float v) : f(v) {}
+		Arg(int v) : i(v) {}
 		Arg(void* v) : p(v) {}
 		Arg() : p(NULL) {}
 	} Arg;
@@ -35,9 +37,9 @@ namespace SYNTH {
 
 	typedef float FloatInt2Float(float y, int ix);
 
-	struct ElemCtrls {
-		PotF amp;
-	};
+	//struct ElemCtrls {
+	//	PotF amp;
+	//};
 
 	//enum MixMode : unsigned char {
 	//	SSN1K_MM_OVR = 0x00	// overwrite
@@ -50,11 +52,9 @@ namespace SYNTH {
 	//};
 
 	class Elem {
-	protected: PROP(const float*, samplingRate);
+	//protected: PROP(const float*, samplingRate);
 	public:
 		Elem();
-
-		void setFromStream(byte*& stream, Pot* target);
 
 		virtual void assignControls(PotBase* controls) = 0;
 		virtual void setFromStream(byte* stream);

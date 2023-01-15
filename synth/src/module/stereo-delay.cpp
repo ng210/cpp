@@ -6,7 +6,7 @@ NS_FW_BASE_USE
 using namespace SYNTH;
 
 StereoDelay::StereoDelay(float* samplingRate) {
-	pControls_ = (PotBase**)&controls_;
+	pControls_ = (PotBase*)&controls_;
 	left_.samplingRate(samplingRate);
 	left_.assignControls(&controls_.feedbackLeft);
 	right_.samplingRate(samplingRate);

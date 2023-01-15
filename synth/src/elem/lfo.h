@@ -7,8 +7,8 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
-    typedef struct LfoCtrls_ : ElemCtrls {
-        //PotF dc;
+    typedef struct LfoCtrls {
+        PotF amp;
         PotF fre;
     } LfoCtrls;
 
@@ -24,6 +24,9 @@ namespace SYNTH {
         void assignControls(PotBase* controls);
         void setFromStream(byte* stream);
         float run(Arg params = (void*)NULL);
+
+        static float* samplingRate;
+        static void initialize(float* samplingRate);
     };
 
 }

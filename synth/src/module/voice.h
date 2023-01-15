@@ -24,6 +24,7 @@ namespace SYNTH {
         Voice();
         virtual ~Voice();
 
+        void assignControls(PotBase** pControls);
         void freeResources();
         void setNote(byte node, byte velocity);
         void setSamplingRate(float* samplingRate);

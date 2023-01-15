@@ -23,6 +23,7 @@ float* Module::getOutput(int id) {
 }
 
 void Module::initialize(byte** pData) {
+	// set sound bank and program
 }
 
 bool Module::isActive() {
@@ -45,5 +46,22 @@ void Module::createOutputBuffers(int count) {
 	for (var i = 0; i < count; i++) {
 		outputs_[i] = p;
 		p += SAMPLE_BUFFER_SIZE;
+	}
+}
+
+void Module::setProgram(int prgId) {
+	var sb = soundBank_;
+	program_ = prgId;
+	isActive_ = true;
+	var count = (int)*sb;
+	if (prgId < count) {
+		var offset = *(short*)(sb + 1 + 16 * prgId + 14);
+		sb += offset;
+		count = *sb++;
+		for (var i = 0; i < count; i++) {
+			var iid = *sb++;
+			var pot = getControl(iid);
+			pot->setFromStream(sb);
+		}
 	}
 }

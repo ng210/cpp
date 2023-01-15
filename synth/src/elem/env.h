@@ -16,7 +16,8 @@ namespace SYNTH {
         Idle = 7
     } EnvPhase;
 
-    typedef struct EnvCtrls_ : ElemCtrls {
+    typedef struct EnvCtrls {
+        PotF amp;
         PotF dc;
         Pot atk;
         Pot dec;

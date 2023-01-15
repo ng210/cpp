@@ -88,3 +88,7 @@ int ModuleDevice::getCommandSize(byte cmd, byte* args) {
 }
 #endif
 
+int ModuleDevice::compareToModule(void* moduleDevice, UINT32 ix, Collection* collection, void* module) {
+	var mdl1 = ((ModuleDevice*)moduleDevice)->object();
+	return (int)((size_t)mdl1 - (size_t)module);
+}

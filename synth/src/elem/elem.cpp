@@ -26,7 +26,6 @@ void Elem::createFrequencyTable() {
 }
 
 Elem::Elem() {
-	samplingRate_ = &DefaultSamplingRate;
 }
 
 //float Mdl::mix(Pot in1, Pot in2) {
@@ -57,11 +56,6 @@ void Elem::assignControls(PotBase* controls) {}
 
 void Elem::setFromStream(byte* stream) {}
 
-void Elem::setFromStream(byte*& stream, Pot* target) {
-	var ctrls = (ElemCtrls*)target;
-	ctrls->amp.setFromStream(stream);
-}
-
 void Elem::connect(int id, void* input) { }
 
 //void Elem::run(float* buffer, int start, int end) {
@@ -88,7 +82,7 @@ void Elem::createBezierTable(float* table, float px, int steps, FloatInt2Float t
 	var bx = 2 * px, by = 2 * py;
 	for (var i = 0; i <= steps; i++) {
 		var x = (float)i / steps;
-		var r = (-bx + (float)sqrt(bx * bx + 4 * ax * x)) / (2 * ax);
+		var r = (-bx + (float)sqrt(bx * bx + 4.0f * ax * x)) / (2.0f * ax);
 		var y = r * r * ay + by * r;
 		table[i] = transform(y, i);
 	}

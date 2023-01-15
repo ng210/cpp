@@ -8,7 +8,7 @@ namespace SYNTH {
 
 #define DELAY_MAX 5000	// milliseconds
 
-	typedef struct DlyCtrls_ {
+	typedef struct DlyCtrls {
 		PotF8 feedback;
 		PotF delay;
 	} DlyCtrls;
@@ -19,8 +19,8 @@ namespace SYNTH {
 	private: float* buffer_;
 	private: float length_;
 	private: float cursor_;
-	private: PROP_R(float*, samplingRate);
 	//private: float* input_;
+	protected: PROP_R(float*, samplingRate);
 	public:
 		Dly();
 		virtual ~Dly();
@@ -30,9 +30,9 @@ namespace SYNTH {
 		//void connect(int id, void* input);
 		float run(Arg params = (void*)NULL);
 		//void run(float* buffer, int start, int end);
-		void samplingRate(float* smpRate);
 
 		void setDelay(float delay);
+		void samplingRate(float* smpRate);
 	};
 
 }

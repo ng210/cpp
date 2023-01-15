@@ -16,38 +16,63 @@ namespace SYNTH {
     } FltMode;
 
 
-    typedef struct FltCtrls_ {
+    typedef struct FltCtrls {
         Pot cut;
         PotF8 res;
         PotF8 mod;
         Pot mode;
     } FltCtrls;
 
-    typedef struct FltCoeffs_ {
-        float ai[3];
-        float bi[3];
-        float ci[3];
-        float ui[2];
-        float vi[2];
-        float lp[2];
-        float hp[2];
-    } FltCoeffs;
+    class Flt;
+    class FltStage {
+        friend class Flt;
+    protected:
+        float ai_[3];    // nominator coeffs
+        float bi_[3];    // LP denominator coeffs
+        float ci_[3];    // HP denominator coeffs
+        float ui_[3];    // LP inputs
+        float vi_[3];    // HP inputs
+        float lp_[2];    // LP outputs
+        float hp_[2];    // HP outputs
+    public:
+        FltStage();
+        virtual void run(Arg) = 0;
+        virtual void update(float, float) = 0;
+    };
+
+    class FltStage1Pole : public FltStage {
+    public:
+        void run(Arg);
+        void update(float, float);
+    };
+
+    class FltStage2Pole : public FltStage {
+        float linearFactor_;
+    public:
+        FltStage2Pole(float f);
+        void run(Arg);
+        void update(float, float);
+    };
 
     #define FltCtrlCount (sizeof(FltCtrls)/sizeof(Pot*))
 
     class Flt : public Elem {
-    private: PROP_R(FltCtrls*, controls);
-    private: FltCoeffs coeffs;
-    private: PROP_R(float, theta);
+    protected: PROP_R(FltCtrls*, controls);
+    protected: FltStage* stages_[5];   // 5x2 = max 10 poles
+    //private: PROP_R(float, theta);
+    protected: PROP_R(int, stageCount);
     public:
-        Flt();
-        void samplingRate(float* smpRate);
+        Flt(int poleCount = 2);
+        ~Flt();
+
         void update(float cut);
         void assignControls(PotBase* controls);
+        void createStages(int poleCount);
         void setFromStream(byte* stream);
         float run(Arg params = (void*)NULL);
 
         static float cutoffTable[256];
+        static float* linearFactors[];
         static void initialize(float smpRate);
     };
 }

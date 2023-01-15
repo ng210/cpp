@@ -66,9 +66,6 @@
     <ClCompile Include="device\module-device.cpp">
       <Filter>Source Files\device</Filter>
     </ClCompile>
-    <ClCompile Include="module\voice.cpp">
-      <Filter>Source Files\module</Filter>
-    </ClCompile>
     <ClCompile Include="device\synth-device.cpp">
       <Filter>Source Files\device</Filter>
     </ClCompile>
@@ -92,6 +89,18 @@
     </ClCompile>
     <ClCompile Include="elem\clp.cpp">
       <Filter>Source Files\elem</Filter>
+    </ClCompile>
+    <ClCompile Include="module\bass.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="module\synth-base.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="device\bass-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="device\synth-base-device.cpp">
+      <Filter>Source Files\device</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -140,10 +149,7 @@
     <ClInclude Include="device\synth-device.h">
       <Filter>Header Files\device</Filter>
     </ClInclude>
-    <ClInclude Include="module\voice.h">
-      <Filter>Header Files\module</Filter>
-    </ClInclude>
-    <ClInclude Include="module\synth-controls.h">
+    <ClInclude Include="module\synth-def.h">
       <Filter>Header Files\module</Filter>
     </ClInclude>
     <ClInclude Include="module\module.h">
@@ -160,6 +166,18 @@
     </ClInclude>
     <ClInclude Include="elem\clp.h">
       <Filter>Header Files\elem</Filter>
+    </ClInclude>
+    <ClInclude Include="module\bass.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="module\synth-base.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="device\bass-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\synth-base-device.h">
+      <Filter>Header Files\device</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

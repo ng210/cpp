@@ -7,11 +7,11 @@ NS_FW_BASE_USE
 using namespace SYNTH;
 
 Distort::Distort(float* samplingRate) {
-    pControls_ = (PotBase**)&controls_;
+    pControls_ = (PotBase*)&controls_;
     controls_.mod.value.f = 0.0f;
     clp_.assignControls(&controls_.amp);
+    flt_.createStages(3);
     flt_.assignControls(&controls_.cut);
-    flt_.samplingRate(samplingRate);
     createOutputBuffers(1);
     isMono_ = true;
     updateFilter();
@@ -48,5 +48,5 @@ void Distort::run(int start, int end) {
 }
 
 void Distort::updateFilter() {
-    flt_.update(1.0f);
+    flt_.update(0.0f);
 }

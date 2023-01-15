@@ -8,10 +8,11 @@ using namespace PLAYER;
 namespace SYNTH {
 
 	typedef enum SynthDevices {
-		DeviceSynth = 1,
-		DeviceMixer = 2,
-		DeviceDelay = 3,
-		DeviceClip = 4
+		DeviceSynth,
+		DeviceBass,
+		DeviceMixer,
+		DeviceDelay,
+		DeviceClip
 	} SynthDevices;
 
 	class SynthAdapter : public Adapter {

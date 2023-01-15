@@ -15,7 +15,8 @@ namespace SYNTH {
         WfNoise = 16
     } OscWaveform;
 
-    typedef struct OscCtrls_ : ElemCtrls {
+    typedef struct OscCtrls {
+        PotF8 amp;
         PotF fre;
         Pot note;
         Pot tune;
@@ -37,6 +38,9 @@ namespace SYNTH {
         void setFromStream(byte* stream);
         float run(Arg params = (void*)NULL);
         void setNoteControl(Pot* note);
+
+        static float* samplingRate;
+        static void initialize(float* samplingRate);
     };
 }
 

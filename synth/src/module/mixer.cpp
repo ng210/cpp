@@ -8,7 +8,7 @@ int Mixer8x4::frame_ = 0;
 float Mixer8x4::buffer_[SAMPLE_BUFFER_SIZE];
 
 Mixer8x4::Mixer8x4() {
-    pControls_ = (PotBase**)&controls_;
+    pControls_ = (PotBase*)&controls_;
     //combinedBuffer_ = MALLOC(float, 8 * 4 * 1024);
     //var buffer = combinedBuffer_;
     for (var i = 0; i < 8; i++) {

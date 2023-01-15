@@ -13,6 +13,10 @@ namespace SYNTH {
 	public:
 		StereoDelayDevice(SynthAdapter* adapter);
 		~StereoDelayDevice();
+
+#ifdef PLAYER_EDIT_MODE
+		int writeToStream(Stream* stream);
+#endif
 	};
 }
 #endif

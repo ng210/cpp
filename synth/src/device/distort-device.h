@@ -11,6 +11,11 @@ namespace SYNTH {
 	public:
 		DistortDevice(SynthAdapter* adapter);
 		~DistortDevice();
+
+#ifdef PLAYER_EDIT_MODE
+		int writeToStream(Stream* stream);
+#endif
+
 	};
 }
 #endif
