@@ -1,6 +1,6 @@
 #include "soundplayer.h"
 #include "wavfmt.h"
-#include "consoleapp.h"
+#include "console/consoleapp.h"
 #include <stdio.h>
 #include <math.h>
 #include "base/memory.h"

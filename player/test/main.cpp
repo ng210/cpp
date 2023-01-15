@@ -1,4 +1,4 @@
-#include "consoleapp.h"
+#include "console/consoleapp.h"
 #include "test.h"
 #include "player-lib.h"
 #include "player-adapter.h"
@@ -183,7 +183,7 @@ void PlayerTest::testCreateSequence() {
     var player = device->player();
     player->addSequence(createTestSequence(device));
     assert("Should have 1 sequence", player->sequences().length() == 1);
-    assert("Should have 12 bytes", ((Sequence*)player->sequences().getAt(0))->length() == 1+2+5+1+2+1);
+    assert("Should have 12 bytes", ((Sequence*)player->sequences().get(0))->length() == 1+2+5+1+2+1);
     DEL_(device);
     Player::cleanUp();
 }
@@ -198,20 +198,20 @@ void PlayerTest::testCreateSequenceFromFrames() {
         frame->delta_ = 0;
         var command = device->makeCommand(PlayerCommands::CmdAssign, 1, 1, 0, 0);
         frame->addCommand(command);
-        frames->add(frame);
+        frames->push(frame);
     // frame #2
     frame = NEW_(Frame);
         frame->delta_ = 96;
         var commandStream = device->makeCommandAsStream(PlayerCommands::CmdEOS);
         frame->addCommand(commandStream->extract());
         DEL_(commandStream);
-        frames->add(frame);
+        frames->push(frame);
 #pragma endregion
     var sequence1 = createTestSequence(device);
     var sequence2 = Sequence::fromFrames(frames, device);
-    frames->forEach([](void* f, UINT32 ix, Collection* c, void* args) {
+    frames->apply([](void* f, UINT32 ix, Collection* c, void* args) {
         var frame = (Frame*)f;
-        frame->commands_.forEach([](void* p, UINT32 ix, Collection* c, void* args) {
+        frame->commands_.apply([](void* p, UINT32 ix, Collection* c, void* args) {
             FREE((byte*)p);
             return 1;
         });
@@ -252,8 +252,8 @@ void PlayerTest::testLoadFromBinary() {
 
     assert("Should have 2 channels", player->channels().length() == 2);
     assert("Should have 25.0 fps", player->refreshRate() == 25.0f);
-    assert("Should have PlayerDevice as #1", ((Device*)player->devices().getAt(0))->type() == PlayerDevices::DevicePlayer);
-    assert("Should have ConsDevice as #2", ((Device*)player->devices().getAt(0))->type() == ConsDevices::DeviceCons);
+    assert("Should have PlayerDevice as #1", ((Device*)player->devices().get(0))->type() == PlayerDevices::DevicePlayer);
+    assert("Should have ConsDevice as #2", ((Device*)player->devices().get(0))->type() == ConsDevices::DeviceCons);
     assert("Should have 2 sequences", player->sequences().length() == 2);
 
     DEL_(device);
@@ -303,7 +303,8 @@ void PlayerTest::testRunPlayer() {
     DEL_(bin);
     var device = PlayerDevice::create(&data);
     var player = device->player();
-
+    // assign master sequence to master channel
+    player->assignChannel(0, (Sequence*)player->sequences().get(0), 0, 0);
     player->useThread();
     player->start();
     while (device->isActive()) {
@@ -349,7 +350,7 @@ int _main(NS_FW_BASE::Map* args) {
 //        // Frame #2 - 3
 //        sequence->writeDelta(96);
 //        sequence->writeEOS();
-//        player->sequences().add(sequence);
+//        player->sequences().push(sequence);
 //    }
 //
 //    var ix = 0;
@@ -391,7 +392,7 @@ int _main(NS_FW_BASE::Map* args) {
 //        sequence->writeDelta(20);
 //        sequence->writeCommand(TestAdapterCommand::CmdSetInk)->writeByte(15);
 //        sequence->writeEOS();
-//        player->sequences().add(sequence);
+//        player->sequences().push(sequence);
 //    }
 //
 //    //#region Sequence #2 - 33
@@ -408,7 +409,7 @@ int _main(NS_FW_BASE::Map* args) {
 //        sequence->writeCommand(TestAdapterCommand::CmdSetInk)->writeByte(2);
 //        sequence->writeCommand(TestAdapterCommand::CmdSetText)->writeString("Seq2.2 - End");
 //        sequence->writeEOS();
-//        player->sequences().add(sequence);
+//        player->sequences().push(sequence);
 //    }
 //}
 //int setupAll(Player*& player, Adapter*& adapter, Cons*& cons, Channel*& channel) {
@@ -437,7 +438,7 @@ int _main(NS_FW_BASE::Map* args) {
 //        result = 4;
 //        createSequences(player);
 //        if (player->sequences().length() != 3) break;
-//        var seq1 = (Sequence*)player->sequences().getAt(1);
+//        var seq1 = (Sequence*)player->sequences().get(1);
 //        //player->masterDevice()->assignChannel(0, seq1, 0, 2);
 //        channel->assign(0, seq1);
 //
@@ -487,7 +488,7 @@ int _main(NS_FW_BASE::Map* args) {
 //        ASSERT("Should have 6 frames", frames->length() == 6);
 //        int count = 0;
 //        for (var i = 0; i < frames->length(); i++) {
-//            count += ((Frame*)frames->getAt(i))->commands_.length();
+//            count += ((Frame*)frames->get(i))->commands_.length();
 //        }
 //        ASSERT("Should have correct number of commands", count == 15);
 //    }
@@ -609,7 +610,7 @@ int _main(NS_FW_BASE::Map* args) {
 //        LOG("Setup failed, error code %d\n", result);
 //    }
 //    else {
-//        var seq = (Sequence*)player->sequences().getAt(1);
+//        var seq = (Sequence*)player->sequences().get(1);
 //        var text = seq->print();
 //        printf("%s", text);
 //        var expected = "Adapter: TestAdapter\nFrames\n #00 [000] 02(53 65 71 31 2E 31 00) 04(FA 00)\n #01 [020] 03(01) 02(53 65 71 31 2E 32 00) 04(FA 00)\n #02 [020] 03(02) 02(53 65 71 31 2E 33 00) 04(FA 00)\n #03 [020] 03(03) 02(53 65 71 31 2E 34 00) 04(FA 01)\n #04 [020] 03(04) 02(45 6E 64 0A 00)\n #05 [020] 03(0F) 01()\n";

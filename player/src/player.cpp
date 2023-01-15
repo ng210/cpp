@@ -31,7 +31,7 @@ namespace PLAYER {
 
     void Player::cleanUp() {
         for (var i = 0; i < Player::adapters_->values()->length(); i++) {
-            var adapter = *(Adapter**)Player::adapters_->values()->getAt(i);
+            var adapter = *(Adapter**)Player::adapters_->values()->get(i);
             DEL_(adapter);
         }
         DEL_(Player::adapters_);
@@ -52,6 +52,7 @@ namespace PLAYER {
         sequences_.compare(Collection::compareByRef);
         dataBlocks_.init(sizeof(DataBlockItem), 16);
         dataBlocks_.compare(Collection::compareByRef);
+        masterChannel_ = NULL;
         masterDevice_ = NULL;
         refreshRate_ = 25.0f;
         initData_.dataBlock = NULL;
@@ -66,7 +67,7 @@ namespace PLAYER {
     //    int ix = -1;
     //    Adapter* adapter = NULL;
     //    for (var i = 0; i < adapters_.length(); i++) {
-    //        var ai = (AdapterDataItem*)adapters_.getAt(i);
+    //        var ai = (AdapterDataItem*)adapters_.get(i);
     //        if (ai->adapter->info()->id == adapterType) {
     //            adapter = ai->adapter;
     //            break;
@@ -136,23 +137,23 @@ namespace PLAYER {
         if (dataBlocks_.length() == 0) {
             // ensure the first datablock is reserved
             DataBlockItem dbi(0, NULL, DataBlockItemFlag::None);
-            dataBlocks_.add(&dbi);
+            dataBlocks_.push(&dbi);
         }
         DataBlockItem dbi(length, stream, flag);
-        return (DataBlockItem*)dataBlocks_.add(&dbi);
+        return (DataBlockItem*)dataBlocks_.push(&dbi);
     }
     Sequence* Player::addSequence(Sequence* sequence) {
-        sequences_.add(sequence);
+        sequences_.push(sequence);
         return sequence;
     }
     Sequence* Player::addSequence(byte* stream, int length) {
         Sequence* sequence = NULL;
         int deviceId = *stream;
         int ix = -1;
-        var device = (Device*)devices_.getAt(deviceId);
+        var device = (Device*)devices_.get(deviceId);
         if (device != NULL) {
             sequence = NEW_(Sequence, device, stream, 0, length);
-            sequences_.add(sequence);
+            sequences_.push(sequence);
         }
         else {
             // error: illegal device id!
@@ -169,7 +170,7 @@ namespace PLAYER {
         if (device) {
             device->player(this);
             device->initialize(pData);
-            devices_.add(device);
+            devices_.push(device);
             //device->dataBlockItem(dataBlock);
         }
         return device;
@@ -200,23 +201,23 @@ namespace PLAYER {
             stop();
         }
 
-        dataBlocks_.forEach([](void* p, UINT32 ix, Collection* arr, void* args) {
+        dataBlocks_.apply([](void* p, UINT32 ix, Collection* arr, void* args) {
             var dbi = (DataBlockItem*)p;
             if (dbi->flag & DataBlockItemFlag::Allocated) {
                 FREE(dbi->dataBlock);
             }
             return 1;
             });
-        sequences_.forEach([](void* sequence, UINT32 ix, Collection* arr, void* args) {
+        sequences_.apply([](void* sequence, UINT32 ix, Collection* arr, void* args) {
             DEL_((Sequence*)sequence);
             return 1;
             });
         // don't delete the master device yet
         for (var i = 1; i < devices_.length(); i++) {
-            var dev = (Device*)devices_.getAt(i);
+            var dev = (Device*)devices_.get(i);
             DEL_(dev);
         }
-        channels_.forEach([](void* channel, UINT32 ix, Collection* arr, void* args) {
+        channels_.apply([](void* channel, UINT32 ix, Collection* arr, void* args) {
             DEL_((Channel*)channel);
             return 1;
             });
@@ -229,7 +230,7 @@ namespace PLAYER {
     void Player::initialize(byte** pData) {
         clear();
         masterChannel_ = NEW_(Channel, "master");
-        channels_.add(masterChannel_);
+        channels_.push(masterChannel_);
         if (pData != NULL && *pData != NULL) {
             // HEADER
             // 00 02 data block count
@@ -262,7 +263,7 @@ namespace PLAYER {
             for (var i = 3; i < dataBlockCount; i++) {
                 var length = dataBlockTable[i];
                 DataBlockItem dbi(length, offset, DataBlockItemFlag::None);
-                dataBlocks_.add(&dbi);
+                dataBlocks_.push(&dbi);
                 offset += length;
             }
 
@@ -271,7 +272,7 @@ namespace PLAYER {
             refreshRate_ = READ(p, float);
             var channelCount = READ(p, byte);
             for (var ci = 0; ci < channelCount; ci++) {
-                channels_.add(NEW_(Channel));
+                channels_.push(NEW_(Channel));
             }
 
             // process adapter list
@@ -292,7 +293,7 @@ namespace PLAYER {
                         if (device != NULL) {
                             device->player(this);
                             device->initialize(&p);
-                            devices_.add(device);
+                            devices_.push(device);
                         }
                         else {
                             // error: unknown device!
@@ -316,22 +317,22 @@ namespace PLAYER {
             }
 
             // assign 1st sequence to the 1st channel with the 1st device
-            assignChannel(0, (Sequence*)sequences_.getAt(0), 0, 0);
+            //assignChannel(0, (Sequence*)sequences_.get(0), 0, 0);
         }
     }
     void Player::masterDevice(PlayerDevice* device) {
         masterDevice_ = device;
-        devices_.insertAt(0, device);
+        devices_.insert(0, device);
     }
     void Player::assignChannel(int channelId, Sequence* sequence, int deviceId, int loopCount) {
-        var chn = (Channel*)channels_.getAt(channelId);
-        var dev = (Device*)devices_.getAt(deviceId);
+        var chn = (Channel*)channels_.get(channelId);
+        var dev = (Device*)devices_.get(deviceId);
         chn->assign(dev, sequence, loopCount);
     }
     int Player::run(int ticks) {
         if (masterChannel_->isActive()) {
             for (var i = 0; i < channels_.length(); i++) {
-                ((Channel*)channels_.getAt(i))->run(ticks);
+                ((Channel*)channels_.get(i))->run(ticks);
             }
         }
         return masterChannel_->isActive();
@@ -349,7 +350,7 @@ namespace PLAYER {
         var adapter = masterDevice_->adapter();
         adapterMap.put(&adapter, &list);
         for (var i = 1; i < devices_.length(); i++) {
-            var device = (Device*)devices_.getAt(i);
+            var device = (Device*)devices_.get(i);
             adapter = device->adapter();
             if (!adapterMap.containsKey(&adapter)) {
                 list = NEW_(PArray, 16);
@@ -358,7 +359,7 @@ namespace PLAYER {
             else {
                 list = *(PArray**)adapterMap.get(&adapter);
             }
-            list->add(device);
+            list->push(device);
         }
 
         Stream initData(1024);
@@ -370,13 +371,13 @@ namespace PLAYER {
         Stream adapterList(4096);
         adapterList.writeByte((byte)adapterMap.size());
         for (var i = 0; i < adapterMap.size(); i++) {
-            var adapter = *(Adapter**)adapterMap.keys()->getAt(i);
+            var adapter = *(Adapter**)adapterMap.keys()->get(i);
             // write adapter data
             adapter->writeToStream(&adapterList);
-            var list = *(PArray**)adapterMap.values()->getAt(i);
+            var list = *(PArray**)adapterMap.values()->get(i);
             adapterList.writeByte(list->length());
             for (var j = 0; j < list->length(); j++) {
-                var device = (Device*)list->getAt(j);
+                var device = (Device*)list->get(j);
                 device->writeToStream(&adapterList);
             }
             DEL_(list);
@@ -387,11 +388,11 @@ namespace PLAYER {
         Stream seqList(4096);
         seqList.writeByte(seqCount);
         for (var i = 0; i < seqCount; i++) {
-            var seq = (Sequence*)sequences_.getAt(i);
+            var seq = (Sequence*)sequences_.get(i);
             seqList.writeWord((word)seq->length());
         }
         for (var i = 0; i < seqCount; i++) {
-            var seq = (Sequence*)sequences_.getAt(i);
+            var seq = (Sequence*)sequences_.get(i);
             seqList.writeStream(seq);
         }
 
@@ -406,7 +407,7 @@ namespace PLAYER {
         stream->writeDword(seqList.length());
         //offset += seqList.length();
         for (var i = 0; i < dataBlocks_.length(); i++) {
-            var dbi = (DataBlockItem*)dataBlocks_.getAt(i);
+            var dbi = (DataBlockItem*)dataBlocks_.get(i);
             stream->writeDword(dbi->length);
             //offset += dbi->length;
         }
@@ -416,7 +417,7 @@ namespace PLAYER {
         stream->writeStream(&adapterList);
         stream->writeStream(&seqList);
         for (var i = 0; i < dataBlocks_.length(); i++) {
-            var dbi = (DataBlockItem*)dataBlocks_.getAt(i);
+            var dbi = (DataBlockItem*)dataBlocks_.get(i);
             stream->writeBytes(dbi->dataBlock, dbi->length);
         }
         return stream;

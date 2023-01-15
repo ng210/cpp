@@ -11,7 +11,7 @@ namespace PLAYER {
         word delta_ = 0;
         PArray commands_;
         inline Frame* addCommand(byte* command) {
-            commands_.add(command);
+            commands_.push(command);
             return this;
         }
     } Frame;

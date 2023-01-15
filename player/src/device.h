@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include "basedef.h"
 #include "base/str.h"
-#include "stream.h"
+#include "base/stream.h"
 #include "player-defs.h"
 
 NS_FW_BASE_USE

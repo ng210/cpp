@@ -146,10 +146,15 @@ HRESULT SoundPlayer::initialize(int sampleRate, int channels) {
 			}
 		}
 
+		// reset playback position
+		SoundPlayer::secondaryBuffer_->SetCurrentPosition(0);
+		DWORD sampleCount = SoundPlayer::bufferSize_ >> SoundPlayer::sampleSizeLog2_;
+		for (DWORD i = 0; i < sampleCount; i++) {
+			SoundPlayer::sampleBuffer_[i] = 0;
+		}
+
 		// create audio thread
-		//if (SoundPlayer::threadId_ == NULL) {
-			HANDLE hThread = CreateThread(0, 0x1000, &SoundPlayer::threadProc, NULL, NULL, &SoundPlayer::threadId_);
-		//}
+		HANDLE hThread = CreateThread(0, 0x1000, &SoundPlayer::threadProc, NULL, NULL, &SoundPlayer::threadId_);
 
 		SoundPlayer::setLatency(SoundPlayer::defaultLatency_);
 

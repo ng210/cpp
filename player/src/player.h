@@ -2,7 +2,7 @@
 #define __PLAYER_PLAYER_H
 
 #include "collection/map.h"
-#include "stream.h"
+#include "base/stream.h"
 #include "player-device.h"
 
 NS_FW_BASE_USE

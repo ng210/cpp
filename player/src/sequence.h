@@ -2,7 +2,7 @@
 #define __PLAYER_SEQUENCE_H
 
 #include "collection/parray.h"
-#include "stream.h"
+#include "base/stream.h"
 #include "frame.h"
 
 NS_FW_BASE_USE

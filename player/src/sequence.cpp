@@ -24,8 +24,8 @@ Sequence::Sequence(Device* device, byte* stream, int offset, int length) {
 
 Sequence::~Sequence() {
 	if (frames_) {
-		var frame0 = (Frame*)frames_->getAt(0);
-		var cmd0 = frame0->commands_.getAt(0);
+		var frame0 = (Frame*)frames_->get(0);
+		var cmd0 = frame0->commands_.get(0);
 		FREE(cmd0);
 		ARRAY_FOREACH(frames_, DEL_((Frame*)value));
 		DEL_(frames_);
@@ -88,7 +88,7 @@ PArray* Sequence::toFrames(Device* device) {
 				break;
 			}
 		}
-		frames_->add(frame);
+		frames_->push(frame);
 		if (cmd == PlayerCommands::CmdEOS) {
 			frame->addCommand(stream->cursor());
 			stream->writeByte(CmdEOS);
@@ -108,11 +108,11 @@ Sequence* Sequence::fromFrames(Collection* frames, Device* device) {
 	sequence->writeHeader();
 	var hasEOS = false;
 	for (var fi = 0; fi < frames->length(); fi++) {
-		var frame = (Frame*)frames->getAt(fi);
+		var frame = (Frame*)frames->get(fi);
 		var hasEOF = false;
 		sequence->writeDelta(frame->delta_);
 		for (var ci = 0; ci < frame->commands_.length(); ci++) {
-			var command = (byte*)frame->commands_.getAt(ci);
+			var command = (byte*)frame->commands_.get(ci);
 			var cmd = *command;
 			var len = device->getCommandSize(cmd, command + 1);
 			sequence->writeBytes(command, len);
@@ -156,11 +156,11 @@ char* Sequence::print(Device* device) {
 
 	const char* hexDigits = "0123456789ABCDEF";
 	for (var i = 0; i < frames_->length(); i++) {
-		var frame = (Frame*)frames_->getAt(i);
+		var frame = (Frame*)frames_->get(i);
 		sprintf_s(str, 64, " #%02d [%03d] ", i, frame->delta_);
 		stream->writeString(str, false);
 		for (var j = 0; j < frame->commands_.length(); j++) {
-			var cmd = (byte*)frame->commands_.getAt(j);
+			var cmd = (byte*)frame->commands_.get(j);
 			var code = *cmd;
 			var len = device->getCommandSize(code, cmd);
 			// hexdump command
@@ -186,7 +186,7 @@ char* Sequence::print(Device* device) {
 	stream->writeByte(0);
 
 	if (!hasFrames) {
-		FREE(((Frame*)frames_->getAt(0))->commands_.getAt(0));
+		FREE(((Frame*)frames_->get(0))->commands_.get(0));
 		ARRAY_FOREACH(frames_, DEL_((Frame*)value));
 		DEL_(frames_);
 		frames_ = NULL;

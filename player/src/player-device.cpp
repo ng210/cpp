@@ -16,16 +16,16 @@ namespace PLAYER {
 		Player::addAdapter(adapter);
 		var device = (PlayerDevice*)adapter->createDevice(PlayerDevices::DevicePlayer);
 		device->initialize(pData);
-		//device->player()->devices().add(device);
+		//device->player()->devices().push(device);
 		device->type(PlayerDevices::DevicePlayer);
 		return device;
 	}
 
 	PlayerDevice::PlayerDevice(void* object, Adapter* adapter) : Device(object, adapter) {
 		// 1st device is this player-device itself
-		//devices_.add(this);
+		//devices_.push(this);
 		//masterChannel_ = NEW_(Channel, "master");
-		//channels_.add(masterChannel_);
+		//channels_.push(masterChannel_);
 		type_ = PlayerDevices::DevicePlayer;
 	}
 	PlayerDevice::~PlayerDevice() {
@@ -50,7 +50,7 @@ namespace PLAYER {
 	void PlayerDevice::setRefreshRate(float fps) {
 		var player = (Player*)object();
 		for (int i = 1; i < player->devices().length(); i++) {
-			((Device*)player->devices().getAt(i))->setRefreshRate(fps);
+			((Device*)player->devices().get(i))->setRefreshRate(fps);
 		}
 	}
 
@@ -62,9 +62,9 @@ namespace PLAYER {
 				int sequenceId = READ(cursor, byte);
 				int deviceId = READ(cursor, byte);
 				int loopCount = READ(cursor, byte);
-				var targetChannel = (Channel*)player->channels().getAt(channelId);
-				var device = (Device*)player->devices().getAt(deviceId);
-				var sequence = (Sequence*)player->sequences().getAt(sequenceId);
+				var targetChannel = (Channel*)player->channels().get(channelId);
+				var device = (Device*)player->devices().get(deviceId);
+				var sequence = (Sequence*)player->sequences().get(sequenceId);
 				targetChannel->assign(device, sequence, loopCount);
 				break;
 		}

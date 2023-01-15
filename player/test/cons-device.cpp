@@ -1,4 +1,4 @@
-#include "consoleapp.h"
+#include "console/consoleapp.h"
 #include "cons-adapter.h"
 #include "cons-device.h"
 

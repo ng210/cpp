@@ -3,7 +3,7 @@
 
 #include "collection/parray.h"
 #include <stdarg.h>
-#include "stream.h"
+#include "base/stream.h"
 
 NS_FW_BASE_USE
 namespace PLAYER {
