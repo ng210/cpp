@@ -1,0 +1,282 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="base">
+      <UniqueIdentifier>{1a0e2a0f-a338-43df-a89a-6daa416e7d04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\Source Files">
+      <UniqueIdentifier>{bd8a7bf8-3c66-4826-b816-cf9702ab2bfa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\Header Files">
+      <UniqueIdentifier>{bcfae443-9b84-4d14-9d9a-a3059135e7e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="collection">
+      <UniqueIdentifier>{85ea1f82-6056-43be-9653-6c201ef0edb0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="collection\Header Files">
+      <UniqueIdentifier>{de7ff3be-9c39-4bbb-9bc0-44f6538e6679}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="collection\Source Files">
+      <UniqueIdentifier>{9998a387-640f-43f1-bdee-5393d63fbe58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{d7fd6525-d251-4728-9ae6-2129e68605dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\Header Files">
+      <UniqueIdentifier>{cf1ae352-70d5-44dd-8cc6-d7641c61c8aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\Source Files">
+      <UniqueIdentifier>{778c534c-a25a-468f-99e3-3241df4447e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win">
+      <UniqueIdentifier>{759bddbb-64c8-47a8-8776-8e5f4ec5418f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win\Header Files">
+      <UniqueIdentifier>{2e5f63e1-d8fb-4b83-a6ed-f75bf018ca73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win\Source Files">
+      <UniqueIdentifier>{9f09fbda-989a-4fc2-8af9-93d644264153}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="syntax">
+      <UniqueIdentifier>{05d95359-0536-4f52-b04d-3eaf8fd00ab0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="syntax\Header Files">
+      <UniqueIdentifier>{4c23e39c-5cc1-416e-95da-476a1dd2e047}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="syntax\Source Files">
+      <UniqueIdentifier>{c31286bd-0461-46e0-9cd1-1d916fb84937}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="console">
+      <UniqueIdentifier>{8bab0379-216c-491b-98a9-25f6384e5871}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="console\Header Files">
+      <UniqueIdentifier>{c19f43e8-faf3-460b-8430-a90b13320967}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="console\Source Files">
+      <UniqueIdentifier>{ebc89372-7d3d-4286-a454-a482c28e5c50}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="fw.h" />
+    <ClInclude Include="basedef.h" />
+    <ClInclude Include="base\debug.h">
+      <Filter>base\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base\memory.h">
+      <Filter>base\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base\str.h">
+      <Filter>base\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\array.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\collection.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\map.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\keyvaluepair.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\utils.h">
+      <Filter>utils\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="runtime.h" />
+    <ClInclude Include="utils\buffer.h">
+      <Filter>utils\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\file.h">
+      <Filter>utils\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\pathinfo.h">
+      <Filter>utils\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\tree.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base\string.h">
+      <Filter>base\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\parray.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\arraybase.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="types.h" />
+    <ClInclude Include="win\window.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win\staticctrl.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win\ctrl.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win\editctrl.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win\comboboxctrl.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\directory.h">
+      <Filter>utils\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test.h" />
+    <ClInclude Include="collection\graph.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="syntax\syntax.h">
+      <Filter>syntax\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="syntax\expression.h">
+      <Filter>syntax\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="syntax\node.h">
+      <Filter>syntax\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="syntax\grammar.h">
+      <Filter>syntax\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base\stream.h">
+      <Filter>base\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\edge.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\vertex.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win\winapp.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="console\consoleapp.h">
+      <Filter>console\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="console\tracer.h">
+      <Filter>console\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win\tracer-win.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="syntax\syntax-test.h">
+      <Filter>syntax\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="base\base-test.h">
+      <Filter>base\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="collection\collection-test.h">
+      <Filter>collection\Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="base\memory.cpp">
+      <Filter>base\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base\str.cpp">
+      <Filter>base\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\array.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\map.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\keyvaluepair.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\utils.cpp">
+      <Filter>utils\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\buffer.cpp">
+      <Filter>utils\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\pathinfo.cpp">
+      <Filter>utils\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\tree.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base\string.cpp">
+      <Filter>base\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\parray.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\window.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\staticctrl.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\ctrl.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\editctrl.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\comboboxctrl.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\file.cpp">
+      <Filter>utils\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\arraybase.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test.cpp" />
+    <ClCompile Include="collection\graph.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="syntax\syntax.cpp">
+      <Filter>syntax\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="syntax\expression.cpp">
+      <Filter>syntax\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="syntax\node.cpp">
+      <Filter>syntax\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base\debug.cpp">
+      <Filter>base\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base\stream.cpp">
+      <Filter>base\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\edge.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\vertex.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\winapp.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="console\consoleapp.cpp">
+      <Filter>console\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="console\tracer.cpp">
+      <Filter>console\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\tracer-win.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="syntax\syntax-test.cpp">
+      <Filter>syntax\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\directory.cpp">
+      <Filter>utils\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\collection.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base\base-test.cpp">
+      <Filter>base\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collection\collection-test.cpp">
+      <Filter>collection\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

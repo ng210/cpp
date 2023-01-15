@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="data">
+      <UniqueIdentifier>{c23fdaed-b2e2-4d7b-b7e5-d535f42e8320}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -20,9 +23,22 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="data\test.dat" />
-    <CopyFileToFolders Include="data\pakreader\1.pak" />
-    <CopyFileToFolders Include="data\1.pak" />
-    <CopyFileToFolders Include="data\2.pak" />
+    <CopyFileToFolders Include="data\pakreader\1.pak">
+      <Filter>data</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="data\1.pak">
+      <Filter>data</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="data\2.pak">
+      <Filter>data</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\test.dat">
+      <Filter>data</Filter>
+    </None>
+    <None Include="data\test2.dat">
+      <Filter>data</Filter>
+    </None>
   </ItemGroup>
 </Project>

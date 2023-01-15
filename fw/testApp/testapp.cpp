@@ -131,6 +131,7 @@ LRESULT TestApp::onCreate() {
 	RECT rect;
 	SYSPR(GetClientRect(hWnd_, &rect));
 	logControl_ = NEW_(EditCtrl, this, 0x001, WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL, NULL);
+	NEW_(EditCtrl, this, 0x001, WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL, NULL);
 	//LONG_PTR SYSFN(style, GetWindowLongPtr(logControl_->hWnd(), GWL_STYLE));
 	//style = WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL;
 	//SYSPR(SetWindowLongPtr(logControl_->hWnd(), GWL_STYLE, style));
