@@ -13,7 +13,6 @@ Distort::Distort(float* samplingRate) {
     flt_.createStages(3);
     flt_.assignControls(&controls_.cut);
     createOutputBuffers(1);
-    isMono_ = true;
     updateFilter();
 }
 
@@ -40,8 +39,7 @@ float* Distort::getOutput(int id) {
 void Distort::run(int start, int end) {
     // out = flt(clip(amp*in, lvl), tone, contour)
     for (var i = start; i < end; i++) {
-        var smp = inputs_[0][i] * controls_.amp.value.f;
-        smp = clp_.run(smp);
+        var smp = clp_.run(inputs_[0][i] * controls_.amp.value.f);
         smp = flt_.run(smp);
         outputs_[0][i] = smp;
     }

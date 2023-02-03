@@ -57,7 +57,7 @@ namespace SYNTH {
 		Elem();
 
 		virtual void assignControls(PotBase* controls) = 0;
-		virtual void setFromStream(byte* stream);
+		virtual void setFromStream(byte*& stream);
 		virtual void connect(int id, void* input);
 		virtual float run(Arg params = (void*)NULL);
 		//virtual void run(float* buffer, int start, int end);
@@ -66,6 +66,8 @@ namespace SYNTH {
 		static void createFrequencyTable();
 		static float p2f(float p);
 		static void createBezierTable(float* table, float px, int steps, FloatInt2Float transform);
+
+		static const float* samplingRate;
 	};
 
 }

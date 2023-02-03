@@ -1,51 +1,43 @@
 #ifndef __ENV_H
 #define __ENV_H
 
-#include "elem.h"
+#include "synth/src/elem/elem.h"
 
 NS_FW_BASE_USE
 namespace SYNTH {
 
-    typedef enum class EnvPhase {
-        Up = 1,
-        Atk = 2,
-        Dec = 3,
-        Sus = 4,
-        Down = 5,
-        Rel = 6,
-        Idle = 7
-    } EnvPhase;
+	#define SMOOTH(x) x*(3.0*x - 2.0*x*x)
 
-    typedef struct EnvCtrls {
-        PotF amp;
-        PotF dc;
-        Pot atk;
-        Pot dec;
-        PotF8 sus;
-        Pot rel;
-    } EnvCtrls;
+	typedef enum class EnvPhase {
+		Up,
+		Del,
+		Atk,
+		Dec,
+		Hld,
+		Sus,
+		Down,
+		Rel,
+		Idle
+	} EnvPhase;
 
-    #define EnvCtrlCount (sizeof(EnvCtrls) / sizeof(Pot))
+	class Env : public Elem {
+	protected: float velocity_;
+	protected: PROP_R(int, ticks);
+	protected: double timer_;
+	protected: double rate_;
+	protected: PROP_R(EnvPhase, phase);
+	public:
+		Env();
 
-    class Env : public Elem {
-    private: PROP_R(EnvCtrls*, controls);
-    private: byte gate;
-    private: float velocity;
-    private: PROP_R(int, ticks);
-    private: double timer;
-    private: double rate;
-    private: PROP_R(EnvPhase, phase);
-    public:
-        Env();
+		virtual void setGate(byte velocity) = 0;
+		inline bool isActive() { return phase_ != EnvPhase::Idle; }
 
-        void assignControls(PotBase* controls);
-        void setFromStream(byte* stream);
-        float run(Arg params = (void*)NULL);
+		static double attackRates[256];
+		static double releaseRates[256];
+		static double releaseRatesExp[256];
+		static void initialize();
+	};
 
-        void setGate(byte velocity);
-        inline bool isActive() { return phase_ < EnvPhase::Idle; }
-
-        static void initialize(float samplingRate);
-    };
 }
+
 #endif

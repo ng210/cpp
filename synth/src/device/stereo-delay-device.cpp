@@ -3,7 +3,7 @@
 
 using namespace SYNTH;
 
-StereoDelayDevice::StereoDelayDevice(SynthAdapter* adapter) : ModuleDevice(NEW_(StereoDelay, &adapter->samplingRate), adapter) {
+StereoDelayDevice::StereoDelayDevice(SynthAdapter* adapter) : ModuleDevice(NEW_(StereoDelay), adapter) {
 	type(DeviceDelay);
 }
 

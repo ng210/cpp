@@ -1,7 +1,3 @@
-/******************************************************************************
- * PSynth library
- *****************************************************************************/
-
 #ifndef __SYNTH_H
 #define __SYNTH_H
 
@@ -13,7 +9,7 @@ NS_FW_BASE_USE
 namespace SYNTH {
 
     typedef struct SynthCtrls_ {
-        EnvCtrls amEnv, fmEnv, pmEnv, ftEnv;
+        AdsrCtrls amAdsr, fmAdsr, pmAdsr, ftAdsr;
         LfoCtrls lfo1, lfo2;
         OscCtrls osc1, osc2;
         FltCtrls flt1;
@@ -21,10 +17,10 @@ namespace SYNTH {
 
 	typedef enum SynthCtrlId {
 		// envelopes
-		amEnvAmp, amEnvDc, amEnvAtk, amEnvDec, amEnvSus, amEnvRel,
-		fmEnvAmp, fmEnvDc, fmEnvAtk, fmEnvDec, fmEnvSus, fmEnvRel,
-		pmEnvAmp, pmEnvDc, pmEnvAtk, pmEnvDec, pmEnvSus, pmEnvRel,
-		ftEnvAmp, ftEnvDc, ftEnvAtk, ftEnvDec, ftEnvSus, ftEnvRel,
+		amAdsrAmp, amAdsrDc, amAdsrAtk, amAdsrDec, amAdsrSus, amAdsrRel,
+		fmAdsrAmp, fmAdsrDc, fmAdsrAtk, fmAdsrDec, fmAdsrSus, fmAdsrRel,
+		pmAdsrAmp, pmAdsrDc, pmAdsrAtk, pmAdsrDec, pmAdsrSus, pmAdsrRel,
+		ftAdsrAmp, ftAdsrDc, ftAdsrAtk, ftAdsrDec, ftAdsrSus, ftAdsrRel,
 		// LFOs
 		amLfoAmp, amLfoFre,
 		fmLfoAmp, fmLfoFre,
@@ -32,7 +28,7 @@ namespace SYNTH {
 		osc1Amp, osc1Fre, osc1Note, osc1Tune, osc1Psw, osc1Wave,
 		osc2Amp, osc2Fre, osc2Note, osc2Tune, osc2Psw, osc2Wave,
 
-		flt1Cut,/*=fmEnvDc*/ flt1Res, flt1Mod,/*=fmEnvAmp*/ flt1Mode
+		flt1Cut,/*=fmAdsrDc*/ flt1Res, flt1Mod,/*=fmAdsrAmp*/ flt1Mode
 	} SynthCtrlId;
 
     #define SynthCtrlCount (sizeof(SynthCtrls)/sizeof(Pot*))

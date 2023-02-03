@@ -13,6 +13,11 @@ void PotBase::init(S min, S max, S step, S value) {
 	this->value = value;
 }
 
+void PotBase::setFromStream(byte*& stream) {
+	// placeholder
+}
+
+
 void Pot::setFromStream(byte*& stream) {
 	value.b = *stream;
 	stream++;

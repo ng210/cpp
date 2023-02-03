@@ -11,7 +11,7 @@ namespace SYNTH {
 		PotF8 lvl;
 	} ClpCtrls;
 
-#define ClpCtrlsCount (sizeof(ClpCtrls) / sizeof(Pot))
+#define ClpCtrlsCount (sizeof(ClpCtrls) / sizeof(PotBase))
 
 
 	class Clp : public Elem {
@@ -20,7 +20,7 @@ namespace SYNTH {
 		Clp();
 		virtual ~Clp();
 		void assignControls(PotBase* controls);
-		void setFromStream(byte* stream);
+		void setFromStream(byte*& stream);
 		float run(Arg param = (void*)NULL);
 	};
 }

@@ -2,7 +2,7 @@
 #define __SYNTH_BASE_H
 
 #include "synth/src/module/module.h"
-#include "synth/src/elem/env.h"
+#include "synth/src/elem/adsr.h"
 #include "synth/src/elem/lfo.h"
 #include "synth/src/elem/osc.h"
 #include "synth/src/elem/flt.h"
@@ -17,7 +17,7 @@ namespace SYNTH {
     typedef struct Voice {
         Pot velocity;
         Pot note;
-        Env* envelopes;
+        Adsr* envelopes;
         Osc* oscillators;
         Lfo* lfos;
         Flt* filters;
@@ -59,6 +59,7 @@ namespace SYNTH {
 
         // Module
         void connectInput(int id, float* buffer);
+        bool isActive();
         inline float* getOutput(int id);
         void initialize(byte** pData);
         void run(int start, int end);

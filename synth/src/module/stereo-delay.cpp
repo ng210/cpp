@@ -5,11 +5,11 @@
 NS_FW_BASE_USE
 using namespace SYNTH;
 
-StereoDelay::StereoDelay(float* samplingRate) {
+StereoDelay::StereoDelay() {
 	pControls_ = (PotBase*)&controls_;
-	left_.samplingRate(samplingRate);
+	left_.setSamplingRate();
 	left_.assignControls(&controls_.feedbackLeft);
-	right_.samplingRate(samplingRate);
+	right_.setSamplingRate();
 	right_.assignControls(&controls_.feedbackRight);
 	createOutputBuffers(2);
 	isMono_ = false;
@@ -43,8 +43,15 @@ void StereoDelay::connectInput(int id, float* buffer) {
 
 void StereoDelay::run(int start, int end) {
 	for (var i = start; i < end; i++) {
-		outputs_[0][i] = left_.run(inputs_[0][i]) * controls_.mixLeft.value.f;
-		outputs_[1][i] = right_.run(inputs_[1][i]) * controls_.mixRight.value.f;
+		var delayedLeft = left_.run(inputs_[0][i]);
+		var delayedRight = right_.run(inputs_[1][i]);
+
+		//var fb = q + q / (1.0f - f);
+		//st->ai_[0] = st->ai_[0] + f * (smp - st->ai_[0] + fb * (st->ai_[0] - st->ai_[1]));
+		//smp = st->ai_[1] = st->ai_[1] + f * (st->ai_[0] - st->ai_[1]);
+
+		outputs_[0][i] = controls_.mixLeft.value.f * delayedLeft + (1.0f - controls_.mixLeft.value.f) * inputs_[0][i];
+		outputs_[1][i] = controls_.mixRight.value.f * delayedRight + (1.0f - controls_.mixRight.value.f) * inputs_[1][i];
 	}
 }
 

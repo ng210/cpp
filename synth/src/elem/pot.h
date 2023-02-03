@@ -27,7 +27,7 @@ namespace SYNTH {
         PotBase();
         PotBase(S min, S max, S step, S value);
         virtual void init(S min, S max, S step, S value);
-        virtual void setFromStream(byte*& stream) = 0;
+        virtual void setFromStream(byte*& stream);
     };
 
     class Pot : public PotBase {

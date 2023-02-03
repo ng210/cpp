@@ -14,6 +14,9 @@ namespace SYNTH {
 		PotF delayRight;
 		PotF8 mixLeft;
 		PotF8 mixRight;
+		PotF8 cut;
+		PotF8 res;
+		Pot Mode;
 	} DelayCtrls;	
 
 	class StereoDelay : public Module {
@@ -22,7 +25,7 @@ namespace SYNTH {
 	private: Dly right_;
 
 	public:
-		StereoDelay(float* samplingRate);
+		StereoDelay();
 		virtual ~StereoDelay();
 
 		void initialize(byte** pData);

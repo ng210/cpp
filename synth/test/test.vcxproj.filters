@@ -26,8 +26,16 @@
     <None Include="test-data2.bin">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="min.xm">
+    <None Include="drums1.pat">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="drums2.pat">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="test.xm">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

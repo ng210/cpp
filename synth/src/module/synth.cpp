@@ -13,7 +13,6 @@ Synth::Synth(float* pSmpRate, int count) {
     pControls_ = (PotBase*)&controls_;
     program_ = -1;
     createOutputBuffers(1);
-    isMono_ = true;
 }
 
 Synth::~Synth() {
@@ -21,12 +20,12 @@ Synth::~Synth() {
 
 // Voice handling
 void Synth::setupVoiceHandler(Voice& v) {
-    // Envelopes
-    v.envelopes = NEWARR(Env, 4);
-    v.envelopes[0].assignControls((PotBase*)&controls_.amEnv);
-    v.envelopes[1].assignControls((PotBase*)&controls_.fmEnv);
-    v.envelopes[2].assignControls((PotBase*)&controls_.pmEnv);
-    v.envelopes[3].assignControls((PotBase*)&controls_.ftEnv);
+    // Adsrelopes
+    v.envelopes = NEWARR(Adsr, 4);
+    v.envelopes[0].assignControls((PotBase*)&controls_.amAdsr);
+    v.envelopes[1].assignControls((PotBase*)&controls_.fmAdsr);
+    v.envelopes[2].assignControls((PotBase*)&controls_.pmAdsr);
+    v.envelopes[3].assignControls((PotBase*)&controls_.ftAdsr);
     // LFOs
     v.lfos = NEWARR(Lfo, 2);
     v.lfos[0].assignControls((PotBase*)&controls_.lfo1);
@@ -57,13 +56,13 @@ void Synth::renderVoiceHandler(Voice& v, float* buffer, int start, int end) {
         var cut = v.envelopes[3].run();
 
         // run oscillators
-        float args[3] = { am, fm, pm };
+        float args[3] = { 1.0f, fm, pm };
         var smp = v.oscillators[0].run(args);
         smp += v.oscillators[1].run(args);
 
         // run filter
         v.filters[0].update(cut);
-        buffer[i] += v.filters[0].run(smp);
+        buffer[i] += am * v.filters[0].run(smp);
     }
 }
 void Synth::freeVoiceHandler(Voice& v) {

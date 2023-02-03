@@ -1,7 +1,7 @@
 #include <math.h>
 #include "base/memory.h"
-#include "distort-device.h"
-#include "../module/distort.h"
+#include "synth/src/device/distort-device.h"
+#include "synth/src/module/distort.h"
 
 using namespace SYNTH;
 

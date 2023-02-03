@@ -47,18 +47,18 @@ void SynthBaseDevice::processCommand(byte cmd, byte*& cursor) {
 	byte b;
 	float f;
 	switch (cmd) {
-	case SynthCommands::CmdSetNote:
+	case ModuleCommands::CmdSetNote:
 		byte note, velocity;
 		note = READ(cursor, byte);
 		velocity = READ(cursor, byte);
 		setNote(note, velocity);
 		break;
-	case CmdSetUint8:
+	case ModuleCommands::CmdSetUint8:
 		ctrlId = READ(cursor, byte);
 		b = READ(cursor, byte);
 		setControl(ctrlId, b);
 		break;
-	case CmdSetFloat8:
+	case ModuleCommands::CmdSetFloat8:
 		ctrlId = READ(cursor, byte);
 		b = READ(cursor, byte);
 		setControl(ctrlId, b / 255.0f);
@@ -67,12 +67,12 @@ void SynthBaseDevice::processCommand(byte cmd, byte*& cursor) {
 		// 	device.setControl(sequence.getUint8(cursor++), sequence.getUint16(cursor));
 		// 	cursor += 2;
 		// 	break;
-	case CmdSetFloat:
+	case ModuleCommands::CmdSetFloat:
 		ctrlId = READ(cursor, byte);
 		f = READ(cursor, float);
 		setControl(ctrlId, f);
 		break;
-	case CmdSetProgram:
+	case ModuleCommands::CmdSetProgram:
 		prgId = READ(cursor, byte);
 		setProgram(prgId);
 		break;
@@ -82,36 +82,6 @@ void SynthBaseDevice::processCommand(byte cmd, byte*& cursor) {
 #pragma endregion
 
 #ifdef PLAYER_EDIT_MODE
-int SynthBaseDevice::getCommandSize(byte cmd, byte* args) {
-	var length = 1;
-	switch (cmd) {
-	case CmdSetNote:
-		length += 2 * sizeof(byte);
-		break;
-	case CmdSetProgram:
-		length += sizeof(byte);
-		break;
-	default:
-		length = ModuleDevice::getCommandSize(cmd, args);
-		break;
-	}
-	return length;
-}
-
-void SynthBaseDevice::makeCommandImpl(int command, byte*& stream, va_list args) {
-	switch (command) {
-	case CmdSetNote:
-		*stream++ = (byte)va_arg(args, int);	// note
-		*stream++ = (byte)va_arg(args, int);	// velocity
-		break;
-	case CmdSetProgram:
-		*stream++ = (byte)va_arg(args, int);	// program id
-		break;
-	default:
-		ModuleDevice::makeCommandImpl(command, stream, args);
-		break;
-	}
-}
 
 int SynthBaseDevice::writeToStream(Stream* stream) {
 	var start = stream->cursor();
@@ -120,8 +90,8 @@ int SynthBaseDevice::writeToStream(Stream* stream) {
 	// get data-block id
 	var sb = synthBase()->soundBank();
 	int ix = 0;
-	player_->dataBlocks().search(&sb, ix, [](void* value, UINT32 ix, Collection* collection, void* key) {
-		return (int)(((DataBlockItem*)value)->dataBlock - *(byte**)key);
+	player_->dataBlocks().search(&sb, ix, [](void* value, Key key, UINT32 ix, Collection* collection, void* args) {
+		return (int)(((DataBlockItem*)value)->dataBlock - (byte*)key.p);
 		});
 	stream->writeByte(ix);
 	stream->writeByte(synthBase()->program());

@@ -32,6 +32,7 @@ Mixer8x4::Mixer8x4() {
         channel->stageCount = 0;
     }
     channelCount_ = 0;
+    isMono_ = false;
 }
 
 Mixer8x4::~Mixer8x4() {
@@ -77,10 +78,9 @@ MixerChannel* Mixer8x4::connectEffect(MixerChannel* channel, Module* effect, int
         if (stageId < 4) {
             var input = stageId == 0 ? channel->input : channel->stages[stageId - 1].effect;
             // try to connect the effect as stereo:
-            // read 2 outputs and connect them top 2 inputs
+            // read 2 outputs and connect them to 2 inputs
             for (var i = 0; i < 2; i++) {
-                effect->connectInput(0, channel->input->getOutput(0));
-                effect->connectInput(1, channel->input->getOutput(1));
+                effect->connectInput(i, input->getOutput(i));
             }
             channel->stages[stageId].effect = effect;
         }
@@ -139,8 +139,8 @@ void Mixer8x4::fillSoundBuffer(short* buffer, int sampleCount, void* args) {
 
             // panning and final amplification
             var amp = 32768.0f * ch->controls->amp.value.f;
-            var pan = ch->controls->pan.value.f;
-            chLeft *= amp * (1.0f - pan);
+            var pan = 2.0f * ch->controls->pan.value.f;
+            chLeft *= amp * (2.0f - pan);
             chRight *= amp * pan;
             left += chLeft;
             right += chRight;

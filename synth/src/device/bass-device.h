@@ -5,7 +5,6 @@
 #include "synth/src/device/synth-base-device.h"
 #include "synth/src/module/bass.h"
 
-
 using namespace PLAYER;
 namespace SYNTH {
 

@@ -2,9 +2,10 @@
 #define __XMLOADER_H
 
 #include "player/src/player.h"
-#include "device/synth-device.h"
+#include "synth/src/device/synth-device.h"
 
 NS_FW_BASE_USE
+using namespace PLAYER;
 namespace SYNTH {
 
 #define MAX_NUMBER_OF_CHANNELS 32
@@ -99,7 +100,9 @@ namespace SYNTH {
 		int channelCount_;
 		Array patternOrder_;
 		Array instruments_;
-		Device* synthDevice_;
+		SynthAdapter* synthAdapter_;
+		SynthDevice* synthDevice_;
+		Player* player_;
 		PlayerDevice* playerDevice_;
 		Stream* soundBank_;
 
@@ -111,7 +114,7 @@ namespace SYNTH {
 		void process();
 	public:
 		PROP_R(PArray, patterns);
-		XmLoader(PlayerDevice* playerDevice, Stream* soundBank = NULL);
+		XmLoader(Player* player, Stream* soundBank = NULL);
 		virtual ~XmLoader(void);
 
 		int load(const char* path);

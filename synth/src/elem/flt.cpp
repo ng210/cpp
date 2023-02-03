@@ -2,11 +2,6 @@
 #include "math.h"
 #include "base/memory.h"
 
-// Linear factors
-#define LF2P 1.4142135623730950488016887242097
-#define LF4P1 0.7653668647301795434569199680608
-#define LF4P2 1.8477590650225735122563663787936
-
 /**************************************************************
 1 pole: s + 1
     stage1
@@ -47,10 +42,10 @@ FltStage::FltStage() {
     memset(&ai_, 0, sizeof(float) * 19);
 }
 void FltStage1Pole::run(Arg params) {
-    var gain = 1.0f / ai_[0];
+    //var gain = 1.0f / ai_[0];
     // y0 = (b0*u0 + b1*u1 - a1*y1)/a0
-    var lp = (bi_[0] * ui_[0] + bi_[1] * ui_[1] - ai_[1] * lp_[0]) * gain;
-    var hp = (ci_[0] * vi_[0] + ci_[1] * vi_[1] - ai_[1] * hp_[0]) * gain;
+    var lp = (bi_[0] * ui_[0] + bi_[1] * ui_[1] - ai_[1] * lp_[0]) / ai_[0];        // * gain;
+    var hp = (ci_[0] * vi_[0] + ci_[1] * vi_[1] - ai_[1] * hp_[0]) / ai_[0];
     ui_[1] = ui_[0];
     vi_[1] = vi_[0];
     lp_[0] = lp;
@@ -68,10 +63,10 @@ FltStage2Pole::FltStage2Pole(float f) {
 }
 
 void FltStage2Pole::run(Arg params) {
-    var gain = 1.0f / ai_[0];
+    //var gain = 1.0f / ai_[0];
     // y0 = (b0*u0 + b1*u1 + b2*u2 - a1*y1 - a2*y2)/a0
-    var lp = (bi_[0] * ui_[0] + bi_[1] * ui_[1] + bi_[2] * ui_[2] - ai_[1] * lp_[0] - ai_[2] * lp_[1]) * gain;
-    var hp = (ci_[0] * vi_[0] + ci_[1] * vi_[1] + ci_[2] * vi_[2] - ai_[1] * hp_[0] - ai_[2] * hp_[1]) * gain;
+    var lp = (bi_[0] * ui_[0] + bi_[1] * ui_[1] + bi_[2] * ui_[2] - ai_[1] * lp_[0] - ai_[2] * lp_[1]) / ai_[0];    // * gain;
+    var hp = (ci_[0] * vi_[0] + ci_[1] * vi_[1] + ci_[2] * vi_[2] - ai_[1] * hp_[0] - ai_[2] * hp_[1]) / ai_[0];
     ui_[2] = ui_[1]; ui_[1] = ui_[0];
     vi_[2] = vi_[1]; vi_[1] = vi_[0];
     lp_[1] = lp_[0]; lp_[0] = lp;
@@ -91,16 +86,21 @@ void FltStage2Pole::update(float e, float g) {
 
 #pragma region Filter
 float Flt::cutoffTable[256];
-float pole2Factors[] = { 1.4142135623730950488016887242097f };  // sqrt(2)
+float pole2Factors[] = { (float)M_SQRT2 };  // sqrt(2)
 float pole3Factors[] = { 1.0f };
 float pole4Factors[] = { 0.7653668647301795434569199680608f, 1.8477590650225735122563663787936f };  // sqrt(2 + sqrt(2)), sqrt(2 - sqrt(2))
-float pole5Factors[] = { 1.6180339887498948482045868343656f, 0.61803398874989484820458683436564f };  // 0.5(1 + sqrt(5)), 0.5(sqrt(5) - 1)
-float pole6Factors[] = { 0.5176380902050415246977976752481f, 1.4142135623730950488016887242097f, 1.9318516525781365734994863994578f }; // sqrt(2 - sqrt(3)), sqrt(2), sqrt(2 + sqrt(3))
+float pole5Factors[] = { 0.61803398874989484820458683436564f, 1.6180339887498948482045868343656f };  // 0.5(1 + sqrt(5)), 0.5(sqrt(5) - 1)
+float pole6Factors[] = { 0.5176380902050415246977976752481f, (float)M_SQRT2, 1.9318516525781365734994863994578f }; // sqrt(2 - sqrt(3)), sqrt(2), sqrt(2 + sqrt(3))
+float pole7Factors[] = { 0.445042f, 1.24698f, 1.801938f };
+float pole8Factors[] = { 0.390181f, 1.11114f, 1.662939f, 1.961571f };
+float pole9Factors[] = { 0.347296f, 1.0f, 1.532089f, 1.879385f };
+float pole10Factors[] = { 0.312869f, 0.907981f, (float)M_SQRT2, 1.782013f, 1.975377f };
 
-float* Flt::linearFactors[] = { NULL, (float*)&pole2Factors, (float*)&pole3Factors, (float*)&pole4Factors, (float*)&pole5Factors, (float*)&pole6Factors};
+float* Flt::linearFactors[] = { NULL, (float*)&pole2Factors, (float*)&pole3Factors, (float*)&pole4Factors, (float*)&pole5Factors, (float*)&pole6Factors, (float*)&pole7Factors, (float*)&pole8Factors, (float*)&pole9Factors, (float*)&pole10Factors };
 
 Flt::Flt(int poleCount) {
     controls_ = NULL;
+    poleCount_ = poleCount;
     createStages(poleCount);
 }
 Flt::~Flt() {
@@ -135,7 +135,7 @@ void Flt::createStages(int poleCount) {
     stageCount_ = si;
 }
 
-void Flt::setFromStream(byte* stream) {
+void Flt::setFromStream(byte*& stream) {
     controls_->cut.setFromStream(stream);
     controls_->res.setFromStream(stream);
     controls_->mod.setFromStream(stream);
@@ -155,6 +155,8 @@ float Flt::run(Arg params) {
         hp = stages_[i]->hp_[0];
     }
 
+    //hp = input - lp;
+
     var output = 0.0;
     var mode = controls_->mode.value.b;
     if ((mode & FmLowPass) != 0) output += lp;
@@ -167,16 +169,16 @@ float Flt::run(Arg params) {
 
 void Flt::update(float cut) {
     var res = (controls_->res.value.f < 0.000001f) ? 1.0f : 1.0f - controls_->res.value.f;
-    var e = 0.01f + 0.49f * (Flt::cutoffTable[controls_->cut.value.b] + cut);
-    var g = -res * e;
+    var e = (float)M_PI * (0.001f + 0.499f * (Flt::cutoffTable[controls_->cut.value.b] + cut));
+    var g = -res * e;   // (float)-pow(res, 0.5f / poleCount_) * e;
 
     for (var i = 0; i < stageCount_; i++) {
         stages_[i]->update(e, g);
     }
 }
 
-void Flt::initialize(float smpRate) {
+void Flt::initialize() {
     // calculate cutoff
-    createBezierTable(cutoffTable, 0.85f, 255, [](float y, int i) { return 0.005f + y * 0.995f; });
+    createBezierTable(cutoffTable, 0.85f, 255, [](float y, int i) { return 0.0002f + (float)(3.1415926535897932384626433832795 * y * 0.9998); });
 }
 #pragma endregion

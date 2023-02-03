@@ -7,6 +7,8 @@ using namespace SYNTH;
 
 float Elem::FrequencyTable[128];
 const float DefaultSamplingRate = 48000.0f;
+const float* Elem::samplingRate = &DefaultSamplingRate;
+
 //   0 = 0Hz
 //   9
 // A440 = 57
@@ -54,7 +56,7 @@ float Elem::run(Arg params) {
 
 void Elem::assignControls(PotBase* controls) {}
 
-void Elem::setFromStream(byte* stream) {}
+void Elem::setFromStream(byte*& stream) {}
 
 void Elem::connect(int id, void* input) { }
 

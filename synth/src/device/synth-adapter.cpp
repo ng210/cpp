@@ -5,6 +5,7 @@
 #include "synth/src/device/synth-adapter.h"
 #include "synth/src/device/synth-device.h"
 #include "synth/src/device/bass-device.h"
+#include "synth/src/device/drums-device.h"
 #include "synth/src/device/mixer-device.h"
 #include "synth/src/device/distort-device.h"
 #include "synth/src/device/stereo-delay-device.h"
@@ -40,6 +41,9 @@ Device* SynthAdapter::createDevice(int deviceType) {
 		break;
 	case SynthDevices::DeviceBass:
 		device = NEW_(BassDevice, this);
+		break;
+	case SynthDevices::DeviceDrums:
+		device = NEW_(DrumsDevice, this);
 		break;
 	case SynthDevices::DeviceMixer:
 		device = NEW_(MixerDevice, this);

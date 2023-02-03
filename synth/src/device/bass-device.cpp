@@ -1,6 +1,4 @@
-#include "soundlib/src/soundplayer.h"
 #include "base/memory.h"
-#include "player/src/player.h"
 #include "synth/src/device/bass-device.h"
 
 using namespace SYNTH;

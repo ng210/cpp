@@ -28,7 +28,7 @@ namespace SYNTH {
 #pragma endregion
 
 #ifdef PLAYER_EDIT_MODE
-		//void makeCommandImpl(int command, byte*& stream, va_list args);
+		//void makeCommandImpl(int command, Stream* stream, va_list args);
 		//int getCommandSize(byte cmd, byte* args);
 		int writeToStream(Stream* stream);
 #endif

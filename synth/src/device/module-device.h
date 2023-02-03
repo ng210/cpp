@@ -12,6 +12,9 @@ namespace SYNTH {
 		CmdSetUint8		= 2,
 		CmdSetFloat8	= 3,
 		CmdSetFloat 	= 4,
+		CmdSetNote		= 10,
+		CmdSetVelocity	= 11,
+		CmdSetProgram	= 12
 	} ModuleCommands;
 
 	class ModuleDevice : public Device {
@@ -29,10 +32,10 @@ namespace SYNTH {
 		void setControl(byte ctrlId, float value);
 
 #ifdef PLAYER_EDIT_MODE
-		void makeCommandImpl(int command, byte*& stream, va_list args);
+		void makeCommandImpl(int command, Stream* stream, va_list args);
 		int getCommandSize(byte cmd, byte* args);
 #endif
-		static int compareToModule(void* moduleDevice, UINT32 ix, Collection* collection, void* module);
+		static int compareToModule(void* moduleDevice, Key key, UINT32 ix, Collection* collection, void* module);
 
 	};
 }

@@ -19,7 +19,7 @@ void Clp::assignControls(PotBase* controls) {
     controls_->lvl.init(0.0f, 1.0f, 0.01f, 1.0f);
 }
 
-void Clp::setFromStream(byte* stream) {
+void Clp::setFromStream(byte*& stream) {
 
 }
 

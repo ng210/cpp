@@ -24,23 +24,20 @@ namespace SYNTH {
         Pot wave;
     } OscCtrls;
 
-    #define OscCtrlCount (sizeof(OscCtrls) / sizeof(Pot*))
+    #define OscCtrlCount (sizeof(OscCtrls) / sizeof(PotBase))
 
     class Osc : public Elem {
     private: PROP_R(OscCtrls*, controls);
-    private: Pot* note;
-    private: float smp;
+    private: Pot* note_;
     private: double timer;
+    private: double smp_;
     public:
         Osc();
         void reset();
         void assignControls(PotBase* controls);
-        void setFromStream(byte* stream);
+        void setFromStream(byte*& stream);
         float run(Arg params = (void*)NULL);
         void setNoteControl(Pot* note);
-
-        static float* samplingRate;
-        static void initialize(float* samplingRate);
     };
 }
 

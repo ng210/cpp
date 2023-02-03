@@ -17,9 +17,9 @@ MixerDevice::~MixerDevice() {
 
 #pragma region Device
 void MixerDevice::initialize(byte** pData) {
-	var mixer = (Mixer8x4*)object();
+	var mixer = (Mixer8x4*)object_;
 	if (pData != NULL && *pData != NULL) {
-		((Module*)object())->initialize(pData);
+		mixer->initialize(pData);
 		for (var ci = 0; ci < mixer->channelCount_; ci++) {
 			var ch = mixer->getChannel(ci);
 			var di = READ(*pData, byte);

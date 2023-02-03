@@ -12,21 +12,21 @@ NS_FW_BASE_USE
 namespace SYNTH {
 
     typedef struct BassCtrls {
-        EnvCtrls amEnv, pmEnv, ftEnv;
+        AdsrCtrls amAdsr, pmAdsr, ftAdsr;
         OscCtrls osc1, osc2;
         FltCtrls flt1;
     } BassCtrls;
 
     typedef enum BassCtrlId {
         // envelopes
-        bAmEnvAmp, bAmEnvDc, bAmEnvAtk, bAmEnvDec, bAmEnvSus, bAmEnvRel,
-        bPmEnvAmp, bPmEnvDc, bPmEnvAtk, bPmEnvDec, bPmEnvSus, bPmEnvRel,
-        bFtEnvAmp, bFtEnvDc, bFtEnvAtk, bFtEnvDec, bFtEnvSus, bFtEnvRel,
+        bAmAdsrAmp, bAmAdsrDc, bAmAdsrAtk, bAmAdsrDec, bAmAdsrSus, bAmAdsrRel,
+        bPmAdsrAmp, bPmAdsrDc, bPmAdsrAtk, bPmAdsrDec, bPmAdsrSus, bPmAdsrRel,
+        bFtAdsrAmp, bFtAdsrDc, bFtAdsrAtk, bFtAdsrDec, bFtAdsrSus, bFtAdsrRel,
         // oscillators
         bOsc1Amp, bOsc1Fre, bOsc1Note, bOsc1Tune, bOsc1Psw, bOsc1Wave,
         bOsc2Amp, bOsc2Fre, bOsc2Note, bOsc2Tune, bOsc2Psw, bOsc2Wave,
 
-        bFlt1Cut,/*=fmEnvDc*/ bFlt1Res, bFlt1Mod,/*=fmEnvAmp*/ bFlt1Mode
+        bFlt1Cut,/*=fmAdsrDc*/ bFlt1Res, bFlt1Mod,/*=fmAdsrAmp*/ bFlt1Mode
     } BassCtrlId;
 
 #define BassCtrlCount (sizeof(BassCtrls)/sizeof(Pot*))

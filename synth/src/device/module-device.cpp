@@ -59,17 +59,23 @@ void ModuleDevice::setControl(byte ctrlId, float value) {
 
 
 #ifdef PLAYER_EDIT_MODE
-void ModuleDevice::makeCommandImpl(int command, byte*& stream, va_list args) {
+void ModuleDevice::makeCommandImpl(int command, Stream* stream, va_list args) {
 	switch (command) {
 	case ModuleCommands::CmdSetUint8:
 	case ModuleCommands::CmdSetFloat8:
-		*stream++ = (byte)va_arg(args, int);	// ctrlId
-		*stream++ = (byte)va_arg(args, int);	// value
+		stream->writeByte((byte)va_arg(args, int));		// ctrlId
+		stream->writeByte((byte)va_arg(args, int));		// value
 		break;
 	case ModuleCommands::CmdSetFloat:
-		*stream++ = (byte)va_arg(args, int);	// ctrlId
-		*stream = (byte)va_arg(args, float);	// value
-		stream += sizeof(float);
+		stream->writeByte(va_arg(args, int));			// ctrlId
+		stream->writeFloat(va_arg(args, float));		// value
+		break;
+	case CmdSetNote:
+		stream->writeByte((byte)va_arg(args, int));		// note
+		stream->writeByte((byte)va_arg(args, int));		// velocity
+		break;
+	case CmdSetProgram:
+		stream->writeByte((byte)va_arg(args, int));		// program id
 		break;
 	}
 }
@@ -83,12 +89,18 @@ int ModuleDevice::getCommandSize(byte cmd, byte* args) {
 	case ModuleCommands::CmdSetFloat:
 		length += sizeof(float);
 		break;
+	case ModuleCommands::CmdSetNote:
+		length += 2 * sizeof(byte);
+		break;
+	case CmdSetProgram:
+		length += sizeof(byte);
+		break;
 	}
 	return length;
 }
 #endif
 
-int ModuleDevice::compareToModule(void* moduleDevice, UINT32 ix, Collection* collection, void* module) {
+int ModuleDevice::compareToModule(void* moduleDevice, Key key, UINT32 ix, Collection* collection, void* args) {
 	var mdl1 = ((ModuleDevice*)moduleDevice)->object();
-	return (int)((size_t)mdl1 - (size_t)module);
+	return (int)((size_t)mdl1 - (size_t)key.p);
 }

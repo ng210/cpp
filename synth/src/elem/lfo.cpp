@@ -20,7 +20,7 @@ void Lfo::assignControls(PotBase* controls) {
     controls_->fre.init(0.0f, 20.0f, 0.01f, 2.0f);
 }
 
-void Lfo::setFromStream(byte* stream) {
+void Lfo::setFromStream(byte*& stream) {
     //controls_->dc.setFromStream(stream);
     controls_->amp.setFromStream(stream);
     controls_->fre.setFromStream(stream);
@@ -28,7 +28,7 @@ void Lfo::setFromStream(byte* stream) {
 
 float Lfo::run(Arg params) {
     var smp = sin(SYNTH_THETA * timer);
-    var delta = controls_->fre.value.f / *Lfo::samplingRate;
+    var delta = controls_->fre.value.f / *Elem::samplingRate;
     if (delta >= 1.0) {
         delta = 0.99999999f;
     }
@@ -38,10 +38,4 @@ float Lfo::run(Arg params) {
     }
 
     return (float)(controls_->amp.value.f * smp/* + controls_->dc.value.f*/);
-}
-
-float* Lfo::samplingRate = NULL;
-
-void Lfo::initialize(float* smpRate) {
-    Lfo::samplingRate = smpRate;
 }

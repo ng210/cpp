@@ -8,12 +8,6 @@
 using namespace PLAYER;
 namespace SYNTH {
 
-	typedef enum SynthCommands {
-		CmdSetNote = 10,
-		CmdSetVelocity = 11,
-		CmdSetProgram = 12
-	} SynthCommands;
-
 	class SynthBaseDevice : public ModuleDevice
 	{
 		//protected: PROP(int, samplingRate);
@@ -36,8 +30,6 @@ namespace SYNTH {
 		inline SynthBase* synthBase() { return (SynthBase*)object_; };
 
 #ifdef PLAYER_EDIT_MODE
-		void makeCommandImpl(int command, byte*& stream, va_list args);
-		int getCommandSize(byte cmd, byte* args);
 		int writeToStream(Stream* stream);
 #endif
 

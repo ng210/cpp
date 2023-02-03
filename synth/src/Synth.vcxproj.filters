@@ -36,7 +36,7 @@
     <ClCompile Include="elem\elem.cpp">
       <Filter>Source Files\elem</Filter>
     </ClCompile>
-    <ClCompile Include="elem\env.cpp">
+    <ClCompile Include="elem\adsr.cpp">
       <Filter>Source Files\elem</Filter>
     </ClCompile>
     <ClCompile Include="elem\flt.cpp">
@@ -102,12 +102,27 @@
     <ClCompile Include="device\synth-base-device.cpp">
       <Filter>Source Files\device</Filter>
     </ClCompile>
+    <ClCompile Include="module\drums.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="elem\dahr.cpp">
+      <Filter>Source Files\elem</Filter>
+    </ClCompile>
+    <ClCompile Include="elem\env.cpp">
+      <Filter>Source Files\elem</Filter>
+    </ClCompile>
+    <ClCompile Include="device\drums-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="xmloader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="elem\elem.h">
       <Filter>Header Files\elem</Filter>
     </ClInclude>
-    <ClInclude Include="elem\env.h">
+    <ClInclude Include="elem\adsr.h">
       <Filter>Header Files\elem</Filter>
     </ClInclude>
     <ClInclude Include="elem\flt.h">
@@ -126,9 +141,6 @@
       <Filter>Header Files\module</Filter>
     </ClInclude>
     <ClInclude Include="module\mixer.h">
-      <Filter>Header Files\module</Filter>
-    </ClInclude>
-    <ClInclude Include="module\mixer-controls.h">
       <Filter>Header Files\module</Filter>
     </ClInclude>
     <ClInclude Include="device\mixer-device.h">
@@ -178,6 +190,21 @@
     </ClInclude>
     <ClInclude Include="device\synth-base-device.h">
       <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="module\drums.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="elem\dahr.h">
+      <Filter>Header Files\elem</Filter>
+    </ClInclude>
+    <ClInclude Include="elem\env.h">
+      <Filter>Header Files\elem</Filter>
+    </ClInclude>
+    <ClInclude Include="device\drums-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="xmloader.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

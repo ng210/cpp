@@ -13,7 +13,6 @@ Bass::Bass(float* smpRate, int count) {
     pControls_ = (PotBase*)&controls_;
     program_ = -1;
     createOutputBuffers(1);
-    isMono_ = true;
 }
 
 Bass::~Bass() {
@@ -21,11 +20,11 @@ Bass::~Bass() {
 
 // Voice handling
 void Bass::setupVoiceHandler(Voice& v) {
-    // Envelopes
-    v.envelopes = NEWARR(Env, 3);
-    v.envelopes[0].assignControls((PotBase*)&controls_.amEnv);
-    v.envelopes[1].assignControls((PotBase*)&controls_.pmEnv);
-    v.envelopes[2].assignControls((PotBase*)&controls_.ftEnv);
+    // Adsrelopes
+    v.envelopes = NEWARR(Adsr, 3);
+    v.envelopes[0].assignControls((PotBase*)&controls_.amAdsr);
+    v.envelopes[1].assignControls((PotBase*)&controls_.pmAdsr);
+    v.envelopes[2].assignControls((PotBase*)&controls_.ftAdsr);
     // Oscillators
     v.oscillators = NEWARR(Osc, 2);
     v.oscillators[0].setNoteControl(&v.note);

@@ -142,7 +142,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <Optimization>MinSpace</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\fw</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <DiagnosticsFormat>Classic</DiagnosticsFormat>
@@ -174,9 +174,18 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="min.xm" />
+    <None Include="drums1.pat">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="drums2.pat">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="test-data.bin" />
     <None Include="test-data2.bin" />
+    <CopyFileToFolders Include="test.xm">
+      <DeploymentContent>true</DeploymentContent>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

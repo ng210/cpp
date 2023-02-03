@@ -1,6 +1,6 @@
-#include "osc.h"
 #include "math.h"
 #include "utils/utils.h"
+#include "synth/src/elem/osc.h"
 
 NS_FW_BASE_USE
 using namespace SYNTH;
@@ -11,7 +11,6 @@ Osc::Osc() : Elem() {
 
 void Osc::reset() {
     timer = 0.0;
-    smp = 0.0f;
 }
 
 // float params[] = { 0.0f, 1.0f, 0.0f };
@@ -20,12 +19,12 @@ float Osc::run(Arg params) {
     var am = ((float*)params.p)[0];
     var fm = ((float*)params.p)[1];
     var pm = ((float*)params.p)[2];
-    var pitch = note->value.b + controls_->tune.value.b;
-    var delta = (controls_->fre.value.f + fm + Elem::p2f((float)pitch)) / *Osc::samplingRate;
+    var pitch = note_->value.b + controls_->tune.value.b;
+    var delta = (controls_->fre.value.f + fm + Elem::p2f((float)pitch)) / *Elem::samplingRate;
     if (delta >= 1.0) {
         delta = 0.99999999f;
     }
-    var psw = pm + controls_->psw.value.f;
+    var psw = pm + controls_->psw.value.f + 0.0000001f;
     var smp = 0.0;
     var wf = controls_->wave.value.b;
     var wfc = 0;
@@ -48,9 +47,7 @@ float Osc::run(Arg params) {
         wfc++;
     }
     if ((wf & WfNoise) != 0) {
-        if (timer < delta || timer > 0.5 && timer < 0.5 + delta) {
-            smp += (float)Utils::randomSigned();
-        }
+        smp += (timer <= delta || timer >= 0.5 && timer < 0.5 + delta) ? smp_ = (float)Utils::randomSigned() : smp_;
         wfc++;
     }
     if (wfc > 1) {
@@ -66,14 +63,14 @@ float Osc::run(Arg params) {
 void Osc::assignControls(PotBase* controls) {
     controls_ = (OscCtrls*)controls;
     controls_->amp.init(0.0f, 1.0f, 0.01f, 1.0f);
-    controls_->fre.init(0.0f, 0.5f * *Osc::samplingRate, 100.0f, 0.0f);
+    controls_->fre.init(0.0f, 0.5f * *Elem::samplingRate, 100.0f, 0.0f);
     controls_->note.init(0, 255, 1, 0);
     controls_->tune.init(0, 255, 1, 0);
     controls_->psw.init(0.0f, 1.0f, 0.01f, 0.5f);
     controls_->wave.init(0, 255, 1, WfSaw);
 }
 
-void Osc::setFromStream(byte* stream) {
+void Osc::setFromStream(byte*& stream) {
     controls_->amp.setFromStream(stream);
     controls_->fre.setFromStream(stream);
     controls_->note.setFromStream(stream);
@@ -83,11 +80,5 @@ void Osc::setFromStream(byte* stream) {
 }
 
 void Osc::setNoteControl(Pot* note) {
-    this->note = note;
-}
-
-float* Osc::samplingRate = NULL;
-
-void Osc::initialize(float* smpRate) {
-    Osc::samplingRate = smpRate;
+    this->note_ = note;
 }

@@ -4,8 +4,11 @@
 using namespace SYNTH;
 
 Module::Module() {
+	isActive_ = false;
 	memset(inputs_, 0, 8 * sizeof(float*));
 	memset(outputs_, 0, 8 * sizeof(float*));
+	soundBank_ = NULL;
+	isMono_ = true;
 }
 
 Module::~Module() {
@@ -32,6 +35,10 @@ bool Module::isActive() {
 
 PotBase* Module::getControl(int id) {
 	return &((PotBase*)pControls_)[id];
+}
+
+void Module::setControl(int id, S value) {
+	pControls_[id].value = value;
 }
 
 void Module::connectInput(int id, float* buffer) {

@@ -8,8 +8,9 @@
 #include <math.h>
 #include "base/memory.h"
 #include "utils/file.h"
-#include "xmloader.h"
-#include "synth-controls.h"
+#include "player/src/player-lib.h"
+#include "synth/src/xmloader.h"
+#include "synth/src/device/synth-device.h"
 
 #define SAMPLING_RATE 48000
 
@@ -23,7 +24,7 @@ static char dummy[16] = "";
 class XmEffectMap : public Map {
 public:
 	XmEffectMap() {
-		init(sizeof(int), 4*sizeof(char), Map::hashingItem, Collection::compareInt);
+		initialize(sizeof(int), 4*sizeof(char), Map::hashingItem, Collection::compareInt);
 		int key; char* value;
 
 		key = 0x00; value = "0"; put(&key, value); // 00 // Appregio
@@ -81,13 +82,25 @@ public:
 
 static XmEffectMap* xmEffectMap_ = NULL;
 
-XmLoader::XmLoader(PlayerDevice* playerDevice, Stream* soundBank) {
+XmLoader::XmLoader(Player* player, Stream* soundBank) {
 	bpm_ = 120;
 	channelCount_ = 4;
 	ticks_ = 4;
-	playerDevice_ = playerDevice;
+	player_ = player;
 	soundBank_ = soundBank;
-	synthDevice_ = playerDevice->getDevice(DeviceSynth);
+	playerDevice_ = player->masterDevice();
+	// check synth-adapter
+	synthAdapter_ = (SynthAdapter*)player->getAdapter(2);	// SynthAdapter::info_.id
+	if (synthAdapter_ == NULL) {
+		synthAdapter_ = (SynthAdapter*)Player::addAdapter(NEW_(SynthAdapter));
+	}
+	// check synth-device
+	var ix = 0;
+	synthDevice_ = (SynthDevice*)player->devices().search(SynthDevices::DeviceSynth, ix);
+	if (synthDevice_ == NULL) {
+		synthDevice_ = (SynthDevice*)player->addDevice(synthAdapter_, SynthDevices::DeviceSynth);
+	}
+
 	patternOrder_.init(sizeof(byte), 256);
 	patterns_.init(256);
 	//instruments_.init(sizeof(XmInstrument), 64);
@@ -99,9 +112,9 @@ XmLoader::XmLoader(PlayerDevice* playerDevice, Stream* soundBank) {
 XmLoader::~XmLoader(void) {
 	ARRAY_FOREACH(&patterns_, FREE(value));
 	DEL_(xmEffectMap_);
-
 }
 
+#pragma region XmReading
 void XmLoader::getVolumeEffect(byte code, byte*& ptr, XmNote* xmNote) {
 	if (code & 0x04) {
 		var vol = *ptr++;
@@ -120,7 +133,6 @@ void XmLoader::getVolumeEffect(byte code, byte*& ptr, XmNote* xmNote) {
 		}
 	}
 }
-
 void XmLoader::getEffect(byte code, byte*& ptr, XmNote* xmNote) {
 	if (code & 0x08) {
 		xmNote->effects[1].code = *ptr++;
@@ -136,7 +148,6 @@ void XmLoader::getEffect(byte code, byte*& ptr, XmNote* xmNote) {
 		xmNote->effects[1].parameter = -1;
 	}
 }
-
 XmNote* XmLoader::readNote(byte*& ptr, XmNote* xmNote) {
 	byte code = *ptr++;
 	xmNote->hasData = (code != 0x80);
@@ -170,7 +181,43 @@ XmPattern* XmLoader::readPattern(XmFilePattern* ptr) {
 	}
 	return pattern;
 }
+int XmLoader::load(const char* szPath) {
+	int error = 1;
+	byte* xmData = NULL;
+	var bytesRead = File::read(szPath, &xmData);
+	if (bytesRead > 0 && xmData != NULL) {
+		error = 0;
+		// read header
+		var* header = (XmFileHeader*)xmData;
+		bpm_ = header->defaultBPM;
+		ticks_ = header->defaultTempo;
+		channelCount_ = header->channelCount;
+		instruments_.init(sizeof(XmInstrument), header->instrumentCount);
+		for (var i = 0; i < header->instrumentCount; i++) {
+			XmInstrument instrument;
+			instruments_.push(&instrument);
+		}
+		for (int i = 0; i < header->songLength; i++) {
+			patternOrder_.push(&header->patternOrder + i);
+		}
+		// todo: verify file
+		// read patterns
+		byte* ptr = xmData + offsetof(XmFileHeader, headerSize) + header->headerSize;
+		for (int p = 0; p < header->patternCount; p++) {
+			var xmPattern = (XmFilePattern*)ptr;
+			patterns_.push(readPattern(xmPattern));
+			ptr += offsetof(XmFilePattern, packedData) + xmPattern->packedDataSize;
+		}
 
+		process();
+		error = 0;
+		FREE(xmData);
+	}
+	return error;
+}
+#pragma endregion
+
+#pragma region XmProcessing
 void XmLoader::process() {
 	// create an array of instrument info
 	// - sequence
@@ -178,10 +225,10 @@ void XmLoader::process() {
 	var instrumentInfo = NEW_(Array, sizeof(InstrumentInfo), instruments_.length());
 	for (var i = 0; i < instruments_.length(); i++) {
 		var seq = NEW_(Sequence, synthDevice_);
-		var cmd = synthDevice_->makeCommandAsStream(CmdSetProgram, i);
+		var cmd = synthDevice_->makeCommand(CmdSetProgram, i);
 		seq->writeHeader()->writeDelta(0)->writeStream(cmd);
 		InstrumentInfo info = { seq, 0 };
-		instrumentInfo->add(&info);
+		instrumentInfo->push(&info);
 		DEL_(cmd);
 	}
 
@@ -198,8 +245,8 @@ void XmLoader::process() {
 	memset(lastTick, 0, sizeof(word) * instruments_.length());
 	var data = (InstrumentInfo**)instrumentInfo->data();
 	for (var i = 0; i < patternOrder_.length(); i++) {
-		var pi = *(byte*)patternOrder_.getAt(i);
-		var pattern = (XmPattern*)patterns_.getAt(pi);
+		var pi = *(byte*)patternOrder_.get(i);
+		var pattern = (XmPattern*)patterns_.get(pi);
 		var ni = 0;
 		for (var ri = 0; ri < pattern->rowCount; ri++) {
 			//var currentTick = ticks_ * ri + length;
@@ -210,7 +257,7 @@ void XmLoader::process() {
 					var inst = xmNote.instrument;
 					if (inst == 0xff) inst = channelInfo[ci].instrument;
 					else channelInfo[ci].instrument = inst;
-					var info = (InstrumentInfo*)instrumentInfo->getAt(inst);
+					var info = (InstrumentInfo*)instrumentInfo->get(inst);
 
 					var seq = info->sequence;
 					word delta = currentTick - lastTick[inst];
@@ -231,7 +278,7 @@ void XmLoader::process() {
 					if (note != 0xff) {
 						if (note == 0x60) {
 							// note off
-							var stream = synthDevice_->makeCommandAsStream(CmdSetNote, channelInfo[ci].note, 0);
+							var stream = synthDevice_->makeCommand(CmdSetNote, channelInfo[ci].note, 0);
 							channelInfo[ci].note = 0x60;
 							seq->writeStream(stream);
 							DEL_(stream);
@@ -240,7 +287,7 @@ void XmLoader::process() {
 						} else if (xmNote.instrument != 0xff) {
 							// set note
 							var velocity = volume < 0x3f ? volume << 2 : 255;
-							var stream = synthDevice_->makeCommandAsStream(CmdSetNote, note, velocity);
+							var stream = synthDevice_->makeCommand(CmdSetNote, note, velocity);
 							seq->writeStream(stream);
 							DEL_(stream);
 							info->voiceCount++;
@@ -248,10 +295,10 @@ void XmLoader::process() {
 							volume = 0xff;
 						} else {
 							// setController(note)
-							var stream = synthDevice_->makeCommandAsStream(CmdSetUint8, SCosc1note, xmNote.note);
+							var stream = synthDevice_->makeCommand(CmdSetUint8, SynthCtrlId::osc1Note, xmNote.note);
 							seq->writeStream(stream);
 							DEL_(stream);
-							stream = synthDevice_->makeCommandAsStream(CmdSetUint8, SCosc2note, xmNote.note);
+							stream = synthDevice_->makeCommand(CmdSetUint8, SynthCtrlId::osc2Note, xmNote.note);
 							seq->writeStream(stream);
 							DEL_(stream);
 						}
@@ -260,7 +307,7 @@ void XmLoader::process() {
 					if (volume != 0xff) {
 						// setController(amp)
 						var volume = xmNote.volume < 0x40 ? xmNote.volume << 2 : 0xff;
-						var stream = synthDevice_->makeCommandAsStream(CmdSetFloat8, SCamp, volume);
+						var stream = synthDevice_->makeCommand(CmdSetFloat8, SynthCtrlId::amAdsrAmp, volume);
 						seq->writeStream(stream);
 						DEL_(stream);
 					}
@@ -281,39 +328,41 @@ void XmLoader::process() {
 	length = currentTick;
 	// write EOS
 	for (var i = 0; i < instrumentInfo->length(); i++) {
-		((Sequence*)instrumentInfo->getAt(i))->writeEOS();
+		((Sequence*)instrumentInfo->get(i))->writeEOS();
 	}
 
 	// create master sequence at #0
-	var master = NEW_(Sequence, playerDevice_);
+	var playerDevice = player_->masterDevice();
+	var master = NEW_(Sequence, playerDevice);
 	master->writeHeader()->writeDelta(0);
 	for (var i = 0; i < instrumentInfo->length(); i++) {
 		var n = i + 1;
-		var seq = (Sequence*)instrumentInfo->getAt(i);
+		var seq = (Sequence*)instrumentInfo->get(i);
 		if (seq->length() > 1 + 2 + 2 + 1) {
-			var cmd = playerDevice_->makeCommandAsStream(CmdAssign, n, n, i, 0);
+			var cmd = playerDevice->makeCommand(CmdAssign, n, n, i, 0);
 			master->writeStream(cmd);
 			DEL_(cmd);
 		}
 	}
 	master->writeEOF()->writeDelta(length)->writeEOS();
-	instrumentInfo->insertAt(0, master);
-	ARRAY_FOREACH(instrumentInfo, playerDevice_->sequences().add(value));
+	instrumentInfo->insert(0, master);
+	ARRAY_FOREACH(instrumentInfo, player_->sequences().push(value));
 	DEL_(instrumentInfo);
 	#pragma endregion
 
 	#pragma region Devices
-	// create devices and their init blocks
+	// create devices
 	// - block = { device type, voice count, data block id }
-	var stream = NEW_(Stream, 2 * instruments_.length() * sizeof(byte));
+	//var stream = NEW_(Stream, 2 * instruments_.length() * sizeof(byte));
 	byte soundBankId = 3;
 	for (var i = 0; i < instrumentInfo->length(); i++) {
-		var info = (InstrumentInfo*)instrumentInfo->getAt(i);
-		DataBlockItem dbi(2, stream->cursor(), DataBlockItemFlag::None);
-		stream->writeByte(info->voiceCount)->writeByte(soundBankId);
-		playerDevice_->addDevice(DeviceSynth, &dbi);
+		var info = (InstrumentInfo*)instrumentInfo->get(i);
+		var synthDevice = (SynthDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceSynth);
+		synthDevice->synth()->voiceCount(info->voiceCount);
+		synthDevice->synth()->setProgram(i);
 
-		var instr = (XmInstrument*)instruments_.getAt(i);
+		// create channel to each instrument
+		var instr = (XmInstrument*)instruments_.get(i);
 		var name = instr->header.name;
 		if (name == NULL || strlen(name) == 0) {
 			char str[16] = "";
@@ -321,14 +370,14 @@ void XmLoader::process() {
 			name = &str[0];
 		}
 		Channel ch(name);
-		playerDevice_->channels().add(&ch);
+		player_->channels().push(&ch);
 	}
-	playerDevice_->addDataBlock(stream->extract(), stream->length());
-	DEL_(stream);
+	//player_->addDataBlock(stream->extract(), stream->length());
+	//DEL_(stream);
 	#pragma endregion
 
-	playerDevice_->addDataBlock(soundBank_->extract(), soundBank_->length());
-	DEL_(soundBank_);
+	//playerDevice_->addDataBlock(soundBank_->extract(), soundBank_->length());
+	//DEL_(soundBank_);
 }
 
 #ifdef _DEBUG
@@ -355,7 +404,7 @@ char* XmLoader::printPattern(int id) {
 	int n = 0;
 	var buffer = MALLOC(char, 65536);
 	var ptr = buffer;
-	var pattern = (XmPattern*)patterns_.getAt(id);
+	var pattern = (XmPattern*)patterns_.get(id);
 	for (int r = 0; r < pattern->rowCount; r++) {
 		ptr += sprintf_s(ptr, 16, "%02x: ", r);
 		for (int ch = 0; ch < channelCount_; ch++) {
@@ -380,7 +429,7 @@ char* XmLoader::printPattern(int id) {
 //		if (instrument != 0xFF && instrument != state.instrument) {
 //			state.instrument = instrument;
 //			cmd = synthAdapter_->makeCommand(CmdSetProgram, instrument);
-//			commands->add(cmd);
+//			commands->push(cmd);
 //		}
 //		// process volume
 //		int volume = xmNote->volume;
@@ -399,27 +448,27 @@ char* XmLoader::printPattern(int id) {
 //				// note on
 //			int v = volume == 0xFF ? 0x40 : volume;
 //			cmd = synthAdapter_->createCommand(Synth_Cmd_setControlF, SSN1K_CI_Env1Amp, 1.0);
-//			commands->add(cmd);
+//			commands->push(cmd);
 //			cmd = synthAdapter_->createCommand(Synth_Cmd_setNoteOn, note, volume * 255 >> 6);
-//			commands->add(cmd);
+//			commands->push(cmd);
 //			volume = 0xFF;
 //			//} else {
 //			//	if (note != state.note) {
 //			//		// set note
 //			//		cmd = synthAdapter_->createCommand(Synth_Cmd_setControlF, SSN1K_CI_Tune, (double)note);
-//			//		commands->add(cmd);
+//			//		commands->push(cmd);
 //			//	}
 //			//}
 //			state.note = note;
 //		}
 //		if (note == 0x60 && xmNote->note != state.note) {
 //			cmd = synthAdapter_->createCommand(Synth_Cmd_setNoteOff, state.note);
-//			commands->add(cmd);
+//			commands->push(cmd);
 //			state.note = xmNote->note;
 //		}
 //		if (volume != 0xFF) {
 //			cmd = synthAdapter_->createCommand(Synth_Cmd_setControlF, SSN1K_CI_Env1Amp, volume / 255.0);
-//			commands->add(cmd);
+//			commands->push(cmd);
 //		}
 //	}
 //	//v = xmNote.instrument;
@@ -440,7 +489,7 @@ char* XmLoader::printPattern(int id) {
 //	PArray* seqMaps = NEW_(PArray);
 //	for (int ch = 0; ch < channelCount_; ch++) {
 //		Map* seqMap = NEW_(Map, sizeof(int), MAP_USE_REF, Map::hashingItem, Collection::compareInt);
-//		seqMaps->add(seqMap);
+//		seqMaps->push(seqMap);
 //		pattern->channels[ch] = NEW_(Array, sizeof(int));
 //		for (int ri = 0; ri < pattern->rowCount; ri++) {
 //			XMNOTE* xmNote = &pattern->data[ch + ri*channelCount_];
@@ -448,7 +497,7 @@ char* XmLoader::printPattern(int id) {
 //				PArray* commands = convertNote(xmNote, states_[ch]);
 //				if (commands != NULL) {
 //					for (UINT32 ci = 0; ci < commands->length(); ci++) {
-//						PLAYER_COMMAND cmd = (PLAYER_COMMAND)commands->getAt(ci);
+//						PLAYER_COMMAND cmd = (PLAYER_COMMAND)commands->get(ci);
 //						int code = ((SYNTH_CMD_SET_CTRL_*)cmd)->code;
 //						if (code == Synth_Cmd_setControl ||
 //							code == Synth_Cmd_setControlB ||
@@ -459,8 +508,8 @@ char* XmLoader::printPattern(int id) {
 //						if (sequence == NULL) {
 //							sequence = NEW_(Sequence);
 //							int seqId = sequences->length();
-//							sequences->add(sequence);
-//							pattern->channels[ch]->add(&seqId);
+//							sequences->push(sequence);
+//							pattern->channels[ch]->push(&seqId);
 //							seqMap->put(&code, sequence);
 //						}
 //						// int delta = getDelta(ri);
@@ -473,9 +522,9 @@ char* XmLoader::printPattern(int id) {
 //		}
 //	}
 //	for (UINT32 i = 0; i < seqMaps->length(); i++) {
-//		Map* seqMap = (Map*)seqMaps->getAt(i);
+//		Map* seqMap = (Map*)seqMaps->get(i);
 //		for (UINT32 si = 0; si < seqMap->values()->length(); si++) {
-//			Sequence* sequence = (Sequence*)seqMap->values()->getAt(si);
+//			Sequence* sequence = (Sequence*)seqMap->values()->get(si);
 //			// int delta = getDelta(ri);
 //			Frame* frame = sequence->addFrame(pattern->rowCount);
 //			frame->addCommand(playerAdapter_->createEndCommand());
@@ -486,45 +535,12 @@ char* XmLoader::printPattern(int id) {
 //}
 
 // LOADER
-int XmLoader::load(const char *szPath) {
-	int error = 1;
-	byte* xmData = NULL;
-	var bytesRead = File::read(szPath, &xmData);
-	if (bytesRead > 0 && xmData != NULL) {
-		error = 0;
-		// read header
-		var *header = (XmFileHeader*)xmData;
-		bpm_ = header->defaultBPM;
-		ticks_ = header->defaultTempo;
-		channelCount_ = header->channelCount;
-		instruments_.init(sizeof(XmInstrument), header->instrumentCount);
-		for (var i = 0; i < header->instrumentCount; i++) {
-			XmInstrument instrument;
-			instruments_.add(&instrument);
-		}
-		for (int i = 0; i < header->songLength; i++) {
-			patternOrder_.add(&header->patternOrder + i);
-		}
-		// todo: verify file
-		// read patterns
-		byte* ptr = xmData + offsetof(XmFileHeader, headerSize) + header->headerSize;
-		for (int p = 0; p < header->patternCount; p++) {
-			var xmPattern = (XmFilePattern*)ptr;
-			patterns_.add(readPattern(xmPattern));
-			ptr += offsetof(XmFilePattern, packedData) + xmPattern->packedDataSize;
-		}
-		process();
-		error = 0;
-		FREE(xmData);
-	}
-	return error;
-}
 
 //PArray* XmLoader::convert() {
 //	// create master sequence
 //	PArray* sequences = NEW_(PArray);
 //	Sequence* masterSequence = NEW_(Sequence);
-//	sequences->add(masterSequence);
+//	sequences->push(masterSequence);
 //	Frame* frame = masterSequence->addFrame(0);
 //	frame->addCommand(playerAdapter_->createCommand(Player_Cmd_setTempo, bpm_*ticks_));
 //
@@ -538,19 +554,19 @@ int XmLoader::load(const char *szPath) {
 //
 //	// convert patterns
 //	for (UINT32 pi = 0; pi < patterns_.length(); pi++) {
-//		XMPATTERN* pattern = (XMPATTERN*)patterns_.getAt(pi);
+//		XMPATTERN* pattern = (XMPATTERN*)patterns_.get(pi);
 //		convertPattern(pattern, sequences);
 //	}
 //
 //	// add sequences to master sequence
 //	int rowCounter = 0;
 //	for (UINT32 i = 0; i < patternOrder_.length(); i++) {
-//		byte pi = *(byte*)patternOrder_.getAt(i);
-//		XMPATTERN* pattern = (XMPATTERN*)patterns_.getAt(pi);
+//		byte pi = *(byte*)patternOrder_.get(i);
+//		XMPATTERN* pattern = (XMPATTERN*)patterns_.get(pi);
 //		for (int ch = 0; ch < channelCount_; ch++) {
 //			Array* seqIds = pattern->channels[ch];
 //			for (UINT32 si = 0; si < seqIds->length(); si++) {
-//				int seqId = *(int*)seqIds->getAt(si);
+//				int seqId = *(int*)seqIds->get(si);
 //				Frame* frame = masterSequence->frame(i);
 //					if (frame == NULL) {
 //						frame = masterSequence->addFrame(rowCounter);
@@ -564,3 +580,4 @@ int XmLoader::load(const char *szPath) {
 //	masterSequence->addFrame(rowCounter)->addCommand(playerAdapter_->createEndCommand());
 //	return sequences;
 //}
+#pragma endregion

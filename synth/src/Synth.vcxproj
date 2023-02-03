@@ -161,13 +161,16 @@
   <ItemGroup>
     <ClCompile Include="device\bass-device.cpp" />
     <ClCompile Include="device\distort-device.cpp" />
+    <ClCompile Include="device\drums-device.cpp" />
     <ClCompile Include="device\stereo-delay-device.cpp" />
     <ClCompile Include="device\synth-base-device.cpp" />
     <ClCompile Include="elem\clp.cpp" />
     <ClCompile Include="elem\dly.cpp" />
     <ClCompile Include="elem\elem.cpp" />
+    <ClCompile Include="elem\adsr.cpp" />
     <ClCompile Include="elem\env.cpp" />
     <ClCompile Include="elem\flt.cpp" />
+    <ClCompile Include="elem\dahr.cpp" />
     <ClCompile Include="elem\lfo.cpp" />
     <ClCompile Include="elem\osc.cpp" />
     <ClCompile Include="elem\pot.cpp" />
@@ -177,22 +180,27 @@
     <ClCompile Include="device\synth-device.cpp" />
     <ClCompile Include="module\bass.cpp" />
     <ClCompile Include="module\distort.cpp" />
+    <ClCompile Include="module\drums.cpp" />
     <ClCompile Include="module\stereo-delay.cpp" />
     <ClCompile Include="module\mixer.cpp" />
     <ClCompile Include="module\module.cpp" />
     <ClCompile Include="module\synth-base.cpp" />
     <ClCompile Include="module\synth.cpp" />
+    <ClCompile Include="xmloader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="device\bass-device.h" />
     <ClInclude Include="device\distort-device.h" />
+    <ClInclude Include="device\drums-device.h" />
     <ClInclude Include="device\stereo-delay-device.h" />
     <ClInclude Include="device\synth-base-device.h" />
     <ClInclude Include="elem\clp.h" />
     <ClInclude Include="elem\dly.h" />
     <ClInclude Include="elem\elem.h" />
-    <ClInclude Include="elem\env.h" />
+    <ClInclude Include="elem\adsr.h" />
     <ClInclude Include="elem\flt.h" />
+    <ClInclude Include="elem\dahr.h" />
+    <ClInclude Include="elem\env.h" />
     <ClInclude Include="elem\lfo.h" />
     <ClInclude Include="elem\osc.h" />
     <ClInclude Include="elem\pot.h" />
@@ -201,14 +209,15 @@
     <ClInclude Include="device\mixer-device.h" />
     <ClInclude Include="device\synth-device.h" />
     <ClInclude Include="module\bass.h" />
+    <ClInclude Include="module\drums.h" />
     <ClInclude Include="module\module.h" />
     <ClInclude Include="module\distort.h" />
     <ClInclude Include="module\stereo-delay.h" />
     <ClInclude Include="module\mixer.h" />
-    <ClInclude Include="module\mixer-controls.h" />
     <ClInclude Include="module\synth-base.h" />
     <ClInclude Include="module\synth-def.h" />
     <ClInclude Include="module\synth.h" />
+    <ClInclude Include="xmloader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

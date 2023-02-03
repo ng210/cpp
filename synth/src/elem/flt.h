@@ -26,7 +26,7 @@ namespace SYNTH {
     class Flt;
     class FltStage {
         friend class Flt;
-    protected:
+    public:
         float ai_[3];    // nominator coeffs
         float bi_[3];    // LP denominator coeffs
         float ci_[3];    // HP denominator coeffs
@@ -54,13 +54,15 @@ namespace SYNTH {
         void update(float, float);
     };
 
-    #define FltCtrlCount (sizeof(FltCtrls)/sizeof(Pot*))
+    #define FltCtrlCount (sizeof(FltCtrls)/sizeof(PotBase))
 
     class Flt : public Elem {
     protected: PROP_R(FltCtrls*, controls);
     protected: FltStage* stages_[5];   // 5x2 = max 10 poles
     //private: PROP_R(float, theta);
     protected: PROP_R(int, stageCount);
+    protected: PROP_R(int, poleCount);
+        static float* samplingRate_;
     public:
         Flt(int poleCount = 2);
         ~Flt();
@@ -68,12 +70,14 @@ namespace SYNTH {
         void update(float cut);
         void assignControls(PotBase* controls);
         void createStages(int poleCount);
-        void setFromStream(byte* stream);
+        void setFromStream(byte*& stream);
         float run(Arg params = (void*)NULL);
+
+        FltStage* stage(int si) { return stages_[si]; }
 
         static float cutoffTable[256];
         static float* linearFactors[];
-        static void initialize(float smpRate);
+        static void initialize();
     };
 }
 

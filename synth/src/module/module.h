@@ -21,6 +21,7 @@ namespace SYNTH {
 
 		virtual void connectInput(int id, float* buffer); 
 		virtual PotBase* getControl(int id);
+		virtual void setControl(int id, S value);
 		virtual inline float* getInput(int id);
 		virtual inline float* getOutput(int id);
 		virtual void initialize(byte** pData);

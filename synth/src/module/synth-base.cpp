@@ -23,10 +23,8 @@ void SynthBase::initialize(float* pSmpRate, int count) {
 }
 void SynthBase::samplingRate(float* pSmpRate) {
     samplingRate_ = pSmpRate;
-    Osc::initialize(samplingRate_);
-    Lfo::initialize(samplingRate_);
-    Env::initialize(*samplingRate_);
-    Flt::initialize(*samplingRate_);
+    Adsr::initialize();
+    Flt::initialize();
 
     for (var i = 0; i < voiceCount_; i++) {
         Voice& v = voices_[i];
@@ -35,25 +33,34 @@ void SynthBase::samplingRate(float* pSmpRate) {
 }
 void SynthBase::setNote(byte note, byte velocity) {
     if (velocity != 0) {
+        //printf(" ** ON\n");
         // get free voice
-        var candidate = &voices_[0];
-        for (int i = 0; i < voiceCount_; i++) {
-            Voice& voice = voices_[i];
-            if (candidate->envelopes[0].ticks() < voice.envelopes[0].ticks()) {
-                candidate = &voice;
-            }
-            if (!voice.envelopes[0].isActive()) {
-                candidate = &voice;
+        var vi = 0;
+        Voice* candidate = &voices_[vi];
+        for (; vi < voiceCount_; vi++) {
+            // first inactive
+            Voice* voice = &voices_[vi];
+            //printf("   - %d,%d,%d,%d\n", vi, voice->envelopes[0].phase(), note, velocity);
+            if (!voice->envelopes[0].isActive()) {
+                candidate = voice;
                 break;
             }
+            // the longest running
+            if (candidate->envelopes[0].ticks() < voice->envelopes[0].ticks()) {
+                candidate = voice;
+            }
         }
+        //printf(" - %d,%d,%d,%d\n", vi, candidate->envelopes[0].phase(), note, velocity);
         (this->*setNoteVoice)(*candidate, note, velocity);
     }
     else {
+        //printf(" ** OFF\n");
         for (int i = 0; i < voiceCount_; i++) {
-            Voice& voice = voices_[i];
-            if (voice.envelopes[0].phase() < EnvPhase::Down && voice.note.value.b == note) {
-                (this->*setNoteVoice)(voice, note, 0);
+            Voice* voice = &voices_[i];
+            //printf("   - %d,%d,%d,%d\n", i, voice->envelopes[0].phase(), note, velocity);
+            if (voice->envelopes[0].phase() < EnvPhase::Down && voice->note.value.b == note) {
+                (this->*setNoteVoice)(*voice, note, 0);
+                //printf(" - %d,%d,%d,%d\n", i, voice->envelopes[0].phase(), note, velocity);
                 break;
             }
         }
@@ -75,6 +82,13 @@ void SynthBase::connectInput(int id, float* buffer) {
 }
 float* SynthBase::getOutput(int id) {
     return outputs_[0];
+}
+bool SynthBase::isActive() {
+    //var isActive = false;
+    //for (var i = 0; i < voiceCount_; i++) {
+    //    isActive |= voices_[i].envelopes[0].isActive();
+    //}
+    return isActive_;
 }
 void SynthBase::initialize(byte** pData) {
 }

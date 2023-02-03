@@ -26,13 +26,13 @@ namespace SYNTH {
 		virtual ~Dly();
 
 		void assignControls(PotBase* controls);
-		void setFromStream(byte* stream);
+		void setFromStream(byte*& stream);
 		//void connect(int id, void* input);
 		float run(Arg params = (void*)NULL);
 		//void run(float* buffer, int start, int end);
 
 		void setDelay(float delay);
-		void samplingRate(float* smpRate);
+		void Dly::setSamplingRate();
 	};
 
 }

@@ -1,8 +1,9 @@
 #ifndef __CLIP_DEVICE_H
 #define __CLIP_DEVICE_H
 
-#include "synth-adapter.h"
-#include "module-device.h"
+#include "synth/src/device/synth-adapter.h"
+#include "synth/src/device/module-device.h"
+#include "synth/src/module/distort.h"
 
 using namespace PLAYER;
 namespace SYNTH {

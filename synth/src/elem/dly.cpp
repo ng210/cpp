@@ -7,7 +7,6 @@ using namespace SYNTH;
 Dly::Dly() {
 	buffer_ = NULL;
 	controls_ = NULL;
-	samplingRate_ = NULL;
 	length_ = 0.0f;
 	cursor_ = 0.0f;
 }
@@ -22,7 +21,7 @@ void Dly::assignControls(PotBase* controls) {
 	controls_->delay.init(0.0f, DELAY_MAX / 100.0f, 5.0f, 1000.0f);
 }
 
-void Dly::setFromStream(byte* stream) {
+void Dly::setFromStream(byte*& stream) {
 	//Elem::setFromStream(stream, (Pot*)controls_);
 	controls_->feedback.setFromStream(stream);
 	controls_->delay.setFromStream(stream);
@@ -57,15 +56,14 @@ float Dly::run(Arg params) {
 //	}
 //}
 
-void Dly::samplingRate(float* smpRate) {
-	samplingRate_ = smpRate;
-	var count = (int)(*smpRate * DELAY_MAX / 1000.0f);
+void Dly::setSamplingRate() {
+	var count = (int)(*Elem::samplingRate * DELAY_MAX / 1000.0f);
 	buffer_ = MALLOC(float, count);
 	memset(buffer_, 0, sizeof(float) * count);
 }
 
 void Dly::setDelay(float delay) {
-	length_ = delay * *samplingRate_ / 1000.0f;
+	length_ = delay * *Elem::samplingRate / 1000.0f;
 	controls_->delay.value.f = delay;
 	cursor_ = length_ - 1;
 }
