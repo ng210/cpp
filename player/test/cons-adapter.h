@@ -1,7 +1,7 @@
 #ifndef __CONS_ADAPTER_H
 #define __CONS_ADAPTER_H
 
-#include "adapter.h"
+#include "player/src/adapter.h"
 
 using namespace PLAYER;
 

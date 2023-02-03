@@ -51,7 +51,7 @@ void ConsDevice::processCommand(byte cmd, byte*& cursor) {
 }
 
 #ifdef PLAYER_EDIT_MODE
-void ConsDevice::makeCommandImpl(int command, byte*& stream, va_list args) {
+void ConsDevice::makeCommandImpl(int command, Stream* stream, va_list args) {
     switch ((ConsCommands)command) {
     case CmdSetText:
         char* str; str = va_arg(args, char*);

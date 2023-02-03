@@ -58,11 +58,13 @@ Sequence* Sequence::writeByte(byte value) { Stream::writeByte(value); return thi
 Sequence* Sequence::writeWord(word value) { Stream::writeWord(value); return this; }
 Sequence* Sequence::writeDword(dword value) { Stream::writeDword(value); return this; }
 Sequence* Sequence::writeFloat(float value) { Stream::writeFloat(value); return this; }
-Sequence* Sequence::writeHeader() { reset(); writeByte((byte)device_->type()); return this; };
-Sequence* Sequence::writeDelta(word delta) { writeWord(delta); return this; };
-Sequence* Sequence::writeCommand(byte cmd) { writeByte(cmd); return this; };
-Sequence* Sequence::writeEOF() { writeByte(PlayerCommands::CmdEOF); return this; };
-Sequence* Sequence::writeEOS() { writeByte(PlayerCommands::CmdEOS); return this; };
+Sequence* Sequence::writeHeader() { reset(); writeByte((byte)device_->type()); return this; }
+Sequence* Sequence::writeDelta(word delta) { writeWord(delta); return this; }
+Sequence* Sequence::writeCommand(byte cmd) { writeByte(cmd); return this; }
+Sequence* Sequence::writeEOF() { writeByte(PlayerCommands::CmdEOF); return this; }
+Sequence* Sequence::writeEOS() { writeByte(PlayerCommands::CmdEOS); return this; }
+Sequence* Sequence::writeBytes(byte* stream, int length) { Stream::writeBytes(stream, length); return this; }
+Sequence* Sequence::writeStream(Stream* stream, long length, long offset) { Stream::writeStream(stream, length, offset); return this; }
 
 PArray* Sequence::toFrames(Device* device) {
 	frames_ = NEW_(PArray);

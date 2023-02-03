@@ -90,7 +90,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\fw</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
       <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
       <PreprocessorDefinitions>PLAYER_EDIT_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -115,7 +115,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\fw</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <ExceptionHandling>false</ExceptionHandling>

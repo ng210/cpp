@@ -3,7 +3,7 @@
 
 #include "collection/parray.h"
 #include "base/stream.h"
-#include "frame.h"
+#include "player/src/frame.h"
 
 NS_FW_BASE_USE
 namespace PLAYER {
@@ -33,7 +33,8 @@ namespace PLAYER {
 		Sequence* writeEOS();
 		Sequence* writeByte(byte value);
 		Sequence* writeString(char* str);
-		Sequence* writeStream(byte* stream, int length);
+		Sequence* writeBytes(byte* stream, int length);
+		Sequence* writeStream(Stream* stream, long length = 0, long offset = 0);
 		Sequence* writeWord(word value);
 		Sequence* writeDword(dword value);
 		Sequence* writeFloat(float value);

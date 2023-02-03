@@ -72,19 +72,18 @@ namespace PLAYER {
 	}
 	
 #ifdef PLAYER_EDIT_MODE
-	void PlayerDevice::makeCommandImpl(int command, byte*& stream, va_list args) {
+	void PlayerDevice::makeCommandImpl(int command, Stream* stream, va_list args) {
 		switch (command) {
 		case PlayerCommands::CmdAssign:
 			// byte chnId, byte seqId, byte devId, byte loopCount
-			*stream++ = (byte)va_arg(args, int);
-			*stream++ = (byte)va_arg(args, int);
-			*stream++ = (byte)va_arg(args, int);
-			*stream++ = (byte)va_arg(args, int);
+			stream->writeByte((byte)va_arg(args, int));
+			stream->writeByte((byte)va_arg(args, int));
+			stream->writeByte((byte)va_arg(args, int));
+			stream->writeByte((byte)va_arg(args, int));
 			break;
 		case PlayerCommands::CmdTempo:
 			// float framePerSecond
-			*(float*)stream = va_arg(args, float);
-			stream += sizeof(float);
+			stream->writeFloat(va_arg(args, float));
 			break;
 		case PlayerCommands::CmdEOF:
 			// no arguments

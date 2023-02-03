@@ -3,7 +3,7 @@
 
 #include "collection/parray.h"
 #include "collection/map.h"
-#include "device.h"
+#include "player/src/device.h"
 
 NS_FW_BASE_USE
 
@@ -21,7 +21,7 @@ namespace PLAYER {
 	class Channel;
 	class PlayerDevice : public Device {
 	public:
-		static PlayerDevice* create(byte** pData);
+		static PlayerDevice* create(byte** pData = NULL);
 
 		PlayerDevice(void* object, Adapter* adapter);
 		virtual ~PlayerDevice();
@@ -37,7 +37,7 @@ namespace PLAYER {
 		void processCommand(byte cmd, byte*& cursor);
 
 #ifdef PLAYER_EDIT_MODE
-		void makeCommandImpl(int command, byte*& stream, va_list args);
+		void makeCommandImpl(int command, Stream* stream, va_list args);
 		int getCommandSize(byte cmd, byte* args);
 		int writeToStream(Stream* stream);
 #endif

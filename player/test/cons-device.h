@@ -1,7 +1,7 @@
 #ifndef __CONS_DEVICE_H
 #define __CONS_DEVICE_H
 
-#include "device.h"
+#include "player/src/device.h"
 
 using namespace PLAYER;
 
@@ -23,7 +23,7 @@ public:
 	void processCommand(byte cmd, byte*& cursor);
 
 #ifdef PLAYER_EDIT_MODE
-	void makeCommandImpl(int command, byte*& stream, va_list args);
+	void makeCommandImpl(int command, Stream* stream, va_list args);
 	int getCommandSize(byte cmd, byte* args);
 	int writeToStream(Stream* stream);
 #endif

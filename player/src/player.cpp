@@ -2,9 +2,9 @@
 #include <windows.h>
 #include "base/memory.h"
 #include "utils/file.h"
-#include "player.h"
-#include "sequence.h"
-#include "channel.h"
+#include "player/src/player.h"
+#include "player/src/sequence.h"
+#include "player/src/channel.h"
 
 #include "adapter.h"
 
@@ -20,13 +20,15 @@ namespace PLAYER {
     Map* Player::adapters_ = NULL;
     Adapter* Player::addAdapter(Adapter* adapter) {
         if (Player::adapters_ == NULL) {
-            Player::adapters_ = NEW_(Map, sizeof(int), sizeof(Adapter*), Map::hashingStr, Collection::compareInt);
+            Player::adapters_ = NEW_(Map, sizeof(int), sizeof(Adapter*), Map::hashingInt, Collection::compareInt);
+            Player::adapters_->hasRefKey(false);
         }
-        Player::adapters_->put(&adapter->getInfo()->id, &adapter);
+        Player::adapters_->put(adapter->getInfo()->id, &adapter);
         return adapter;
     }
     Adapter* Player::getAdapter(int type) {
-        return *(Adapter**)Player::adapters_->get(&type);
+        var item = Player::adapters_->get(type);
+        return (Adapter*)(item != NULL ? *(Adapter**)item : item);
     }
 
     void Player::cleanUp() {
@@ -43,11 +45,12 @@ namespace PLAYER {
         hThread_ = NULL;
         isTerminating_ = false;
         isPlaying_ = false;
+        counter_ = 0;
 
         channels_.init(16);
-        channels_.compare([](void* p, UINT32 ix, Collection* collection, void* args) { return fmw::strncmp(((Channel*)p)->id(), (char*)args, 16); });
+        channels_.compare([](void* p, Key key, UINT32 ix, Collection* collection, void* args) { return fmw::strncmp(((Channel*)p)->id(), (char*)key.p, 16); });
         devices_.init(16);
-        devices_.compare([](void* p, UINT32 ix, Collection* collection, void* args) { return ((Device*)p)->type() - *(int*)args; });
+        devices_.compare([](void* p, Key key, UINT32 ix, Collection* collection, void* args) { return ((Device*)p)->type() - key.i; });
         sequences_.init(16);
         sequences_.compare(Collection::compareByRef);
         dataBlocks_.init(sizeof(DataBlockItem), 16);
@@ -163,8 +166,8 @@ namespace PLAYER {
     Device* Player::addDevice(Adapter* adapter, int deviceType, byte** pData) {
         Device* device = NULL;
         var adapterId = adapter->getInfo()->id;
-        if (!Player::adapters_->containsKey(&adapterId)) {
-            Player::adapters_->put(&adapterId, adapter);
+        if (!Player::adapters_->containsKey(adapterId)) {
+            Player::adapters_->put(adapterId, adapter);
         }
         device = adapter->createDevice(deviceType);
         if (device) {
@@ -201,14 +204,14 @@ namespace PLAYER {
             stop();
         }
 
-        dataBlocks_.apply([](void* p, UINT32 ix, Collection* arr, void* args) {
+        dataBlocks_.apply([](void* p, Key key, UINT32 ix, Collection* arr, void* args) {
             var dbi = (DataBlockItem*)p;
             if (dbi->flag & DataBlockItemFlag::Allocated) {
                 FREE(dbi->dataBlock);
             }
             return 1;
             });
-        sequences_.apply([](void* sequence, UINT32 ix, Collection* arr, void* args) {
+        sequences_.apply([](void* sequence, Key key, UINT32 ix, Collection* arr, void* args) {
             DEL_((Sequence*)sequence);
             return 1;
             });
@@ -217,7 +220,7 @@ namespace PLAYER {
             var dev = (Device*)devices_.get(i);
             DEL_(dev);
         }
-        channels_.apply([](void* channel, UINT32 ix, Collection* arr, void* args) {
+        channels_.apply([](void* channel, Key key, UINT32 ix, Collection* arr, void* args) {
             DEL_((Channel*)channel);
             return 1;
             });
@@ -281,7 +284,7 @@ namespace PLAYER {
             for (var ai = 0; ai < adapterCount; ai++) {
                 // get adapter
                 int adapterId = READ(p, byte);
-                var adapter = *(Adapter**)Player::adapters_->get(&adapterId);
+                var adapter = *(Adapter**)Player::adapters_->get(adapterId);
                 if (adapter) {
                     // initialize
                     adapter->initialize(&p);
@@ -331,6 +334,7 @@ namespace PLAYER {
     }
     int Player::run(int ticks) {
         if (masterChannel_->isActive()) {
+            counter_ += ticks;
             for (var i = 0; i < channels_.length(); i++) {
                 ((Channel*)channels_.get(i))->run(ticks);
             }

@@ -3,7 +3,7 @@
 
 #include "collection/map.h"
 #include "base/stream.h"
-#include "player-device.h"
+#include "player/src/player-device.h"
 
 NS_FW_BASE_USE
 
@@ -22,7 +22,7 @@ namespace PLAYER {
 	protected:	PROP_R(PArray, sequences);
 	protected:	PROP_R(Array, dataBlocks);
 	protected:	PROP_R(Channel*, masterChannel);
-	protected:	PROP_R(float, refreshRate);
+	protected:	PROP(float, refreshRate);
 	protected:	PROP_R(DataBlockItem, initData);
 
 	DataBlockItem* addDataBlock(byte* stream, int length, DataBlockItemFlag flag = DataBlockItemFlag::Allocated);
@@ -47,6 +47,7 @@ namespace PLAYER {
 #pragma region Player
 	private:
 		PROP_R(PlayerDevice*, masterDevice);
+		PROP_R(int, counter);
 	public:
 		Player();
 		~Player();

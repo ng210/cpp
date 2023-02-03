@@ -1,9 +1,9 @@
 #include "console/consoleapp.h"
 #include "test.h"
-#include "player-lib.h"
-#include "player-adapter.h"
-#include "cons-adapter.h"
-#include "cons-device.h"
+#include "player/src/player-lib.h"
+#include "player/src/player-adapter.h"
+#include "player/test/cons-adapter.h"
+#include "player/test/cons-device.h"
 
 NS_FW_BASE_USE
 using namespace PLAYER;
@@ -35,6 +35,8 @@ public:
     void testRunPlayer();
     //int testCreateFrames();
     //int testPrintSequence();
+
+    void runAll(int& totalPassed, int& totalFailed);
 };
 
 PlayerAdapter PlayerTest::playerAdapter_;
@@ -197,21 +199,22 @@ void PlayerTest::testCreateSequenceFromFrames() {
     var frame = NEW_(Frame);
         frame->delta_ = 0;
         var command = device->makeCommand(PlayerCommands::CmdAssign, 1, 1, 0, 0);
-        frame->addCommand(command);
+        frame->addCommand(command->extract());
+        DEL_(command);
         frames->push(frame);
     // frame #2
     frame = NEW_(Frame);
         frame->delta_ = 96;
-        var commandStream = device->makeCommandAsStream(PlayerCommands::CmdEOS);
+        var commandStream = device->makeCommand(PlayerCommands::CmdEOS);
         frame->addCommand(commandStream->extract());
         DEL_(commandStream);
         frames->push(frame);
 #pragma endregion
     var sequence1 = createTestSequence(device);
     var sequence2 = Sequence::fromFrames(frames, device);
-    frames->apply([](void* f, UINT32 ix, Collection* c, void* args) {
+    frames->apply([](void* f, Key key1, UINT32 ix, Collection* c, void* args1) {
         var frame = (Frame*)f;
-        frame->commands_.apply([](void* p, UINT32 ix, Collection* c, void* args) {
+        frame->commands_.apply([](void* p, Key key2, UINT32 ix, Collection* c, void* args2) {
             FREE((byte*)p);
             return 1;
         });
@@ -314,6 +317,10 @@ void PlayerTest::testRunPlayer() {
     
     DEL_(device);
     Player::cleanUp();
+}
+
+void PlayerTest::runAll(int& totalPassed, int& totalFailed) {
+    return;
 }
 
 #pragma endregion

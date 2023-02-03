@@ -2,8 +2,8 @@
 #define __PLAYER_CHANNEL_H
 
 #include "basedef.h"
-#include "device.h"
-#include "sequence.h"
+#include "player/src/device.h"
+#include "player/src/sequence.h"
 
 NS_FW_BASE_USE
 namespace PLAYER {

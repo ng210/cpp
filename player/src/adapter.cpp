@@ -9,8 +9,8 @@ Adapter::Adapter() {
 
 void Adapter::initialize(byte** pData) {}
 
-int Adapter::compare(void* item, UINT32 ix, Collection* collection, void* key) {
-	return (*(Adapter**)item)->getInfo()->id - (*(Adapter**)key)->getInfo()->id;
+int Adapter::compare(void* item, Key key, UINT32 ix, Collection* collection, void* args) {
+	return (*(Adapter**)item)->getInfo()->id - (*(Adapter**)key.p)->getInfo()->id;
 }
 #ifdef PLAYER_EDIT_MODE
 void Adapter::writeToStream(Stream* data) {

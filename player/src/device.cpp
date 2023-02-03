@@ -1,6 +1,7 @@
 #include "device.h"
 #include <stdarg.h>
 #include "base/memory.h"
+#include "player/src/device.h"
 
 NS_FW_BASE_USE
 
@@ -36,23 +37,23 @@ namespace PLAYER {
 	}
 
 #ifdef PLAYER_EDIT_MODE
-	byte* Device::makeCommand(byte command, ...) {
-		va_list args;
-		va_start(args, command);
-		byte* bytes = (byte*)MALLOC(byte, getCommandSize(command, (byte*)args));
-		var p = bytes;
-		*p++ = command;
-		makeCommandImpl(command, p, args);
-		va_end(args);
-		return bytes;
-	}
+	//byte* Device::makeCommand(byte command, ...) {
+	//	va_list args;
+	//	va_start(args, command);
+	//	byte* bytes = (byte*)MALLOC(byte, getCommandSize(command, (byte*)args));
+	//	var p = bytes;
+	//	*p++ = command;
+	//	makeCommandImpl(command, p, args);
+	//	va_end(args);
+	//	return bytes;
+	//}
 
-	Stream* Device::makeCommandAsStream(byte command, ...) {
+	Stream* Device::makeCommand(byte command, ...) {
 		va_list args;
 		va_start(args, command);
 		var stream = NEW_(Stream, getCommandSize(command, (byte*)args));
 		stream->writeByte(command);
-		makeCommandImpl(command, stream->cursor(), args);
+		makeCommandImpl(command, stream, args);
 		va_end(args);
 		return stream;
 	}

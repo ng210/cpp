@@ -88,7 +88,7 @@ void Channel::assign(Device* device, Sequence* sequence, int loopCount) {
     cursor_ = sequence_->data() + 1;
     device_ = device;
     loopCount_ = loopCount;
-    //this.currentTick = 0;
+    currentTick_ = 0;
     isActive_ = true;
     run(0);
 }

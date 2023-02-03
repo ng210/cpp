@@ -121,7 +121,7 @@
       </SDLCheck>
       <PreprocessorDefinitions>PLAYER_EDIT_MODE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)..\fw</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
       <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
     </ClCompile>
     <Link>
@@ -142,7 +142,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>PLAYER_EDIT_MODE;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)..\fw</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

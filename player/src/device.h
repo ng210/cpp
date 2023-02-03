@@ -5,7 +5,7 @@
 #include "basedef.h"
 #include "base/str.h"
 #include "base/stream.h"
-#include "player-defs.h"
+#include "player/src/player-defs.h"
 
 NS_FW_BASE_USE
 
@@ -39,9 +39,9 @@ namespace PLAYER {
 		void object(void* obj) { object_ = obj; }
 
 #ifdef PLAYER_EDIT_MODE
-		virtual byte* makeCommand(byte command, ...);
-		virtual Stream* makeCommandAsStream(byte command, ...);
-		virtual void makeCommandImpl(int command, byte*& stream, va_list args) = 0;
+		//virtual byte* makeCommand(byte command, ...);
+		virtual Stream* makeCommand(byte command, ...);
+		virtual void makeCommandImpl(int command, Stream* stream, va_list args) = 0;
 		virtual int getCommandSize(byte cmd, byte* args) = 0;
 		virtual int writeToStream(Stream* stream);
 #endif
