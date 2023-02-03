@@ -278,5 +278,8 @@
     <ClCompile Include="collection\collection-test.cpp">
       <Filter>collection\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="syntax\grammar.cpp">
+      <Filter>syntax\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -80,6 +80,33 @@ char* Stream::readString() {
 	cursor_ += strlen(s);
 	return s;
 }
+char* Stream::readRow() {
+	char* row = NULL;
+	var start = cursor_;
+	var end = &data_[length_];
+	var i = 0, j = 0;
+	while (cursor_ < end) {
+		var ch = *cursor_++;
+		if (ch == '\0') break;
+		if (ch == '\r') {
+			j = 1;
+			if (cursor_[j] == '\n') j++;
+			break;
+		}
+		if (ch == '\n') {
+			j = 1;
+			break;
+		}
+		i++;
+	}
+	if (i > 0) {
+		row = MALLOC(char, (size_t)(i + 1));
+		memcpy(row, start, i);
+		row[i] = '\0';
+		cursor_ += j;
+	}
+	return row;
+}
 
 Stream* Stream::writeByte(byte v) {
 	ensureSize(sizeof(v));
@@ -151,7 +178,8 @@ byte* Stream::readBytesFromFile(const char* path, size_t byteCount, size_t offse
 
 byte* Stream::readBytesFromFile(FILE* fp, size_t byteCount, size_t offset) {
 	var curr = fseek(fp, 0, SEEK_CUR);
-	var length = fseek(fp, 0, SEEK_END);
+	fseek(fp, 0, SEEK_END);
+	size_t length = (size_t)ftell(fp);
 	fseek(fp, curr + (long)offset, SEEK_SET);
 	var bytesAhead = length - (curr + offset);
 	if (byteCount > bytesAhead) byteCount = bytesAhead;

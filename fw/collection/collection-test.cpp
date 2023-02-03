@@ -10,37 +10,41 @@
 
 NS_FW_BASE_USE
 
-int CollectionTest::compareWord(void* item, unsigned int ix, Collection* array, void* key) {
+int CollectionTest::compareInt(void* item, Key key, unsigned int ix, Collection* array, void* args) {
+	WORD i = *(int*)item;	// ((KeyValuePair*)item)->key();
+	return i - key.i;
+}
+int CollectionTest::compareWord(void* item, Key key, unsigned int ix, Collection* array, void* args) {
 	WORD w = *(WORD*)item;	// ((KeyValuePair*)item)->key();
-	return w - *(WORD*)key;
+	return w - *(WORD*)key.p;
 }
-int CollectionTest::compareStr(void* item, unsigned int ix, Collection* array, void* key) {
-	return strncmp((char*)item, (char*)key);
+int CollectionTest::compareStr(void* item, Key key, unsigned int ix, Collection* array, void* args) {
+	return strncmp((char*)item, (char*)key.p);
 }
-int CollectionTest::compareObj(void* item, unsigned int ix, Collection* array, void* key) {
-	return strncmp(((TEST_DATA*)item)->name, ((TEST_DATA*)key)->name);
+int CollectionTest::compareObj(void* item, Key key, unsigned int ix, Collection* array, void* args) {
+	return strncmp(((TEST_DATA*)item)->name, ((TEST_DATA*)key.p)->name);
 }
-int CollectionTest::checkSortInt(void* item, unsigned int ix, Collection* array, void* arg) {
+int CollectionTest::checkSortInt(void* item, Key key, unsigned int ix, Collection* array, void* args) {
 	int res = 1;
 	if ((int)ix < array->length() - 1) {
 		void* right = array->get(ix + 1);
-		res = compareWord(item, ix, array, right) < 0;
+		res = compareWord(item, right, ix, array, NULL) < 0;
 	}
 	return res;
 }
-int CollectionTest::checkSortStr(void* item, unsigned int ix, Collection* array, void* arg) {
+int CollectionTest::checkSortStr(void* item, Key key, unsigned int ix, Collection* array, void* args) {
 	int res = 1;
 	if ((int)ix < array->length() - 1) {
 		void* right = array->get(ix + 1);
-		res = compareStr(item, ix, array, right) < 0;
+		res = compareStr(item, right, ix, array, NULL) < 0;
 	}
 	return res;
 }
-int CollectionTest::checkSortObj(void* item, unsigned int ix, Collection* array, void* arg) {
+int CollectionTest::checkSortObj(void* item, Key key, unsigned int ix, Collection* array, void* args) {
 	int res = 1;
 	if ((int)ix < array->length() - 1) {
 		TEST_DATA* right = (TEST_DATA*)array->get(ix + 1);
-		res = compareObj(item, ix, array, right) < 0;
+		res = compareObj(item, right, ix, array, NULL) < 0;
 	}
 	return res;
 }
@@ -327,7 +331,7 @@ void CollectionTest::testMap() {
 	WORD dw = 0;
 	TEST_DATA testData;
 
-	Map* map1 = NEW_(Map, sizeof(WORD), sizeof(WORD), Map::hashingItem, compareWord);
+	Map* map1 = NEW_(Map, sizeof(WORD), sizeof(WORD), Map::hashingInt, compareInt); map1->hasRefKey(false);
 	Map* map2 = NEW_(Map, MAP_USE_REF, MAP_USE_REF, Map::hashingStr, compareStr);
 	Map* map3 = NEW_(Map, sizeof(TEST_DATA), sizeof(TEST_DATA), Map::hashingItem, compareObj);
 
@@ -337,16 +341,16 @@ void CollectionTest::testMap() {
 		str = str_format("a%02d", i);
 		testData.id = i;
 		strncpy(testData.name, 4, str);
-		map1->put(&i, &i);
+		map1->put(i, &i);
 		map2->put(str, str);
 		map3->put(&testData, &testData);
 	}
 	INFO(" map1 map<int, int>\n");
 	assert("length should be 16", map1->size() == 16);
-	dw = 0; assert("first item (#0) should be 0", *(WORD*)map1->get(&dw) == 0);
-	dw = 8; assert("item #8 should be 8", *(WORD*)map1->get(&dw) == 8);
-	dw = 15; assert("last item (#15) should be 15", *(WORD*)map1->get(&dw) == 15);
-	dw = -1; assert("-1 should return NULL", map1->get(&dw) == NULL);
+	dw = 0; assert("first item (#0) should be 0", *(word*)map1->get(dw) == 0);
+	dw = 8; assert("item #8 should be 8", *(word*)map1->get(dw) == 8);
+	dw = 15; assert("last item (#15) should be 15", *(word*)map1->get(dw) == 15);
+	dw = -1; assert("-1 should return NULL", map1->get(dw) == NULL);
 
 	INFO(" map2 map<char*, char*>\n");
 	assert("length should be 16", map2->size() == 16);
@@ -424,4 +428,13 @@ void CollectionTest::testTree() {
 	//ARRAY_FOREACH(tree1->edges(), delEdge((Edge*)value););
 	//ARRAY_FOREACH(tree1->nodes(), delNode((Node*)value););
 	DEL_(tree1);
+}
+
+void CollectionTest::runAll(int& totalPassed, int& totalFailed) {
+	test("Array tests", (TestMethod)&CollectionTest::testArray);
+	test("PArray tests", (TestMethod)&CollectionTest::testPArray);
+	test("Map tests", (TestMethod)&CollectionTest::testMap);
+	test("Tree tests", (TestMethod)&CollectionTest::testTree);
+	totalPassed += totalPassed_;
+	totalFailed += totalFailed_;
 }

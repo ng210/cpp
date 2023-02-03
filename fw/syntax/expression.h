@@ -1,9 +1,10 @@
-#ifndef __EXPRESSION_H
-#define __EXPRESSION_H
+#ifndef __SYNTAX_EXPRESSION_H
+#define __SYNTAX_EXPRESSION_H
 
 #include "collection/map.h"
 #include "collection/tree.h"
 #include "syntax/grammar.h"
+#include "syntax/node.h"
 
 NS_FW_BASE_USE
 
@@ -16,7 +17,7 @@ namespace NS_FW_SYNTAX {
     protected: PROP_R(Tree*, tree);
     protected: PROP_R(Syntax*, syntax);
     protected: PROP_R(char*, expression);
-    protected: PROP_R(Vertex*, lastNode);
+    protected: PROP_R(Node*, lastNode);
     public:
         Expression(Syntax* syntax);
         Expression* resolve(void* context);
@@ -25,9 +26,11 @@ namespace NS_FW_SYNTAX {
         Map* createInOutMap(PArray* ruleIn, PArray* ruleOut, Array* missing);
         PArray* mergeNodes(PArray* nodes, Map* inOutMap);
         PArray* shuffleNodes(PArray* nodes, Map* inOutMap);
-        void applyRule(Rule* rule, PArray* nodes, int pos, void* context);
-        bool matchRule(Rule* rule, PArray* nodes, void* context);
+        void applyRule(GrammarRule* rule, PArray* nodes, int pos, void* context);
+        bool matchRule(GrammarRule* rule, PArray* nodes, void* context);
         Node* createNode(int code, void* type, char* term);
+
+        char* nodeToString(Node* node, bool simple);
     };
 
 }

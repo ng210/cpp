@@ -53,6 +53,16 @@ int strncmp(const char *left, const char *right, size_t len) {
 	return res;
 }
 //*********************************************************
+//// reverse compare
+//int strnrcmp(const char* left, const char* right, size_t len) {
+//	int res = left[0] - right[0];
+//	for (size_t i = 0; i < len && res == 0; i++) {
+//		res = left[i] - right[i];
+//		if (left[i] == '\0' || right[i] == '\0') break;
+//	}
+//	return res;
+//}
+//*********************************************************
 void memset(void *dst, const char value, size_t len) {
 	for (size_t i = 0; i < len; i++) {
 		((char*)dst)[i] = value;
@@ -189,6 +199,41 @@ char* strtrim(const char* src, const char* str) {
 	size_t offset = strspn(src, str);
 	size_t length = strrspn(src, str);
 	return substr(src, offset, length - offset);
+}
+
+char* parseInt(char* str, int& value, int radix) {
+	value = 0;
+	char ch = *str;
+	var sign = 1;
+	if (ch == '-') {
+		sign = -1;
+		str++;
+	}
+	while ((ch = *str) != '\0' && ch >= '0' && ch - '0' < radix) {
+		value *= radix;
+		value += ch - '0';
+		str++;
+	}
+	value *= sign;
+	return str;
+}
+
+char* parseDouble(char* str, double& value) {
+	value = 0.0;
+	int integerPart, fractionPart;
+	var p = parseInt(str, integerPart);
+	var len = (size_t)(p - str);
+	value = (double)integerPart;
+	if (*str == '.') {
+		str++;
+		var p = parseInt(str, fractionPart);
+		var len = (size_t)(p - str);
+		var fraction = (double)fractionPart;
+		var pow10 = 1;
+		for (var i = 0; i < len; i++) pow10 *= 10;
+		value += fraction / pow10;
+	}
+	return str;
 }
 
 NS_FW_BASE_END

@@ -16,6 +16,11 @@ NS_FW_BASE_USE
 //const size_t Map::seedExt_ = 0x80000000000003ULL;
 //const size_t Map::seedInt_ = 2;
 
+
+Map::Map() : keys_(NULL), values_(NULL), size_(0), bucketList_(NULL), hashing_(NULL) {
+	hasRefKey_ = false;
+}
+
 //void Map::initialize() {
 //	// add type entry
 //	classType_ = ADD_TYPE(Map);
@@ -24,19 +29,21 @@ NS_FW_BASE_USE
 //void Map::shutDown() {
 //	DEL_(Map<K,V>::defaultSeparator_);
 //}
-
-size_t Map::hashingItem(void* key, size_t itemSize) {
+size_t Map::hashingInt(Key key, size_t unused) {
+	return (key.i * MAP_SEED1) ^ MAP_SEED2;
+}
+size_t Map::hashingItem(Key key, size_t itemSize) {
 	size_t hash = 0;
-	UINT8* b = (UINT8*)key;
+	UINT8* b = (UINT8*)key.p;
 	for (int i = 0; i < itemSize; i++) {
 		hash = ((hash + *b++) * MAP_SEED1) ^ MAP_SEED2;
 	}
 	return hash;
 }
-size_t Map::hashingStr(void* key, size_t unused1) {
+size_t Map::hashingStr(Key key, size_t unused1) {
 	size_t hash = 0;
 	UINT32 len = 0;
-	char* str = (char*)key;
+	char* str = (char*)key.p;
 	char ch;
 	while ((ch = str[len]) != '\0') {
 		hash = ((hash + ch) * MAP_SEED1) ^ MAP_SEED2;
@@ -46,10 +53,10 @@ size_t Map::hashingStr(void* key, size_t unused1) {
 	return hash;
 }
 
-int Map::compareWrapper_(void* item, UINT32 ix, Collection* collection, void* key) {
+int Map::compareWrapper_(void* item, Key key, UINT32 ix, Collection* collection, void* args) {
 	Array* bucket = (Array*)collection;
 	KeyValuePair* keyValue = (KeyValuePair*)item;
-	return bucket->compare()(keyValue->key().p, ix, bucket, key);
+	return bucket->compare()(keyValue->key().p, key, ix, bucket, args);
 }
 
 Map::Map(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTIONCALLBACK* compare) {
@@ -77,7 +84,7 @@ void Map::initialize(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing,
 	if (valueSize == MAP_USE_REF) values_ = NEW_(PArray, MAP_ITEM_COUNT);
 	else values_ = NEW_(Array, valueSize, MAP_ITEM_COUNT);
 	size_ = 0;
-
+	hasRefKey_ = true;
 	bucketList_ = NEW_(Array, sizeof(Array), MAP_BUCKETLIST_SIZE);
 	Array* ptr = (Array*)bucketList_->data();
 	for (size_t i = 0; i < MAP_BUCKETLIST_SIZE; i++) {
@@ -93,22 +100,28 @@ Map::~Map() {
 	DEL_(keys_);
 	DEL_(values_);
 	bucketList_->apply(
-		[](void* item, UINT32 ix, Collection* collection, void* args) {
+		[](void* item, Key key, UINT32 ix, Collection* collection, void* args) {
 			((Array*)item)->~Array();
 			return 1;
 		});
 	DEL_(bucketList_);
 }
 
-bool Map::containsKey(void* key) {
+bool Map::containsKey(Key key) {
 	int ix;
 	return keys_->binSearch(key, ix, keys_->compare());	//Collection::compareInt
 }
 
 Array* Map::getBucket(Key key) {
-	size_t hash = hashing_(key.p, keys_->itemSize());
+	size_t hash = hashing_(key, keys_->itemSize());
 	UINT32 ix = (UINT32)(hash % bucketList_->length());
 	return (Array*)bucketList_->get(ix);
+}
+
+KeyValuePair* Map::getKeyValuePair(Key key) {
+	int pos = -1;
+	var bucket = getBucket(key);
+	return (KeyValuePair*)bucket->binSearch(key, pos, Map::compareWrapper_);
 }
 
 void* Map::put(KeyValuePair* keyValue) {
@@ -116,6 +129,10 @@ void* Map::put(KeyValuePair* keyValue) {
 }
 void* Map::put(Key key, void* value) {
 	return add(key, value);
+}
+
+void Map::sort(COLLECTIONCALLBACK* compare) {
+
 }
 
 #pragma region Collection
@@ -126,7 +143,14 @@ void* Map::add(Key key, void* value) {
 	void* res = NULL;
 	if (keyValue == NULL) {
 		var ix = values_->length();
-		KeyValuePair kvp(keys_->push(key.p), values_->push(value));
+		KeyValuePair kvp(NULL, values_->push(value));
+		if (hasRefKey_) {
+			kvp.key_ = keys_->push(key.p);
+		}
+		else {
+			kvp.key_ = keys_->push(&key);
+		}
+
 		kvp.index_ = ix;
 		bucket->insert(pos, &kvp);
 		size_++;
@@ -167,9 +191,8 @@ void Map::remove(Key key) {
 	}
 }
 void* Map::get(Key key) {
-	int pos = -1;
-	var bucket = getBucket(key);
-	return bucket->binSearch(key, pos, Map::compareWrapper_) ? ((KeyValuePair*)bucket->get(pos))->value_ : NULL;
+	var kvp = getKeyValuePair(key);
+	return kvp != NULL ? kvp->value_ : NULL;
 }
 void Map::set(Key key, void* item) {
 	int pos = -1;
@@ -192,7 +215,7 @@ int Map::apply(COLLECTIONCALLBACK callback, ...) {
 		var bucket = (Array*)bucketList_->get(i);
 		for (var j = 0; j < bucket->length(); j++) {
 			var kvp = (KeyValuePair*)bucket->get(j);
-			if (!callback(kvp, ix, this, args)) {
+			if (!callback(kvp, j, ix, this, args)) {
 				res = ix;
 				break;
 			}

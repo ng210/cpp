@@ -4,6 +4,7 @@
 #include "collection/graph.h"
 #include "collection/parray.h"
 #include "syntax/expression.h"
+#include "syntax/grammar.h"
 
 NS_FW_BASE_USE
 
@@ -20,6 +21,7 @@ namespace NS_FW_SYNTAX {
     protected: PROP_R(Map, symbols);
     protected: PROP_R(PArray*, prototypes);
     protected: PROP_R(PArray*, rules);
+    protected: PROP_R(Grammar*, grammar);
 
     public:
         Syntax(void* grammar, bool debug);

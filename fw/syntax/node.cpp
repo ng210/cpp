@@ -3,19 +3,19 @@
 
 using namespace NS_FW_SYNTAX;
 
-PArray* Node::getValue() {
-    PArray* value = NULL;
+Array* Node::getValue() {
+    Array* value = NULL;
     if (edges_.length() > 0) {
-        value = NEW_(PArray, edges_.length());
-        value_ != NULL ? value->add(value_) : value->add(term_);
+        value = NEW_(Array, edges_.length());
+        value_.p != NULL ? value->push(value_.p) : value->push(term_);
         for (var i = 0; i < edges_.length(); i++) {
             var node = (Node*)((Edge*)edges_.get(i))->to();
-            node->value_ != NULL ? value->add(node->value_) : value->add(node->term_);
+            node->value_.p != NULL ? value->push(node->value_.p) : value->add(node->term_);
         }
     }
     else {
-        value = NEW_(PArray);
-        value_ != NULL ? value->add(value_) : value->add(term_);
+        value = NEW_(Array);
+        value_.p != NULL ? value->push(value_.p) : value->push(term_);
     }
     return value;
 };

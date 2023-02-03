@@ -183,6 +183,7 @@
     <ClCompile Include="console\consoleapp.cpp" />
     <ClCompile Include="console\tracer.cpp" />
     <ClCompile Include="syntax\expression.cpp" />
+    <ClCompile Include="syntax\grammar.cpp" />
     <ClCompile Include="syntax\node.cpp" />
     <ClCompile Include="syntax\syntax-test.cpp" />
     <ClCompile Include="syntax\syntax.cpp" />

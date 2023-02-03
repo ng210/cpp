@@ -25,7 +25,7 @@ void* ArrayBase::binSearch_(Key key, int& ix, COLLECTIONCALLBACK* compare) {
 		UINT32 mid = (min + max) >> 1;
 		// compare item with middle item
 		void* item = get(mid);
-		int i = compare(item, mid, this, key.p);
+		int i = compare(item, key, mid, this, NULL);
 		if (i == 0) {
 			// on equation the middle item was the searched item
 			ix = mid;

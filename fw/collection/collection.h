@@ -10,7 +10,6 @@ NS_FW_BASE_BEGIN
 // Base class collection
 //*****************************************************************************
 class Collection;
-typedef int (COLLECTIONCALLBACK)(void* value, UINT32 ix, Collection* collection, void* args);
 
 typedef union Key {
 	int i;
@@ -20,6 +19,8 @@ typedef union Key {
 	Key(void* p) { this->p = p; }
 	Key(int i) { this->i = i; }
 } Key;
+
+typedef int (COLLECTIONCALLBACK)(void* value, Key key, UINT32 ix, Collection* collection, void* args);
 
 class Collection {
 protected: PROP_R(int, length);
@@ -47,15 +48,18 @@ public:
 
 	//inline UINT32 length() { return length_;  }
 
-	static int compareByRef(void* item, UINT32 ix, Collection* collection, void* key) {
-		return (int)((size_t)item - (size_t)key);
+	static int compareByRef(void* item, Key key, UINT32 ix, Collection* collection, void* args) {
+		return (int)((size_t)item - (size_t)key.p);
 	}
-	static int compareStr(void* item, UINT32 ix, Collection* collection, void* key) {
-		return strncmp((char*)item, (char*)key);
+	static int compareStr(void* item, Key key, UINT32 ix, Collection* collection, void* args) {
+		return strncmp((char*)item, (char*)key.p);
 	}
-	static int compareInt(void* item, UINT32 ix, Collection* collection, void* key) {
+	static int compareStrReverse(void* item, Key key, UINT32 ix, Collection* collection, void* args) {
+		return strncmp((char*)key.p, (char*)item);
+	}
+	static int compareInt(void* item, Key key, UINT32 ix, Collection* collection, void* args) {
 		int i = *(int*)item;
-		return i - *(int*)key;
+		return i - key.i;
 	}
 
 };

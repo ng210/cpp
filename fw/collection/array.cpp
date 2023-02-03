@@ -102,7 +102,7 @@ int Array::apply(COLLECTIONCALLBACK* callback, ...) {
 	var res = -1;
 	for (var ix = 0; ix < length_; ix++) {
 
-		if (!callback(value, ix, this, args)) {
+		if (!callback(value, NULL, ix, this, args)) {
 			res = ix;
 			break;
 		}
@@ -112,7 +112,7 @@ int Array::apply(COLLECTIONCALLBACK* callback, ...) {
 	return res;
 }
 void Array::fill(void* value) {
-	apply([](void* item, UINT32 ix, Collection* collection, void* args) {
+	apply([](void* item, Key key, UINT32 ix, Collection* collection, void* args) {
 		var source = args;
 		collection->set(item, source);
 		return 1;
@@ -144,8 +144,8 @@ void Array::sort_(int min, int max, COLLECTIONCALLBACK* compare) {
 		void* tmp = MALLOC(char, itemSize_);
 		while (l <= r) {
 			void* item;
-			while ((item = get(l)) != NULL && compare(item, l, this, pivot) < 0) l++;
-			while ((item = get(r)) != NULL && compare(item, r, this, pivot) > 0) r--;
+			while ((item = get(l)) != NULL && compare(item, pivot, l, this, NULL) < 0) l++;
+			while ((item = get(r)) != NULL && compare(item, pivot, r, this, NULL) > 0) r--;
 			if (l > r) break;
 			// swap left and right
 			void* left = get(l);
@@ -192,7 +192,7 @@ void* Array::search(Key key, int& ix, COLLECTIONCALLBACK* compare) {
 	if (compare == NULL) compare = compare_;
 	void* item = get(0);
 	for (int i = 0; i < length_; i++) {
-		int res = compare(item, i, this, key.p);
+		int res = compare(item, key, i, this, NULL);
 		if (res == 0) {
 			ix = i;
 			value = item;

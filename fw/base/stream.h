@@ -33,6 +33,7 @@ public:
 	float readFloat();
 	double readDouble();
 	char* readString();
+	char* readRow();
 
 	inline void reset() { cursor_ = data_; }
 	Stream* writeByte(byte b);

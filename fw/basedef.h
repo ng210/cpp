@@ -25,6 +25,23 @@
 #endif
 #endif
 
+typedef union BYTEVALUE {
+	byte b;
+	word w;
+	dword d;
+	float f;
+	byte bytes[4];
+	BYTEVALUE(const byte b) { this->b = b; }
+	BYTEVALUE(const word w) { this->w = w; }
+	BYTEVALUE(const dword d) { this->d = d; }
+	BYTEVALUE(const float f) { this->f = f; }
+} BYTEVALUE;
+
+#define DB(v) (byte)v
+#define DW(v) ((BYTEVALUE)(word)v).bytes[0], ((BYTEVALUE)(word)v).bytes[1]
+#define DD(v) ((BYTEVALUE)(dword)v).bytes[0], ((BYTEVALUE)(dword)v).bytes[1], ((BYTEVALUE)(dword)v).bytes[2], ((BYTEVALUE)(dword)v).bytes[3]
+#define DF(v) ((BYTEVALUE)v).bytes[0], ((BYTEVALUE)v).bytes[1], ((BYTEVALUE)v).bytes[2], ((BYTEVALUE)v).bytes[3]
+
 #define STRINGIFY(str) #str
 #define WIDEN2(x) L ## x
 #define WIDEN(x) WIDEN2(x)

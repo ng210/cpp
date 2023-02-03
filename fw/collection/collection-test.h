@@ -18,13 +18,16 @@ public:
 	void testMap();
 	void testTree();
 
-	static int compareWord(void* item, unsigned int ix, Collection* array, void* key);
-	static int compareStr(void* str, unsigned int ix, Collection* array, void* key);
-	static int compareObj(void* obj, unsigned int ix, Collection* array, void* key);
+	void runAll(int& totalPassed, int& totalFailed);
 
-	static int checkSortInt(void* item, unsigned int ix, Collection* array, void* key);
-	static int checkSortStr(void* str, unsigned int ix, Collection* array, void* key);
-	static int checkSortObj(void* obj, unsigned int ix, Collection* array, void* key);
+	static int compareInt(void* item, Key key, unsigned int ix, Collection* array, void* args);
+	static int compareWord(void* item, Key key, unsigned int ix, Collection* array, void* args);
+	static int compareStr(void* str, Key key, unsigned int ix, Collection* array, void* args);
+	static int compareObj(void* obj, Key key, unsigned int ix, Collection* array, void* args);
+
+	static int checkSortInt(void* item, Key key, unsigned int ix, Collection* array, void* args);
+	static int checkSortStr(void* str, Key key, unsigned int ix, Collection* array, void* args);
+	static int checkSortObj(void* obj, Key key, unsigned int ix, Collection* array, void* args);
 };
 
 #endif

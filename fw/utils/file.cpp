@@ -6,7 +6,9 @@ NS_FW_BASE_BEGIN
 
 bool File::exists(const char* path) {
 	FILE* fp = NULL;
-	return fopen_s(&fp, path, "r") == 0 && fp != NULL;
+	var exists = fopen_s(&fp, path, "r") == 0 && fp != NULL;
+	if (fp) fclose(fp);
+	return exists;
 }
 
 size_t File::read(const char* path, UINT8** ptr, size_t offset, size_t byteCount) {

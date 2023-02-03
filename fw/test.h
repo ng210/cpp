@@ -29,6 +29,7 @@ public:
     void test(const char* label, TestMethod testMethod);
     void displayFinalResults(const char* label = NULL);
     void assert(const char* label, bool condition);
+    virtual void runAll(int& totalPassed, int& totalFailed) = 0;
 
     static void setColor(float ratio);
     static Console* cons;

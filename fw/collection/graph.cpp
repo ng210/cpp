@@ -21,11 +21,11 @@ Graph::Graph() {
 }
 
 Graph::~Graph() {
-	vertices_.apply([](void* item, UINT32 ix, Collection* collection, void* args) {
+	vertices_.apply([](void* item, Key key, UINT32 ix, Collection* collection, void* args) {
 		DEL_((Vertex*)item);
 		return 1;
 	});
-	edges_.apply([](void* item, UINT32 ix, Collection* collection, void* args) {
+	edges_.apply([](void* item, Key key, UINT32 ix, Collection* collection, void* args) {
 		DEL_((Edge*)item);
 		return 1;
 	});
@@ -98,7 +98,7 @@ int Graph::apply(COLLECTIONCALLBACK callback, ...) {
 	va_start(args, callback);
 	var res = -1;
 	for (var ix = 0; ix < vertices_.length(); ix++) {
-		if (!callback(vertices_.data()[ix], ix, this, args)) {
+		if (!callback(vertices_.data()[ix], NULL, ix, this, args)) {
 			res = ix;
 			break;
 		}
@@ -310,12 +310,12 @@ Edge* Graph::defCreateEdgeHandler(Graph* graph, Vertex* from, Vertex* to, void* 
 int Graph::defDeleteEdgeHandler(Graph* graph, Edge* edge, ...) {
 	return 0;
 }
-int Graph::defVertexCompare(void* item, UINT32 ix, Collection* graph, void* arg) {
-	return ((Vertex*)item)->id() - *(int*)&arg;
+int Graph::defVertexCompare(void* item, Key key, UINT32 ix, Collection* graph, void* arg) {
+	return ((Vertex*)item)->id() - key.i;
 }
-int Graph::defEdgeCompare(void* item, UINT32 ix, Collection* graph, void* arg) {
+int Graph::defEdgeCompare(void* item, Key key, UINT32 ix, Collection* graph, void* arg) {
 	var edge = (Edge*)item;
-	return (int)((size_t)edge->data() - (size_t)arg);
+	return (int)((size_t)edge->data() - (size_t)key.p);
 }
 
 Graph* Graph::createComplete(int vertexCount, bool isDirected, VERTEXHANDLER vertexHandler, EDGEHANDLER edgeHandler) {

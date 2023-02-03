@@ -1,7 +1,7 @@
 #include "console/consoleapp.h"
 #include "base/base-test.h"
 #include "collection/collection-test.h"
-//#include "syntax/syntax-test.h"
+#include "syntax/syntax-test.h"
 
 NS_FW_BASE_USE
 
@@ -34,23 +34,24 @@ int _main(NS_FW_BASE::Map* args) {
 	int totalPassed = 0;
 	int totalFailed = 0;
 
-	var baseTest = NEW_(BaseTest);
-	baseTest->test("Str tests", (TestMethod)&BaseTest::strTests);
-	baseTest->test("String tests", (TestMethod)&BaseTest::stringTests);
-	totalPassed += baseTest->totalPassed_;
-	totalFailed += baseTest->totalFailed_;
-	baseTest->displayFinalResults("Base Test Results ");
-	DEL_(baseTest);
+	//var baseTest = NEW_(BaseTest);
+	//baseTest->test("Str tests", (TestMethod)&BaseTest::strTests);
+	//baseTest->test("String tests", (TestMethod)&BaseTest::stringTests);
+	//totalPassed += baseTest->totalPassed_;
+	//totalFailed += baseTest->totalFailed_;
+	//baseTest->displayFinalResults("Base Test Results ");
+	//DEL_(baseTest);
 
 	var collectionTest = NEW_(CollectionTest);
-	//collectionTest->test("Array tests", (TestMethod)&CollectionTest::testArray);
-	//collectionTest->test("PArray tests", (TestMethod)&CollectionTest::testPArray);
-	//collectionTest->test("Map tests", (TestMethod)&CollectionTest::testMap);
-	collectionTest->test("Tree tests", (TestMethod)&CollectionTest::testTree);
-	totalPassed += collectionTest->totalPassed_;
-	totalFailed += collectionTest->totalFailed_;
+	collectionTest->runAll(totalPassed, totalFailed);
 	collectionTest->displayFinalResults("Collection Test Results ");
 	DEL_(collectionTest);
+
+	var syntaxTest = NEW_(SyntaxTest);
+	syntaxTest->runAll(totalPassed, totalFailed);
+	syntaxTest->displayFinalResults("Syntax Test Results ");
+	DEL_(syntaxTest);
+
 
 	//testRatio();
 

@@ -28,6 +28,8 @@ size_t strrcspn(const char *dest, const char *src);
 //char** strsplit(const char* src, const char* separator, int& count);
 
 // extended string functions
+char* parseInt(char* str, int& value, int radix = 10);
+char* parseDouble(char* str, double& value);
 
 NS_FW_BASE_END
 

@@ -90,7 +90,7 @@ int PArray::apply(COLLECTIONCALLBACK* callback, ...) {
 	va_start(args, callback);
 	var res = -1;
 	for (var ix = 0; ix < length_; ix++) {
-		if (!callback(data_[ix], ix, this, args)) {
+		if (!callback(data_[ix], NULL, ix, this, args)) {
 			res = ix;
 			break;
 		}
@@ -124,8 +124,8 @@ void PArray::sort_(int min, int max, COLLECTIONCALLBACK* compare) {
 		void* pivot = get(ix);
 		while (l <= r) {
 			void* item;
-			while ((item = get(l)) != NULL && compare(item, l, this, pivot) < 0) l++;
-			while ((item = get(r)) != NULL && compare(item, r, this, pivot) > 0) r--;
+			while ((item = get(l)) != NULL && compare(item, pivot, l, this, NULL) < 0) l++;
+			while ((item = get(r)) != NULL && compare(item, pivot, r, this, NULL) > 0) r--;
 			if (l > r) break;
 			// swap left and right
 			void* tmp = data_[l];
@@ -142,7 +142,7 @@ void* PArray::search(Key key, int& ix, COLLECTIONCALLBACK* compare) {
 	if (compare == NULL) compare = this->compare();
 	for (int i = 0; i < length_; i++) {
 		void* item = data_[i];
-		int res = compare(item, i, this, key.p);
+		int res = compare(item, key, i, this, NULL);
 		if (res == 0) {
 			value = item;
 			ix = i;
