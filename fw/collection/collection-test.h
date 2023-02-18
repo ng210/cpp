@@ -20,14 +20,14 @@ public:
 
 	void runAll(int& totalPassed, int& totalFailed);
 
-	static int compareInt(void* item, Key key, unsigned int ix, Collection* array, void* args);
-	static int compareWord(void* item, Key key, unsigned int ix, Collection* array, void* args);
-	static int compareStr(void* str, Key key, unsigned int ix, Collection* array, void* args);
-	static int compareObj(void* obj, Key key, unsigned int ix, Collection* array, void* args);
+	static COLLECTION_COMPARE compareInt;
+	static COLLECTION_COMPARE compareWord;
+	static COLLECTION_COMPARE compareStr;
+	static COLLECTION_COMPARE compareObj;
 
-	static int checkSortInt(void* item, Key key, unsigned int ix, Collection* array, void* args);
-	static int checkSortStr(void* str, Key key, unsigned int ix, Collection* array, void* args);
-	static int checkSortObj(void* obj, Key key, unsigned int ix, Collection* array, void* args);
+	static COLLECTION_ACTION checkSortInt;
+	static COLLECTION_ACTION checkSortStr;
+	static COLLECTION_ACTION checkSortObj;
 };
 
 #endif

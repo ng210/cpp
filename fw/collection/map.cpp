@@ -53,13 +53,13 @@ size_t Map::hashingStr(Key key, size_t unused1) {
 	return hash;
 }
 
-int Map::compareWrapper_(void* item, Key key, UINT32 ix, Collection* collection, void* args) {
+int Map::compareWrapper_(COLLECTION_ARGUMENTS) {
 	Array* bucket = (Array*)collection;
-	KeyValuePair* keyValue = (KeyValuePair*)item;
-	return bucket->compare()(keyValue->key().p, key, ix, bucket, args);
+	KeyValuePair* keyValue = (KeyValuePair*)value;
+	return bucket->compare()(keyValue->key().p, key, bucket, args);
 }
 
-Map::Map(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTIONCALLBACK* compare) {
+Map::Map(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTION_COMPARE* compare) {
 	initialize(keySize, valueSize, hashing, compare);
 }
 //Map::Map(Array* array, const char* separator) {
@@ -77,7 +77,7 @@ Map::Map(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTIONC
 //	}
 //}
 
-void Map::initialize(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTIONCALLBACK* compare) {
+void Map::initialize(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTION_COMPARE* compare) {
 	if (keySize == MAP_USE_REF) keys_ = NEW_(PArray, MAP_ITEM_COUNT);
 	else keys_= NEW_(Array, keySize, MAP_ITEM_COUNT);
 	keys_->compare(compare);
@@ -100,16 +100,16 @@ Map::~Map() {
 	DEL_(keys_);
 	DEL_(values_);
 	bucketList_->apply(
-		[](void* item, Key key, UINT32 ix, Collection* collection, void* args) {
-			((Array*)item)->~Array();
-			return 1;
+		[](COLLECTION_ARGUMENTS) {
+			((Array*)value)->~Array();
+			return value;
 		});
 	DEL_(bucketList_);
 }
 
 bool Map::containsKey(Key key) {
-	int ix;
-	return keys_->binSearch(key, ix, keys_->compare());	//Collection::compareInt
+	Key found = -1;
+	return keys_->binSearch(key, found, keys_->compare());	//Collection::compareInt
 }
 
 Array* Map::getBucket(Key key) {
@@ -119,7 +119,7 @@ Array* Map::getBucket(Key key) {
 }
 
 KeyValuePair* Map::getKeyValuePair(Key key) {
-	int pos = -1;
+	Key pos = -1;
 	var bucket = getBucket(key);
 	return (KeyValuePair*)bucket->binSearch(key, pos, Map::compareWrapper_);
 }
@@ -131,13 +131,15 @@ void* Map::put(Key key, void* value) {
 	return add(key, value);
 }
 
-void Map::sort(COLLECTIONCALLBACK* compare) {
-
+void Map::sort(COLLECTION_COMPARE* compare) {
+	// sort keys, adjust KeyValuePairs in buckets
+	for (var i = 0; i < values_->length(); i++) {
+	}
 }
 
 #pragma region Collection
 void* Map::add(Key key, void* value) {
-	int pos = -1;
+	Key pos = -1;
 	var bucket = getBucket(key);
 	var keyValue = (KeyValuePair*)bucket->binSearch(key, pos, Map::compareWrapper_);
 	void* res = NULL;
@@ -170,7 +172,7 @@ void* Map::insert(Key key, void* value) {
 }
 void Map::remove(Key key) {
 	// unsorted Map, this method brakes the order of keys and values
-	int pos = -1;
+	Key pos = -1;
 	var bucket = getBucket(key);
 	var kvp = (KeyValuePair*)bucket->binSearch(key, pos, Map::compareWrapper_);
 	if (kvp) {
@@ -195,7 +197,7 @@ void* Map::get(Key key) {
 	return kvp != NULL ? kvp->value_ : NULL;
 }
 void Map::set(Key key, void* item) {
-	int pos = -1;
+	Key pos = -1;
 	var bucket = getBucket(key);
 	var kvp = (KeyValuePair*)bucket->binSearch(key, pos, Map::compareWrapper_);
 	if (kvp) {
@@ -206,16 +208,16 @@ void Map::set(void** item, void* data) {
 	memcpy(item, data, values_->itemSize());
 }
 
-int Map::apply(COLLECTIONCALLBACK callback, ...) {
+int Map::apply(COLLECTION_ACTION action, ...) {
 	va_list args;
-	va_start(args, callback);
+	va_start(args, action);
 	dword ix = 0;
 	var res = -1;
 	for (var i = 0; i < bucketList_->length(); i++) {
 		var bucket = (Array*)bucketList_->get(i);
 		for (var j = 0; j < bucket->length(); j++) {
 			var kvp = (KeyValuePair*)bucket->get(j);
-			if (!callback(kvp, j, ix, this, args)) {
+			if (!action(kvp, j, this, args)) {
 				res = ix;
 				break;
 			}
@@ -231,14 +233,14 @@ void Map::fill(void* value) {
 	}
 }
 
-void* Map::search(Key key, int& ix, COLLECTIONCALLBACK* compare) {
+void* Map::search(Key key, Key& found, COLLECTION_COMPARE* compare) {
 	void* res = NULL;
-	int pos = -1;
-	ix = -1;
+	Key pos = -1;
+	found = -1;
 	var bucket = getBucket(key);
 	var kvp = (KeyValuePair*)bucket->binSearch(key, pos, Map::compareWrapper_);
 	if (kvp) {
-		ix = pos;
+		found = pos;
 		res = kvp->value();
 	}
 	return res;

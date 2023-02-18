@@ -3,13 +3,10 @@
 NS_FW_BASE_USE
 NS_FW_WIN_BEGIN
 
-StaticCtrl::StaticCtrl(Window* parent, size_t ctrlId, TCHAR* text) : Ctrl(parent, ctrlId) {
-	CREATESTRUCT* createStruct = Ctrl::getCreateStruct(text, "STATIC");
-	hWnd_ = create(createStruct, parent);
-	FREE(createStruct);
-}
+WndClass StaticCtrl::WndClass_("STATIC");
 
-StaticCtrl::~StaticCtrl() {
+void StaticCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
+	Window::create(StaticCtrl::WndClass_, parent, name, style, exStyle);
 }
 
 NS_FW_WIN_END

@@ -6,55 +6,45 @@ NS_FW_WIN_USE
 
 char* TestApp::eos_ = "\n\0";
 
-WinApp* createApplication(HINSTANCE hInstance, Map* args) {
-	// Load menu
-	HMENU hMenu = NULL;
-
-	CREATESTRUCT createStruct = {
-		NULL,							// LPVOID      lpCreateParams;
-		hInstance,						// HINSTANCE   hInstance;
-		hMenu,							// HMENU       hMenu;
-		NULL,							// HWND        hwndParent;
-		480,							// int         cy;
-		640,							// int         cx;
-		CW_USEDEFAULT,					// int         y;
-		CW_USEDEFAULT,					// int         x;
-		WS_OVERLAPPEDWINDOW,			// LONG        style;
-		"Test App",						// LPCSTR      lpszName;
-		0,								// LPCSTR      lpszClass;
-		0								// DWORD       dwExStyle;
-	};
-	WNDCLASSEX wndClassEx = {
-		sizeof(WNDCLASSEX),				// UINT        cbSize;
-										/* Win 3.x */
-		CS_HREDRAW | CS_VREDRAW,		// UINT        style;
-		NULL,							// WNDPROC     lpfnWndProc;
-		0,								// int         cbClsExtra;
-		0,								// int         cbWndExtra;
-		hInstance,						// HINSTANCE   hInstance;
-		LoadIcon(NULL, IDI_APPLICATION),// HICON       hIcon;
-		LoadCursor(NULL, IDC_ARROW),	// HCURSOR     hCursor;
-		(HBRUSH)COLOR_BACKGROUND,		// HBRUSH      hbrBackground;
-		NULL,							// LPCSTR      lpszMenuName;
-		"TestWClass",					// LPCSTR      lpszClassName;
-										/* Win 4.0 */
-		NULL							// HICON       hIconSm;
-	};
-	return NEW_(TestApp, &createStruct, &wndClassEx);
-}
-
-TestApp::TestApp(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx) {
-	// put initialization code here
-	logControl_ = NULL;
-	char eos = '\0';
+TestApp::TestApp() {
 	state_ = 0;
-	log_.append(&eos, 1);
-	create(createStruct, wndClassEx);
 }
+
 TestApp::~TestApp() {
 	// put cleanup code here
-	DEL_(logControl_);
 	// log buffer?
+}
+
+void TestApp::create(WndClass wndClass, LONG style, DWORD exStyle) {
+	Window::create(wndClass, NULL, "TestApp", style, exStyle);
+}
+
+LRESULT TestApp::onCreate() {
+	RECT rect;
+	LRESULT result = 0;
+	SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, 800, 600, SWP_NOMOVE));
+	SYSPR(GetClientRect(hWnd_, &rect));
+	HFONT hFont = (HFONT)GetStockObject(SYSTEM_FIXED_FONT);
+
+	// Create edit text control
+	logCtrl_.create(this, "", WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL);
+	testCtrl_.create(this, "");
+	rect.left += 4; rect.right -= 8;
+	rect.top += 4; rect.bottom -= 12;
+	var height = rect.bottom >> 1;
+	SYSFN(result, SetWindowPos(logCtrl_.hWnd(), NULL, rect.left, rect.top, rect.right, height, SWP_SHOWWINDOW));
+	rect.top += height + 2;
+	SYSPR(SetWindowPos(testCtrl_.hWnd(), NULL, rect.left, rect.top, rect.right, height, SWP_SHOWWINDOW));
+
+	SendMessage(logCtrl_.hWnd(), WM_SETFONT, (WPARAM)hFont, false);
+
+	//char eos = '\0';
+	//log_.append(&eos, 1);
+	return result;
+}
+
+LRESULT TestApp::onDestroy() {
+	return 0;
 }
 
 LRESULT CALLBACK TestApp::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -72,23 +62,19 @@ LRESULT CALLBACK TestApp::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			mmi->ptMaxTrackSize.x = 800; mmi->ptMaxTrackSize.y = 600;
 			mmi->ptMinTrackSize.x = 640; mmi->ptMinTrackSize.y = 400;
 			break;
-		case WM_SIZE:
-			RECT rect;
-			//SYSPR(GetClientRect(hWnd_, &rect));
-			SYSPR(GetClientRect(hWnd_, &rect));
-			rect.left += 4; rect.right -= 8;
-			rect.top += 4; rect.bottom -= 8;
-			SYSFN(ret, SetWindowPos(logControl_->hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
-			break;
-		case WM_LBUTTONUP:
-			if ((state_ & 0x01) != 0) {
-				state_++;
-			}
-			break;
+		//case WM_SIZE:
+		//	break;
 		default:
 			ret = Window::wndProc(hWnd, uMsg, wParam, lParam);
 	}
 	return ret;
+}
+
+LRESULT TestApp::onLeftUp(POINT& pos, WPARAM state) {
+	if ((state_ & 0x01) != 0) {
+		state_++;
+	}
+	return 0;
 }
 
 void TestApp::log(const char* text) {
@@ -97,7 +83,8 @@ void TestApp::log(const char* text) {
 	char* eol = "\r\n---\r\n\0";
 	log_.append(eol, 8);
 	char* buffer = log_.getBufferAsType<char>();
-	SetWindowText(logControl_->hWnd(), buffer);
+	SetWindowText(logCtrl_.hWnd(), buffer);
+	testCtrl_.setText(buffer);
 	FREE(buffer);
 	//ScrollWindow(logControl_->hWnd(), 0, 0, NULL, &rect);
 }
@@ -126,33 +113,12 @@ void TestApp::update() {
 	Sleep(1);
 }
 
-LRESULT TestApp::onCreate() {
-	// Create static text control
-	RECT rect;
-	SYSPR(GetClientRect(hWnd_, &rect));
-	logControl_ = NEW_(EditCtrl, this, 0x001, WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL, NULL);
-	NEW_(EditCtrl, this, 0x001, WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL, NULL);
-	//LONG_PTR SYSFN(style, GetWindowLongPtr(logControl_->hWnd(), GWL_STYLE));
-	//style = WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL;
-	//SYSPR(SetWindowLongPtr(logControl_->hWnd(), GWL_STYLE, style));
-	SYSPR(SetWindowPos(logControl_->hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
-	HFONT hFont = (HFONT)GetStockObject(SYSTEM_FIXED_FONT);
-	SendMessage(logControl_->hWnd(), WM_SETFONT, (WPARAM)hFont, false);
-	return 0;
-}
 
-//int TestApp::onCommand(int wmId) {
-//	return 0;
-//}
-//int TestApp::onMouseClick(POINT, int) {
-//	return 0;
-//}
-//int TestApp::onMouseMove(POINT) {
-//	return 0;
-//}
-//int TestApp::onPaint(HDC hdc, PAINTSTRUCT* ps) {
-//	return 0;
-//}
-//int TestApp::onDestroy() {
-//	return 0;
-//}
+WinApp* createApplication(HINSTANCE hInstance, Map* args) {
+	// Load menu
+	HMENU hMenu = NULL;
+	var wndClass = Window::registerClass((char*)"TestApp", hInstance);
+	var app = NEW_(TestApp);
+	app->create(wndClass);
+	return app;
+}

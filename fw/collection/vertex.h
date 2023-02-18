@@ -9,7 +9,8 @@ NS_FW_BASE_BEGIN
 class Graph;
 class Vertex;
 class Edge;
-typedef int VERTEXHANDLER(Graph* graph, Vertex*, ...);
+typedef int (VERTEXHANDLER)(Graph* graph, Vertex* vertex, ...);
+typedef int (VVERTEXHANDLER)(Graph* graph, Vertex* vertex, va_list args);
 
 enum class VertexFlags {
 	none = 0,

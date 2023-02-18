@@ -21,45 +21,52 @@ Graph::Graph() {
 }
 
 Graph::~Graph() {
-	vertices_.apply([](void* item, Key key, UINT32 ix, Collection* collection, void* args) {
-		DEL_((Vertex*)item);
-		return 1;
+	vertices_.apply([](COLLECTION_ARGUMENTS) {
+		DEL_((Vertex*)value);
+		return value;
 	});
-	edges_.apply([](void* item, Key key, UINT32 ix, Collection* collection, void* args) {
-		DEL_((Edge*)item);
-		return 1;
+	edges_.apply([](COLLECTION_ARGUMENTS) {
+		DEL_((Edge*)value);
+		return value;
 	});
 }
 
 Vertex* Graph::createVertex(void* data, Vertex* parent) {
 	Vertex* vertex = createVertexHandler(this, parent, data);
-	vertex->graph(this);
-	if (!root_) {
-		root_ = vertex;
+	if (vertex != NULL) {
+		vertex->graph(this);
+		if (root_ == NULL) {
+			root_ = vertex;
+		}
+		vertices_.push(vertex);
 	}
-	vertices_.push(vertex);
 	return vertex;
 }
 
 Edge* Graph::createEdge(Vertex* from, Vertex* to, void* data) {
 	var edge = createEdgeHandler(this, from, to, data);
-	edge->graph(this);
-	edges_.push(edge);
+	if (edge != NULL) {
+		edge->graph(this);
+		edges_.push(edge);
+	}
 	return edge;
 }
 
-void Graph::deleteVertex(Vertex* vertex) {
-	if (!deleteVertexHandler(this, vertex)) {
+Vertex* Graph::deleteVertex(Vertex* vertex) {
+	vertex = deleteVertexHandler(this, vertex);
+	if (vertex != NULL) {
 		removeVertex(vertex);
-		DEL_(vertex);
 	}
+	return vertex;
 }
 
-void Graph::deleteEdge(Edge* edge) {
-	if (!deleteEdgeHandler(this, edge)) {
+Edge* Graph::deleteEdge(Edge* edge) {
+	edge = deleteEdgeHandler(this, edge);
+	if (edge) {
 		removeEdge(edge);
 		DEL_(edge);
 	}
+	return edge;
 }
 
 
@@ -68,22 +75,22 @@ void* Graph::add(Key key, void* item) {
 	return addVertex((Vertex*)key.p, item, NULL);
 }
 void* Graph::get(Key key) {
-	int ix = -1;
-	return vertices_.search(key, ix);
+	Key found = -1;
+	return vertices_.search(key, found);
 }
 void* Graph::insert(Key key, void* item) {
 	return add(key, item);
 }
 void Graph::remove(Key key) {
-	int ix = -1;
-	var vertex = (Vertex*)search(key, ix);
+	Key found = -1;
+	var vertex = (Vertex*)search(key, found);
 	if (vertex) {
 		removeVertex(vertex);
 	}
 }
 void Graph::set(Key key, void* item) {
-	int ix = -1;
-	var vertex = (Vertex*)search(key, ix);
+	Key found = -1;
+	var vertex = (Vertex*)search(key, found);
 	if (vertex) {
 		vertex->setData(item);
 	}
@@ -93,12 +100,12 @@ void Graph::set(void** oldItem, void* newItem) {
 	vertex->setData(newItem);
 }
 
-int Graph::apply(COLLECTIONCALLBACK callback, ...) {
+int Graph::apply(COLLECTION_ACTION action, ...) {
 	va_list args;
-	va_start(args, callback);
+	va_start(args, action);
 	var res = -1;
 	for (var ix = 0; ix < vertices_.length(); ix++) {
-		if (!callback(vertices_.data()[ix], NULL, ix, this, args)) {
+		if (!action(vertices_.data()[ix], ix, this, args)) {
 			res = ix;
 			break;
 		}
@@ -111,10 +118,10 @@ void Graph::fill(void* value) {
 		vertices_.set(i, value);
 	}
 }
-void* Graph::search(Key key, int& ix, COLLECTIONCALLBACK* compare) {
+void* Graph::search(Key key, Key& found, COLLECTION_COMPARE* compare) {
 	if (compare == NULL) compare = compare_;
-	ix = -1;
-	return vertices_.search(key, ix, compare);
+	found.i = -1;
+	return vertices_.search(key, found, compare);
 }
 #pragma endregion
 
@@ -152,7 +159,9 @@ void Graph::removeEdge(Edge* edge) {
 	}
 }
 
-void Graph::DFS(Vertex* start, VERTEXHANDLER preHandler, VERTEXHANDLER postHandler, EDGEHANDLER edgeHandler, void* args) {
+void Graph::DFS(Vertex* start, VVERTEXHANDLER preHandler, VVERTEXHANDLER postHandler, VEDGEHANDLER edgeHandler, ...) {
+	va_list args;
+	va_start(args, edgeHandler);
 	// reset flags
 	for (var i = 0; i < vertices_.length(); i++) {
 		((Vertex*)vertices_.get(i))->flag() = VertexFlags::none;
@@ -197,9 +206,12 @@ void Graph::DFS(Vertex* start, VERTEXHANDLER preHandler, VERTEXHANDLER postHandl
 			remaining.remove(ix);
 		}
 	}
+	va_end(args);
 }
 
-void Graph::BFS(Vertex* start, VERTEXHANDLER preHandler, VERTEXHANDLER postHandler, EDGEHANDLER edgeHandler, void* args) {
+void Graph::BFS(Vertex* start, VVERTEXHANDLER preHandler, VVERTEXHANDLER postHandler, VEDGEHANDLER edgeHandler, ...) {
+	va_list args;
+	va_start(args, edgeHandler);
 	// reset flags
 	for (var i = 0; i < vertices_.length(); i++) {
 		((Vertex*)vertices_.get(i))->flag(VertexFlags::none);
@@ -209,12 +221,12 @@ void Graph::BFS(Vertex* start, VERTEXHANDLER preHandler, VERTEXHANDLER postHandl
 	PArray remaining(vertices_.length());
 	remaining.add(start);
 	start->flag(VertexFlags::queued);
-	if (preHandler != NULL && preHandler(this, start, level, args)) return;
+	if (preHandler != NULL && preHandler(this, start, args)) return;		// level
 
 	var isStopped = false;
 	while (!isStopped && remaining.length() > 0) {
 		var vertex = (Vertex*)remaining.pop();
-		if (postHandler != NULL && postHandler(this, start, level, args)) break;
+		if (postHandler != NULL && postHandler(this, start, args)) break;	// level
 		for (var i = 0; i < vertex->edges().length(); i++) {
 			var edge = (Edge*)vertex->edges().get(i);
 			if (edge) {
@@ -225,7 +237,7 @@ void Graph::BFS(Vertex* start, VERTEXHANDLER preHandler, VERTEXHANDLER postHandl
 						if (!edgeHandler(this, edge, args)) {
 							child->flag(VertexFlags::queued);
 							if (preHandler != NULL) {
-								if (!preHandler(this, child, level + 1, args)) {
+								if (!preHandler(this, child, args)) {		// level + 1
 									remaining.insert(0, child);
 								}
 							}
@@ -240,7 +252,7 @@ void Graph::BFS(Vertex* start, VERTEXHANDLER preHandler, VERTEXHANDLER postHandl
 		}
 		level++;
 	}
-
+	va_end(args);
 }
 
 PArray* Graph::findPath(Vertex* start, Vertex* end, EDGEHANDLER checkEdge) {
@@ -250,19 +262,14 @@ PArray* Graph::findPath(Vertex* start, Vertex* end, EDGEHANDLER checkEdge) {
 	if (checkEdge == NULL) checkEdge = Edge::defaultHandler;
 	void* args[3] = { links, end, checkEdge };
 	BFS(start,
-		[](Graph* graph, Vertex* vertex, ...) {
-			va_list args;
-			va_start(args, vertex);
+		[](Graph* graph, Vertex* vertex, va_list args) {
 			var links = va_arg(args, Array*);	// skip links
 			var end = va_arg(args, Vertex*);
 			var res = (int)(vertex == end);
-			va_end(args);
 			return res;
 		},
 		NULL,
-		[](Graph* graph, Edge* edge, ...) {
-			va_list args;
-			va_start(args, edge);
+		[](Graph* graph, Edge* edge, va_list args) {
 			var links = va_arg(args, Array*);
 			var end = va_arg(args, Vertex*);	// skip end
 			var checkEdge = va_arg(args, EDGEHANDLER*);
@@ -271,10 +278,9 @@ PArray* Graph::findPath(Vertex* start, Vertex* end, EDGEHANDLER checkEdge) {
 				links->set(edge->to()->id(), edge);
 			}
 			else res = 1;
-			va_end(args);
 			return res;
 		},
-		args
+		links, end, checkEdge
 	);
 	PArray* path = NULL;
 	var link = (Edge*)links->get(end->id());
@@ -301,20 +307,21 @@ PArray* Graph::findPath(Vertex* start, Vertex* end, EDGEHANDLER checkEdge) {
 Vertex* Graph::defCreateVertexHandler(Graph* graph, Vertex* parent, void* data) {
 	return NEW_(Vertex, graph->vertices().length(), parent, data);
 }
-int Graph::defDeleteVertexHandler(Graph* graph, Vertex* vertex, ...) {
-	return 0;
+Vertex* Graph::defDeleteVertexHandler(Graph* graph, Vertex* vertex) {
+	return vertex;
 }
 Edge* Graph::defCreateEdgeHandler(Graph* graph, Vertex* from, Vertex* to, void* data) {
 	return NEW_(Edge, from, to, data);
 }
-int Graph::defDeleteEdgeHandler(Graph* graph, Edge* edge, ...) {
-	return 0;
+Edge* Graph::defDeleteEdgeHandler(Graph* graph, Edge* edge) {
+	return edge;
 }
-int Graph::defVertexCompare(void* item, Key key, UINT32 ix, Collection* graph, void* arg) {
-	return ((Vertex*)item)->id() - key.i;
+
+int Graph::defVertexCompare(COLLECTION_ARGUMENTS) {
+	return ((Vertex*)value)->id() - key.i;
 }
-int Graph::defEdgeCompare(void* item, Key key, UINT32 ix, Collection* graph, void* arg) {
-	var edge = (Edge*)item;
+int Graph::defEdgeCompare(COLLECTION_ARGUMENTS) {
+	var edge = (Edge*)value;
 	return (int)((size_t)edge->data() - (size_t)key.p);
 }
 

@@ -22,7 +22,8 @@ typedef enum ConsoleColors {
 
 
 class Console {
-protected: PROP_R(HANDLE, hConsole);
+protected: PROP_R(HANDLE, hOutput);
+protected: PROP_R(HANDLE, hInput);
 protected: PROP_R(CONSOLE_SCREEN_BUFFER_INFO, consoleScreenBufferInfo);
 protected: PROP_R(CONSOLE_CURSOR_INFO, consoleCursorInfo);
 protected: PROP_R(char*, consoleBuffer);
@@ -39,6 +40,9 @@ public:
 	COORD* movexy(int x, int y);
 	void setcolor(int col);
 	void clearscreen();
+
+	int keyPressed();
+	CHAR getKey();
 };
 
 extern int _main(NS_FW_BASE::Map* args);

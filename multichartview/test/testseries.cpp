@@ -26,7 +26,7 @@ TestSeries::TestSeries(int size) {
 
 int TestSeries::get(int ix, int seriesId, double* value) {
 	int result = 0;
-	TESTDATA* data = (TESTDATA*)data_->getAt(ix);
+	TESTDATA* data = (TESTDATA*)data_->get(ix);
 	if (data != NULL) {
 		switch (seriesId) {
 			case 0: value[0] = data->i / 100.0; break;
@@ -42,7 +42,7 @@ int TestSeries::get(int ix, int seriesId, double* value) {
 }
 int TestSeries::set(int ix, int seriesId, double* value) {
 	int result = 0;
-	TESTDATA* data = (TESTDATA*)data_->getAt(ix);
+	TESTDATA* data = (TESTDATA*)data_->get(ix);
 	if (data != NULL) {
 		switch (seriesId) {
 			case 0: data->i = (int)(*value * 100.0); break;

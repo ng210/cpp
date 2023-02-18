@@ -3,16 +3,18 @@
 NS_FW_BASE_USE
 NS_FW_WIN_BEGIN
 
-EditCtrl::EditCtrl(Window* parent, size_t ctrlId, int style, TCHAR* text) : Ctrl(parent, ctrlId) {
+WndClass EditCtrl::WndClass_("EDIT");
+
+EditCtrl::EditCtrl() {
+}
+
+void EditCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
 	if (style == 0) {
 		style = WS_BORDER | ES_LEFT;
 	}
-	style |= WS_CHILD | WS_VISIBLE;
+	//style |= WS_CHILD | WS_VISIBLE;
 
-	CREATESTRUCT* createStruct = Ctrl::getCreateStruct(text, "EDIT");
-	createStruct->style = style;
-	hWnd_ = create(createStruct, parent);
-	FREE(createStruct);
+	Ctrl::create(EditCtrl::WndClass_, parent, name, style, exStyle);
 }
 
 EditCtrl::~EditCtrl() {

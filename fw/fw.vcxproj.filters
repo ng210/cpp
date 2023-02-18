@@ -170,6 +170,9 @@
     <ClInclude Include="collection\collection-test.h">
       <Filter>collection\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="syntax\grammar-defs.h">
+      <Filter>syntax\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\memory.cpp">

@@ -77,7 +77,7 @@ double Stream::readDouble() {
 }
 char* Stream::readString() {
 	var s = (char*)cursor_;
-	cursor_ += strlen(s);
+	cursor_ += strlen(s) + 1;
 	return s;
 }
 char* Stream::readRow() {

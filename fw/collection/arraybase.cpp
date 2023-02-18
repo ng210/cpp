@@ -13,11 +13,11 @@ ArrayBase::~ArrayBase() {
 	FREE(data_);
 }
 
-void* ArrayBase::binSearch(Key key, int& ix, COLLECTIONCALLBACK* compare) {
+void* ArrayBase::binSearch(Key key, Key& found, COLLECTION_COMPARE* compare) {
 	if (compare == NULL) compare = compare_;
-	return binSearch_(key, ix, compare);
+	return binSearch_(key, found, compare);
 }
-void* ArrayBase::binSearch_(Key key, int& ix, COLLECTIONCALLBACK* compare) {
+void* ArrayBase::binSearch_(Key key, Key& found, COLLECTION_COMPARE* compare) {
 	UINT32 min = 0, max = length_;
 	// the search range gets halved each iteration
 	while (min < max) {
@@ -25,10 +25,10 @@ void* ArrayBase::binSearch_(Key key, int& ix, COLLECTIONCALLBACK* compare) {
 		UINT32 mid = (min + max) >> 1;
 		// compare item with middle item
 		void* item = get(mid);
-		int i = compare(item, key, mid, this, NULL);
+		int i = compare(item, key, this, NULL);
 		if (i == 0) {
 			// on equation the middle item was the searched item
-			ix = mid;
+			found.i = mid;
 			return item;
 		}
 		if (i > 0) {
@@ -41,16 +41,16 @@ void* ArrayBase::binSearch_(Key key, int& ix, COLLECTIONCALLBACK* compare) {
 		}
 	}
 	// item not found, index marks the place where the item should be.
-	ix = max;
+	found.i = max;
 	return NULL;
 }
-int ArrayBase::findIndex(Key key, COLLECTIONCALLBACK* compare) {
+Key ArrayBase::findIndex(Key key, COLLECTION_COMPARE* compare) {
 	if (compare == NULL) compare = compare_;
-	int ix = 0;
-	if (!search(key, ix, compare)) ix = -1;
-	return ix;
+	Key found = 0;
+	if (!search(key, found, compare)) found = -1;
+	return found;
 }
-void ArrayBase::sort(COLLECTIONCALLBACK* compare) {
+void ArrayBase::sort(COLLECTION_COMPARE* compare) {
 	if (compare == NULL) compare = compare_;
 	return sort_(0, length_ - 1, compare);
 }

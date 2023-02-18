@@ -8,10 +8,13 @@ NS_FW_BASE_USE
 NS_FW_WIN_BEGIN
 
 class ComboboxCtrl : public Ctrl {
+	static WndClass WndClass_;
 protected: PROP_R(PArray*, items);
 public:
-	ComboboxCtrl(Window* parent, size_t ctrlId);
+	ComboboxCtrl();
 	virtual ~ComboboxCtrl();
+
+	void create(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
 	void addItem(LPTSTR item);
 	void addItems(PArray* items);
 	void setSelection(int ix);

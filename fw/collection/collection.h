@@ -18,13 +18,20 @@ typedef union Key {
 	Key() { p = NULL; }
 	Key(void* p) { this->p = p; }
 	Key(int i) { this->i = i; }
+	bool operator==(int iv) { return i == iv; }
+	bool operator==(void* pv) { return p == pv; }
+	bool operator!=(int iv) { return i != iv; }
+	bool operator!=(void* pv) { return p != pv; }
+
 } Key;
 
-typedef int (COLLECTIONCALLBACK)(void* value, Key key, UINT32 ix, Collection* collection, void* args);
+#define COLLECTION_ARGUMENTS void* value, Key key, Collection* collection, va_list args
+typedef void* (COLLECTION_ACTION)(COLLECTION_ARGUMENTS);
+typedef int (COLLECTION_COMPARE)(COLLECTION_ARGUMENTS);
 
 class Collection {
 protected: PROP_R(int, length);
-protected: PROP(COLLECTIONCALLBACK*, compare);
+protected: PROP(COLLECTION_COMPARE*, compare);
 protected:
 public:
 	Collection();
@@ -35,9 +42,11 @@ public:
 	virtual void set(Key key, void* item) = 0;
 	virtual void set(void** pOldItem, void* newItem) = 0;
 
-	virtual int apply(COLLECTIONCALLBACK, ...) = 0;
+	virtual int apply(COLLECTION_ACTION, ...) = 0;
 	virtual void fill(void* value);
-	virtual void* search(Key key, int& ix, COLLECTIONCALLBACK* compare = NULL);
+	virtual void* search(Key key, Key& found, COLLECTION_COMPARE* compare = NULL);
+
+	virtual void from(Collection* collection);
 
 	//virtual void* getAt(int ix) = 0;
 	//virtual void removeAt(int ix) = 0;
@@ -48,20 +57,10 @@ public:
 
 	//inline UINT32 length() { return length_;  }
 
-	static int compareByRef(void* item, Key key, UINT32 ix, Collection* collection, void* args) {
-		return (int)((size_t)item - (size_t)key.p);
-	}
-	static int compareStr(void* item, Key key, UINT32 ix, Collection* collection, void* args) {
-		return strncmp((char*)item, (char*)key.p);
-	}
-	static int compareStrReverse(void* item, Key key, UINT32 ix, Collection* collection, void* args) {
-		return strncmp((char*)key.p, (char*)item);
-	}
-	static int compareInt(void* item, Key key, UINT32 ix, Collection* collection, void* args) {
-		int i = *(int*)item;
-		return i - key.i;
-	}
-
+	static COLLECTION_COMPARE compareByRef;
+	static COLLECTION_COMPARE compareStr;
+	static COLLECTION_COMPARE compareStrReverse;
+	static COLLECTION_COMPARE compareInt;
 };
 
 NS_FW_BASE_END

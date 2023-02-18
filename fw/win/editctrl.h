@@ -6,9 +6,12 @@
 NS_FW_WIN_BEGIN
 
 class EditCtrl : public Ctrl {
+	static WndClass WndClass_;
 public:
-	EditCtrl(Window* parent, size_t ctrlId, int style = 0, TCHAR* text = NULL);
+	EditCtrl();
 	~EditCtrl();
+
+	void create(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
 };
 
 NS_FW_WIN_END

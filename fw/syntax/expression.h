@@ -23,11 +23,11 @@ namespace NS_FW_SYNTAX {
         Expression* resolve(void* context);
         void* evaluate(void* context);
     private:
-        Map* createInOutMap(PArray* ruleIn, PArray* ruleOut, Array* missing);
-        PArray* mergeNodes(PArray* nodes, Map* inOutMap);
-        PArray* shuffleNodes(PArray* nodes, Map* inOutMap);
-        void applyRule(GrammarRule* rule, PArray* nodes, int pos, void* context);
-        bool matchRule(GrammarRule* rule, PArray* nodes, void* context);
+        Map* createInOutMap(NodeArray* inNodes, int outCodesLength, int* outNodes, NodeArray* missing);
+        NodeArray* mergeNodes(NodeArray* nodes, Map* inOutMap);
+        NodeArray* shuffleNodes(NodeArray* nodes, Map* inOutMap);
+        void applyRule(GrammarRule* rule, NodeArray* nodes, int pos, void* context);
+        bool matchRule(GrammarRule* rule, int& len, Node** nodes, void* context);
         Node* createNode(int code, void* type, char* term);
 
         char* nodeToString(Node* node, bool simple);

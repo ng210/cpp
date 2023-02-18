@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include "base/memory.h"
 #include "syntax/expression.h"
 #include "syntax/syntax.h"
@@ -13,170 +14,213 @@ Expression::Expression(Syntax* syntax) {
 }
 
 Expression* Expression::resolve(void* context) {
-    //        this.lastNode = null;
-    //        var nodes = Array.from(this.tree.vertices);
-    //        if (this.syntax.debug > 0) console.log(`input: ${ nodes.map(x = > `${x.data.type.symbol } ['${x.data.term.replace(/[\n\r]/g, '\\n')}'] `)
-    //    }`);
-    //    // try to apply rules as long as there are nodes
-    //    while (nodes.length > 0) {
-    //        var r = 0;
-    //        while (r < this.syntax.ruleMap.length) {
-    //            var rule = this.syntax.ruleMap[r];
-    //            if (this.matchRule(rule, nodes, context)) {
-    //                // has a match, start over
-    //                // TODO: sort rules by prio and input length
-    //                r = 0;
-    //            }
-    //            else {
-    //                // has no match, try the next rule
-    //                r++;
-    //            }
-    //        }
-    //        break;
-    //    }
-    //    return this;
-    return NULL;
+    lastNode_ = NULL;
+    var len = tree_->vertices().length();
+    var nodes = MALLOC(Node*, len);
+    for (var i = 0; i < len; i++) {
+        nodes[i] = (Node*)tree_->vertices().get(i);
+    }
+    // try to apply rules as long as there are nodes
+    while (len > 0) {
+        var r = 0;
+        while (r < syntax_->rules()->length()) {
+            var rule = (GrammarRule*)syntax_->rules()->get(r);
+            if (matchRule(rule, len, nodes, context)) {
+                // has a match, start over
+                // TODO: sort rules by prio and input length
+                r = 0;
+            }
+            else {
+                // has no match, try the next rule
+                r++;
+            }
+        }
+        break;
+    }
+    return this;
 }
 void* Expression::evaluate(void* context) {
-    //        this.tree.DFS(this.lastNode, null, n = > {
-    //            // node handler calls action with the input nodes as arguments
-    //            if (typeof n.data.type.action == = 'function') {
-    //                var args = n.edges.map(x = > x.to);
-    //                // action returns a (calculated) value of the node
-    //                args.unshift(n);
-    //                n.data.value = n.data.type.action.apply(context, args);
-    //            }
-    //        });
-    //        return this.lastNode.data;  //.value;
-    return NULL;
+    tree_->DFS(lastNode_, NULL,
+        [](Graph* graph, Vertex* vertex, va_list args) {
+            var obj = va_arg(args, void*);
+            var node = (Node*)vertex;
+            if (node->type()->action != NULL) {
+                // node handler calls action with the input nodes as arguments
+                Node* nodes[16];
+                // action returns a (calculated) value of the node
+                nodes[0] = node;
+                for (var i = 0; i < node->edges().length(); i++) {
+                    var edge = (Edge*)node->edges().get(i);
+                    nodes[i+1] = (Node*)edge->to();
+                }
+                node->type()->action(obj, nodes);
+            }
+            return 1;
+        }, NULL, context);
+    return lastNode_->data();  //.value;
 }
-Map* Expression::createInOutMap(PArray* ruleIn, PArray* ruleOut, Array* missing) {
-    //    var inOutMap = new Dictionary();
-    //    var arr = Array.from(ruleOut);
-    //    for (var i = 0; i < ruleIn.length; i++) {
-    //        var found = false;
-    //        for (var j = 0; j < arr.length; j++) {
-    //            if (ruleIn[i] == arr[j] && arr[j] != this.syntax.literalCode) {
-    //                inOutMap.put(i, j);
-    //                arr[j] = null;
-    //                found = true;
-    //                break;
-    //            }
-    //        }
-    //        if (!found) {
-    //            missing.push(i);
-    //        }
-    //    }
-    //    return inOutMap;
-    return NULL;
+Map* Expression::createInOutMap(NodeArray* inNodes, int outCodesLength, int* outCodes, NodeArray* missing) {
+// inOutMap[i] = j, if inNodes[i] == outNodes[j]
+// missing[k] = i, i !E outNodes
+    var inOutMap = NEW_(Map, sizeof(int), sizeof(int), Map::hashingInt, Map::compareInt);
+    var arr = MALLOC(int, outCodesLength);
+    memcpy(arr, outCodes, outCodesLength);
+    int k = 0;
+    for (var i = 0; i < inNodes->length; i++) {
+        var found = false;
+        var inCode = inNodes->codes[i];
+        for (var j = 0; j < outCodesLength; j++) {
+            var outCode = arr[j];
+            if (inCode == outCode && outCode != syntax_->literalCode()) {
+                inOutMap->add(i, &j);
+                arr[j] = -1;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            missing->codes[k++] = i;
+        }
+    }
+    missing->length = k;
+    FREE(arr);
+    return inOutMap;
 }
-PArray* Expression::mergeNodes(PArray* nodes, Map* inOutMap) {
-    //    if (this.syntax.debug > 2) console.log('merge in: ' + nodes.map(n = > `{${ this.nodeToString(n) }
-    //}`).join('  '));
-    //    var parents = nodes.map(() = > 0);
-    //    for (var i = 0; i < nodes.length; i++) {
-    //        var node = nodes[i];
-    //        // candidate for parent:
-    //        // - appears on both sides of the rule, strongest rule
-    //        if (inOutMap.has(i)) parents[i] += 10;
-    //        // - has an edge
-    //        if (node.edges.length > 0) parents[i]++;
-    //        // - has an action
-    //        if (node.data.type.action != null) parents[i]++;
-    //        // - non-literal node
-    //        if (node.data.code == this.syntax.literalCode) parents[i] -= 8;
-    //        // - is a start node
-    //        if (node.data.type.start) parents[i]++;
-    //        // - not ignored
-    //        if (node.data.type.ignore) parents[i] -= 10;
-    //    }
-    //    // - leftmost node wins
-    //    var pi = 0;
-    //    for (var i = 1; i < parents.length; i++) {
-    //        if (parents[i] > parents[pi]) pi = i;
-    //    }
-    //    var parent = nodes[pi];
-    //    var remains = [];
-    //    var ci = nodes.length - inOutMap.size;
-    //    for (var i = 0; i < nodes.length; i++) {
-    //        if (i == pi || inOutMap.has(i)) {
-    //            remains.push(nodes[i]);
-    //            continue;
-    //        }
-    //        else if (!nodes[i].data.type.ignore) {
-    //            this.tree.addEdge(parent, nodes[i]);
-    //            nodes[i] = null;
-    //        }
-    //        if (ci-- == 0) break;
-    //    }
-    //    if (this.syntax.debug > 2) console.log('merge out: ' + remains.map(n = > `{${ this.nodeToString(n) }
-    //}`).join('  '));
-    //    return remains;
-    return NULL;
+NodeArray* Expression::mergeNodes(NodeArray* input, Map* inOutMap) {
+    //if (this.syntax.debug > 2) console.log('merge in: ' + nodes.map(n = > `{${ this.nodeToString(n) } }`).join('  '));
+    var len = input->length;
+    int parents[32];
+    memset(parents, 0, len * sizeof(int));
+    for (var i = 0; i < len; i++) {
+        var node = (Node*)input->nodes[i];
+        // candidate for parent:
+        // - appears on both sides of the rule, strongest rule
+        if (inOutMap->containsKey(i)) parents[i] += 10;
+        // - has an edge
+        if (node->edges().length() > 0) parents[i]++;
+        // - has an action
+        if (node->type()->action != NULL) parents[i]++;
+        // - non-literal node
+        if (node->code() == syntax_->literalCode()) parents[i] -= 8;
+        // - is a start node
+        if (node->type()->isStart) parents[i]++;
+        // - not ignored
+        if (node->type()->isIgnored) parents[i] -= 10;
+    }
+    // - get the highest rating from the left
+    var pi = 0;
+    for (var i = 1; i < len; i++) {
+        if (parents[i] > parents[pi]) pi = i;
+    }
+
+    var parent = (Node*)input->nodes[pi];
+    var remains = NEW_(NodeArray);
+    var ci = len - inOutMap->size();
+    var j = 0;
+    for (var i = 0; i < len; i++) {
+        var ni = (Node*)input->nodes[i];
+        if (i == pi || inOutMap->containsKey(i)) {
+            remains->nodes[j] = ni;
+            continue;
+        }
+        else if (!ni->type()->isIgnored) {
+            tree_->addEdge(parent, ni, NULL);
+            input->nodes[i]= NULL;
+        }
+        if (ci-- == 0) break;
+    }
+    //if (this.syntax.debug > 2) console.log('merge out: ' + remains.map(n = > `{${ this.nodeToString(n) }}`).join('  '));
+    return remains;
 }
-PArray* Expression::shuffleNodes(PArray* nodes, Map* inOutMap) {
-    //        var arr = new Array(nodes.length);
-    //        for (var j = 0; j < nodes.length; j++) {
-    //            var ix = inOutMap.has(j) ? inOutMap.get(j) : j;
-    //            arr[ix] = nodes[j];
-    //        }
-    //        return arr;
-    return NULL;
+NodeArray* Expression::shuffleNodes(NodeArray* input, Map* inOutMap) {
+    var arr = MALLOC(NodeArray, 1);
+    memcpy(arr->nodes, input->nodes, sizeof(NodeArray));
+    for (var j = 0; j < input->length; j++) {
+        var ix = inOutMap->containsKey(j) ? *(int*)inOutMap->get(j) : j;
+        input->nodes[ix] = arr->nodes[j];
+    }
+    FREE(arr);
+    return input;
 }
-void Expression::applyRule(GrammarRule* rule, PArray* nodes, int pos, void* context) {
-    //        // match found, replace input by output
-    //        var i = rule.in.length;
-    //        if (this.syntax.debug > 1) console.log(`match: ${ rs(rule) }`);
-    //        // extract rule's input
-    //        var inNodes = nodes.splice(n, i);
-    //        // get output
-    //        var ruleOut = rule.out;
-    //        if (typeof rule.action == = 'function') {
-    //            var outNodes = rule.action.apply(context, inNodes);
-    //            if (outNodes != null) {
-    //                if (!Array.isArray(outNodes)) outNodes = [outNodes];
-    //                ruleOut = outNodes.map(x = > x.data.code);
-    //            }
-    //        }
-    //        if (rule.in.length < ruleOut.length) {
-    //            throw new Error('Invalid rule: output cannot be longer than input!');
-    //        }
-    //        var outNodes = [];
-    //        if (!this.syntax.symbols.getAt(ruleOut[0]).empty) {
-    //            var missing = [];
-    //            outNodes = inNodes;
-    //            // get mapping between in-out symbols and missing symbols
-    //            var inOutMap = this.createInOutMap(rule.in, ruleOut, missing);
-    //            if (rule.in.length > ruleOut.length) {
-    //                // merge nodes
-    //                outNodes = this.mergeNodes(inNodes, inOutMap);
-    //            }
-    //
-    //            // shuffle nodes
-    //            if (inOutMap.size > 0) {
-    //                outNodes = this.shuffleNodes(outNodes, inOutMap);
-    //            }
-    //
-    //            // relabel nodes
-    //            if (outNodes.length > 0) {
-    //                for (var i = 0; i < ruleOut.length; i++) {
-    //                    var code = ruleOut[i];
-    //                    outNodes[i].data.code = code;
-    //                    //outNodes[i].data.type = this.syntax.symbols.getAt(code);
-    //                }
-    //            }
-    //        }
-    //        // re-insert the processed nodes
-    //        nodes.splice(n, 0, ...outNodes);
-    //        if (nodes[0]) {
-    //            this.lastNode = nodes[0];
-    //        }
-    //
-    //        //if (this.syntax.debug > 1) console.log(`result: ${nodes.map(x => `${this.syntax.symbols.getAt(x.data.code).symbol}['${x.data.term.replace(/[\n\r]/g, '\\n')}']`)}`);
-    //        if (this.syntax.debug > 0) console.log('result: ' + nodes.map(n = > `{${ this.nodeToString(n) }
-    //    }`).join('  '));
+void Expression::applyRule(GrammarRule* rule, NodeArray* input, int pos, void* context) {
+    // match found, replace input by output
+    //if (this.syntax.debug > 1) console.log(`match: ${ rs(rule) }`);
+    // extract rule's input
+    var inNodes = MALLOC(NodeArray, 1);
+    inNodes->length = rule->inNodes.length;
+    for (var i = 0; i < inNodes->length; i++) {
+        inNodes->nodes[i] = input->nodes[pos + i];
+        //inNodes->codes[i] = input->codes[pos + i];
+    }
+
+    int ruleOutCodesLength = 0;
+    int ruleOutCodes[32]; // &rule->outCodes;
+    if (rule->action != NULL) {
+        var outNodes = (NodeArray*)rule->action(context, inNodes->nodes).p;
+        if (outNodes != NULL) {
+            for (var j = 0; j < outNodes->length; j++) {
+                ruleOutCodes[j++] = outNodes->nodes[j]->code();
+                //ruleOut->codes[j] = outNodes->codes[j];
+            }
+            ruleOutCodesLength = outNodes->length;
+        }
+    }
+    if (rule->inNodes.length < ruleOutCodesLength) {
+        // ERROR: "Invalid rule: output cannot be longer than input!"
+        return;
+    }
+    NodeArray* outNodes = NULL;
+    // check first output symbol is not empty string -> nodes are replaced
+    var code = ruleOutCodes[0];
+    var symbol = (char*)syntax_->symbols().get(code);
+    if (symbol[0] != '\0') {
+        NodeArray missing;
+        outNodes = inNodes;
+        // get mapping between in-out symbols and missing symbols
+        var inOutMap = createInOutMap(&rule->inNodes, ruleOutCodesLength, ruleOutCodes, &missing);
+        if (rule->inNodes.length > ruleOutCodesLength) {
+            // merge nodes
+            outNodes = mergeNodes(inNodes, inOutMap);
+        }
+    
+        // shuffle nodes
+        if (inOutMap->size() > 0) {
+            var nodes = shuffleNodes(outNodes, inOutMap);
+        }
+    
+        // relabel nodes
+        if (outNodes->length > 0) {
+            for (var i = 0; i < ruleOutCodesLength; i++) {
+                var code = ruleOutCodes[i];
+                outNodes->nodes[i]->code(code);
+                //outNodes[i].data.type = this.syntax.symbols.getAt(code);
+            }
+        }
+    }
+    if (outNodes != NULL) {
+        // insert processed nodes
+        // nodes[0..n],outNodes,nodes[n..]
+        var arr = MALLOC(NodeArray, 1);
+        var ptr = &arr->nodes;
+        int count = pos;
+        memcpy(ptr, input->nodes, count);
+        ptr += count;
+        count = outNodes->length;
+        memcpy(ptr, outNodes, count);
+        ptr += count;
+        count = input->length - pos;
+        memcpy(ptr, &input->nodes[pos], count);
+    }
+
+    var node = input->nodes[0];
+    if (node != NULL) {
+        lastNode_ = node;
+    }
+    
+    //if (this.syntax.debug > 1) console.log(`result: ${nodes.map(x => `${this.syntax.symbols.getAt(x.data.code).symbol}['${x.data.term.replace(/[\n\r]/g, '\\n')}']`)}`);
+    //if (this.syntax.debug > 0) console.log('result: ' + nodes.map(n = > `{${ this.nodeToString(n) }}`).join('  '));
 }
-bool Expression::matchRule(GrammarRule* rule, PArray* nodes, void* context) {
+bool Expression::matchRule(GrammarRule* rule, int& len, Node** nodes, void* context) {
     //        // apply the rule on the input as many times as possible
     //        var hasMatch = false;
     //        for (var n = 0; n < nodes.length;) {

@@ -7,7 +7,7 @@
 #include "base/debug.h"
 
 //*********************************************************
-#define NS_FW_WIN win
+#define NS_FW_WIN fw_win
 #define NS_FW_WIN_BEGIN namespace NS_FW_WIN {
 #define NS_FW_WIN_END }
 #define NS_FW_WIN_USE using namespace NS_FW_WIN;
@@ -20,42 +20,73 @@ NS_FW_WIN_BEGIN
 #define SIZING_TOP		4
 #define SIZING_BOTTOM	8
 
-typedef union WINDOWCLASS_ {
+typedef union WndClass_ {
 	ATOM atom;
-	LPTSTR str;
-	size_t v;
-	WINDOWCLASS_() : v(0) {}
-} WINDOWCLASS;
+	char* className;
+	WndClass_(char* s) { className = s; }
+	WndClass_(ATOM a) { className = (char*)a; }
+	WndClass_() { className = NULL; }
+} WndClass;
 
 class Window {
+	protected: WNDPROC defWindowProc_;
 	protected: PROP_R(HINSTANCE, hInstance);
 	protected: PROP_R(HWND, hWnd);
 	protected: PROP_R(RECT, rect);
-	protected: PROP_R(int, width);
-	protected: PROP_R(int, height);
-protected:
-	WINDOWCLASS wndClass_;
-
-	Window();
-	static LRESULT CALLBACK wndProcWrapper(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	virtual LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
+	protected: PROP_R(POINT, mousePos);
+	protected: PROP_R(WndClass, wndClass);
+	protected: PROP_R(Window*, parent);
+	//protected: PROP_R(bool, propagateMessage);
 public:
-	Window(CREATESTRUCT* createStruct, Window* parent = NULL, WNDCLASSEX* wndClassEx = NULL);
+	Window();
 	virtual ~Window();
 
-	inline WINDOWCLASS wndClass() { return wndClass_; }
+	virtual void create(WndClass wndClass, Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
+	LONG setWindowStyle(LONG style, DWORD exStyle = 0);
+	virtual LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	HWND create(CREATESTRUCT* createStruct, Window* parent = NULL, WNDCLASSEX* wndClassEx = NULL);
-	//void sizing(int sizingEdge, LPRECT sizingRect, LPRECT confineRect, int width, int height);
+#pragma region EventHandling
+
+#pragma region MouseEvents
+	virtual LRESULT onMouse(HWND hWnd, UINT message, POINT& point, WPARAM wParam);
+	virtual LRESULT onLeftUp(POINT& pos, WPARAM state);
+	virtual LRESULT onLeftDown(POINT& pos, WPARAM state);
+	virtual LRESULT onLeftClick(POINT& pos, WPARAM state);
+	virtual LRESULT onLeftDblClick(POINT& pos, WPARAM state);
+	virtual LRESULT onRightUp(POINT& pos, WPARAM state);
+	virtual LRESULT onRightDown(POINT& pos, WPARAM state);
+	virtual LRESULT onRightClick(POINT& pos, WPARAM state);
+	virtual LRESULT onRightDblClick(POINT& pos, WPARAM state);
+	virtual LRESULT onMiddleUp(POINT& pos, WPARAM state);
+	virtual LRESULT onMiddleDown(POINT& pos, WPARAM state);
+	virtual LRESULT onMiddleClick(POINT& pos, WPARAM state);
+	virtual LRESULT onMiddleDblClick(POINT& pos, WPARAM state);
+	virtual LRESULT onMouseMove(POINT& pos, POINT& delta, WPARAM state);
+#pragma endregion
+
+#pragma region SystemEvents
 	virtual LRESULT onCreate();
-	//virtual int onMove(int x, int y);
-	virtual LRESULT onSize(WPARAM wParam, LPARAM lParam);
+	virtual LRESULT onDestroy();
+	virtual LRESULT onPaint();
+	virtual LRESULT onMove(POINT& point);
+	virtual LRESULT onMoving(RECT& rect);
+	virtual LRESULT onSize(RECT& rect, WPARAM state);
+	virtual LRESULT onSizing(RECT& rect, WPARAM state);
 	virtual LRESULT onCommand(WPARAM wParam, LPARAM lParam);
-	//virtual int onMouseClick(POINT, int);
-	//virtual int onMouseMove(POINT);
-	virtual int onPaint(HDC hdc, PAINTSTRUCT* ps);
-	virtual int onDestroy();
+#pragma endregion
+
+#pragma endregion
+
+#pragma region Statics
+protected:
+	static LRESULT CALLBACK wndProcWrapper(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+public:
+	static LONG defaultStyle;
+	static ATOM registerClass(WNDCLASSEX& wndClassEx);
+	static ATOM registerClass(char* name, HINSTANCE hInstance, UINT style = 0);
+#pragma endregion
+
+	//static void getCreateStructures(CREATESTRUCT& createStruct, WNDCLASSEX& wndClassEx, HINSTANCE hInstance, const char* appName, const char* wClassName);
 };
 
 NS_FW_WIN_END

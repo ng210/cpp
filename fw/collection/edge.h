@@ -7,7 +7,8 @@ NS_FW_BASE_BEGIN
 
 class Edge;
 class Graph;
-typedef int EDGEHANDLER(Graph* graph, Edge*, ...);
+typedef int (EDGEHANDLER)(Graph* graph, Edge* edge, ...);
+typedef int (VEDGEHANDLER)(Graph* graph, Edge* edge, va_list args);
 
 class Vertex;
 class Edge {

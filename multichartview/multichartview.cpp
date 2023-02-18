@@ -129,9 +129,9 @@ void MultiChartView::setDataSource(DataSeries* source, int channelCount, CHARTCH
 void MultiChartView::select() {
 	for (int x = selectRect_.left; x < selectRect_.right; x++) {
 		int ix = (int)CHART_FROM_X(x + offsetX_);
-		int at = 0;
-		if (selection_.binSearch(&ix, at, Collection::compareInt) == NULL) {
-			selection_.insertAt(at, &ix);
+		Key at = -1;
+		if (selection_.binSearch(ix, at, Collection::compareInt) == NULL) {
+			selection_.insert(at, &ix);
 		}
 	}
 	InvalidateRect(hWnd_, NULL, false);
@@ -158,7 +158,7 @@ void MultiChartView::draw(LPARAM lParam) {
 	SYSPR(GetClientRect(hWnd_, &rect));
 	double y = (double)(rect.bottom - cy) / (rect.bottom - rect.top - MULTICHARTVIEW_TOOLBARHEIGHT);
 	lastDrawY_ = y;
-	int at = 0;
+	Key at = -1;
 	if (configuration_.canDrawWithoutSelection || selection_.binSearch(&ix, at, Collection::compareInt) != NULL) {
 		dataSeries_->set(ix, ch, &y);
 	}
@@ -175,7 +175,7 @@ void MultiChartView::drawLine(LPARAM lParam) {
 		cy = MULTICHARTVIEW_TOOLBARHEIGHT;
 	}
 	int ix = (int)CHART_FROM_X(cx);
-	int at = 0;
+	Key at = -1;
 	RECT rect;
 	SYSPR(GetClientRect(hWnd_, &rect));
 	double y = (double)(rect.bottom - cy) / (rect.bottom - rect.top - MULTICHARTVIEW_TOOLBARHEIGHT);
@@ -277,7 +277,7 @@ void MultiChartView::drawChannel(HDC hdc, int chnId, RECT* rect, int dataStart, 
 				break;
 			}
 			// overpaint selection
-			int ix = 0;
+			Key ix = -1;
 			if (selection_.binSearch(&i, ix, Collection::compareInt)) {
 				SYSPR(AlphaBlend(
 					hdc, frameRect.left - 1, rect->top, frameRect.right - frameRect.left + 2, height,

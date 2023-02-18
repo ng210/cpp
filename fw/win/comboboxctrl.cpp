@@ -3,17 +3,20 @@
 
 NS_FW_WIN_BEGIN
 
-ComboboxCtrl::ComboboxCtrl(Window* parent, size_t ctrlId) : Ctrl(parent, ctrlId) {
-	CREATESTRUCT* createStruct = Ctrl::getCreateStruct("bla", "ComboBox");	// WC_COMBOBOX);
-	createStruct->style |= CBS_DROPDOWN | WS_VISIBLE | WS_VSCROLL;
-	hWnd_ = create(createStruct, parent);
-	FREE(createStruct);
+WndClass ComboboxCtrl::WndClass_("COMBOBOX");
+
+ComboboxCtrl::ComboboxCtrl() {
 	items_ = NEW_(PArray);
 }
 
 ComboboxCtrl::~ComboboxCtrl() {
 	ARRAY_FOREACH(items_, FREE(value));
 	DEL_(items_);
+}
+
+void ComboboxCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
+	style |= CBS_DROPDOWN | WS_VISIBLE | WS_VSCROLL;
+	Ctrl::create(ComboboxCtrl::WndClass_, parent, name, style, exStyle);
 }
 
 void ComboboxCtrl::addItem(LPTSTR item) {

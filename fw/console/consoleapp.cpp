@@ -60,10 +60,11 @@ int main(int argc, char** argv) {
 // CONSOLE
 //*****************************************************************************
 Console::Console() {
-	hConsole_ = GetStdHandle(STD_OUTPUT_HANDLE);
+	hOutput_ = GetStdHandle(STD_OUTPUT_HANDLE);
+	hInput_ = GetStdHandle(STD_INPUT_HANDLE);
 	consoleCursorInfo_ = {};
 	consoleBuffer_ = MALLOC(char, CONSOLE_BUFFER_LENGTH);
-	GetConsoleScreenBufferInfo(hConsole_, &consoleScreenBufferInfo_);
+	GetConsoleScreenBufferInfo(hOutput_, &consoleScreenBufferInfo_);
 }
 Console::~Console() {
 	FREE(consoleBuffer_);
@@ -71,9 +72,9 @@ Console::~Console() {
 }
 
 void Console::showCursor(bool status) {
-	SYSPR(GetConsoleCursorInfo(hConsole_, &consoleCursorInfo_));
+	SYSPR(GetConsoleCursorInfo(hOutput_, &consoleCursorInfo_));
 	consoleCursorInfo_.bVisible = status;
-	SYSPR(SetConsoleCursorInfo(hConsole_, &consoleCursorInfo_));
+	SYSPR(SetConsoleCursorInfo(hOutput_, &consoleCursorInfo_));
 }
 void Console::printf(const char* const format, ...) {
 	va_list args;
@@ -84,43 +85,43 @@ void Console::printf(const char* const format, ...) {
 void Console::vprintf(const char* const format, va_list args) {
 	vsprintf_s(consoleBuffer_, CONSOLE_BUFFER_LENGTH, format, args);
 	DWORD dwBytesWritten = 0;
-	DWORD reserved;
-	SYSPR(WriteConsole(hConsole_, consoleBuffer_, NS_FW_BASE::strlen(consoleBuffer_), (LPDWORD)&dwBytesWritten, &reserved));
+	DWORD reserved = 0;
+	SYSPR(WriteConsole(hOutput_, consoleBuffer_, NS_FW_BASE::strlen(consoleBuffer_), (LPDWORD)&dwBytesWritten, &reserved));
 }
 COORD* Console::gotoxy(int x, int y) {
-	SYSPR(GetConsoleScreenBufferInfo(hConsole_, &consoleScreenBufferInfo_));
+	SYSPR(GetConsoleScreenBufferInfo(hOutput_, &consoleScreenBufferInfo_));
 	consoleScreenBufferInfo_.dwCursorPosition.X = x;
 	consoleScreenBufferInfo_.dwCursorPosition.Y = y;
-	SYSPR(SetConsoleCursorPosition(hConsole_, consoleScreenBufferInfo_.dwCursorPosition));
+	SYSPR(SetConsoleCursorPosition(hOutput_, consoleScreenBufferInfo_.dwCursorPosition));
 	return &consoleScreenBufferInfo_.dwCursorPosition;
 }
 COORD* Console::movexy(int x, int y) {
-	SYSPR(GetConsoleScreenBufferInfo(hConsole_, &consoleScreenBufferInfo_));
+	SYSPR(GetConsoleScreenBufferInfo(hOutput_, &consoleScreenBufferInfo_));
 	consoleScreenBufferInfo_.dwCursorPosition.X += x;
 	consoleScreenBufferInfo_.dwCursorPosition.Y += y;
-	SYSPR(SetConsoleCursorPosition(hConsole_, consoleScreenBufferInfo_.dwCursorPosition));
+	SYSPR(SetConsoleCursorPosition(hOutput_, consoleScreenBufferInfo_.dwCursorPosition));
 	return &consoleScreenBufferInfo_.dwCursorPosition;
 }
 
 void Console::setcolor(int col) {
-	SetConsoleTextAttribute(hConsole_, col & 0x0f);
+	SYSPR(SetConsoleTextAttribute(hOutput_, col & 0x0f));
 }
 
 void Console::clearscreen() {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	int result;
-	SYSFN(result, GetConsoleScreenBufferInfo(hConsole_, &csbi));
+	SYSFN(result, GetConsoleScreenBufferInfo(hOutput_, &csbi));
 	if (result) {
 		var size = csbi.dwSize.X * csbi.dwSize.Y;
 		unsigned long count = 0;
 		COORD topLeft = { 0, 0 };
-		SYSFN(result, FillConsoleOutputCharacter(hConsole_, (TCHAR)' ', size, topLeft, &count));
+		SYSFN(result, FillConsoleOutputCharacter(hOutput_, (TCHAR)' ', size, topLeft, &count));
 		if (result) {
-			SYSFN(result, GetConsoleScreenBufferInfo(hConsole_, &csbi));
+			SYSFN(result, GetConsoleScreenBufferInfo(hOutput_, &csbi));
 			if (result) {
-				SYSFN(result, FillConsoleOutputAttribute(hConsole_, csbi.wAttributes, size, topLeft, &count));
+				SYSFN(result, FillConsoleOutputAttribute(hOutput_, csbi.wAttributes, size, topLeft, &count));
 				if (result) {
-					SYSFN(result, SetConsoleCursorPosition(hConsole_, topLeft));
+					SYSFN(result, SetConsoleCursorPosition(hOutput_, topLeft));
 				}
 			}
 		}
@@ -147,4 +148,17 @@ void Console::dump(const byte* const data, int length, int width) {
 	if (p != line) {
 		printf("%s\n", line);
 	}
+}
+
+int Console::keyPressed() {
+	DWORD eventCount = 0;
+	SYSPR(GetNumberOfConsoleInputEvents(hInput_, &eventCount));
+	return eventCount;
+}
+
+CHAR Console::getKey() {
+	INPUT_RECORD buffer;
+	DWORD eventCount = 0;
+	SYSPR(ReadConsoleInput(hInput_, &buffer, 1, &eventCount));
+	return buffer.Event.KeyEvent.uChar.AsciiChar;
 }

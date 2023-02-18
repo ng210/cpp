@@ -1,9 +1,9 @@
 #include "resource.h"
-#include "winapp.h"
+#include "win/winapp.h"
 #include "utils/buffer.h"
 #include "utils/file.h"
-#include "multichartview.h"
-#include "dataseries.h"
+#include "multichartview/multichartview.h"
+#include "multichartview/dataseries.h"
 
 #include "win/editctrl.h"
 

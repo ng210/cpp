@@ -9,15 +9,15 @@ class ArrayBase : public Collection {
 protected: PROP_R(void**, data);
 protected: PROP_R(int, itemSize);
 protected:
-	virtual void sort_(int min, int max, COLLECTIONCALLBACK* compare) = 0;
-	virtual void* binSearch_(Key key, int& ix, COLLECTIONCALLBACK* compare);
+	virtual void sort_(int min, int max, COLLECTION_COMPARE* compare) = 0;
+	virtual void* binSearch_(Key key, Key& found, COLLECTION_COMPARE* compare);
 public:
 	ArrayBase();
 	virtual ~ArrayBase();
 
-	void* binSearch(Key key, int& ix, COLLECTIONCALLBACK* compare = NULL);
-	int findIndex(Key key, COLLECTIONCALLBACK* compare = NULL);
-	void sort(COLLECTIONCALLBACK* compare = NULL);
+	void* binSearch(Key key, Key& found, COLLECTION_COMPARE* compare = NULL);
+	Key findIndex(Key key, COLLECTION_COMPARE* compare = NULL);
+	void sort(COLLECTION_COMPARE* compare = NULL);
 
 	virtual int join(ArrayBase* array) = 0;
 	virtual char* str_join(const char* filler) = 0;

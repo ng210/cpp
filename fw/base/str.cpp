@@ -11,9 +11,11 @@ bool strnullorempty(const char* szStr) {
 //*********************************************************
 char* strncpy(char *dst, size_t len, const char *src) {
 	size_t i = 0;
-	if (dst != NULL && src != NULL) {
-		for (; i < len && src[i] != '\0'; i++) {
-			dst[i] = src[i];
+	if (dst != NULL) {
+		if (src != NULL) {
+			for (; i < len && src[i] != '\0'; i++) {
+				dst[i] = src[i];
+			}
 		}
 		dst[i] = '\0';
 	}
@@ -203,35 +205,39 @@ char* strtrim(const char* src, const char* str) {
 
 char* parseInt(char* str, int& value, int radix) {
 	value = 0;
-	char ch = *str;
-	var sign = 1;
-	if (ch == '-') {
-		sign = -1;
-		str++;
+	if (str != NULL) {
+		char ch = *str;
+		var sign = 1;
+		if (ch == '-') {
+			sign = -1;
+			str++;
+		}
+		while ((ch = *str) != '\0' && ch >= '0' && ch - '0' < radix) {
+			value *= radix;
+			value += ch - '0';
+			str++;
+		}
+		value *= sign;
 	}
-	while ((ch = *str) != '\0' && ch >= '0' && ch - '0' < radix) {
-		value *= radix;
-		value += ch - '0';
-		str++;
-	}
-	value *= sign;
 	return str;
 }
 
 char* parseDouble(char* str, double& value) {
 	value = 0.0;
-	int integerPart, fractionPart;
-	var p = parseInt(str, integerPart);
-	var len = (size_t)(p - str);
-	value = (double)integerPart;
-	if (*str == '.') {
-		str++;
-		var p = parseInt(str, fractionPart);
+	if (str != NULL) {
+		int integerPart, fractionPart;
+		var p = parseInt(str, integerPart);
 		var len = (size_t)(p - str);
-		var fraction = (double)fractionPart;
-		var pow10 = 1;
-		for (var i = 0; i < len; i++) pow10 *= 10;
-		value += fraction / pow10;
+		value = (double)integerPart;
+		if (*str == '.') {
+			str++;
+			var p = parseInt(str, fractionPart);
+			var len = (size_t)(p - str);
+			var fraction = (double)fractionPart;
+			var pow10 = 1;
+			for (var i = 0; i < len; i++) pow10 *= 10;
+			value += fraction / pow10;
+		}
 	}
 	return str;
 }

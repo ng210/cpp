@@ -15,7 +15,7 @@ typedef size_t(HashingFunction)(Key key, size_t itemSize);
 //*****************************************************************************
 class Map : public Collection {
 	friend class RunTime;
-	static int compareWrapper_(void* item, Key key, UINT32 ix, Collection* collection, void* args);
+	static int compareWrapper_(COLLECTION_ARGUMENTS);
 protected: PROP_R(ArrayBase*, keys);
 protected: PROP_R(ArrayBase*, values);
 protected: PROP_R(size_t, size);
@@ -26,10 +26,10 @@ protected:
 protected: PROP(bool, hasRefKey);
 public:
 	Map();
-	Map(UINT32 keySize, UINT32 valueSize = sizeof(void*), HashingFunction hashing = Map::hashingStr, COLLECTIONCALLBACK* compare = Collection::compareByRef);
+	Map(UINT32 keySize, UINT32 valueSize = sizeof(void*), HashingFunction hashing = Map::hashingStr, COLLECTION_COMPARE* compare = Collection::compareByRef);
 
 	virtual ~Map();
-	void initialize(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTIONCALLBACK* compare);
+	void initialize(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTION_COMPARE* compare);
 
 	PROP(HashingFunction*, hashing);
 
@@ -37,7 +37,7 @@ public:
 	//void cleanUp();
 	void* put(KeyValuePair* keyValue);
 	void* put(Key key, void* value);
-	void sort(COLLECTIONCALLBACK* compare = NULL);
+	void sort(COLLECTION_COMPARE* compare = NULL);
 
 	// Collection
 	void* add(Key key, void* value = NULL);
@@ -47,9 +47,9 @@ public:
 	void set(Key key, void* item);
 	void set(void** oldItem, void* newItem);
 
-	int apply(COLLECTIONCALLBACK, ...);
+	int apply(COLLECTION_ACTION* action, ...);
 	void fill(void* value);
-	void* search(Key key, int& ix, COLLECTIONCALLBACK* compare = NULL);
+	void* search(Key key, Key& found, COLLECTION_COMPARE* compare = NULL);
 
 	static HashingFunction hashingInt;
 	static HashingFunction hashingItem;

@@ -1,6 +1,15 @@
 #include "base/memory.h"
 #include "syntax/syntax.h"
 
+////////////////////////////////////////////////////////
+//
+//
+//
+//
+//
+//
+//
+
 using namespace NS_FW_SYNTAX;
 
 Syntax::Syntax(void* grammar, bool debug) {

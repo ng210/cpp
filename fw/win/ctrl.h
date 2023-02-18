@@ -7,11 +7,11 @@ NS_FW_BASE_USE
 NS_FW_WIN_BEGIN
 
 class Ctrl : public Window {
-protected: PROP_R(Window*, parent);
-protected: PROP_R(size_t, ctrlId);
+protected: PROP(size_t, ctrlId);
 protected:
-	Ctrl(Window* parent, size_t ctrlId);
-	CREATESTRUCT* getCreateStruct(LPTSTR szName, LPTSTR szClass);
+	void create(WndClass wndClass, Window* parent, char* name, LONG style = 0, DWORD exStyle = 0);
+public:
+	Ctrl();
 };
 
 NS_FW_WIN_END

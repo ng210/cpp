@@ -15,7 +15,7 @@ class PArray : public ArrayBase {
 protected:
 	UINT32 capacity_;
 	UINT32 extendSize_;
-	virtual void sort_(int min, int max, COLLECTIONCALLBACK* compare);
+	virtual void sort_(int min, int max, COLLECTION_COMPARE* compare);
 public:
 	PArray(UINT32 capacity = ARRAY_DEFAULT_CAPACITY);
 	//virtual ~PArray();
@@ -29,13 +29,15 @@ public:
 	void set(Key key, void* item);
 	void set(void** pOldItem, void* newItem);
 
-	int apply(COLLECTIONCALLBACK*, ...);
+	int apply(COLLECTION_ACTION*, ...);
 	void fill(void* value);
 
 	// ArrayBase
 	int join(ArrayBase* array);
-	void* search(Key key, int& ix, COLLECTIONCALLBACK* compare = NULL);
+	void* search(Key key, Key& ix, COLLECTION_COMPARE* compare = NULL);
 	char* str_join(const char* filler);
+	PArray* splice(Key pos, int count);
+	PArray* map(COLLECTION_ACTION* action);
 
 	static PArray* str_split(const char* src, const char* str);
 };

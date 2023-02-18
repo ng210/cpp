@@ -27,7 +27,7 @@ extern INT WINAPI WinMain(HINSTANCE instance, HINSTANCE pprevInstance, char* cmd
 	//}
 	//DEL_(workingDir);
 
-	// get command line arguments
+	#pragma region CommandLine
 	char** args_ = str_split(cmdLine, " ");
 	Map* args = NEW_(Map, MAP_USE_REF, MAP_USE_REF, Map::hashingStr, Collection::compareStr);
 	for (int i = 0; args_[i] != NULL; i++) {
@@ -37,6 +37,7 @@ extern INT WINAPI WinMain(HINSTANCE instance, HINSTANCE pprevInstance, char* cmd
 		args->put(key, value);
 	}
 	FREE(args_);
+	#pragma endregion
 
 	WinApp* winApp = createApplication(instance, args);
 	if (winApp != NULL && winApp->hWnd() != NULL) {
@@ -58,14 +59,10 @@ extern INT WINAPI WinMain(HINSTANCE instance, HINSTANCE pprevInstance, char* cmd
 }
 
 WinApp::WinApp() {
-	this->workingDir_ = "";
+	workingDir_ = "";
 }
 
 WinApp::~WinApp() {
-}
-
-HWND WinApp::create(CREATESTRUCT* createStruct, WNDCLASSEX* wndClassEx) {
-	return Window::create(createStruct, NULL, wndClassEx);
 }
 
 int WinApp::main(NS_FW_BASE::Map* args) {

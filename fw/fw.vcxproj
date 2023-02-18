@@ -139,6 +139,7 @@
     <ClInclude Include="console\consoleapp.h" />
     <ClInclude Include="console\tracer.h" />
     <ClInclude Include="syntax\expression.h" />
+    <ClInclude Include="syntax\grammar-defs.h" />
     <ClInclude Include="syntax\node.h" />
     <ClInclude Include="syntax\grammar.h" />
     <ClInclude Include="syntax\syntax-test.h" />

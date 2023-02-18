@@ -44,7 +44,7 @@ void Array::clear() {
 void* Array::get(Key key) {
 	int i = key.i;
 	if (i < 0) i += length_;
-	return i < length_ ? (void*)&((char*)data_)[i * itemSize_] : NULL;
+	return i < length_ ? (void*)&((byte*)data_)[i * itemSize_] : NULL;
 }
 void* Array::insert(Key key, void* item) {
 	int i = key.i;
@@ -95,28 +95,28 @@ void Array::set(void** pOldItem, void* newItem) {
 	memcpy(pOldItem, newItem, itemSize_);
 }
 
-int Array::apply(COLLECTIONCALLBACK* callback, ...) {
+int Array::apply(COLLECTION_ACTION* callback, ...) {
 	va_list args;
 	va_start(args, callback);
-	var value = data_;
+	var value = (byte*)data_;
 	var res = -1;
 	for (var ix = 0; ix < length_; ix++) {
 
-		if (!callback(value, NULL, ix, this, args)) {
+		if (!callback(value, ix, this, args)) {
 			res = ix;
 			break;
 		}
-		value = (void**)((byte*)value +itemSize_);
+		value += itemSize_;
 	}
 	va_end(args);
 	return res;
 }
 void Array::fill(void* value) {
-	apply([](void* item, Key key, UINT32 ix, Collection* collection, void* args) {
-		var source = args;
-		collection->set(item, source);
-		return 1;
-	}, value);
+	var dst = (byte*)data_;
+	for (var i = 0; i < length_; i++) {
+		set(dst, value);
+		dst += itemSize_;
+	}
 }
 #pragma endregion
 
@@ -135,7 +135,7 @@ int Array::join(ArrayBase* array) {
 	return res;
 }
 
-void Array::sort_(int min, int max, COLLECTIONCALLBACK* compare) {
+void Array::sort_(int min, int max, COLLECTION_COMPARE* compare) {
 	if (min < max) {
 		// create a random index
 		int ix = min;	// (int)(min + Utils::random(max - min));
@@ -144,8 +144,8 @@ void Array::sort_(int min, int max, COLLECTIONCALLBACK* compare) {
 		void* tmp = MALLOC(char, itemSize_);
 		while (l <= r) {
 			void* item;
-			while ((item = get(l)) != NULL && compare(item, pivot, l, this, NULL) < 0) l++;
-			while ((item = get(r)) != NULL && compare(item, pivot, r, this, NULL) > 0) r--;
+			while ((item = get(l)) != NULL && compare(item, pivot, this, NULL) < 0) l++;
+			while ((item = get(r)) != NULL && compare(item, pivot, this, NULL) > 0) r--;
 			if (l > r) break;
 			// swap left and right
 			void* left = get(l);
@@ -187,18 +187,18 @@ void Array::sort_(int min, int max, COLLECTIONCALLBACK* compare) {
 //	ix = max;
 //	return NULL;
 //}
-void* Array::search(Key key, int& ix, COLLECTIONCALLBACK* compare) {
+void* Array::search(Key key, Key& found, COLLECTION_COMPARE* compare) {
 	void* value = NULL;
 	if (compare == NULL) compare = compare_;
-	void* item = get(0);
+	var item = (byte*)data_;
 	for (int i = 0; i < length_; i++) {
-		int res = compare(item, key, i, this, NULL);
+		int res = compare(item, key, this, NULL);
 		if (res == 0) {
-			ix = i;
+			found.i = i;
 			value = item;
 			break;
 		}
-		item = (void*)((char*)item + itemSize_);
+		item += itemSize_;
 	}
 	return value;
 }
@@ -211,4 +211,34 @@ char* Array::str_join(const char* filler) {
 	char* str = NS_FW_BASE::str_join(parts, filler);
 	FREE(parts);
 	return str;
+}
+
+Array* Array::splice(Key pos, int count) {
+	var arr = NEW_(Array, itemSize_, count);
+	var ptr = &((char*)data_)[pos.i * itemSize_];
+	// copy data into new array
+	fmw::memcpy(arr->data_, ptr, itemSize_ * count);
+	arr->length_ = count;
+	// shift elements down
+	var remaining = length_ - pos.i - count;
+	if (remaining > 0) {
+		memcpy(ptr, ptr + count * itemSize_, remaining * itemSize_);
+	}
+	length_ -= count;
+	if ((UINT32)length_ < capacity_ - extendSize_) {
+		// decrease capacity
+		capacity_ -= extendSize_;
+		data_ = (void**)REALLOC(data_, char, (size_t)capacity_ * itemSize_);
+	}
+	return arr;
+}
+
+Array* Array::map(COLLECTION_ACTION* action, int itemSize) {
+	var arr = NEW_(Array, itemSize, length_);
+	for (var i = 0; i < length_; i++) {
+		var value = action(&data_[i], i, this, NULL);
+		arr->push(value);
+		FREE(value);
+	}
+	return arr;
 }

@@ -10,43 +10,46 @@
 
 NS_FW_BASE_USE
 
-int CollectionTest::compareInt(void* item, Key key, unsigned int ix, Collection* array, void* args) {
-	WORD i = *(int*)item;	// ((KeyValuePair*)item)->key();
+int CollectionTest::compareInt(COLLECTION_ARGUMENTS) {
+	WORD i = *(int*)value;	// ((KeyValuePair*)item)->key();
 	return i - key.i;
 }
-int CollectionTest::compareWord(void* item, Key key, unsigned int ix, Collection* array, void* args) {
-	WORD w = *(WORD*)item;	// ((KeyValuePair*)item)->key();
+int CollectionTest::compareWord(COLLECTION_ARGUMENTS) {
+	WORD w = *(WORD*)value;	// ((KeyValuePair*)item)->key();
 	return w - *(WORD*)key.p;
 }
-int CollectionTest::compareStr(void* item, Key key, unsigned int ix, Collection* array, void* args) {
-	return strncmp((char*)item, (char*)key.p);
+int CollectionTest::compareStr(COLLECTION_ARGUMENTS) {
+	return strncmp((char*)value, (char*)key.p);
 }
-int CollectionTest::compareObj(void* item, Key key, unsigned int ix, Collection* array, void* args) {
-	return strncmp(((TEST_DATA*)item)->name, ((TEST_DATA*)key.p)->name);
+int CollectionTest::compareObj(COLLECTION_ARGUMENTS) {
+	return strncmp(((TEST_DATA*)value)->name, ((TEST_DATA*)key.p)->name);
 }
-int CollectionTest::checkSortInt(void* item, Key key, unsigned int ix, Collection* array, void* args) {
-	int res = 1;
-	if ((int)ix < array->length() - 1) {
-		void* right = array->get(ix + 1);
-		res = compareWord(item, right, ix, array, NULL) < 0;
+void* CollectionTest::checkSortInt(COLLECTION_ARGUMENTS) {
+	size_t res = 1;
+	var ix = key.i;
+	if ((int)ix < collection->length() - 1) {
+		void* right = collection->get(ix + 1);
+		res = compareWord(value, right, collection, NULL) < 0;
 	}
-	return res;
+	return (void*)res;
 }
-int CollectionTest::checkSortStr(void* item, Key key, unsigned int ix, Collection* array, void* args) {
-	int res = 1;
-	if ((int)ix < array->length() - 1) {
-		void* right = array->get(ix + 1);
-		res = compareStr(item, right, ix, array, NULL) < 0;
+void* CollectionTest::checkSortStr(COLLECTION_ARGUMENTS) {
+	size_t res = 1;
+	var ix = key.i;
+	if ((int)ix < collection->length() - 1) {
+		void* right = collection->get(ix + 1);
+		res = compareStr(value, right, collection, NULL) < 0;
 	}
-	return res;
+	return (void*)res;
 }
-int CollectionTest::checkSortObj(void* item, Key key, unsigned int ix, Collection* array, void* args) {
-	int res = 1;
-	if ((int)ix < array->length() - 1) {
-		TEST_DATA* right = (TEST_DATA*)array->get(ix + 1);
-		res = compareObj(item, right, ix, array, NULL) < 0;
+void* CollectionTest::checkSortObj(COLLECTION_ARGUMENTS) {
+	size_t res = 1;
+	var ix = key.i;
+	if ((int)ix < collection->length() - 1) {
+		TEST_DATA* right = (TEST_DATA*)collection->get(ix + 1);
+		res = compareObj(value, right, collection, NULL) < 0;
 	}
-	return res;
+	return (void*)res;
 }
 
 void CollectionTest::testArray() {
@@ -193,7 +196,7 @@ void CollectionTest::testArray() {
 	arr2->compare(compareStr);
 
 	INFO(" SEARCH\n");
-	int pos = 0;
+	Key pos = 0;
 	INFO(" arr1 array<short int>\n");
 	arr1->search(arr1->get(8), pos, compareWord);
 	assert("item 508 should be #8", pos == 8);
@@ -233,6 +236,87 @@ void CollectionTest::testArray() {
 	FREE(str);
 	//ARRAY_FOREACH(arr1, FREE(*(char**)value));
 	DEL_(arr1);
+
+	INFO(" FROM\n");
+	arr1 = NEW_(Array, 8 * sizeof(char));
+	arr1->push("red");
+	arr1->push("blue");
+	arr1->push("green");
+	arr1->push("black");
+	arr1->push("white");
+	arr2 = NEW_(Array, 8 * sizeof(char));
+	arr2->from(arr1);
+	var isMatch = arr1->length() == arr2->length();
+	if (isMatch) {
+		for (var i = 0; i < arr1->length(); i++) {
+			var str1 = (char*)arr1->get(i);
+			var str2 = (char*)arr2->get(i);
+			if (str1 == str2) {
+				isMatch = false;
+				break;
+			} else {
+				if ((isMatch = fmw::strncmp(str1, str2, 8) == 0) == false) break;
+			}
+		}
+	}
+
+	assert("arrays should match by content not by reference", isMatch);
+	DEL_(arr1);
+	DEL_(arr2);
+
+	INFO(" MAP\n");
+	arr1 = NEW_(Array, 8);
+	arr1->push("red");
+	arr1->push("blue");
+	arr1->push("green");
+	arr1->push("black");
+	arr1->push("white");
+	arr2 = arr1->map(
+		[](COLLECTION_ARGUMENTS) {
+			var item = fmw::strdup((char*)value);
+			item[0] &= 255 - 32;
+			return (void*)item;
+		},
+		arr1->itemSize()
+	);
+
+	isMatch =
+		fmw::strncmp((char*)arr2->get(0), "Red", 3) == 0 &&
+		fmw::strncmp((char*)arr2->get(1), "Blue", 4) == 0 &&
+		fmw::strncmp((char*)arr2->get(2), "Green", 5) == 0 &&
+		fmw::strncmp((char*)arr2->get(3), "Black", 5) == 0 &&
+		fmw::strncmp((char*)arr2->get(4), "White", 5) == 0;
+
+	assert("array2 should contain items with initial capital", isMatch);
+	arr2->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
+	printf("\n");
+	DEL_(arr1);
+	DEL_(arr2);
+
+	INFO(" SPLICE\n");
+	arr1 = NEW_(Array, 8 * sizeof(char));
+	arr1->push("red");
+	arr1->push("blue");
+	arr1->push("green");
+	arr1->push("black");
+	arr1->push("white");
+	arr2 = arr1->splice(2, 2);
+
+	isMatch =
+		fmw::strncmp((char*)arr1->get(0), "red", 3) == 0 &&
+		fmw::strncmp((char*)arr1->get(1), "blue", 4) == 0 &&
+		fmw::strncmp((char*)arr1->get(2), "white", 5) == 0 &&
+
+		fmw::strncmp((char*)arr2->get(0), "green", 5) == 0 &&
+		fmw::strncmp((char*)arr2->get(1), "black", 5) == 0;
+
+	assert("array1 should contain 3, array2 2 items", isMatch);
+	arr1->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
+	printf("\n");
+	arr2->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
+	printf("\n");
+	DEL_(arr1);
+	DEL_(arr2);
 }
 void CollectionTest::testPArray() {
 	char* str = NULL;
@@ -293,7 +377,7 @@ void CollectionTest::testPArray() {
 	arr1->compare(compareStr);
 
 	INFO(" SEARCH\n");
-	int pos = 0;
+	Key pos = 0;
 	INFO(" arr1 array<char*>\n");
 	arr1->search(arr1->get(8), pos);
 	assert("item 's08' should be #8", pos == 8);
@@ -325,6 +409,85 @@ void CollectionTest::testPArray() {
 	FREE(str);
 	ARRAY_FOREACH(pArr1, FREE(value));
 	DEL_(pArr1);
+
+	INFO(" FROM\n");
+	pArr1 = NEW_(PArray, 8);
+	pArr1->push("red");
+	pArr1->push("blue");
+	pArr1->push("green");
+	pArr1->push("black");
+	pArr1->push("white");
+	var pArr2 = NEW_(PArray, 8);
+	pArr2->from(pArr1);
+	var isMatch = pArr1->length() == pArr2->length();
+	if (isMatch) {
+		for (var i = 0; i < pArr1->length(); i++) {
+			var str1 = (char*)pArr1->get(i);
+			var str2 = (char*)pArr2->get(i);
+			if (str1 != str2) {
+				isMatch = false;
+				break;
+			}
+		}
+	}
+
+	assert("arrays should match by content", isMatch);
+	DEL_(pArr1);
+	DEL_(pArr2);
+
+	INFO(" MAP\n");
+	pArr1 = NEW_(PArray, 8);
+	pArr1->push("red");
+	pArr1->push("blue");
+	pArr1->push("green");
+	pArr1->push("black");
+	pArr1->push("white");
+	pArr2 = pArr1->map(
+		[](COLLECTION_ARGUMENTS) {
+			var item = fmw::strdup((char*)value);
+			item[0] &= 255-32;
+			return (void*)item;
+		}
+	);
+
+	isMatch =
+		fmw::strncmp((char*)pArr2->get(0), "Red", 3) == 0 &&
+		fmw::strncmp((char*)pArr2->get(1), "Blue", 4) == 0 &&
+		fmw::strncmp((char*)pArr2->get(2), "Green", 5) == 0 &&
+		fmw::strncmp((char*)pArr2->get(3), "Black", 5) == 0 &&
+		fmw::strncmp((char*)pArr2->get(4), "White", 5) == 0;
+
+	assert("array2 should contain items with initial capital", isMatch);
+	pArr2->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
+	printf("\n");
+	DEL_(pArr1);
+	ARRAY_FOREACH(pArr2, FREE(value));
+	DEL_(pArr2);
+
+	INFO(" SPLICE\n");
+	pArr1 = NEW_(PArray, 8);
+	pArr1->push("red");
+	pArr1->push("blue");
+	pArr1->push("green");
+	pArr1->push("black");
+	pArr1->push("white");
+	pArr2 = pArr1->splice(2, 2);
+
+	isMatch =
+		fmw::strncmp((char*)pArr1->get(0), "red", 3) == 0 &&
+		fmw::strncmp((char*)pArr1->get(1), "blue", 4) == 0 &&
+		fmw::strncmp((char*)pArr1->get(2), "white", 5) == 0 &&
+
+		fmw::strncmp((char*)pArr2->get(0), "green", 5) == 0 &&
+		fmw::strncmp((char*)pArr2->get(1), "black", 5) == 0;
+
+	assert("array1 should contain 3, array2 2 items", isMatch);
+	pArr1->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
+	printf("\n");
+	pArr2->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
+	printf("\n");
+	DEL_(pArr1);
+	DEL_(pArr2);
 }
 void CollectionTest::testMap() {
 	char* str = NULL;

@@ -1,3 +1,4 @@
+# include <stdarg.h>
 #include "collection/collection.h"
 
 NS_FW_BASE_USE
@@ -7,29 +8,53 @@ Collection::Collection() {
 	compare_ = compareByRef;
 }
 
-void Collection::fill(void* value) {
+void Collection::fill(void* fillValue) {
 	apply(
-		[](void* item, Key key, UINT32 ix, Collection* collection, void* arg) {
-			collection->set(item, arg);
-			return 1;
-		}
+		[](COLLECTION_ARGUMENTS) {
+			var value_ = va_arg(args, void*);
+			collection->set(value, value_);
+			return (void*)1;
+		},
+		fillValue
 	);
 }
 
-void* Collection::search(Key key, int& ix, COLLECTIONCALLBACK* compare) {
+void Collection::from(Collection* collection) {
+	collection->apply(
+		[](COLLECTION_ARGUMENTS) {
+			var that = va_arg(args, Collection*);
+			return that->add(key, value);
+		},
+		this
+	);
+}
+
+void* Collection::search(Key key, Key& found, COLLECTION_COMPARE* compare) {
 	void* value = NULL;
-	void* args[4] = { &key, &ix, compare, &value };
 	apply(
-		[](void* item, Key key, UINT32 ix, Collection* collection, void* args) {
-			var args_ = (void**)args;
-			Key key_ = *(Key*)(args_[0]);
-			*(UINT32*)(args_[1]) = ix;
-			var compare_ = (COLLECTIONCALLBACK*)((void**)args_)[2];
-			int res = compare_(item, key, ix, collection, NULL);
+		[](void* item, Key key, Collection* collection, va_list args) {
+			var key_ = va_arg(args, Key);
+			var compare_ = va_arg(args, COLLECTION_COMPARE*);
+			var pValue_ = va_arg(args, void**);
+			var res = compare_(item, key, collection, NULL);
 			if (res == 0) {
-				*(void**)(args_[3]) = item;
+				*pValue_ = item;
 			}
-			return res;
-		}, &args);
+			return *pValue_;
+		}, key, compare, &value);
 	return value;
+}
+
+int Collection::compareByRef(COLLECTION_ARGUMENTS) {
+	return (int)((size_t)value - (size_t)key.p);
+}
+int Collection::compareStr(COLLECTION_ARGUMENTS) {
+	return strncmp((char*)value, (char*)key.p);
+}
+int Collection::compareStrReverse(COLLECTION_ARGUMENTS) {
+	return strncmp((char*)key.p, (char*)value);
+}
+int Collection::compareInt(COLLECTION_ARGUMENTS) {
+	int i = *(int*)value;
+	return i - key.i;
 }

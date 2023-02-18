@@ -85,12 +85,12 @@ void PArray::set(void** pOldItem, void* newItem) {
 	*pOldItem = newItem;
 }
 
-int PArray::apply(COLLECTIONCALLBACK* callback, ...) {
+int PArray::apply(COLLECTION_ACTION* action, ...) {
 	va_list args;
-	va_start(args, callback);
+	va_start(args, action);
 	var res = -1;
 	for (var ix = 0; ix < length_; ix++) {
-		if (!callback(data_[ix], NULL, ix, this, args)) {
+		if (!action(data_[ix], ix, this, args)) {
 			res = ix;
 			break;
 		}
@@ -116,7 +116,7 @@ int PArray::join(ArrayBase* array) {
 	return length_;
 }
 
-void PArray::sort_(int min, int max, COLLECTIONCALLBACK* compare) {
+void PArray::sort_(int min, int max, COLLECTION_COMPARE* compare) {
 	if (min < max) {
 		// create a random index
 		int ix = min;
@@ -124,8 +124,8 @@ void PArray::sort_(int min, int max, COLLECTIONCALLBACK* compare) {
 		void* pivot = get(ix);
 		while (l <= r) {
 			void* item;
-			while ((item = get(l)) != NULL && compare(item, pivot, l, this, NULL) < 0) l++;
-			while ((item = get(r)) != NULL && compare(item, pivot, r, this, NULL) > 0) r--;
+			while ((item = get(l)) != NULL && compare(item, pivot, this, NULL) < 0) l++;
+			while ((item = get(r)) != NULL && compare(item, pivot, this, NULL) > 0) r--;
 			if (l > r) break;
 			// swap left and right
 			void* tmp = data_[l];
@@ -137,15 +137,15 @@ void PArray::sort_(int min, int max, COLLECTIONCALLBACK* compare) {
 		sort_(l, max, compare);
 	}
 }
-void* PArray::search(Key key, int& ix, COLLECTIONCALLBACK* compare) {
+void* PArray::search(Key key, Key& found, COLLECTION_COMPARE* compare) {
 	void* value = NULL;
 	if (compare == NULL) compare = this->compare();
 	for (int i = 0; i < length_; i++) {
 		void* item = data_[i];
-		int res = compare(item, key, i, this, NULL);
+		int res = compare(item, key, this, NULL);
 		if (res == 0) {
 			value = item;
-			ix = i;
+			found.i = i;
 			break;
 		}
 	}
@@ -158,6 +158,34 @@ char* PArray::str_join(const char* filler) {
 	char* str = NS_FW_BASE::str_join(parts, filler);
 	FREE(parts);
 	return str;
+}
+PArray* PArray::splice(Key pos, int count) {
+	var arr = NEW_(PArray, count);
+	var ptr = &data_[pos.i];
+	// copy data into new array
+	fmw::memcpy(arr->data_, ptr, ITEMSIZE * count);
+	arr->length_ = count;
+	// shift elements down
+	var p2 = pos.i + count;
+	if (p2 < length_) {
+		memcpy(&data_[pos.i], &data_[p2], (length_ - p2) * ITEMSIZE);
+	}
+	length_ -= count;
+	if ((UINT32)length_ < capacity_ - extendSize_) {
+		// decrease capacity
+		capacity_ -= extendSize_;
+		data_ = REALLOC(data_, void*, capacity_);
+	}
+	return arr;
+}
+
+PArray* PArray::map(COLLECTION_ACTION* action) {
+	var arr = NEW_(PArray, length_);
+	for (var i = 0; i < length_; i++) {
+		var value = action(data_[i], i, this, NULL);
+		arr->push(value);
+	}
+	return arr;
 }
 
 PArray* PArray::str_split(const char* src, const char* str) {

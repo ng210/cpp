@@ -16,7 +16,7 @@ class Array : public ArrayBase {
 protected:
 	UINT32 capacity_;
 	UINT32 extendSize_;
-	void sort_(int min, int max, COLLECTIONCALLBACK* compare);
+	void sort_(int min, int max, COLLECTION_COMPARE* compare);
 public:
 	Array();
 	Array(UINT32 itemSize, UINT32 capacity = ARRAY_DEFAULT_CAPACITY);
@@ -32,13 +32,15 @@ public:
 	void set(Key key, void* item);
 	void set(void** pOldItem, void* newItem);
 
-	int apply(COLLECTIONCALLBACK*, ...);
+	int apply(COLLECTION_ACTION*, ...);
 	void fill(void* value);
-	void* search(Key key, int& ix, COLLECTIONCALLBACK* compare = NULL);
+	void* search(Key key, Key& found, COLLECTION_COMPARE* compare = NULL);
 
 	// ArrayBase
 	int join(ArrayBase* array);
 	char* str_join(const char* filler);
+	Array* splice(Key pos, int count);
+	Array* map(COLLECTION_ACTION* action, int itemSize);
 };
 
 NS_FW_BASE_END

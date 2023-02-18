@@ -1,7 +1,7 @@
 #ifndef __TESTSERIES_H
 #define __TESTSERIES_H
 
-#include "dataseries.h"
+#include "multichartview/dataseries.h"
 
 NS_FW_BASE_USE
 

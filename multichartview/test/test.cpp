@@ -2,6 +2,8 @@
 #include "testseries.h"
 #include "utils/utils.h"
 
+NS_FW_BASE_USE
+
 WinApp* createApplication(HINSTANCE hInstance, Map* args) {
 	// Load menu
 	HMENU hMenu = NULL;

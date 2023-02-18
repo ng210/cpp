@@ -1,10 +1,10 @@
 #ifndef __FILE_H
 #define __FILE_H
 
+#include <stdio.h>
 #include "basedef.h"
 #include "base/stream.h"
 #include "utils/buffer.h"
-#include <stdio.h>
 
 NS_FW_BASE_BEGIN
 
