@@ -54,13 +54,23 @@ namespace SYNTH {
         void setProgram(int prgId);
     };
 
+    class MidTom : public GenericDrum {
+    public:
+        void setProgram(int prgId);
+    };
+
+    class HighTom : public GenericDrum {
+    public:
+        void setProgram(int prgId);
+    };
+
     typedef struct DrumCtrls {
         GenericDrumCtrls bd, sd, oh, ch, lt, mt, ht, cp;
     } DrumCtrls;
 
     typedef enum DrumsNotes {
         drBD = 1,
-        drSN = 2,
+        drSD = 2,
         drOH = 3,
         drCH = 4,
         drLT = 5,
@@ -90,9 +100,7 @@ namespace SYNTH {
         prgSDa0a,
         prgHH808,
         prgHHa0a,
-        prgLT808,
-        prgMT808,
-        prgHT808,
+        prgTT808,
         prgCP808
     } DrumPrgId;
 
@@ -104,8 +112,8 @@ namespace SYNTH {
     protected: PROP_R(GenericDrum, closedHihat);
     protected: PROP_R(OpenHihat, openHihat);
     protected: PROP_R(GenericDrum, lowTom);
-    protected: PROP_R(GenericDrum, midTom);
-    protected: PROP_R(GenericDrum, highTom);
+    protected: PROP_R(MidTom, midTom);
+    protected: PROP_R(HighTom, highTom);
     protected: PROP_R(GenericDrum, clap);
              //void renderGenericDrum(GenericDrum& drum, float* buffer, int start, int end);
              void renderHihat(GenericDrum* hihat, float* buffer, int start, int end);

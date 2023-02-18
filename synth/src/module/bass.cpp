@@ -20,7 +20,7 @@ Bass::~Bass() {
 
 // Voice handling
 void Bass::setupVoiceHandler(Voice& v) {
-    // Adsrelopes
+    // Envelopes
     v.envelopes = NEWARR(Adsr, 3);
     v.envelopes[0].assignControls((PotBase*)&controls_.amAdsr);
     v.envelopes[1].assignControls((PotBase*)&controls_.pmAdsr);
@@ -33,7 +33,7 @@ void Bass::setupVoiceHandler(Voice& v) {
     v.oscillators[1].assignControls((PotBase*)&controls_.osc2);
     // Filter
     v.filters = NEWARR(Flt, 1);
-    v.filters[0].createStages(2);
+    v.filters[0].createStages(3);
     v.filters[0].assignControls((PotBase*)&controls_.flt1);
 }
 void Bass::renderVoiceHandler(Voice& v, float* buffer, int start, int end) {

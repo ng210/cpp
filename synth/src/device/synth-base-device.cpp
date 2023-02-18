@@ -89,11 +89,11 @@ int SynthBaseDevice::writeToStream(Stream* stream) {
 	stream->writeByte(synthBase()->voiceCount());
 	// get data-block id
 	var sb = synthBase()->soundBank();
-	int ix = 0;
-	player_->dataBlocks().search(&sb, ix, [](void* value, Key key, UINT32 ix, Collection* collection, void* args) {
+	Key ix = 0;
+	player_->dataBlocks().search(&sb, ix, [](COLLECTION_ARGUMENTS) {
 		return (int)(((DataBlockItem*)value)->dataBlock - (byte*)key.p);
 		});
-	stream->writeByte(ix);
+	stream->writeByte(ix.i);
 	stream->writeByte(synthBase()->program());
 
 	return (int)(stream->cursor() - start);

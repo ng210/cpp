@@ -36,6 +36,7 @@ namespace SYNTH {
 	//typedef CtrlUnion Ctrl;
 
 	typedef float FloatInt2Float(float y, int ix);
+	typedef double DoubleInt2Double(double y, int ix);
 
 	//struct ElemCtrls {
 	//	PotF amp;
@@ -65,7 +66,7 @@ namespace SYNTH {
 		static float FrequencyTable[128];
 		static void createFrequencyTable();
 		static float p2f(float p);
-		static void createBezierTable(float* table, float px, int steps, FloatInt2Float transform);
+		static void createBezierTable(double* table, float px, int steps, DoubleInt2Double transform);
 
 		static const float* samplingRate;
 	};

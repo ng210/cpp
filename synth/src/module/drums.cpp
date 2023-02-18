@@ -89,7 +89,8 @@ float GenericDrum::runFilter(Flt* flt, float cut, float input) {
     var f = Flt::cutoffTable[flt->controls()->cut.value.b] + cut;
     var fb = q + q / (1.0f - f);
     st->ai_[0] = st->ai_[0] + f * (input - st->ai_[0] + fb * (st->ai_[0] - st->ai_[1]));
-    return st->ai_[1] = st->ai_[1] + f * (st->ai_[0] - st->ai_[1]);
+    st->ai_[1] = st->ai_[1] + f * (st->ai_[0] - st->ai_[1]);
+    return (float)st->ai_[1];
 }
 
 void GenericDrum::render(float* buffer, int start, int end) {
@@ -129,6 +130,17 @@ void OpenHihat::setProgram(int prgId) {
     ((GenericDrumCtrls*)pControls_)->dahr1.hld.value.b = hld;
 }
 
+void MidTom::setProgram(int prgId) {
+    GenericDrum::setProgram(prgId);
+    ((GenericDrumCtrls*)pControls_)->dahr2.dc.value.f = 137.2f / *Elem::samplingRate;
+}
+
+void HighTom::setProgram(int prgId) {
+    GenericDrum::setProgram(prgId);
+    ((GenericDrumCtrls*)pControls_)->dahr2.dc.value.f = 188.4f / *Elem::samplingRate;
+}
+
+
 #pragma endregion
 
 byte* createDefaultSoundBank() {
@@ -139,19 +151,19 @@ byte* createDefaultSoundBank() {
         // envelopes
         4,
         // dahr1
-        DF(1.0f), DF(0.0f), DB(1), DB(2), DB(80), DB(180) /*=Decay*/,
+        DF(1.0f), DF(0.0f), DB(2), DB(2), DB(10), DB(100) /*=Decay*/,
         // dahr2
-        DF(54.0f), DF(47.0f) /*=Tune*/, DB(0), DB(0), DB(1), DB(60),
+        DF(44.0f), DF(47.0f) /*=Tune*/, DB(0), DB(0), DB(1), DB(40),
         // dahr3
-        DF(0.8f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(2),
+        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(4),
         // dahr4
-        DF(1.0f), DF(0.0f), DB(0), DB(0), DB(1), DB(2),
+        DF(1.0f), DF(0.0f), DB(0), DB(0), DB(1), DB(4),
         // filter
         1,
-        DB(1) /*=Tone*/, DB(80), DB(0), DB(FmLowPass),
+        DB(2) /*=Tone*/, DB(20), DB(0), DB(FmLowPass),
         // frequences
         3,
-        DF(3.2f), DB(160), DF(273.0f), DB(40), DF(9511.0f), DB(10)
+        DF(3.2f), DB(160), DF(273.0f), DB(10), DF(9511.0f), DB(20)
     };
     data[2 * count] = NEW_(Stream, bd808_, arraysize(bd808_));
     data[2 * count + 1] = "bd808........";
@@ -160,16 +172,16 @@ byte* createDefaultSoundBank() {
         // envelopes
         4,
         // dahr1
-        DF(1.0f), DF(0.0f), DB(2), DB(6), DB(80), DB(100) /*=Decay*/,
+        DF(1.0f), DF(0.0f), DB(2), DB(6), DB(60), DB(100) /*=Decay*/,
         // dahr2
         DF(169.0f), DF(51.0f) /*=Tune*/, DB(0), DB(0), DB(1), DB(50),
         // dahr3
-        DF(0.2f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(1), DB(6),
+        DF(0.3f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(1), DB(6),
         // dahr4
         DF(1.0f), DF(0.0f), DB(0), DB(0), DB(1), DB(2),
         // filter
         1,
-        DB(1) /*=Tone*/, DB(40), DB(0), DB(FmLowPass),
+        DB(2) /*=Tone*/, DB(40), DB(0), DB(FmLowPass),
         // frequences
         3,
         DF(3.2f), DB(200), DF(273.0f), DB(20), DF(9511.0f), DB(10)
@@ -181,19 +193,19 @@ byte* createDefaultSoundBank() {
         // envelopes
         4,
         // dahr1
-        DF(1.0f), DF(0.0f), DB(2), DB(8), DB(20), DB(80) /*=Decay*/,
+        DF(1.0f), DF(0.0f), DB(3), DB(3), DB(20), DB(54) /*=Decay*/,
         // dahr2
-        DF(29.0f), DF(54.0f) /*=Tune*/, DB(0), DB(10), DB(10), DB(30),
+        DF(19.0f), DF(42.0f) /*=Tune*/, DB(0), DB(1), DB(2), DB(20),
         // dahr3
-        DF(0.4f) /*=Tone*/, DF(0.0f), DB(0), DB(2), DB(4), DB(30),
+        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(2), DB(2), DB(14),
         // dahr4
-        DF(0.4f), DF(0.0f), DB(0), DB(1), DB(0), DB(12),
+        DF(0.6f), DF(0.0f), DB(0), DB(2), DB(3), DB(6),
         // filter
         1,
-        DB(2) /*=Tone*/, DB(100), DB(0), DB(FmLowPass),
+        DB(4) /*=Tone*/, DB(10), DB(0), DB(FmLowPass),
         // frequences
         3,
-        DF(11.2f), DB(160), DF(173.0f), DB(30), DF(9511.0f), DB(40)
+        DF(11.2f), DB(160), DF(73.0f), DB(30), DF(9511.0f), DB(40)
     };
     data[2 * count] = NEW_(Stream, bd707_, arraysize(bd707_));
     data[2 * count + 1] = "bd707........";
@@ -204,16 +216,16 @@ byte* createDefaultSoundBank() {
         // envelopes
         4,
         // dahr1
-        DF(1.0f), DF(0.0f), DB(2), DB(1), DB(40), DB(80) /*=Decay*/,
+        DF(0.9f), DF(0.0f), DB(1), DB(1), DB(24), /*=Decay*/ DB(40),
         // dahr2
-        DF(39.0f), DF(171.0f) /*=Tune*/, DB(0), DB(1), DB(0), DB(30),
+        DF(39.0f), DF(171.0f) /*=Tune*/, DB(0), DB(1), DB(0), DB(24),
         // dahr3
-        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(3),
+        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(4),
         // dahr4
-        DF(0.2f), DF(0.0f), DB(0), DB(0), DB(4), DB(20),
+        DF(0.2f), DF(0.0f), DB(0), DB(1), DB(10), DB(60),
         // filter
         1,
-        DB(60) /*=Tone*/, DB(40), DB(0), DB(FmHighPass),
+        DB(90) /*=Tone*/, DB(40), DB(0), DB(FmHighPass),
         // frequences
         3,
         DF(151.0f), DB(80), DF(15.7f), DB(10), DF(6511.0f), DB(80)
@@ -225,16 +237,16 @@ byte* createDefaultSoundBank() {
         // envelopes
         4,
         // dahr1
-        DF(1.0f), DF(0.0f), DB(2), DB(2), DB(40), DB(60) /*=Decay*/,
+        DF(1.0f), DF(0.0f), DB(1), DB(1), DB(20), DB(40) /*=Decay*/,
         // dahr2
         DF(39.0f), DF(231.0f) /*=Tune*/, DB(0), DB(1), DB(0), DB(20),
         // dahr3
-        DF(0.8f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(4),
+        DF(0.8f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(3),
         // dahr4
-        DF(0.5f), DF(0.0f), DB(0), DB(0), DB(0), DB(80),
+        DF(0.5f), DF(0.0f), DB(0), DB(0), DB(0), DB(60),
         // filter
         1,
-        DB(40) /*=Tone*/, DB(60), DB(0), DB(FmBandPass),
+        DB(100) /*=Tone*/, DB(60), DB(0), DB(FmBandPass),
         // frequences
         3,
         DF(81.0f), DB(140), DF(105.7f), DB(40), DF(9511.0f), DB(40)
@@ -246,19 +258,19 @@ byte* createDefaultSoundBank() {
         // envelopes
         4,
         // dahr1
-        DF(1.0f), DF(0.0f), DB(10), DB(6), DB(20), DB(100) /*=Decay*/,
+        DF(1.0f), DF(0.0f), DB(3), DB(2), DB(12), DB(60) /*=Decay*/,
         // dahr2
-        DF(29.0f), DF(175.0f) /*=Tune*/, DB(0), DB(0), DB(10), DB(10),
+        DF(19.0f), DF(173.0f) /*=Tune*/, DB(0), DB(2), DB(10), DB(20),
         // dahr3
-        DF(0.8f) /*=Tone*/, DF(0.0f), DB(0), DB(3), DB(1), DB(6),
+        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(1), DB(2), DB(5),
         // dahr4
-        DF(-0.2f), DF(0.0f), DB(8), DB(1), DB(2), DB(20),
+        DF(-0.2f), DF(0.0f), DB(2), DB(2), DB(4), DB(14),
         // filter
         1,
-        DB(72) /*=Tone*/, DB(80), DB(0), DB(FmBandPass),
+        DB(80) /*=Tone*/, DB(40), DB(0), DB(FmBandPass),
         // frequences
         3,
-        DF(55.0f), DB(60), DF(17.7f), DB(80), DF(6511.0f), DB(100)
+        DF(48.0f), DB(80), DF(17.7f), DB(60), DF(6511.0f), DB(100)
     };
     data[2 * count] = NEW_(Stream, sda0a_, arraysize(sda0a_));
     data[2 * count + 1] = "sda0a........";
@@ -269,20 +281,20 @@ byte* createDefaultSoundBank() {
         // envelopes
         4,
         // dahr1
-        DF(1.0f), DF(0.0f), DB(4), DB(4), DB(20), DB(60),
+        DF(1.0f), DF(0.0f), DB(2), DB(0), DB(2), DB(26),
         // dahr2
-        DF(127.2f), DF(0.0f), DB(0), DB(8), DB(1), DB(22),
+        DF(27.2f), DF(0.0f), DB(0), DB(2), DB(1), DB(12),
         // dahr3
-        DF(0.8f), DF(0.0f), DB(0), DB(1), DB(0), DB(3),
+        DF(0.8f), DF(0.0f), DB(0), DB(0), DB(1), DB(4),
         // dahr4
-        DF(-0.2f), DF(0.0f), DB(0), DB(1), DB(2), DB(10),
+        DF(-0.2f), DF(0.0f), DB(0), DB(0), DB(1), DB(20),
         // filter
         2,
-        DB(70) /*=Tone*/, DB(40), DB(0), DB(FmHighPass),
-        DB(142) /*=Tone*/, DB(80), DB(0), DB(FmBandPass | FmHighPass),
+        DB(182) /*=Tone*/, DB( 60), DB( 0), DB(FmHighPass),
+        DB(240) /*=Tone*/, DB(  0), DB( 0), DB(FmBandPass | FmHighPass),
         // frequences
         6,
-        DF(205.0f), DB(60), DF(284.0f), DB(0), DF(303.0f), DB(0), DF(369.0f), DB(0), DF(426.0f), DB(0), DF(521.0f), DB(0)
+        DF(205.0f), DB(22), DF(284.0f), DB(0), DF(303.0f), DB(0), DF(369.0f), DB(0), DF(426.0f), DB(0), DF(521.0f), DB(0)
     };
     data[2 * count] = NEW_(Stream, hh808_, arraysize(hh808_));
     data[2 * count + 1] = "hh808........";
@@ -291,89 +303,47 @@ byte* createDefaultSoundBank() {
         // envelopes
         4,
         // dahr1
-        DF(1.0f), DF(0.0f), DB(5), DB(2), DB(30), DB(60),
+        DF(1.0f), DF(0.0f), DB(3), DB(0), DB(4), DB(22),
         // dahr2
-        DF(103.0f), DF(7.0f), DB(0), DB(1), DB(2), DB(2),
+        DF(0.0f), DF(0.0f), DB(0), DB(2), DB(2), DB(20),
         // dahr3
-        DF(0.4f), DF(0.0f), DB(0), DB(2), DB(0), DB(6),
+        DF(0.8f), DF(0.0f), DB(0), DB(2), DB(2), DB(8),
         // dahr4
-        DF(-0.1f), DF(0.0f), DB(0), DB(0), DB(2), DB(12),
+        DF(-0.1f), DF(0.0f), DB(0), DB(1), DB(30), DB(82),
         // filter
         2,
-        DB(59) /*=Tone*/, DB(40), DB(0), DB(FmHighPass),
-        DB(127) /*=Tone*/, DB(20), DB(0), DB(FmLowPass | FmBandPass),
+        DB(153) /*=Tone*/, DB( 40), DB(0), DB(FmHighPass),
+        DB(127) /*=Tone*/, DB(  0), DB(0), DB(FmBandPass | FmHighPass),
         // frequences
         6,
         //DF(205.0f), DB(60), DF(284.0f), DB(0), DF(303.0f), DB(0), DF(369.0f), DB(0), DF(426.0f), DB(0), DF(521.0f), DB(0)
-        DF(457.0f), DB(40), DF(211.0f), DB(0), DF(241.0f), DB(0), DF(293.0f), DB(0), DF(367.0f), DB(0), DF(569.0f), DB(0)
+        DF(457.0f), DB(24), DF(211.0f), DB(0), DF(241.0f), DB(0), DF(293.0f), DB(0), DF(367.0f), DB(0), DF(569.0f), DB(0)
     };
     data[2 * count] = NEW_(Stream, hha0a_, arraysize(hha0a_));
     data[2 * count + 1] = "hha0a........";
     count++;
 #pragma endregion
 #pragma region Tom
-    byte lt808_[] = {
+    byte tt808_[] = {
         // envelopes
         4,
         // dahr1
-        DF(1.0f), DF(0.0f), DB(2), DB(4), DB(10), DB(120) /*=Decay*/,
+        DF(1.0f), DF(0.0f), DB(2), DB(4), DB(10), DB(100) /*=Decay*/,
         // dahr2
-        DF(69.0f), DF(88.0f) /*=Tune*/, DB(0), DB(1), DB(0), DB(80),
+        DF(69.0f), DF(88.0f) /*=Tune*/, DB(0), DB(1), DB(0), DB(60),
         // dahr3
-        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(1),
+        DF(0.8f) /*=Tone*/, DF(0.0f), DB(0), DB(1), DB(0), DB(4),
         // dahr4
-        DF(0.2f), DF(0.0f), DB(0), DB(0), DB(0), DB(20),
+        DF(0.6f), DF(0.0f), DB(0), DB(0), DB(1), DB(8),
         // filter
         1,
-        DB(4) /*=Tone*/, DB(40), DB(0), DB(FmLowPass | FmBandPass),
+        DB(10) /*=Tone*/, DB(40), DB(0), DB(FmLowPass | FmBandPass),
         // frequences
         3,
         DF(1.0f), DB(100), DF(205.7f), DB(90), DF(9511.0f), DB(20)
     };
-    data[2 * count] = NEW_(Stream, lt808_, arraysize(lt808_));
-    data[2 * count + 1] = "lt808........";
-    count++;
-    byte mt808_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(1.0f), DF(0.0f), DB(2), DB(4), DB(10), DB(120) /*=Decay*/,
-        // dahr2
-        DF(65.0f), DF(123.0f) /*=Tune*/, DB(0), DB(1), DB(0), DB(80),
-        // dahr3
-        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(10),
-        // dahr4
-        DF(0.2f), DF(0.0f), DB(0), DB(0), DB(0), DB(20),
-        // filter
-        1,
-        DB(4) /*=Tone*/, DB(40), DB(0), DB(FmLowPass | FmBandPass),
-        // frequences
-        3,
-        DF(2.7f), DB(110), DF(229.7f), DB(80), DF(9511.0f), DB(20)
-    };
-    data[2 * count] = NEW_(Stream, mt808_, arraysize(mt808_));
-    data[2 * count + 1] = "mt808........";
-    count++;
-    byte ht808_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(1.0f), DF(0.0f), DB(2), DB(4), DB(10), DB(120) /*=Decay*/,
-        // dahr2
-        DF(87.0f), DF(167.0f) /*=Tune*/, DB(0), DB(1), DB(0), DB(140),
-        // dahr3
-        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(4),
-        // dahr4
-        DF(0.2f), DF(0.0f), DB(0), DB(0), DB(0), DB(20),
-        // filter
-        1,
-        DB(2) /*=Tone*/, DB(0), DB(0), DB(FmLowPass | FmBandPass),
-        // frequences
-        3,
-        DF(3.7f), DB(120), DF(267.7f), DB(70), DF(9511.0f), DB(20)
-    };
-    data[2 * count] = NEW_(Stream, ht808_, arraysize(ht808_));
-    data[2 * count + 1] = "cp808........";
+    data[2 * count] = NEW_(Stream, tt808_, arraysize(tt808_));
+    data[2 * count + 1] = "tt808........";
     count++;
 #pragma endregion
 #pragma region Clap
@@ -383,18 +353,18 @@ byte* createDefaultSoundBank() {
         // dahr1
         DF(0.6f), DF(0.0f), DB(0), DB(0), DB(2), DB(5),
         // dahr2
-        DF(0.5f), DF(0.0f), DB(10), DB(0), DB(1), DB(8),
+        DF(0.5f), DF(0.0f), DB(5), DB(0), DB(2), DB(4),
         // dahr3
-        DF(0.65f), DF(0.0f), DB(21), DB(0), DB(2), DB(5),
+        DF(0.65f), DF(0.0f), DB(9), DB(0), DB(3), DB(5),
         // dahr4
-        DF(0.6f), DF(0.0f), DB(28), DB(0), DB(20), DB(100),
+        DF(0.4f), DF(0.0f), DB(12), DB(0), DB(10), DB(90),
         // filter
         2,
-        DB(10) /*=Tone*/, DB(210), DB(0), DB(FmHighPass),
-        DB(130) /*=Tone*/, DB(20), DB(0), DB(FmLowPass),
+        DB( 42) /*=Tone*/, DB(220), DB(0), DB(FmHighPass),
+        DB(180) /*=Tone*/, DB( 20), DB(0), DB(FmLowPass | FmBandPass),
         // frequences
         3,
-        DF(225.0f), DB(6), DF(374.0f), DB(3), DF(9512.0f), DB(160)
+        DF(221.0f), DB(0), DF(0.1f), DB(0), DF(8753.0f), DB(180)
     };
     data[2 * count] = NEW_(Stream, clap_, arraysize(clap_));
     data[2 * count + 1] = "cp808a.......";
@@ -451,17 +421,17 @@ Drums::Drums() {
     lowTom_.assignControls((PotBase*)&controls_.lt);
     lowTom_.filters[0].createStages(4);
     lowTom_.soundBank(soundBank_);
-    lowTom_.setProgram(prgLT808);
+    lowTom_.setProgram(prgTT808);
 
     midTom_.assignControls((PotBase*)&controls_.mt);
     midTom_.filters[0].createStages(4);
     midTom_.soundBank(soundBank_);
-    midTom_.setProgram(prgMT808);
+    midTom_.setProgram(prgTT808);
 
     highTom_.assignControls((PotBase*)&controls_.ht);
     highTom_.filters[0].createStages(4);
     highTom_.soundBank(soundBank_);
-    highTom_.setProgram(prgHT808);
+    highTom_.setProgram(prgTT808);
 
     clap_.assignControls((PotBase*)&controls_.cp);
     closedHihat_.filters[0].createStages(6);
@@ -545,7 +515,7 @@ void Drums::renderHihat(GenericDrum* hihat, float* buffer, int start, int end) {
         float click = hihat->envelopes[2].run();
         float cut = hihat->envelopes[3].run();
         am += click;
-        cut += click;
+        //cut += click;
 
         // create 6 pulses
         double smp = 0.0f;
@@ -603,14 +573,15 @@ void Drums::renderClap(float* buffer, int start, int end) {
             float am = clap_.envelopes[0].run() + clap_.envelopes[1].run() + clap_.envelopes[2].run() + clap_.envelopes[3].run();
 
             var delta = clap_.fre[0];
-            float sin1 = clap_.amp[0] * (float)SMPPULSE(clap_.timers[0]);
+            float sin1 = clap_.amp[0] * (float)SMPSINUS(clap_.timers[0]);
             clap_.timers[0] += delta; if (clap_.timers[0] > 1.0) clap_.timers[0] -= 1.0;
 
             delta = clap_.fre[1];
-            float sin2 = clap_.amp[1] * (float)SMPPULSE(clap_.timers[1]);
+            float sin2 = clap_.amp[1] * (float)SMPSINUS(clap_.timers[1]);
             clap_.timers[1] += delta; if (clap_.timers[1] > 1.0) clap_.timers[1] -= 1.0;
 
             SMPNOISE(clap_.fre[2], clap_.timers[2], clap_.noise);
+            clap_.timers[2] += delta; if (clap_.timers[2] > 1.0) clap_.timers[2] -= 1.0;
 
             var smp = sin1 + sin2 + clap_.amp[2] * clap_.noise;
 
@@ -658,10 +629,10 @@ void Drums::run(int start, int end) {
     renderSnareDrum(outputs_[0], start, end);
     renderOpenHihat(outputs_[0], start, end);
     renderClosedHihat(outputs_[0], start, end);
-    //renderLowTom(outputs_[0], start, end);
-    //renderMidTom(outputs_[0], start, end);
-    //renderHighTom(outputs_[0], start, end);
-    //renderClap(outputs_[0], start, end);
+    renderLowTom(outputs_[0], start, end);
+    renderMidTom(outputs_[0], start, end);
+    renderHighTom(outputs_[0], start, end);
+    renderClap(outputs_[0], start, end);
 }
 void Drums::setNote(byte note, byte velocity) {
     // C1:BD  D1:SD  E1:LT  F1:MT  G1:HT  A1:RS  H1:CL
@@ -670,7 +641,7 @@ void Drums::setNote(byte note, byte velocity) {
     switch (note) {
     case drBD:
         break;
-    case drSN:
+    case drSD:
         drum = &snareDrum_;
         break;
     case drOH:

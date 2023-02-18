@@ -22,17 +22,657 @@ using namespace PLAYER;
 #define SAMPLING_RATE 48000
 #define LAST_TICK 128
 
+var isSaveToWave_ = false;
+var framePerRow_ = 0;
+var totalFrames_ = 0;
+Array patternOrder_(sizeof(int), 256);
+Array patterns_(sizeof(int), 64);
+
+typedef char* (ROWPROCESSOR)(PArray* tokens, Sequence* sequence, int& delta);
+
+PlayerAdapter playerAdapter_;
+SynthAdapter synthAdapter_;
+
+
+void saveToBuffer(Drums* drums, short*& buffer, int length) {
+    var output = drums->getOutput(0);
+    while (length > 0) {
+        var toWrite = length > SAMPLE_BUFFER_SIZE ? SAMPLE_BUFFER_SIZE : length;
+        drums->run(0, toWrite);
+        for (var j = 0; j < toWrite; j++) {
+            *buffer++ = (short)(32767.0f * output[j]);
+        }
+        length -= toWrite;
+    }
+}
+
+char* synthRowProcessor(PArray* tokens, Sequence* sequence, int& delta) {
+    const char* notes[12] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "H"};
+    char* txt = NULL;
+    char* ptr = NULL;
+    var firstNote = true;
+    for (var i = 0; i < tokens->length(); i++) {
+        var token = (char*)tokens->get(i);
+        var note = 0, velocity = 0;
+        for (var j = 0; j < arraysize(notes); j++) {
+            var ptr = token;
+            var noteToken = notes[j];
+            // check note
+            var len = fmw::strlen(noteToken);
+            if (fmw::strncmp(token, noteToken, len) == 0) {
+                // check octave
+                var oct = -1;
+                parseInt(token + len, oct);
+                // calculate note (1 = C#0)
+                note = j + 12 * oct;
+                break;
+            }
+        }
+
+        if (note != 0) {
+            // read velocity
+            var vel = (char*)tokens->get(i + 1);
+            var p = parseInt(vel, velocity);
+            if (p != vel) {
+                velocity = velocity * 255 / 10;
+                i++;
+            }
+            else {
+                velocity = 255;
+            }
+
+            if (firstNote) {
+                sequence->writeDelta(delta);
+                firstNote = false;
+            }
+
+            // add note
+            var command = sequence->device()->makeCommand(ModuleCommands::CmdSetNote, note, velocity);
+            if (ptr == NULL) {
+                ptr = MALLOC(char, 1024);
+                ptr[0] = '\0';
+            }
+            str_format_s(ptr, 255, " %s(%d): %0.2f  ", token, note, velocity / 255.0f);
+            ptr += fmw::strlen(ptr);
+            sequence->writeStream(command);
+            delta = 0;
+            DEL_(command);
+        }
+    }
+    if (!firstNote) sequence->writeEOF();
+    return txt;
+}
+
+char* drumsRowProcessor(PArray* tokens, Sequence* sequence, int& delta) {
+    char* txt = NULL;
+    char* ptr;
+    var firstNote = true;
+    for (var i = 0; i < tokens->length(); i++) {
+        var token = (char*)tokens->get(i);
+        var note = 0, velocity = 0;
+        if (fmw::strncmp(token, "BD", 2) == 0) {
+            note = drBD;
+        }
+        else if (fmw::strncmp(token, "SD", 2) == 0) {
+            note = drSD;
+        }
+        else if (fmw::strncmp(token, "OH", 2) == 0) {
+            note = drOH;
+        }
+        else if (fmw::strncmp(token, "CH", 2) == 0) {
+            note = drCH;
+        }
+        else if (fmw::strncmp(token, "LT", 2) == 0) {
+            note = drLT;
+        }
+        else if (fmw::strncmp(token, "MT", 2) == 0) {
+            note = drMT;
+        }
+        else if (fmw::strncmp(token, "HT", 2) == 0) {
+            note = drHT;
+        }
+        else if (fmw::strncmp(token, "CP", 2) == 0) {
+            note = drCP;
+        }
+        if (note != 0) {
+            // read velocity
+            var vel = (char*)tokens->get(i + 1);
+            var p = parseInt(vel, velocity);
+            if (p != vel) {
+                velocity = velocity * 255 / 10;
+                i++;
+            }
+            else {
+                velocity = 255;
+            }
+
+            if (firstNote) {
+                sequence->writeDelta(delta);
+                firstNote = false;
+            }
+
+            // add drum
+            var command = sequence->device()->makeCommand(ModuleCommands::CmdSetNote, note, velocity);
+            if (txt == NULL) {
+                txt = ptr = MALLOC(char, 1024);
+                ptr[0] = '\0';
+            }
+            str_format_s(ptr, 255, " %s: %0.2f  ", token, velocity/255.0f);
+            ptr += fmw::strlen(ptr);
+            sequence->writeStream(command);
+            delta = 0;
+            DEL_(command);
+        }
+    }
+    if (!firstNote) sequence->writeEOF();
+    return txt;
+}
+
+Stream* soundBank_ = NULL;
+Stream* getSoundBank() {
+    if (soundBank_ == NULL) {
+        int count = 0;
+        var bass = NEW_(Stream);
+        {
+            count++;
+            bass->writeByte(32);
+            bass->writeByte(SynthCtrlId::amAdsrAmp)->writeFloat(1.0f);
+            //bass->writeByte(SynthCtrlId::amAdsrDc)->writeFloat(0.0f);
+            bass->writeByte(SynthCtrlId::amAdsrAtk)->writeByte(22);
+            bass->writeByte(SynthCtrlId::amAdsrDec)->writeByte(68);
+            bass->writeByte(SynthCtrlId::amAdsrSus)->writeByte(80);
+            bass->writeByte(SynthCtrlId::amAdsrRel)->writeByte(82);         // 5
+
+            //bass->writeByte(SynthCtrlId::fmAdsrAmp)->writeFloat(0.0f);
+            ////bass->writeByte(SynthCtrlId::fmAdsrDc)->writeFloat(0.0f);
+            //bass->writeByte(SynthCtrlId::fmAdsrAtk)->writeByte(0);
+            //bass->writeByte(SynthCtrlId::fmAdsrDec)->writeByte(0);
+            //bass->writeByte(SynthCtrlId::fmAdsrSus)->writeByte(0);
+            //bass->writeByte(SynthCtrlId::fmAdsrRel)->writeByte(0);        // 5
+
+            bass->writeByte(SynthCtrlId::pmAdsrAmp)->writeFloat(0.2f);
+            //bass->writeByte(SynthCtrlId::pmAdsrDc)->writeFloat(0.6f);
+            bass->writeByte(SynthCtrlId::pmAdsrAtk)->writeByte(40);
+            bass->writeByte(SynthCtrlId::pmAdsrDec)->writeByte(144);
+            bass->writeByte(SynthCtrlId::pmAdsrSus)->writeByte(128);
+            bass->writeByte(SynthCtrlId::pmAdsrRel)->writeByte(200);       // 5
+
+            bass->writeByte(SynthCtrlId::ftAdsrAmp)->writeFloat(0.5f);
+            bass->writeByte(SynthCtrlId::ftAdsrAtk)->writeByte(122);
+            bass->writeByte(SynthCtrlId::ftAdsrDec)->writeByte(122);
+            bass->writeByte(SynthCtrlId::ftAdsrSus)->writeByte(100);
+            bass->writeByte(SynthCtrlId::ftAdsrRel)->writeByte(222);       // 5
+
+            bass->writeByte(SynthCtrlId::amLfoAmp)->writeFloat(0.0f);
+            bass->writeByte(SynthCtrlId::amLfoFre)->writeFloat(2.0f);
+            bass->writeByte(SynthCtrlId::fmLfoAmp)->writeFloat(0.0f);
+            bass->writeByte(SynthCtrlId::fmLfoFre)->writeFloat(3.8f);    // 4
+
+            bass->writeByte(SynthCtrlId::osc1Amp)->writeByte(160);
+            bass->writeByte(SynthCtrlId::osc1Fre)->writeFloat(0.0f);
+            bass->writeByte(SynthCtrlId::osc1Tune)->writeByte(0);
+            bass->writeByte(SynthCtrlId::osc1Psw)->writeByte(120);
+            bass->writeByte(SynthCtrlId::osc1Wave)->writeByte(WfPulse);  // 5
+
+            bass->writeByte(SynthCtrlId::osc2Amp)->writeByte(120);
+            bass->writeByte(SynthCtrlId::osc2Fre)->writeFloat(0.2f);
+            bass->writeByte(SynthCtrlId::osc2Tune)->writeByte(12);
+            bass->writeByte(SynthCtrlId::osc2Psw)->writeByte(100);
+            bass->writeByte(SynthCtrlId::osc2Wave)->writeByte(WfPulse);    // 5
+
+            bass->writeByte(SynthCtrlId::flt1Cut)->writeByte(  0);
+            bass->writeByte(SynthCtrlId::flt1Res)->writeByte(160);
+            bass->writeByte(SynthCtrlId::flt1Mode)->writeByte(FmLowPass);  // 3
+        }
+        var chords = NEW_(Stream);
+        {
+            count++;
+            chords->writeByte(32);
+            chords->writeByte(SynthCtrlId::amAdsrAmp)->writeFloat(1.0f);
+            //chords->writeByte(SynthCtrlId::amAdsrDc)->writeFloat(0.0f);
+            chords->writeByte(SynthCtrlId::amAdsrAtk)->writeByte(62);
+            chords->writeByte(SynthCtrlId::amAdsrDec)->writeByte(128);
+            chords->writeByte(SynthCtrlId::amAdsrSus)->writeByte(120);
+            chords->writeByte(SynthCtrlId::amAdsrRel)->writeByte(162);       // 5
+
+            //chords->writeByte(SynthCtrlId::fmAdsrAmp)->writeFloat(0.0f);
+            //chords->writeByte(SynthCtrlId::fmAdsrDc)->writeFloat(0.0f);
+            //chords->writeByte(SynthCtrlId::fmAdsrAtk)->writeByte(0);
+            //chords->writeByte(SynthCtrlId::fmAdsrDec)->writeByte(0);
+            //chords->writeByte(SynthCtrlId::fmAdsrSus)->writeByte(0);
+            //chords->writeByte(SynthCtrlId::fmAdsrRel)->writeByte(0);        // 5
+
+            chords->writeByte(SynthCtrlId::pmAdsrAmp)->writeFloat(0.2f);
+            //chords->writeByte(SynthCtrlId::pmAdsrDc)->writeFloat(0.45f);
+            chords->writeByte(SynthCtrlId::pmAdsrAtk)->writeByte(22);
+            chords->writeByte(SynthCtrlId::pmAdsrDec)->writeByte(84);
+            chords->writeByte(SynthCtrlId::pmAdsrSus)->writeByte(128);
+            chords->writeByte(SynthCtrlId::pmAdsrRel)->writeByte(80);       // 5
+
+            chords->writeByte(SynthCtrlId::ftAdsrAmp)->writeFloat(0.4f);
+            chords->writeByte(SynthCtrlId::ftAdsrAtk)->writeByte(122);
+            chords->writeByte(SynthCtrlId::ftAdsrDec)->writeByte(222);
+            chords->writeByte(SynthCtrlId::ftAdsrSus)->writeByte(160);
+            chords->writeByte(SynthCtrlId::ftAdsrRel)->writeByte(122);       // 5
+
+            chords->writeByte(SynthCtrlId::amLfoAmp)->writeFloat(0.1f);
+            chords->writeByte(SynthCtrlId::amLfoFre)->writeFloat(4.1f);
+            chords->writeByte(SynthCtrlId::fmLfoAmp)->writeFloat(1.4f);
+            chords->writeByte(SynthCtrlId::fmLfoFre)->writeFloat(4.8f);    // 4
+
+            chords->writeByte(SynthCtrlId::osc1Amp)->writeByte(160);
+            chords->writeByte(SynthCtrlId::osc1Fre)->writeFloat(0.0f);
+            chords->writeByte(SynthCtrlId::osc1Tune)->writeByte(0);
+            chords->writeByte(SynthCtrlId::osc1Psw)->writeByte(60);
+            chords->writeByte(SynthCtrlId::osc1Wave)->writeByte(WfSaw);  // 5
+
+            chords->writeByte(SynthCtrlId::osc2Amp)->writeByte(100);
+            chords->writeByte(SynthCtrlId::osc2Fre)->writeFloat(0.4f);
+            chords->writeByte(SynthCtrlId::osc2Tune)->writeByte(12);
+            chords->writeByte(SynthCtrlId::osc2Psw)->writeByte(255);
+            chords->writeByte(SynthCtrlId::osc2Wave)->writeByte(WfSaw);    // 5
+
+            chords->writeByte(SynthCtrlId::flt1Cut)->writeByte(20);
+            chords->writeByte(SynthCtrlId::flt1Res)->writeByte( 4);
+            chords->writeByte(SynthCtrlId::flt1Mode)->writeByte(FmBandPass);  // 3
+        }
+        var mono = NEW_(Stream);
+        {
+            count++;
+            mono->writeByte(28);
+            mono->writeByte(SynthCtrlId::amAdsrAmp)->writeFloat(1.0f);
+            mono->writeByte(SynthCtrlId::amAdsrAtk)->writeByte(2);
+            mono->writeByte(SynthCtrlId::amAdsrDec)->writeByte(28);
+            mono->writeByte(SynthCtrlId::amAdsrSus)->writeByte(80);
+            mono->writeByte(SynthCtrlId::amAdsrRel)->writeByte(32);       // 5
+
+            mono->writeByte(SynthCtrlId::pmAdsrAmp)->writeFloat(0.2f);
+            mono->writeByte(SynthCtrlId::pmAdsrAtk)->writeByte(20);
+            mono->writeByte(SynthCtrlId::pmAdsrDec)->writeByte(64);
+            mono->writeByte(SynthCtrlId::pmAdsrSus)->writeByte(128);
+            mono->writeByte(SynthCtrlId::pmAdsrRel)->writeByte(40);       // 5
+
+            mono->writeByte(SynthCtrlId::ftAdsrAmp)->writeFloat(1.0f);
+            mono->writeByte(SynthCtrlId::ftAdsrAtk)->writeByte(2);
+            mono->writeByte(SynthCtrlId::ftAdsrDec)->writeByte(22);
+            mono->writeByte(SynthCtrlId::ftAdsrSus)->writeByte(80);
+            mono->writeByte(SynthCtrlId::ftAdsrRel)->writeByte(32);       // 5
+
+            mono->writeByte(SynthCtrlId::osc1Amp)->writeByte(160);
+            mono->writeByte(SynthCtrlId::osc1Fre)->writeFloat(0.0f);
+            mono->writeByte(SynthCtrlId::osc1Tune)->writeByte(0);
+            mono->writeByte(SynthCtrlId::osc1Psw)->writeByte(0);
+            mono->writeByte(SynthCtrlId::osc1Wave)->writeByte(WfSaw);  // 5
+
+            mono->writeByte(SynthCtrlId::osc2Amp)->writeByte(120);
+            mono->writeByte(SynthCtrlId::osc2Fre)->writeFloat(0.1f);
+            mono->writeByte(SynthCtrlId::osc2Tune)->writeByte(12);
+            mono->writeByte(SynthCtrlId::osc2Psw)->writeByte(10);
+            mono->writeByte(SynthCtrlId::osc2Wave)->writeByte(WfSaw);    // 5
+
+            mono->writeByte(SynthCtrlId::flt1Cut)->writeByte(120);
+            mono->writeByte(SynthCtrlId::flt1Res)->writeByte(0);
+            mono->writeByte(SynthCtrlId::flt1Mode)->writeByte(FmLowPass);  // 3
+        }
+        var piano = NEW_(Stream);
+        {
+            count++;
+            piano->writeByte(28);
+            piano->writeByte(SynthCtrlId::amAdsrAmp)->writeFloat(1.0f);
+            piano->writeByte(SynthCtrlId::amAdsrAtk)->writeByte(  0);
+            piano->writeByte(SynthCtrlId::amAdsrDec)->writeByte( 30);
+            piano->writeByte(SynthCtrlId::amAdsrSus)->writeByte( 80);
+            piano->writeByte(SynthCtrlId::amAdsrRel)->writeByte( 20);       // 5
+
+            piano->writeByte(SynthCtrlId::pmAdsrAmp)->writeFloat(0.3f);
+            piano->writeByte(SynthCtrlId::pmAdsrAtk)->writeByte(  0);
+            piano->writeByte(SynthCtrlId::pmAdsrDec)->writeByte( 24);
+            piano->writeByte(SynthCtrlId::pmAdsrSus)->writeByte(128);
+            piano->writeByte(SynthCtrlId::pmAdsrRel)->writeByte(120);       // 5
+
+            piano->writeByte(SynthCtrlId::ftAdsrAmp)->writeFloat(1.0f);
+            piano->writeByte(SynthCtrlId::ftAdsrAtk)->writeByte(  2);
+            piano->writeByte(SynthCtrlId::ftAdsrDec)->writeByte( 32);
+            piano->writeByte(SynthCtrlId::ftAdsrSus)->writeByte( 80);
+            piano->writeByte(SynthCtrlId::ftAdsrRel)->writeByte( 42);       // 5
+
+            piano->writeByte(SynthCtrlId::osc1Amp)->writeByte( 100);
+            piano->writeByte(SynthCtrlId::osc1Fre)->writeFloat(0.0f);
+            piano->writeByte(SynthCtrlId::osc1Tune)->writeByte(  0);
+            piano->writeByte(SynthCtrlId::osc1Psw)->writeByte(   0);
+            piano->writeByte(SynthCtrlId::osc1Wave)->writeByte(WfTriangle);  // 5
+
+            piano->writeByte(SynthCtrlId::osc2Amp)->writeByte(  80);
+            piano->writeByte(SynthCtrlId::osc2Fre)->writeFloat(0.1f);
+            piano->writeByte(SynthCtrlId::osc2Tune)->writeByte(  0);
+            piano->writeByte(SynthCtrlId::osc2Psw)->writeByte(   0);
+            piano->writeByte(SynthCtrlId::osc2Wave)->writeByte(WfTriangle);    // 5
+
+            piano->writeByte(SynthCtrlId::flt1Cut)->writeByte(10);
+            piano->writeByte(SynthCtrlId::flt1Res)->writeByte(80);
+            piano->writeByte(SynthCtrlId::flt1Mode)->writeByte(FmLowPass|FmBandPass);  // 3
+        }
+
+        word offset = 1 + count * 16;
+        soundBank_ = NEW_(Stream, 1024);
+        soundBank_->writeByte(count);
+        soundBank_->writeString("bassline.....");
+        soundBank_->writeWord(offset); offset += (word)bass->length();
+        soundBank_->writeString("kick.........");
+        soundBank_->writeWord(offset); offset += (word)chords->length();
+        soundBank_->writeString("mono.........");
+        soundBank_->writeWord(offset); offset += (word)mono->length();
+        soundBank_->writeString("piano........");
+        soundBank_->writeWord(offset); offset += (word)piano->length();
+
+        soundBank_->writeStream(bass);
+        soundBank_->writeStream(chords);
+        soundBank_->writeStream(mono);
+        soundBank_->writeStream(piano);        
+
+        DEL_(bass);
+        DEL_(chords);
+        DEL_(mono);
+        DEL_(piano);
+    }
+
+    return soundBank_;
+}
+
+Stream* bassSoundBank_ = NULL;
+Stream* getBassSoundBank() {
+    if (bassSoundBank_ == NULL) {
+        int count = 0;
+        var bass = NEW_(Stream);
+        {
+            bass->writeByte(28);
+            bass->writeByte(BassCtrlId::bAmAdsrAmp)->writeFloat(1.0f);
+            bass->writeByte(BassCtrlId::bAmAdsrAtk)->writeByte(12);
+            bass->writeByte(BassCtrlId::bAmAdsrDec)->writeByte(60);
+            bass->writeByte(BassCtrlId::bAmAdsrSus)->writeByte(160);
+            bass->writeByte(BassCtrlId::bAmAdsrRel)->writeByte(100);         // 5
+
+            bass->writeByte(BassCtrlId::bPmAdsrAmp)->writeFloat(0.0f);
+            bass->writeByte(BassCtrlId::bPmAdsrAtk)->writeByte(20);
+            bass->writeByte(BassCtrlId::bPmAdsrDec)->writeByte(144);
+            bass->writeByte(BassCtrlId::bPmAdsrSus)->writeByte(128);
+            bass->writeByte(BassCtrlId::bPmAdsrRel)->writeByte(100);       // 5
+
+            bass->writeByte(BassCtrlId::bFtAdsrAmp)->writeFloat(0.2f);
+            bass->writeByte(BassCtrlId::bFtAdsrAtk)->writeByte( 2);
+            bass->writeByte(BassCtrlId::bFtAdsrDec)->writeByte(60);
+            bass->writeByte(BassCtrlId::bFtAdsrSus)->writeByte(40);
+            bass->writeByte(BassCtrlId::bFtAdsrRel)->writeByte(80);       // 5
+
+            bass->writeByte(BassCtrlId::bOsc1Amp)->writeByte(120);
+            bass->writeByte(BassCtrlId::bOsc1Fre)->writeFloat(0.0f);
+            bass->writeByte(BassCtrlId::bOsc1Tune)->writeByte(0);
+            bass->writeByte(BassCtrlId::bOsc1Psw)->writeByte(120);
+            bass->writeByte(BassCtrlId::bOsc1Wave)->writeByte(WfSaw);  // 5
+
+            bass->writeByte(BassCtrlId::bOsc2Amp)->writeByte(60);
+            bass->writeByte(BassCtrlId::bOsc2Fre)->writeFloat(0.4f);
+            bass->writeByte(BassCtrlId::bOsc2Tune)->writeByte(12);
+            bass->writeByte(BassCtrlId::bOsc2Psw)->writeByte(100);
+            bass->writeByte(BassCtrlId::bOsc2Wave)->writeByte(WfPulse); // 5
+
+            bass->writeByte(BassCtrlId::bFlt1Cut)->writeByte(10);
+            bass->writeByte(BassCtrlId::bFlt1Res)->writeByte(80);
+            bass->writeByte(BassCtrlId::bFlt1Mode)->writeByte(FmLowPass);  // 3
+            count++;
+        };
+
+        var bass2 = NEW_(Stream);
+        {
+            bass2->writeByte(28);
+            bass2->writeByte(BassCtrlId::bAmAdsrAmp)->writeFloat(1.0f);
+            bass2->writeByte(BassCtrlId::bAmAdsrAtk)->writeByte(250);
+            bass2->writeByte(BassCtrlId::bAmAdsrDec)->writeByte(240);
+            bass2->writeByte(BassCtrlId::bAmAdsrSus)->writeByte(220);
+            bass2->writeByte(BassCtrlId::bAmAdsrRel)->writeByte(240);         // 5
+
+            bass2->writeByte(BassCtrlId::bPmAdsrAmp)->writeFloat(0.2f);
+            bass2->writeByte(BassCtrlId::bPmAdsrAtk)->writeByte(120);
+            bass2->writeByte(BassCtrlId::bPmAdsrDec)->writeByte(244);
+            bass2->writeByte(BassCtrlId::bPmAdsrSus)->writeByte(88);
+            bass2->writeByte(BassCtrlId::bPmAdsrRel)->writeByte(200);       // 5
+
+            bass2->writeByte(BassCtrlId::bFtAdsrAmp)->writeFloat(0.2f);
+            bass2->writeByte(BassCtrlId::bFtAdsrAtk)->writeByte(250);
+            bass2->writeByte(BassCtrlId::bFtAdsrDec)->writeByte(200);
+            bass2->writeByte(BassCtrlId::bFtAdsrSus)->writeByte(120);
+            bass2->writeByte(BassCtrlId::bFtAdsrRel)->writeByte(240);       // 5
+
+            bass2->writeByte(BassCtrlId::bOsc1Amp)->writeByte(100);
+            bass2->writeByte(BassCtrlId::bOsc1Fre)->writeFloat(0.0f);
+            bass2->writeByte(BassCtrlId::bOsc1Tune)->writeByte(0);
+            bass2->writeByte(BassCtrlId::bOsc1Psw)->writeByte(120);
+            bass2->writeByte(BassCtrlId::bOsc1Wave)->writeByte(WfSaw | WfPulse | WfSinus);  // 5
+
+            bass2->writeByte(BassCtrlId::bOsc2Amp)->writeByte(20);
+            bass2->writeByte(BassCtrlId::bOsc2Fre)->writeFloat(3487.04f);
+            bass2->writeByte(BassCtrlId::bOsc2Tune)->writeByte(0);
+            bass2->writeByte(BassCtrlId::bOsc2Psw)->writeByte(120);
+            bass2->writeByte(BassCtrlId::bOsc2Wave)->writeByte(WfNoise); // 5
+
+            bass2->writeByte(BassCtrlId::bFlt1Cut)->writeByte(4);
+            bass2->writeByte(BassCtrlId::bFlt1Res)->writeByte(100);
+            bass2->writeByte(BassCtrlId::bFlt1Mode)->writeByte(FmLowPass);  // 3
+            count++;
+        };
+
+        word offset = 1 + count * 16;
+        bassSoundBank_ = NEW_(Stream, 4096);
+        bassSoundBank_->writeByte(count);
+        bassSoundBank_->writeString("bass.........");
+        bassSoundBank_->writeWord(offset); offset += (word)bass->length();
+        bassSoundBank_->writeString("bass2........");
+        bassSoundBank_->writeWord(offset); offset += (word)bass2->length();
+
+        bassSoundBank_->writeStream(bass);
+        bassSoundBank_->writeStream(bass2);
+        DEL_(bass);
+        DEL_(bass2);
+    }
+    return bassSoundBank_;
+}
+
+void parseFile(char* file, Player* player, Map* rowProcessorMap) {
+    // file structure
+    // - tempo
+    //   - keyword: TEMPO
+    //   - bpm, frame per row
+    // - devices
+    //   - keyword: DEVICES
+    //   - devices ids
+    // - master pattern (pattern order)
+    //   - keyword: MASTER
+    //   - pattern ids
+    // - patterns
+    //   - keyword: PATTERN
+    //   - rows (notes, commands)
+    var cons = getConsole();
+    var stream = NEW_(Stream, 16384);
+    stream->readBytesFromFile(file, 16384, 0);
+    cons->printf(" * %d bytes read.\n", stream->length());
+    stream->reset();
+    PArray devices(16);
+
+#pragma region HEADER
+    // read tempo
+    var row = stream->readRow();
+    var tokens = PArray::str_split(row, " ");
+    var bpm = 120.0;
+    framePerRow_ = 4;
+    totalFrames_ = 0;
+    if (fmw::strncmp((char*)tokens->get(0), "TEMPO", 5) == 0)
+    {
+        parseDouble((char*)tokens->get(1), bpm);
+        parseInt((char*)tokens->get(2), framePerRow_);
+        cons->printf(" * Tempo: %0#.2f bpm, %d frames per row\n", bpm, framePerRow_);
+        var framePerSecond = bpm * framePerRow_ / 60.0;
+        player->refreshRate((float)framePerSecond);
+    }
+    ARRAY_FOREACH(tokens, FREE(value));
+    DEL_(tokens);
+    FREE(row);
+
+    // read devices
+    row = stream->readRow();
+    tokens = PArray::str_split(row, " ");
+    if (fmw::strncmp((char*)tokens->get(0), "DEVICES", 7) == 0)
+    {
+        for (var i = 1; i < tokens->length(); i++) {
+            var devIdToken = (char*)tokens->get(i);
+            var deviceType = 0;
+            byte* initData = NULL;
+            char* deviceName = "Drums";
+            if (fmw::strncmp(devIdToken, deviceName, 5) == 0) {
+                deviceType = SynthDevices::DeviceDrums;
+            }
+            else {
+                deviceName = "Bass";
+                if (fmw::strncmp(devIdToken, "Bass", 4) == 0) {
+                    deviceType = SynthDevices::DeviceBass;
+                    initData = getBassSoundBank()->data();
+                }
+                else {
+                    deviceName = "Synth";
+                    if (fmw::strncmp(devIdToken, "Synth", 5) == 0) {
+                        deviceType = SynthDevices::DeviceSynth;
+                        initData = getSoundBank()->data();
+                    }
+                }
+            }
+
+            cons->printf(" * Device %s(%d) added.\n", deviceName, deviceType);
+            var device = player->addDevice(player->getAdapter(synthAdapter_.getInfo()->id), deviceType, NULL);
+            devices.push(device);
+        }
+    }
+    ARRAY_FOREACH(tokens, FREE(value));
+    DEL_(tokens);
+    FREE(row);
+
+    // read master
+    row = stream->readRow();
+    tokens = PArray::str_split(row, " ");
+    if (fmw::strncmp((char*)tokens->get(0), "MASTER", 6) == 0)
+    {
+        cons->printf(" * Pattern order:");
+        for (var i = 1; i < tokens->length(); i++) {
+            var patternToken = (char*)tokens->get(i);
+            var patternId = -1;
+            var p = parseInt(patternToken, patternId);
+            if (p != patternToken) {
+                patternOrder_.push(&patternId);
+                cons->printf("%02X ", patternId);
+            }
+        }
+    }
+    cons->printf("\n");
+    ARRAY_FOREACH(tokens, FREE(value));
+    DEL_(tokens);
+    FREE(row);
+#pragma endregion
+
+#pragma region PATTERNS
+    var delta = 0;
+    var totalDelta = 0;
+    int patternLength[256];
+    Sequence* sequence = NULL;
+    var seqId = 0;
+    Device* device = NULL;
+    while ((row = stream->readRow()) != NULL) {
+        tokens = PArray::str_split(row, " ");
+        if (fmw::strncmp(row, "PATTERN", 7) == 0) {
+            if (sequence != NULL) {
+                sequence->writeDelta(delta)->writeEOS();
+                patternLength[seqId] = totalDelta;
+                seqId++;
+                player->addSequence(sequence);
+                cons->printf(" * Sequence added with %d frames.\n\n", totalDelta);
+            }
+            cons->printf(" * Pattern %d\n", seqId + 1);
+            var deviceId = -1;
+            parseInt((char*)tokens->get(1), deviceId);
+            device = (Device*)devices.get(deviceId-1);
+            if (device == NULL) {
+                cons->printf("Device %d not found!", deviceId);
+                break;
+            }
+            sequence = NEW_(Sequence, device);
+            sequence->writeHeader();
+            delta = 0;
+            totalDelta = 0;
+            ARRAY_FOREACH(tokens, FREE(value));
+            DEL_(tokens);
+            FREE(row);
+            continue;
+        }
+
+        var rowProcessor = *(ROWPROCESSOR**)rowProcessorMap->get(device->type());
+        var txt = rowProcessor(tokens, sequence, delta);
+        if (txt != NULL) {
+            cons->printf("%4d  %s\n", totalDelta, txt);
+            FREE(txt);
+        }
+        delta++;
+        totalDelta++;
+        ARRAY_FOREACH(tokens, FREE(value));
+        DEL_(tokens);
+        FREE(row);
+    }
+
+    if (sequence != NULL) {
+        sequence->writeDelta(delta)->writeEOS();
+        patternLength[seqId] = totalDelta;
+        player->addSequence(sequence);
+        cons->printf(" * Sequence added with %d frames.\n\n", totalDelta);
+    }
+    //FREE(row);
+    DEL_(stream);
+#pragma endregion
+
+    // create master sequence
+    var masterSequence = NEW_(Sequence, player->masterDevice());
+    masterSequence->writeHeader();
+    delta = 0;
+    totalDelta = 0;
+    for (var i = 0; i < patternOrder_.length(); i++) {
+        var seqId = *(int*)patternOrder_.get(i);
+        masterSequence->writeDelta(delta)->writeCommand(PlayerCommands::CmdAssign)->writeByte(1)->writeByte(seqId)->writeByte(1)->writeByte(0)->writeEOF();
+        delta = patternLength[seqId - 1];
+        totalDelta += delta;
+    }
+    masterSequence->writeDelta(delta)->writeEOS();
+    player->sequences().insert(0, masterSequence);
+    if (totalFrames_ == 0) totalFrames_ = totalDelta;
+    var info = masterSequence->print();
+    cons->printf("%s", info);
+    FREE(info);
+
+    // assign master sequence
+    player->assignChannel(0, (Sequence*)player->sequences().get(0), 0, 0);
+}
+
+void simpleSynthCallback(short* buffer, int sampleCount, void* context) {
+    //((Synth*)context)->run(buffer, 0, sampleCount);
+    //for (var i = 0; i < sampleCount; i++) {
+    //    SynthTest::buffer_[i] = 0.0f;
+    //}
+    var synth = (Module*)context;
+    synth->run(0, sampleCount);
+    for (var i = 0; i < sampleCount; i++) {
+        buffer[i] = (short)(0.6f * synth->getOutput(0)[i] * 32768.0f);
+    }
+}
+
+#pragma region SynthTest
 class SynthTest : public Test {
     //Player* player_;
     //Device* device_;
 
-    static PlayerAdapter playerAdapter_;
-    static SynthAdapter synthAdapter_;
-
-    //Synth* synth_ = NULL;
-
-    Stream* createSoundBank();
-    Stream* createBassSoundBank();
     Stream* createBinaryData();
     void createTestSequence(PlayerDevice* device);
     //Stream* createSynthInitData();
@@ -57,21 +697,6 @@ public:
 };
 
 float SynthTest::buffer_[4096];
-
-void simpleSynthCallback(short* buffer, int sampleCount, void* context) {
-    //((Synth*)context)->run(buffer, 0, sampleCount);
-    //for (var i = 0; i < sampleCount; i++) {
-    //    SynthTest::buffer_[i] = 0.0f;
-    //}
-    var synth = (Module*)context;
-    synth->run(0, sampleCount);
-    for (var i = 0; i < sampleCount; i++) {
-        buffer[i] = (short)(0.6f * synth->getOutput(0)[i] * 32768.0f);
-    }
-}
-
-PlayerAdapter SynthTest::playerAdapter_;
-SynthAdapter SynthTest::synthAdapter_;
 
 SynthTest::SynthTest() {
     //device_ = NULL;
@@ -168,7 +793,7 @@ void SynthTest::createTestSequence(PlayerDevice* device) {
 //    deviceTypeList->writeByte(1);                   // 03 data block id of sound bank
 //    deviceTypeList->writeByte(3);                   // 04 default program
 //    deviceTypeList->writeWord(SamplingRate);
-//    var soundBank = createSoundBank();
+//    var soundBank = getSoundBank();
 //
 //    data->writeWord(3);                             // data block count
 //    data->writeDword(deviceTypeList->length());     // length of device type list block
@@ -199,371 +824,6 @@ void SynthTest::createTestSequence(PlayerDevice* device) {
 //    return data;
 //
 //}
-
-Stream* SynthTest::createBassSoundBank() {
-    int count = 0;
-    var bass = NEW_(Stream);
-    {
-        count++;
-        bass->writeByte(28);
-        bass->writeByte(BassCtrlId::bAmAdsrAmp)->writeFloat(1.0f);
-        bass->writeByte(BassCtrlId::bAmAdsrAtk)->writeByte(22);
-        bass->writeByte(BassCtrlId::bAmAdsrDec)->writeByte(58);
-        bass->writeByte(BassCtrlId::bAmAdsrSus)->writeByte(40);
-        bass->writeByte(BassCtrlId::bAmAdsrRel)->writeByte(122);       // 5
-
-        bass->writeByte(BassCtrlId::bPmAdsrAmp)->writeFloat(0.2f);
-        bass->writeByte(BassCtrlId::bPmAdsrAtk)->writeByte(40);
-        bass->writeByte(BassCtrlId::bPmAdsrDec)->writeByte(144);
-        bass->writeByte(BassCtrlId::bPmAdsrSus)->writeByte(128);
-        bass->writeByte(BassCtrlId::bPmAdsrRel)->writeByte(200);       // 5
-
-        bass->writeByte(BassCtrlId::bFtAdsrAmp)->writeFloat(0.8f);
-        bass->writeByte(BassCtrlId::bFtAdsrAtk)->writeByte(22);
-        bass->writeByte(BassCtrlId::bFtAdsrDec)->writeByte(62);
-        bass->writeByte(BassCtrlId::bFtAdsrSus)->writeByte(10);
-        bass->writeByte(BassCtrlId::bFtAdsrRel)->writeByte(32);       // 5
-
-        bass->writeByte(BassCtrlId::bOsc1Amp)->writeByte(160);
-        bass->writeByte(BassCtrlId::bOsc1Fre)->writeFloat(0.0f);
-        bass->writeByte(BassCtrlId::bOsc1Tune)->writeByte(0);
-        bass->writeByte(BassCtrlId::bOsc1Psw)->writeByte(120);
-        bass->writeByte(BassCtrlId::bOsc1Wave)->writeByte(WfPulse | WfSaw);  // 5
-
-        bass->writeByte(BassCtrlId::bOsc2Amp)->writeByte(120);
-        bass->writeByte(BassCtrlId::bOsc2Fre)->writeFloat(1.2f);
-        bass->writeByte(BassCtrlId::bOsc2Tune)->writeByte(12);
-        bass->writeByte(BassCtrlId::bOsc2Psw)->writeByte(100);
-        bass->writeByte(BassCtrlId::bOsc2Wave)->writeByte(WfPulse); // 5
-
-        bass->writeByte(BassCtrlId::bFlt1Cut)->writeByte(20);
-        bass->writeByte(BassCtrlId::bFlt1Res)->writeByte(120);
-        bass->writeByte(BassCtrlId::bFlt1Mode)->writeByte(FmLowPass | FmBandPass);  // 3
-    };
-
-    word offset = 1 + count * 16;
-    Stream* s = NEW_(Stream, 1024);
-    s->writeByte(count);
-    s->writeString("bass.........");
-    s->writeWord(offset); offset += (word)bass->length();
-
-    s->writeStream(bass);
-    DEL_(bass);
-    return s;
-}
-
-Stream* SynthTest::createSoundBank() {
-    int count = 0;
-    var bass = NEW_(Stream);
-    {
-        count++;
-        bass->writeByte(32);
-        bass->writeByte(SynthCtrlId::amAdsrAmp)->writeFloat(1.0f);
-        //bass->writeByte(SynthCtrlId::amAdsrDc)->writeFloat(0.0f);
-        bass->writeByte(SynthCtrlId::amAdsrAtk)->writeByte(22);
-        bass->writeByte(SynthCtrlId::amAdsrDec)->writeByte(68);
-        bass->writeByte(SynthCtrlId::amAdsrSus)->writeByte(80);
-        bass->writeByte(SynthCtrlId::amAdsrRel)->writeByte(82);         // 5
-
-        //bass->writeByte(SynthCtrlId::fmAdsrAmp)->writeFloat(0.0f);
-        ////bass->writeByte(SynthCtrlId::fmAdsrDc)->writeFloat(0.0f);
-        //bass->writeByte(SynthCtrlId::fmAdsrAtk)->writeByte(0);
-        //bass->writeByte(SynthCtrlId::fmAdsrDec)->writeByte(0);
-        //bass->writeByte(SynthCtrlId::fmAdsrSus)->writeByte(0);
-        //bass->writeByte(SynthCtrlId::fmAdsrRel)->writeByte(0);        // 5
-
-        bass->writeByte(SynthCtrlId::pmAdsrAmp)->writeFloat(0.2f);
-        //bass->writeByte(SynthCtrlId::pmAdsrDc)->writeFloat(0.6f);
-        bass->writeByte(SynthCtrlId::pmAdsrAtk)->writeByte(40);
-        bass->writeByte(SynthCtrlId::pmAdsrDec)->writeByte(144);
-        bass->writeByte(SynthCtrlId::pmAdsrSus)->writeByte(128);
-        bass->writeByte(SynthCtrlId::pmAdsrRel)->writeByte(200);       // 5
-
-        bass->writeByte(SynthCtrlId::ftAdsrAmp)->writeFloat(0.3f);
-        bass->writeByte(SynthCtrlId::ftAdsrAtk)->writeByte(122);
-        bass->writeByte(SynthCtrlId::ftAdsrDec)->writeByte(122);
-        bass->writeByte(SynthCtrlId::ftAdsrSus)->writeByte(60);
-        bass->writeByte(SynthCtrlId::ftAdsrRel)->writeByte(222);       // 5
-
-        bass->writeByte(SynthCtrlId::amLfoAmp)->writeFloat(0.0f);
-        bass->writeByte(SynthCtrlId::amLfoFre)->writeFloat(2.0f);
-        bass->writeByte(SynthCtrlId::fmLfoAmp)->writeFloat(0.0f);
-        bass->writeByte(SynthCtrlId::fmLfoFre)->writeFloat(3.8f);    // 4
-
-        bass->writeByte(SynthCtrlId::osc1Amp)->writeByte(160);
-        bass->writeByte(SynthCtrlId::osc1Fre)->writeFloat(0.0f);
-        bass->writeByte(SynthCtrlId::osc1Tune)->writeByte(0);
-        bass->writeByte(SynthCtrlId::osc1Psw)->writeByte(120);
-        bass->writeByte(SynthCtrlId::osc1Wave)->writeByte(WfPulse);  // 5
-
-        bass->writeByte(SynthCtrlId::osc2Amp)->writeByte(120);
-        bass->writeByte(SynthCtrlId::osc2Fre)->writeFloat(0.2f);
-        bass->writeByte(SynthCtrlId::osc2Tune)->writeByte(12);
-        bass->writeByte(SynthCtrlId::osc2Psw)->writeByte(100);
-        bass->writeByte(SynthCtrlId::osc2Wave)->writeByte(WfPulse);    // 5
-
-        bass->writeByte(SynthCtrlId::flt1Cut)->writeByte(10);
-        bass->writeByte(SynthCtrlId::flt1Res)->writeByte(160);
-        bass->writeByte(SynthCtrlId::flt1Mode)->writeByte(FmLowPass | FmBandPass);  // 3
-    }
-    var kick = NEW_(Stream);
-    {
-        count++;
-        kick->writeByte(32);
-        kick->writeByte(SynthCtrlId::amAdsrAmp)->writeFloat(1.0f);
-        kick->writeByte(SynthCtrlId::amAdsrAtk)->writeByte(2);
-        kick->writeByte(SynthCtrlId::amAdsrDec)->writeByte(82);
-        kick->writeByte(SynthCtrlId::amAdsrSus)->writeByte(140);
-        kick->writeByte(SynthCtrlId::amAdsrRel)->writeByte(26);       // 5
-
-        kick->writeByte(SynthCtrlId::fmAdsrAmp)->writeFloat(120.0f);
-        kick->writeByte(SynthCtrlId::fmAdsrAtk)->writeByte(1);
-        kick->writeByte(SynthCtrlId::fmAdsrDec)->writeByte(42);
-        kick->writeByte(SynthCtrlId::fmAdsrSus)->writeByte(4);
-        kick->writeByte(SynthCtrlId::fmAdsrRel)->writeByte(40);       // 5
-
-        //kick->writeByte(SynthCtrlId::pmAdsrAmp)->writeFloat(0.2f);
-        //kick->writeByte(SynthCtrlId::pmAdsrAtk)->writeByte(0);
-        //kick->writeByte(SynthCtrlId::pmAdsrDec)->writeByte(54);
-        //kick->writeByte(SynthCtrlId::pmAdsrSus)->writeByte(108);
-        //kick->writeByte(SynthCtrlId::pmAdsrRel)->writeByte(40);
-
-        kick->writeByte(SynthCtrlId::ftAdsrAmp)->writeFloat(1.0f);
-        kick->writeByte(SynthCtrlId::ftAdsrAtk)->writeByte(1);
-        kick->writeByte(SynthCtrlId::ftAdsrDec)->writeByte(8);
-        kick->writeByte(SynthCtrlId::ftAdsrSus)->writeByte(1);
-        kick->writeByte(SynthCtrlId::ftAdsrRel)->writeByte(2);        // 5
-
-        kick->writeByte(SynthCtrlId::amLfoAmp)->writeFloat(0.3f);
-        kick->writeByte(SynthCtrlId::amLfoFre)->writeFloat(22.0f);
-        kick->writeByte(SynthCtrlId::fmLfoAmp)->writeFloat(1.1f);
-        kick->writeByte(SynthCtrlId::fmLfoFre)->writeFloat(0.3f);    // 4
-
-        kick->writeByte(SynthCtrlId::osc1Amp)->writeByte(230);
-        kick->writeByte(SynthCtrlId::osc1Fre)->writeFloat(0.0f);
-        kick->writeByte(SynthCtrlId::osc1Tune)->writeByte(0);
-        kick->writeByte(SynthCtrlId::osc1Psw)->writeByte(0);
-        kick->writeByte(SynthCtrlId::osc1Wave)->writeByte(WfSinus);  // 5
-
-        kick->writeByte(SynthCtrlId::osc2Amp)->writeByte(100);
-        kick->writeByte(SynthCtrlId::osc2Fre)->writeFloat(9210.0f);
-        kick->writeByte(SynthCtrlId::osc2Tune)->writeByte(0);
-        kick->writeByte(SynthCtrlId::osc2Psw)->writeByte(12);
-        kick->writeByte(SynthCtrlId::osc2Wave)->writeByte(WfNoise);  // 5
-
-        kick->writeByte(SynthCtrlId::flt1Cut)->writeByte(0);
-        kick->writeByte(SynthCtrlId::flt1Res)->writeByte(60);
-        kick->writeByte(SynthCtrlId::flt1Mode)->writeByte(FmLowPass);    // 3
-    }
-    var snare = NEW_(Stream);
-    {
-        count++;
-        snare->writeByte(32);
-        snare->writeByte(SynthCtrlId::amAdsrAmp)->writeFloat(1.0f);
-        snare->writeByte(SynthCtrlId::amAdsrAtk)->writeByte(1);
-        snare->writeByte(SynthCtrlId::amAdsrDec)->writeByte(30);
-        snare->writeByte(SynthCtrlId::amAdsrSus)->writeByte(80);
-        snare->writeByte(SynthCtrlId::amAdsrRel)->writeByte(60);       // 5
-
-        snare->writeByte(SynthCtrlId::fmAdsrAmp)->writeFloat(120.0f);
-        snare->writeByte(SynthCtrlId::fmAdsrAtk)->writeByte(1);
-        snare->writeByte(SynthCtrlId::fmAdsrDec)->writeByte(10);
-        snare->writeByte(SynthCtrlId::fmAdsrSus)->writeByte(2);
-        snare->writeByte(SynthCtrlId::fmAdsrRel)->writeByte(120);       // 5
-
-        snare->writeByte(SynthCtrlId::ftAdsrAmp)->writeFloat(1.0f);
-        snare->writeByte(SynthCtrlId::ftAdsrAtk)->writeByte(2);
-        snare->writeByte(SynthCtrlId::ftAdsrDec)->writeByte(40);
-        snare->writeByte(SynthCtrlId::ftAdsrSus)->writeByte(100);
-        snare->writeByte(SynthCtrlId::ftAdsrRel)->writeByte(20);        // 5
-
-        snare->writeByte(SynthCtrlId::amLfoAmp)->writeFloat(0.2f);
-        snare->writeByte(SynthCtrlId::amLfoFre)->writeFloat(33.0f);
-        snare->writeByte(SynthCtrlId::fmLfoAmp)->writeFloat(91.1f);
-        snare->writeByte(SynthCtrlId::fmLfoFre)->writeFloat(153.3f);    // 4
-
-        snare->writeByte(SynthCtrlId::osc1Amp)->writeByte(230);
-        snare->writeByte(SynthCtrlId::osc1Fre)->writeFloat(121.0f);
-        snare->writeByte(SynthCtrlId::osc1Tune)->writeByte(0);
-        snare->writeByte(SynthCtrlId::osc1Psw)->writeByte(80);
-        snare->writeByte(SynthCtrlId::osc1Wave)->writeByte(WfSinus);  // 5
-
-        snare->writeByte(SynthCtrlId::osc2Amp)->writeByte(50);
-        snare->writeByte(SynthCtrlId::osc2Fre)->writeFloat(9163.63f);
-        snare->writeByte(SynthCtrlId::osc2Tune)->writeByte(0);
-        snare->writeByte(SynthCtrlId::osc2Psw)->writeByte(0);
-        snare->writeByte(SynthCtrlId::osc2Wave)->writeByte(WfNoise);  // 5
-
-        snare->writeByte(SynthCtrlId::flt1Cut)->writeByte(230);
-        snare->writeByte(SynthCtrlId::flt1Res)->writeByte(40);
-        snare->writeByte(SynthCtrlId::flt1Mode)->writeByte(FmLowPass | FmBandPass);    // 3
-    }
-    var hihat = NEW_(Stream);
-    {
-        count++;
-        hihat->writeByte(32);
-        hihat->writeByte(SynthCtrlId::amAdsrAmp)->writeFloat(1.0f);
-        hihat->writeByte(SynthCtrlId::amAdsrAtk)->writeByte(1);
-        hihat->writeByte(SynthCtrlId::amAdsrDec)->writeByte(64);
-        hihat->writeByte(SynthCtrlId::amAdsrSus)->writeByte(60);
-        hihat->writeByte(SynthCtrlId::amAdsrRel)->writeByte(20);      // 5
-
-        hihat->writeByte(SynthCtrlId::fmAdsrAmp)->writeFloat(21.0f);
-        hihat->writeByte(SynthCtrlId::fmAdsrAtk)->writeByte(4);
-        hihat->writeByte(SynthCtrlId::fmAdsrDec)->writeByte(12);
-        hihat->writeByte(SynthCtrlId::fmAdsrSus)->writeByte(4);
-        hihat->writeByte(SynthCtrlId::fmAdsrRel)->writeByte(220);     // 5
-
-        hihat->writeByte(SynthCtrlId::ftAdsrAmp)->writeFloat(1.0f);
-        hihat->writeByte(SynthCtrlId::ftAdsrAtk)->writeByte(2);
-        hihat->writeByte(SynthCtrlId::ftAdsrDec)->writeByte(11);
-        hihat->writeByte(SynthCtrlId::ftAdsrSus)->writeByte(200);
-        hihat->writeByte(SynthCtrlId::ftAdsrRel)->writeByte(80);      // 5
-
-        hihat->writeByte(SynthCtrlId::amLfoAmp)->writeFloat(0.0f);
-        hihat->writeByte(SynthCtrlId::amLfoFre)->writeFloat(284.0f);
-        hihat->writeByte(SynthCtrlId::fmLfoAmp)->writeFloat(0.0f);
-        hihat->writeByte(SynthCtrlId::fmLfoFre)->writeFloat(180.3f); // 4
-
-        hihat->writeByte(SynthCtrlId::osc1Amp)->writeByte(160);
-        hihat->writeByte(SynthCtrlId::osc1Fre)->writeFloat(286.1f);
-        hihat->writeByte(SynthCtrlId::osc1Tune)->writeByte(0);
-        hihat->writeByte(SynthCtrlId::osc1Psw)->writeByte(120);
-        hihat->writeByte(SynthCtrlId::osc1Wave)->writeByte(WfPulse); // 5
-
-        hihat->writeByte(SynthCtrlId::osc2Amp)->writeByte(120);
-        hihat->writeByte(SynthCtrlId::osc2Fre)->writeFloat(521.3f);
-        hihat->writeByte(SynthCtrlId::osc2Tune)->writeByte(0);
-        hihat->writeByte(SynthCtrlId::osc2Psw)->writeByte(130);
-        hihat->writeByte(SynthCtrlId::osc2Wave)->writeByte(WfPulse); // 5
-
-        hihat->writeByte(SynthCtrlId::flt1Cut)->writeByte(240);
-        hihat->writeByte(SynthCtrlId::flt1Res)->writeByte(80);
-        hihat->writeByte(SynthCtrlId::flt1Mode)->writeByte(FmHighPass);    // 3
-    }
-    var chords = NEW_(Stream);
-    {
-        count++;
-        chords->writeByte(32);
-        chords->writeByte(SynthCtrlId::amAdsrAmp)->writeFloat(1.0f);
-        //chords->writeByte(SynthCtrlId::amAdsrDc)->writeFloat(0.0f);
-        chords->writeByte(SynthCtrlId::amAdsrAtk)->writeByte(22);
-        chords->writeByte(SynthCtrlId::amAdsrDec)->writeByte(68);
-        chords->writeByte(SynthCtrlId::amAdsrSus)->writeByte(120);
-        chords->writeByte(SynthCtrlId::amAdsrRel)->writeByte(162);       // 5
-
-        //chords->writeByte(SynthCtrlId::fmAdsrAmp)->writeFloat(0.0f);
-        //chords->writeByte(SynthCtrlId::fmAdsrDc)->writeFloat(0.0f);
-        //chords->writeByte(SynthCtrlId::fmAdsrAtk)->writeByte(0);
-        //chords->writeByte(SynthCtrlId::fmAdsrDec)->writeByte(0);
-        //chords->writeByte(SynthCtrlId::fmAdsrSus)->writeByte(0);
-        //chords->writeByte(SynthCtrlId::fmAdsrRel)->writeByte(0);        // 5
-
-        chords->writeByte(SynthCtrlId::pmAdsrAmp)->writeFloat(0.2f);
-        //chords->writeByte(SynthCtrlId::pmAdsrDc)->writeFloat(0.45f);
-        chords->writeByte(SynthCtrlId::pmAdsrAtk)->writeByte(2);
-        chords->writeByte(SynthCtrlId::pmAdsrDec)->writeByte(84);
-        chords->writeByte(SynthCtrlId::pmAdsrSus)->writeByte(128);
-        chords->writeByte(SynthCtrlId::pmAdsrRel)->writeByte(40);       // 5
-
-        chords->writeByte(SynthCtrlId::ftAdsrAmp)->writeFloat(0.5f);
-        chords->writeByte(SynthCtrlId::ftAdsrAtk)->writeByte(42);
-        chords->writeByte(SynthCtrlId::ftAdsrDec)->writeByte(222);
-        chords->writeByte(SynthCtrlId::ftAdsrSus)->writeByte(80);
-        chords->writeByte(SynthCtrlId::ftAdsrRel)->writeByte(162);       // 5
-
-        chords->writeByte(SynthCtrlId::amLfoAmp)->writeFloat(0.2f);
-        chords->writeByte(SynthCtrlId::amLfoFre)->writeFloat(4.1f);
-        chords->writeByte(SynthCtrlId::fmLfoAmp)->writeFloat(8.4f);
-        chords->writeByte(SynthCtrlId::fmLfoFre)->writeFloat(4.8f);    // 4
-
-        chords->writeByte(SynthCtrlId::osc1Amp)->writeByte(80);
-        chords->writeByte(SynthCtrlId::osc1Fre)->writeFloat(0.0f);
-        chords->writeByte(SynthCtrlId::osc1Tune)->writeByte(0);
-        chords->writeByte(SynthCtrlId::osc1Psw)->writeByte(200);
-        chords->writeByte(SynthCtrlId::osc1Wave)->writeByte(WfSaw);  // 5
-
-        chords->writeByte(SynthCtrlId::osc2Amp)->writeByte(120);
-        chords->writeByte(SynthCtrlId::osc2Fre)->writeFloat(1.1f);
-        chords->writeByte(SynthCtrlId::osc2Tune)->writeByte(12);
-        chords->writeByte(SynthCtrlId::osc2Psw)->writeByte(255);
-        chords->writeByte(SynthCtrlId::osc2Wave)->writeByte(WfSaw);    // 5
-
-        chords->writeByte(SynthCtrlId::flt1Cut)->writeByte(10);
-        chords->writeByte(SynthCtrlId::flt1Res)->writeByte(40);
-        chords->writeByte(SynthCtrlId::flt1Mode)->writeByte(FmLowPass | FmBandPass);  // 3
-    }
-    var mono = NEW_(Stream);
-    {
-        count++;
-        mono->writeByte(28);
-        mono->writeByte(SynthCtrlId::amAdsrAmp)->writeFloat(1.0f);
-        mono->writeByte(SynthCtrlId::amAdsrAtk)->writeByte(2);
-        mono->writeByte(SynthCtrlId::amAdsrDec)->writeByte(38);
-        mono->writeByte(SynthCtrlId::amAdsrSus)->writeByte(80);
-        mono->writeByte(SynthCtrlId::amAdsrRel)->writeByte(42);       // 5
-
-        mono->writeByte(SynthCtrlId::pmAdsrAmp)->writeFloat(0.2f);
-        mono->writeByte(SynthCtrlId::pmAdsrAtk)->writeByte(20);
-        mono->writeByte(SynthCtrlId::pmAdsrDec)->writeByte(64);
-        mono->writeByte(SynthCtrlId::pmAdsrSus)->writeByte(128);
-        mono->writeByte(SynthCtrlId::pmAdsrRel)->writeByte(40);       // 5
-
-        mono->writeByte(SynthCtrlId::ftAdsrAmp)->writeFloat(1.0f);
-        mono->writeByte(SynthCtrlId::ftAdsrAtk)->writeByte(2);
-        mono->writeByte(SynthCtrlId::ftAdsrDec)->writeByte(32);
-        mono->writeByte(SynthCtrlId::ftAdsrSus)->writeByte(80);
-        mono->writeByte(SynthCtrlId::ftAdsrRel)->writeByte(42);       // 5
-
-        mono->writeByte(SynthCtrlId::osc1Amp)->writeByte(160);
-        mono->writeByte(SynthCtrlId::osc1Fre)->writeFloat(0.0f);
-        mono->writeByte(SynthCtrlId::osc1Tune)->writeByte(0);
-        mono->writeByte(SynthCtrlId::osc1Psw)->writeByte(0);
-        mono->writeByte(SynthCtrlId::osc1Wave)->writeByte(WfSaw);  // 5
-
-        mono->writeByte(SynthCtrlId::osc2Amp)->writeByte(120);
-        mono->writeByte(SynthCtrlId::osc2Fre)->writeFloat(0.1f);
-        mono->writeByte(SynthCtrlId::osc2Tune)->writeByte(12);
-        mono->writeByte(SynthCtrlId::osc2Psw)->writeByte(10);
-        mono->writeByte(SynthCtrlId::osc2Wave)->writeByte(WfSaw);    // 5
-
-        mono->writeByte(SynthCtrlId::flt1Cut)->writeByte(120);
-        mono->writeByte(SynthCtrlId::flt1Res)->writeByte(0);
-        mono->writeByte(SynthCtrlId::flt1Mode)->writeByte(FmLowPass);  // 3
-    }
-
-    word offset = 1 + count * 16;
-    Stream* s = NEW_(Stream, 1024);
-    s->writeByte(count);
-    s->writeString("bassline.....");
-    s->writeWord(offset); offset += (word)bass->length();
-    s->writeString("kick.........");
-    s->writeWord(offset); offset += (word)kick->length();
-    s->writeString("snare........");
-    s->writeWord(offset); offset += (word)snare->length();
-    s->writeString("hihat........");
-    s->writeWord(offset); offset += (word)hihat->length();
-    s->writeString("chords.......");
-    s->writeWord(offset); offset += (word)chords->length();
-    s->writeString("mono.........");
-    s->writeWord(offset); offset += (word)mono->length();
-
-    s->writeStream(bass);
-    s->writeStream(kick);
-    s->writeStream(snare);
-    s->writeStream(hihat);
-    s->writeStream(chords);
-    s->writeStream(mono);
-
-    DEL_(bass);
-    DEL_(kick);
-    DEL_(snare);
-    DEL_(hihat);
-    DEL_(chords);
-    DEL_(mono);
-
-    return s;
-}
 
 //void simpleSoundCallback(short* buffer, int count, void* p) {
 //    var elems = (Elem**)p;
@@ -835,7 +1095,7 @@ void SynthTest::testGenerateSoundSimple() {
     //Mdl::createFrequencyTable();
     var synth = NEW_(Synth, &samplingRate, 4);
     byte* sb = NULL;
-    var soundBank = createSoundBank();
+    var soundBank = getSoundBank();
     synth->soundBank(soundBank->data());
     synth->setProgram(4);
 
@@ -869,13 +1129,13 @@ void SynthTest::testGenerateSoundMixer() {
     const int note4 = SynthPitch::pD1;
     //Mdl::createFrequencyTable();
 #pragma region Devices
-    var soundBank = createSoundBank();
+    var soundBank = getSoundBank();
     var synth = NEW_(Synth, &samplingRate, 1);
     synth->voiceCount(9);
     synth->soundBank(soundBank->data());
     synth->setProgram(4);
 
-    var bassSoundBank = createBassSoundBank();
+    var bassSoundBank = getBassSoundBank();
     var bass = NEW_(Bass, &samplingRate, 1);
     bass->soundBank(bassSoundBank->data());
     bass->setProgram(0);
@@ -951,7 +1211,7 @@ void SynthTest::testCreatePlayerWithDevices() {
     assert("Should have 7 devices", player->devices().length() == 7);
     var mixer = (Mixer8x4*)mixerDevice->object();
     mixer->channelCount(channelCount);
-    var soundBank = createSoundBank();
+    var soundBank = getSoundBank();
     for (var i = 0; i < channelCount; i++) {
         var ch = mixer->getChannel(i);
         mixer->connectInput(ch, synthDevices[i]->synth());
@@ -1010,9 +1270,9 @@ void SynthTest::testCreatePlayerWithDevices() {
 
 Stream* SynthTest::createBinaryData() {
     var data = NEW_(Stream);
-    PlayerDevice playerDevice(NULL, &SynthTest::playerAdapter_);
-    SynthDevice synthDevice(&SynthTest::synthAdapter_);
-    BassDevice bassDevice(&SynthTest::synthAdapter_);
+    PlayerDevice playerDevice(NULL, &playerAdapter_);
+    SynthDevice synthDevice(&synthAdapter_);
+    BassDevice bassDevice(&synthAdapter_);
 
     var initData = NEW_(Stream);
     initData->writeFloat(32.0f);
@@ -1279,14 +1539,14 @@ Stream* SynthTest::createBinaryData() {
     adapterList->writeByte(2);
     // 1st adapter: PlayerAdapter
     {
-        adapterList->writeByte(SynthTest::playerAdapter_.getInfo()->id);
+        adapterList->writeByte(playerAdapter_.getInfo()->id);
         // no init data
         // no devices
         adapterList->writeByte(0);
     }
     // 2nd adapter: SynthAdapter
     {
-        adapterList->writeByte(SynthTest::synthAdapter_.getInfo()->id);
+        adapterList->writeByte(synthAdapter_.getInfo()->id);
         adapterList->writeWord(48000);
         // 10 devices
         adapterList->writeByte(10);
@@ -1419,8 +1679,8 @@ Stream* SynthTest::createBinaryData() {
     DEL_(sequence5);
     DEL_(sequence6);
 
-    var soundBank = createSoundBank();
-    var bassSoundBank = createBassSoundBank();
+    var soundBank = getSoundBank();
+    var bassSoundBank = getBassSoundBank();
 
     // header
     // 3 data blocks
@@ -1444,18 +1704,6 @@ Stream* SynthTest::createBinaryData() {
 #pragma endregion
 
     return data;
-}
-
-void saveToBuffer(Drums* drums, short*& buffer, int length) {
-    var output = drums->getOutput(0);
-    while (length > 0) {
-        var toWrite = length > SAMPLE_BUFFER_SIZE ? SAMPLE_BUFFER_SIZE : length;
-        drums->run(0, toWrite);
-        for (var j = 0; j < toWrite; j++) {
-            *buffer++ = (short)(32767.0f * output[j]);
-        }
-        length -= toWrite;
-    }
 }
 
 void SynthTest::testCreateDrums() {
@@ -1591,12 +1839,9 @@ void SynthTest::testLoadBinary() {
     assert("Should have MixerDevice as #11", ((Device*)player->devices().get(10))->type() == SynthDevices::DeviceMixer);
     assert("Should have 6 sequences", player->sequences().length() == 6);
     assert("Should have 2 data-blocks", player->dataBlocks().length() == 2);
-    int ix = 0;
+    Key ix = 0;
     var mixer = (Mixer8x4*)((Device*)player->devices().search(NULL, ix,
-        [](void* value, Key key, UINT32 ix, Collection* collection, void* args) {
-            return ((Device*)value)->type() == SynthDevices::DeviceMixer ? 0 : 1;
-        }
-    ))->object();
+        [](COLLECTION_ARGUMENTS) { return ((Device*)value)->type() == SynthDevices::DeviceMixer ? 0 : 1; }))->object();
     if (SoundPlayer::start((int)samplingRate, 2, Mixer8x4::fillSoundBuffer, mixer) == 0) {
         player->useThread();
         player->start();
@@ -1663,12 +1908,9 @@ void SynthTest::testSaveToWave() {
         var frame = (Frame*)frames->get(i);
         totalFrameCount += frame->delta_;
     }
-    int ix = 0;
+    Key ix = 0;
     var mixer = (Mixer8x4*)((Device*)player->devices().search(NULL, ix,
-        [](void* value, Key key, UINT32 ix, Collection* collection, void* args) {
-            return ((Device*)value)->type() == SynthDevices::DeviceMixer ? 0 : 1;
-        }
-    ))->object();
+        [](COLLECTION_ARGUMENTS) { return ((Device*)value)->type() == SynthDevices::DeviceMixer ? 0 : 1; }))->object();
     var samplesPerFrame = synthAdapter->samplingRate / player->refreshRate();
     int bufferSizeInSamples = 16384;
     int bufferSize = 2 * sizeof(short) * bufferSizeInSamples;
@@ -1742,15 +1984,17 @@ void SynthTest::testDrumLoop() {
 
         byte* bp;
         var drumsDevice = (DrumsDevice*)player->addDevice(synthAdapter, SynthDevices::DeviceDrums);
+
         byte distortInit[] = {
-            DF(1.3f),       // amp
-            DB(240),        // lvl
-            DB(160),        // cut
-            DB( 40),        // res
+            DF(1.1f),       // amp
+            DB(250),        // lvl
+            DB(210),        // cut
+            DB( 50),        // res
             DB(FmLowPass)
         };
         bp = distortInit;
         player->addDevice(synthAdapter, SynthDevices::DeviceClip, &bp);
+
         byte delayInit1[] = {
             DB(  0),        // feedbackL
             DF( 20.0f),     // delayL
@@ -1761,26 +2005,28 @@ void SynthTest::testDrumLoop() {
         };
         bp = delayInit1;
         player->addDevice(synthAdapter, SynthDevices::DeviceDelay, &bp);
+
         byte delayInit2[] = {
             DB(200),        // feedbackL
-            DF(118.0f),     // delayL
+            DF(218.0f),     // delayL
             DB(180),        // feedbackR
-            DF( 81.0f),     // delayR
+            DF(281.0f),     // delayR
             DB(210),        // mixL
             DB(200)         // mixR
         };
         bp = delayInit2;
         player->addDevice(synthAdapter, SynthDevices::DeviceDelay, &bp);
+
         byte mixerInit[] = {
             DB(1),   // 1 channel
             // channel#1
-                DB(100),        // gain
+                DB( 80),        // gain
                 DB( 50),        // pan
                 DB(250),        // amp
                 DB(3),          // stage count
                     DB(  0),    // stage #1 gain
-                    DB(120),    // stage #2 gain
-                    DB(  4),    // stage #3 gain
+                    DB(180),    // stage #2 gain
+                    DB(  2),    // stage #3 gain
             // inputs
                 DB(1),          // device1 -> channel#1
                     DB(2),      // distort #1
@@ -1796,174 +2042,15 @@ void SynthTest::testDrumLoop() {
 #pragma endregion
 
 #pragma region Parse
-        var stream = NEW_(Stream, 16384);
-        stream->readBytesFromFile(file, 16384, 0);
-        cons->printf("%d bytes read.\n", stream->length());
-        stream->reset();
-        var row = stream->readRow(); 
-        var bpm = 120.0;
-        var p = parseDouble(row, bpm);
-        FREE(row);
-        row = stream->readRow();
-        var framePerRow = 0, totalFrames = 0;
-        p = parseInt(row, framePerRow);
-        if (p == row) {
-            framePerRow = 4;
-            totalFrames = 0;
-        }
-        else {
-            if (*p != '\0') {
-                p++;
-                var p2 = parseInt(p, totalFrames);
-                if (p2 == p) totalFrames = framePerRow * 4;
-            }
-        }
-        var framePerSecond = bpm * framePerRow / 60.0;
-        player->refreshRate((float)framePerSecond);
-        cons->printf("%d frames a row.\n", framePerRow);
-        FREE(row);
-
-        var delta = 0;
-        var totalDelta = 0;
-        int patternOrder[256];
-        int patternCount = 0;
-        int patternLength[256];
-        Sequence* sequence = NULL;
-        var seqId = 0;
-        while ((row = stream->readRow()) != NULL) {
-            if (fmw::strncmp(row, "MASTER", 6) == 0) {
-                var tokens = PArray::str_split(row, " ");
-                patternCount = tokens->length() - 1;
-                for (var i = 1; i < tokens->length(); i++) {
-                    var token = (char*)tokens->get(i);
-                    var patId = -1;
-                    parseInt(token, patId);
-                    patternOrder[i-1] = patId;
-                }
-                ARRAY_FOREACH(tokens, FREE(value));
-                DEL_(tokens);
-                FREE(row);
-                continue;
-            }
-            if (fmw::strncmp(row, "PATTERN", 7) == 0) {
-                if (sequence != NULL) {
-                    sequence->writeDelta(delta)->writeEOS();
-                    player->addSequence(sequence);
-                    patternLength[seqId] = totalDelta;
-                    seqId++;
-                    cons->printf("Sequence %d frames added.", totalDelta);
-                    var info = sequence->print();
-                    cons->printf("%s", info);
-                    FREE(info);
-                }
-                sequence = NEW_(Sequence, drumsDevice);
-                sequence->writeHeader();
-                delta = 0;
-                totalDelta = 0;
-                FREE(row);
-                continue;
-            }
-
-            //cons->printf("%s: %d ", row, delta);
-            var firstNote = true;
-            var tokens = PArray::str_split(row, " ");
-            for (var i = 0; i < tokens->length(); i++) {
-                var token = (char*)tokens->get(i);
-                var note = 0, velocity = 0;
-                if (fmw::strncmp(token, "BD", 2) == 0) {
-                    note = drBD;
-                }
-                else if (fmw::strncmp(token, "SD", 2) == 0) {
-                    note = drSN;
-                }
-                else if (fmw::strncmp(token, "OH", 2) == 0) {
-                    note = drOH;
-                }
-                else if (fmw::strncmp(token, "CH", 2) == 0) {
-                    note = drCH;
-                }
-                else if (fmw::strncmp(token, "LT", 2) == 0) {
-                    note = drLT;
-                }
-                else if (fmw::strncmp(token, "MT", 2) == 0) {
-                    note = drMT;
-                }
-                else if (fmw::strncmp(token, "HT", 2) == 0) {
-                    note = drHT;
-                }
-                else if (fmw::strncmp(token, "CP", 2) == 0) {
-                    note = drCP;
-                }
-                if (note != 0) {
-                    // read velocity
-                    var vel = (char*)tokens->get(i + 1);
-                    var p = parseInt(vel, velocity);
-                    if (p != vel) {
-                        velocity = velocity * 255 / 10;
-                        i++;
-                    } else {
-                        velocity = 255;
-                    }
-
-                    if (firstNote) {
-                        sequence->writeDelta(delta);
-                        firstNote = false;
-                    }
-
-                    // add drum
-                    var command = drumsDevice->makeCommand(ModuleCommands::CmdSetNote, note, velocity);
-                    cons->printf("(%d, %d),  ", note, velocity);
-                    sequence->writeStream(command);
-                    delta = 0;
-                    DEL_(command);
-                }
-            }
-            if (!firstNote) sequence->writeEOF();
-            delta++;
-            totalDelta++;
-            //cons->printf("\n");
-
-            ARRAY_FOREACH(tokens, FREE(value));
-            DEL_(tokens);
-            FREE(row);
-        }
-        if (sequence != NULL) {
-            sequence->writeDelta(delta)->writeEOS();
-            player->addSequence(sequence);
-            patternLength[seqId] = totalDelta;
-            cons->printf("Sequence %d frames added.", totalDelta);
-            var info = sequence->print();
-            cons->printf("%s", info);
-            FREE(info);
-        }
-        //FREE(row);
-        DEL_(stream);
-
-        var info = sequence->print();
-        cons->printf("%s", info);
-        FREE(info);
-
-        // create master sequence
-        var masterSequence = NEW_(Sequence, player->masterDevice());
-        masterSequence->writeHeader();
-        delta = 0;
-        totalDelta = 0;
-        for (var i = 0; i < patternCount; i++) {
-            var seqId = patternOrder[i];
-            masterSequence->writeDelta(delta)->writeCommand(PlayerCommands::CmdAssign)->writeByte(1)->writeByte(seqId)->writeByte(1)->writeByte(0)->writeEOF();
-            delta = patternLength[seqId - 1];
-            totalDelta += delta;
-        }
-        masterSequence->writeDelta(delta)->writeEOS();
-        player->sequences().insert(0, masterSequence);
-        if (totalFrames == 0) totalFrames = totalDelta;
-        info = masterSequence->print();
-        cons->printf("%s", info);
-        FREE(info);
-
-        // assign master sequence
-        player->assignChannel(0, (Sequence*)player->sequences().get(0), 0, 0);
-
+        Map deviceRowProcessorMap(sizeof(int), sizeof(ROWPROCESSOR*), Map::hashingInt, Map::compareInt);
+        deviceRowProcessorMap.hasRefKey(false);
+        var rowProcessor = &synthRowProcessor;
+        deviceRowProcessorMap.add(SynthDevices::DeviceBass, &rowProcessor);
+        deviceRowProcessorMap.add(SynthDevices::DeviceSynth, &rowProcessor);
+        rowProcessor = &drumsRowProcessor;
+        deviceRowProcessorMap.add(SynthDevices::DeviceDrums, &rowProcessor);
+        parseFile(file, player, &deviceRowProcessorMap);
+        player->refreshRate();
 #pragma endregion
         
 #pragma region Playback
@@ -1981,104 +2068,134 @@ void SynthTest::testDrumLoop() {
         //drums->setControl(ohDecay, 160);
 
         int ix = 0;
-#ifdef BAKA
-        var patternTicks = 8 * framePerRow;
-        var toggle = false;
+        if (!isSaveToWave_) {
+
+            if (SoundPlayer::start((int)samplingRate, 2, Mixer8x4::fillSoundBuffer, mixer) == 0) {
+                player->useThread();
+                player->start();
+                player->masterChannel()->loopCount(128);
+
+                var counter = 0;
+                var toggle = false;
+                var patternTicks = 8 * framePerRow_;
+                var device = player->masterDevice();
+
+
+                drums->bassDrum().setProgram(prgBD808);
+                drums->snareDrum().setProgram(prgSD808);
+                drums->closedHihat().setProgram(prgHH808);
+                drums->openHihat().setProgram(prgHH808);
+
+                //drums->bassDrum().setProgram(prgBD707);
+                //drums->snareDrum().setProgram(prgSDa0a);
+                //drums->closedHihat().setProgram(prgHHa0a);
+                //drums->openHihat().setProgram(prgHHa0a);
+
+
+                while (device->isActive()) {
+                    if (player->counter() > counter) {
+                        counter += patternTicks;
+                        toggle = !toggle;
+                        //if (toggle) {
+                        //    drums->bassDrum().setProgram(prgBD707);
+                        //    drums->snareDrum().setProgram(prgSDa0a);
+                        //    drums->closedHihat().setProgram(prgHHa0a);
+                        //    drums->openHihat().setProgram(prgHHa0a);
+                        //}
+                        //else {
+                        //    drums->bassDrum().setProgram(prgBD808);
+                        //    drums->snareDrum().setProgram(prgSD808);
+                        //    drums->closedHihat().setProgram(prgHH808);
+                        //    drums->openHihat().setProgram(prgHH808);
+                        //}
+                    }
+                    //Sleep(3);
+                }
+
+
+                player->stop();
+                assert("Should run to the end", true);
+                SoundPlayer::stop();
+            }
+        }
+        else {
+
+            drums->bassDrum().setProgram(prgBD808);
+            drums->snareDrum().setProgram(prgSD808);
+            drums->closedHihat().setProgram(prgHH808);
+            drums->openHihat().setProgram(prgHH808);
+
             drums->bassDrum().setProgram(prgBD707);
             drums->snareDrum().setProgram(prgSDa0a);
             drums->closedHihat().setProgram(prgHHa0a);
             drums->openHihat().setProgram(prgHHa0a);
-        if (SoundPlayer::start((int)samplingRate, 2, Mixer8x4::fillSoundBuffer, mixer) == 0) {
-            player->useThread();
-            player->start();
-            player->masterChannel()->loopCount(128);
-            while (device->isActive()) {
-                if ((player->counter() % patternTicks) == 0) {
-                    if (toggle) {
-                        drums->bassDrum().setProgram(prgBD707);
-                        drums->snareDrum().setProgram(prgSDa0a);
-                        drums->closedHihat().setProgram(prgHHa0a);
-                        drums->openHihat().setProgram(prgHHa0a);
-                    }
-                    else {
-                        drums->bassDrum().setProgram(prgBD808);
-                        drums->snareDrum().setProgram(prgSD808);
-                        drums->closedHihat().setProgram(prgHH808);
-                        drums->openHihat().setProgram(prgHH808);
-                    }
-                    toggle = !toggle;
-                }
-                Sleep(3);
-            }
-            player->stop();
-            assert("Should run to the end", true);
-            SoundPlayer::stop();
-        }
-#else
-        var samplesPerFrame = synthAdapter->samplingRate / player->refreshRate();
-        int bufferSizeInSamples = 16384;
-        int bufferSize = 2 * sizeof(short) * bufferSizeInSamples;
-        var buffer = MALLOC(short, bufferSize);
-        var offset = buffer;
-        var wave = NEW_(WaveFmt, output, (int)samplingRate, 2, 16);
-        var frameCounter = 0.0f;
-        var frameCount = 0;
-        int totalCount = 0;
-        bool isStopped = false;
-        var patternTicks = 8 * framePerRow;
-        var toggle = false;
-        do {
-            int remainingSamples = bufferSizeInSamples;
-            memset(buffer, 0, bufferSize);
+
+            var samplesPerFrame = synthAdapter->samplingRate / player->refreshRate();
+            int bufferSizeInSamples = 16384;
+            int bufferSize = 2 * sizeof(short) * bufferSizeInSamples;
+            var buffer = MALLOC(short, bufferSize);
             var offset = buffer;
-            while (remainingSamples > 0) {
-                var count = remainingSamples > SAMPLE_BUFFER_SIZE ? SAMPLE_BUFFER_SIZE : remainingSamples;
-                if (frameCounter <= 0) {
-                    if ((player->counter() % patternTicks) == 0) {
-                        if (toggle) {
-                            drums->bassDrum().setProgram(prgBD707);
-                            drums->snareDrum().setProgram(prgSDa0a);
-                            drums->closedHihat().setProgram(prgHHa0a);
-                            drums->openHihat().setProgram(prgHHa0a);
+            var wave = NEW_(WaveFmt, output, (int)samplingRate, 2, 16);
+            var frameCounter = 0.0f;
+            var frameCount = 0;
+            int totalCount = 0;
+            bool isStopped = false;
+            var patternTicks = 16 * framePerRow_;
+            var toggle = false;
+            do {
+                int remainingSamples = bufferSizeInSamples;
+                memset(buffer, 0, bufferSize);
+                var offset = buffer;
+                while (remainingSamples > 0) {
+                    var count = remainingSamples > SAMPLE_BUFFER_SIZE ? SAMPLE_BUFFER_SIZE : remainingSamples;
+                    if (frameCounter <= 0) {
+                        if ((player->counter() % patternTicks) == 0) {
+                            //if (toggle) {
+                            //    drums->bassDrum().setProgram(prgBD808);
+                            //    drums->snareDrum().setProgram(prgSD808);
+                            //    drums->closedHihat().setProgram(prgHH808);
+                            //    drums->openHihat().setProgram(prgHH808);
+                            //}
+                            //else {
+                            //    drums->bassDrum().setProgram(prgBD707);
+                            //    drums->snareDrum().setProgram(prgSDa0a);
+                            //    drums->closedHihat().setProgram(prgHHa0a);
+                            //    drums->openHihat().setProgram(prgHHa0a);
+                            //}
+
+                            toggle = !toggle;
                         }
-                        else {
-                            drums->bassDrum().setProgram(prgBD808);
-                            drums->snareDrum().setProgram(prgSD808);
-                            drums->closedHihat().setProgram(prgHH808);
-                            drums->openHihat().setProgram(prgHH808);
+                        player->run(1);
+                        frameCount++;
+                        frameCounter += samplesPerFrame;
+                        if (!player->masterChannel()->isActive() || frameCount > totalFrames_) {
+                            isStopped = true;
+                            break;
                         }
-                        
-                        toggle = !toggle;
                     }
-                    player->run(1);
-                    frameCount++;
-                    frameCounter += samplesPerFrame;
-                    if (!player->masterChannel()->isActive() || frameCount > totalFrames) {
-                        isStopped = true;
-                        break;
+                    if (frameCounter < count) {
+                        count = (int)ceil(frameCounter);
                     }
+                    Mixer8x4::fillSoundBuffer(offset, count, mixer);
+                    offset += 2 * count;
+                    totalCount += count;
+                    cons->showCursor(false);
+                    cons->printf("% 5d / % 5d", frameCount, totalFrames_);
+                    cons->movexy(-13, 0);
+                    remainingSamples -= count;
+                    frameCounter -= count;
                 }
-                if (frameCounter < count) {
-                    count = (int)ceil(frameCounter);
-                }
-                Mixer8x4::fillSoundBuffer(offset, count, mixer);
-                offset += 2 * count;
-                totalCount += count;
-                cons->showCursor(false);
-                cons->printf("% 5d / % 5d", frameCount, totalFrames);
-                cons->movexy(-13, 0);
-                remainingSamples -= count;
-                frameCounter -= count;
-            }
-            wave->write((byte*)buffer, (int)(2 * (offset - buffer)));
-        } while (!isStopped);
-        cons->printf("\n%d samples saved\n", totalCount);
-        wave->close();
-        DEL_(wave);
-        FREE(buffer);
-#endif
+                wave->write((byte*)buffer, (int)(2 * (offset - buffer)));
+            } while (!isStopped);
+            cons->printf("\n%d samples saved\n", totalCount);
+            wave->close();
+            DEL_(wave);
+            FREE(buffer);
+        }
 #pragma endregion        
         
+        DEL_(bassSoundBank_);
+        DEL_(soundBank_);
         DEL_(device);
         Player::cleanUp();
     } else {
@@ -2090,12 +2207,694 @@ void SynthTest::runAll(int& totalPassed, int& totalFailed) {
     totalPassed += totalPassed_;
     totalFailed += totalFailed_;
 }
+#pragma endregion
+
+void createMoonWalzer()
+{
+    // a small song with a bass, strings, piano and drums
+    PlayerDevice playerDevice(NULL, &playerAdapter_);
+    SynthDevice pianoDevice(&synthAdapter_);
+    SynthDevice padDevice(&synthAdapter_);
+    BassDevice bassDevice(&synthAdapter_);
+    DrumsDevice drumsDevice(&synthAdapter_);
+
+
+    var data = NEW_(Stream);
+
+    var initData = NEW_(Stream);
+    initData->writeFloat(7.4f);
+    // 7 channels
+    initData->writeByte(7);
+
+#pragma region Sequences
+    // MASTER
+    var steps = 24;
+    var seqCount = 0;
+
+    //        00 00 00 00 00 11 11 11 11 11 22 22 22 
+    //        01 23 45 67 89 01 23 45 67 89 01 23 45 
+    //  bass: 11 11 11 11 11 11 11 11 11 11 11 11    0/24
+    //  pad1:    33 33 33    33 33 33    33 33       2/6 10/6 18/4
+    //  pad2:          44 44 44 44       44 44 44    6/8 18/6
+    // piano:    22 22 22    22 22 22 2              2/6 10/7
+    // drums:       55 55 66 55 55 55 66             4/4 8/2 10/6 16/2
+    // bass2: 77 77 77 77 77 77 77 77 77 77 77 77 77 0/28
+    //  0 +0 bass/24 bass2/28
+    //  2 +2 pad1/6 piano/6
+    //  4 +2 drums/4
+    //  6 +2 pad2/8
+    //  8 +2 drums/2
+    // 10 +2 pad1/6 drums/6 piano/7
+    // 16 +6 drums/2
+    // 18 +2 pad1/4 pad2/4
+    // 24 +6 end
+
+    var totalFrameCount = (30 + 2) * steps;
+
+
+    var masterSeq = NEW_(Sequence, &playerDevice);
+    {
+        masterSeq->writeHeader();
+
+        masterSeq->writeDelta(0);
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(6)->writeByte(7)->writeByte(5)->writeByte(8);    // bass2
+        masterSeq->writeEOF();
+
+        masterSeq->writeDelta(2 * steps);
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(1)->writeByte(1)->writeByte(1)->writeByte(12);    // bass
+        masterSeq->writeEOF();
+
+
+        masterSeq->writeDelta(2 * steps);
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(2)->writeByte(2)->writeByte(2)->writeByte(6);     // piano
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(3)->writeByte(3)->writeByte(3)->writeByte(3);     // pad1
+        masterSeq->writeEOF();
+
+        masterSeq->writeDelta(2 * steps);
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(5)->writeByte(5)->writeByte(4)->writeByte(4);     // drums
+        masterSeq->writeEOF();
+
+        masterSeq->writeDelta(2 * steps);
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(4)->writeByte(4)->writeByte(3)->writeByte(4);     // pad2
+        masterSeq->writeEOF();
+
+        masterSeq->writeDelta(2 * steps);
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(5)->writeByte(6)->writeByte(4)->writeByte(2);     // drums
+        masterSeq->writeEOF();
+
+        masterSeq->writeDelta(2 * steps);
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(2)->writeByte(2)->writeByte(2)->writeByte(7);     // piano
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(3)->writeByte(3)->writeByte(3)->writeByte(3);     // pad1
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(5)->writeByte(5)->writeByte(4)->writeByte(6);     // drums
+        masterSeq->writeEOF();
+
+        masterSeq->writeDelta(6 * steps);
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(5)->writeByte(6)->writeByte(4)->writeByte(2);     // drums
+        masterSeq->writeEOF();
+
+        masterSeq->writeDelta(2 * steps);
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(3)->writeByte(3)->writeByte(3)->writeByte(2);     // pad1
+        masterSeq->writeCommand(PlayerCommands::CmdAssign)->writeByte(4)->writeByte(4)->writeByte(3)->writeByte(3);     // pad2
+        masterSeq->writeEOF();
+
+        masterSeq->writeDelta((8 + 2) * steps);
+        masterSeq->writeEOS();
+        seqCount++;
+    }
+
+    // BASS
+    var bassSeq = NEW_(Sequence, &bassDevice);      // 48
+    {
+        bassSeq->writeHeader();
+
+        bassSeq->writeDelta(0); bassSeq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(140); bassSeq->writeEOF(); //  0
+        bassSeq->writeDelta(4); bassSeq->writeCommand(CmdSetNote)->writeByte(pC3)->writeByte(160); bassSeq->writeEOF(); //  4
+        bassSeq->writeDelta(4); bassSeq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(  0); bassSeq->writeEOF(); //  8
+        bassSeq->writeDelta(4); bassSeq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(180);
+                                bassSeq->writeCommand(CmdSetNote)->writeByte(pC3)->writeByte(  0); bassSeq->writeEOF(); // 12
+        bassSeq->writeDelta(2); bassSeq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(  0); bassSeq->writeEOF(); // 14
+        bassSeq->writeDelta(2); bassSeq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(100); bassSeq->writeEOF(); // 16
+        bassSeq->writeDelta(4); bassSeq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(  0);
+                                bassSeq->writeCommand(CmdSetNote)->writeByte(pC3)->writeByte(120); bassSeq->writeEOF(); // 20
+        bassSeq->writeDelta(2); bassSeq->writeCommand(CmdSetNote)->writeByte(pC3)->writeByte(  0); bassSeq->writeEOF(); // 22
+        bassSeq->writeDelta(2); bassSeq->writeCommand(CmdSetNote)->writeByte(pH1)->writeByte(140);
+                                bassSeq->writeCommand(CmdSetNote)->writeByte(pC3)->writeByte(  0); bassSeq->writeEOF(); // 24
+        bassSeq->writeDelta(4); bassSeq->writeCommand(CmdSetNote)->writeByte(pH2)->writeByte(160); bassSeq->writeEOF(); // 28
+        bassSeq->writeDelta(4); bassSeq->writeCommand(CmdSetNote)->writeByte(pH1)->writeByte(  0); bassSeq->writeEOF(); // 32
+        bassSeq->writeDelta(4); bassSeq->writeCommand(CmdSetNote)->writeByte(pH0)->writeByte(180);
+                                bassSeq->writeCommand(CmdSetNote)->writeByte(pH2)->writeByte(  0); bassSeq->writeEOF(); // 36
+        bassSeq->writeDelta(4); bassSeq->writeCommand(CmdSetNote)->writeByte(pH0)->writeByte(  0);
+                                bassSeq->writeCommand(CmdSetNote)->writeByte(pH1)->writeByte(140); bassSeq->writeEOF(); // 40
+        bassSeq->writeDelta(4); bassSeq->writeCommand(CmdSetNote)->writeByte(pH1)->writeByte(  0); bassSeq->writeEOF(); // 44
+
+        bassSeq->writeDelta(4);
+        bassSeq->writeEOS();
+        seqCount++;
+    }
+
+    // PIANO
+    var pianoSeq = NEW_(Sequence, &pianoDevice);    // 24
+    {
+        pianoSeq->writeHeader();
+
+        pianoSeq->writeDelta(0); pianoSeq->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(160); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(  0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte( 80); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(  0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(120); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(  0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pFs4)->writeByte(140); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pFs4)->writeByte(  0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pGs4)->writeByte(160); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pGs4)->writeByte(0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pAs4)->writeByte(80); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pAs4)->writeByte(0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pC5)->writeByte(120); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pC5)->writeByte(0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pAs4)->writeByte(140); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pAs4)->writeByte(0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pGs4)->writeByte(160); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pGs4)->writeByte(0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pFs4)->writeByte(140); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pFs4)->writeByte(0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(120); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(80); pianoSeq->writeEOF();
+        pianoSeq->writeDelta(1); pianoSeq->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0); pianoSeq->writeEOF();
+
+        pianoSeq->writeDelta(1);
+        pianoSeq->writeEOS();
+        seqCount++;
+    }
+
+    // PAD1
+    var pad1Seq = NEW_(Sequence, &padDevice);        // 48
+    {
+        pad1Seq->writeHeader();
+
+        pad1Seq->writeDelta(0);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(120);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(140);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pGs4)->writeByte(100);
+        pad1Seq->writeEOF();
+
+        pad1Seq->writeDelta(12);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(0);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pGs4)->writeByte(0);
+        pad1Seq->writeEOF();
+
+        pad1Seq->writeDelta(12);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pH3)->writeByte(120);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pDs4)->writeByte(140);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(100);
+        pad1Seq->writeEOF();
+
+        pad1Seq->writeDelta(12);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pH3)->writeByte(0);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pDs4)->writeByte(0);
+        pad1Seq->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(0);
+        pad1Seq->writeEOF();
+
+        pad1Seq->writeDelta(12);
+        pad1Seq->writeEOS();
+        seqCount++;
+    }
+
+    // PAD2
+    var pad2Seq = NEW_(Sequence, &padDevice);        // 48
+    {
+        pad2Seq->writeHeader();
+
+        pad2Seq->writeDelta(8);
+        pad2Seq->writeCommand(CmdSetNote)->writeByte(pGs5)->writeByte(180);     //  8
+        pad2Seq->writeEOF();
+
+        pad2Seq->writeDelta(4);
+        pad2Seq->writeCommand(CmdSetNote)->writeByte(pGs5)->writeByte(0);
+        pad2Seq->writeCommand(CmdSetNote)->writeByte(pC6)->writeByte(130);       // 12
+        pad2Seq->writeEOF();
+
+        pad2Seq->writeDelta(8);
+        pad2Seq->writeCommand(CmdSetNote)->writeByte(pC6)->writeByte(0);
+        pad2Seq->writeEOF();
+
+
+        pad2Seq->writeDelta(12);
+        pad2Seq->writeCommand(CmdSetNote)->writeByte(pG5)->writeByte(180);      // 32
+        pad2Seq->writeEOF();
+
+        pad2Seq->writeDelta(4);
+        pad2Seq->writeCommand(CmdSetNote)->writeByte(pG5)->writeByte(0);
+        pad2Seq->writeCommand(CmdSetNote)->writeByte(pH5)->writeByte(130);       // 36
+        pad2Seq->writeEOF();
+
+        pad2Seq->writeDelta(8);
+        pad2Seq->writeCommand(CmdSetNote)->writeByte(pH5)->writeByte(0);
+        pad2Seq->writeEOF();
+
+        pad2Seq->writeDelta(4);
+        pad2Seq->writeEOS();
+        seqCount++;
+    }
+
+    // DRUMS
+    var drums1Seq = NEW_(Sequence, &drumsDevice);    // 24
+    {
+        drums1Seq->writeHeader();
+
+        drums1Seq->writeDelta(0);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drBD)->writeByte(120);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte( 40);
+        drums1Seq->writeEOF();
+
+        drums1Seq->writeDelta(2);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte( 20);
+        drums1Seq->writeEOF();
+
+        drums1Seq->writeDelta(2);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte( 30);
+        drums1Seq->writeEOF();
+
+        drums1Seq->writeDelta(2);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte( 20);
+        drums1Seq->writeEOF();
+
+        drums1Seq->writeDelta(2);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drCP)->writeByte( 60);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drSD)->writeByte( 20);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte( 40);
+        drums1Seq->writeEOF();
+
+        drums1Seq->writeDelta(4);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte( 30);
+        drums1Seq->writeEOF();
+
+        drums1Seq->writeDelta(2);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte( 20);
+        drums1Seq->writeEOF();
+
+        drums1Seq->writeDelta(2);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drBD)->writeByte(100);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte( 40);
+        drums1Seq->writeEOF();
+
+        drums1Seq->writeDelta(2);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte( 20);
+        drums1Seq->writeEOF();
+
+        drums1Seq->writeDelta(2);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte( 30);
+        drums1Seq->writeEOF();
+
+        drums1Seq->writeDelta(2);
+        drums1Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte( 20);
+        drums1Seq->writeEOF();
+
+        drums1Seq->writeDelta(2);
+        drums1Seq->writeEOS();
+        seqCount++;
+    }
+
+    var drums2Seq = NEW_(Sequence, &drumsDevice);    // 24
+    {
+        drums2Seq->writeHeader();
+
+        drums2Seq->writeDelta(0);
+        drums2Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(40);
+        drums2Seq->writeEOF();
+
+        drums2Seq->writeDelta(4);
+        drums2Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(20);
+        drums2Seq->writeEOF();
+
+        drums2Seq->writeDelta(2);
+        drums2Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(20);
+        drums2Seq->writeEOF();
+
+        drums2Seq->writeDelta(2);
+        drums2Seq->writeCommand(CmdSetNote)->writeByte(drSD)->writeByte(30);
+        drums2Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(40);
+        drums2Seq->writeEOF();
+
+        drums2Seq->writeDelta(4);
+        drums2Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(30);
+        drums2Seq->writeEOF();
+
+        drums2Seq->writeDelta(4);
+        drums2Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(40);
+        drums2Seq->writeEOF();
+
+        drums2Seq->writeDelta(2);
+        drums2Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(20);
+        drums2Seq->writeEOF();
+
+        drums2Seq->writeDelta(2);
+        drums2Seq->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte(30);
+        drums2Seq->writeEOF();
+
+        drums2Seq->writeDelta(2);
+        drums2Seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(20);
+        drums2Seq->writeEOF();
+
+        drums2Seq->writeDelta(2);
+        drums2Seq->writeEOS();
+        seqCount++;
+    }
+
+
+    // BASS2
+    var bass2Seq = NEW_(Sequence, &bassDevice);      // 48
+    {
+        bass2Seq->writeHeader();
+
+        bass2Seq->writeDelta( 0); bass2Seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(180);
+                                  bass2Seq->writeCommand(CmdSetNote)->writeByte(pC3)->writeByte(100); bass2Seq->writeEOF();
+        bass2Seq->writeDelta(88); bass2Seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(  0);
+                                  bass2Seq->writeCommand(CmdSetNote)->writeByte(pC3)->writeByte(  0); bass2Seq->writeEOF();
+        bass2Seq->writeDelta(8);
+        bass2Seq->writeEOS();
+        seqCount++;
+    }
+
+
+#pragma endregion
+
+#pragma region Devices
+    var mixerId = 0;
+    var adapterList = NEW_(Stream);
+    // 2 adapters
+    adapterList->writeByte(2);
+    // 1st adapter: PlayerAdapter
+    {
+        adapterList->writeByte(playerAdapter_.getInfo()->id);
+        // no init data
+        // no devices
+        adapterList->writeByte(0);
+    }
+    // 2nd adapter: SynthAdapter
+    var drumsId = 0;
+    {
+        adapterList->writeByte(synthAdapter_.getInfo()->id);
+        adapterList->writeWord(SAMPLING_RATE);
+
+        var channelCount = 0;
+
+        var devCount = adapterList->cursor();
+        adapterList->writeByte(0);
+
+        // Bass
+        adapterList->writeByte(SynthDevices::DeviceBass);
+        adapterList->writeByte(2);          // voice count
+        adapterList->writeByte(1);          // data block id for sound bank 
+        adapterList->writeByte(0);          // program
+        var bassId = ++*devCount;
+        channelCount++;
+
+        // Piano
+        adapterList->writeByte(SynthDevices::DeviceSynth);
+        adapterList->writeByte(6);          // voice count
+        adapterList->writeByte(0);          // data block id for sound bank 
+        adapterList->writeByte(3);          // program
+        var pianoId = ++*devCount;
+        channelCount++;
+
+        // Pad
+        adapterList->writeByte(SynthDevices::DeviceSynth);
+        adapterList->writeByte(8);          // voice count
+        adapterList->writeByte(0);          // data block id for sound bank 
+        adapterList->writeByte(1);          // program
+        var padId = ++*devCount;
+        channelCount++;
+
+        // Drums
+        adapterList->writeByte(SynthDevices::DeviceDrums);
+        drumsId = ++ * devCount;
+        channelCount++;
+
+        // Bass2
+        adapterList->writeByte(SynthDevices::DeviceBass);
+        adapterList->writeByte(4);          // voice count
+        adapterList->writeByte(1);          // data block id for sound bank 
+        adapterList->writeByte(1);          // program
+        var bass2Id = ++ * devCount;
+        channelCount++;
+
+        // Effects
+        adapterList->writeByte(SynthDevices::DeviceClip);
+        adapterList->writeFloat(1.2f);      // amp
+        adapterList->writeByte(250);        // lvl
+        adapterList->writeByte(180);        // cut
+        adapterList->writeByte( 20);        // res
+        adapterList->writeByte(FmLowPass || FmBandPass /*|| FmHighPass */);    // mode
+        var clip1Id = ++*devCount;
+
+        adapterList->writeByte(SynthDevices::DeviceDelay);
+        adapterList->writeByte(10);         // feedbackL
+        adapterList->writeFloat(20.0f);     // delayL
+        adapterList->writeByte(0);          // feedbackR
+        adapterList->writeFloat(10.0f);    // delayR
+        adapterList->writeByte( 20);        // mixL
+        adapterList->writeByte(250);        // mixR
+        var delay1Id = ++*devCount;
+
+        adapterList->writeByte(SynthDevices::DeviceDelay);
+        adapterList->writeByte(180);        // feedbackL
+        adapterList->writeFloat(121.0f);    // delayL
+        adapterList->writeByte(200);        // feedbackR
+        adapterList->writeFloat(153.0f);    // delayR
+        adapterList->writeByte(250);        // mixL
+        adapterList->writeByte(250);        // mixR
+        var delay2Id = ++*devCount;
+
+        adapterList->writeByte(SynthDevices::DeviceDelay);
+        adapterList->writeByte(220);        // feedbackL
+        adapterList->writeFloat(421.0f);    // delayL
+        adapterList->writeByte(200);        // feedbackR
+        adapterList->writeFloat(303.0f);    // delayR
+        adapterList->writeByte(250);        // mixL
+        adapterList->writeByte(240);        // mixR
+        var delay3Id = ++ * devCount;
+
+        adapterList->writeByte(SynthDevices::DeviceClip);
+        adapterList->writeFloat(1.6f);      // amp
+        adapterList->writeByte(240);        // lvl
+        adapterList->writeByte(120);        // cut
+        adapterList->writeByte(140);        // res
+        adapterList->writeByte(FmLowPass || FmBandPass /*|| FmHighPass */);
+        var clip2Id = ++ * devCount;
+
+        adapterList->writeByte(SynthDevices::DeviceClip);
+        adapterList->writeFloat(1.4f);      // amp
+        adapterList->writeByte(240);        // lvl
+        adapterList->writeByte(200);        // cut
+        adapterList->writeByte(230);        // res
+        adapterList->writeByte(FmLowPass || FmBandPass /*|| FmHighPass */);
+        var clip3Id = ++ * devCount;
+
+        adapterList->writeByte(SynthDevices::DeviceDelay);
+        adapterList->writeByte( 20);        // feedbackL
+        adapterList->writeFloat(31.0f);    // delayL
+        adapterList->writeByte( 20);        // feedbackR
+        adapterList->writeFloat(13.0f);    // delayR
+        adapterList->writeByte(180);        // mixL
+        adapterList->writeByte(160);        // mixR
+        var delay4Id = ++ * devCount;
+
+        //adapterList->writeByte(SynthDevices::DeviceDelay);
+        //adapterList->writeByte(40);        // feedbackl
+        //adapterList->writeFloat(11.5f);    // delayL
+        //adapterList->writeByte(120);        // feedbackR
+        //adapterList->writeFloat(380.1f);    // delayR
+        //adapterList->writeByte(200);        // mixL
+        //adapterList->writeByte(180);        // mixR
+
+        adapterList->writeByte(SynthDevices::DeviceMixer);
+        adapterList->writeByte(channelCount);
+        mixerId = ++*devCount;
+
+        // channel #1 - Bass
+        adapterList->writeByte(  0);        // gain#1
+        adapterList->writeByte( 50);        // pan#1
+        adapterList->writeByte( 40);        // amp#1
+        adapterList->writeByte(  2);        // stage count
+            adapterList->writeByte( 40);    // stage#1 gain
+            adapterList->writeByte(200);    // stage#2 gain
+
+        // channel #2 - Piano
+        adapterList->writeByte(100);        // gain#2
+        adapterList->writeByte( 35);        // pan#2
+        adapterList->writeByte( 60);        // amp#2
+        adapterList->writeByte(  1);        // stage count
+            adapterList->writeByte(100);    // stage gain
+
+        // channel #3 - Pad
+        adapterList->writeByte(100);        // gain#3
+        adapterList->writeByte(50);         // pan#3
+        adapterList->writeByte(20);         // amp#3
+        adapterList->writeByte(1);          // stage count
+            adapterList->writeByte( 80);    // stage gain
+
+        // channel #4 - Drums
+        adapterList->writeByte(120);        // gain#4
+        adapterList->writeByte( 60);        // pan#4
+        adapterList->writeByte(140);        // amp#4
+        adapterList->writeByte(  1);        // stage count
+            adapterList->writeByte( 80);    // stage gain
+
+        // channel #5 - Bass2
+        adapterList->writeByte(  0);        // gain#1
+        adapterList->writeByte( 50);        // pan#1
+        adapterList->writeByte( 40);        // amp#1
+        adapterList->writeByte(  2);        // stage count
+            adapterList->writeByte( 20);    // stage#1 gain
+            adapterList->writeByte(240);    // stage#2 gain
+
+        adapterList->writeByte(bassId);     // channel1.input
+        adapterList->writeByte(clip1Id);    // channel1.stage1
+        adapterList->writeByte(delay1Id);   // channel1.stage2
+
+        adapterList->writeByte(pianoId);    // channel2.input
+        adapterList->writeByte(delay2Id);   // channel2.stage1.input
+
+        adapterList->writeByte(padId);      // channel3.input
+        adapterList->writeByte(delay3Id);   // channel3.stage1.input
+
+        adapterList->writeByte(drumsId);    // channel4.input
+        adapterList->writeByte(clip2Id);    // channel4.stage1.input
+
+        adapterList->writeByte(bass2Id);    // channel5.input
+        adapterList->writeByte(clip3Id);    // channel5.stage1
+        adapterList->writeByte(delay4Id);   // channel5.stage2
+
+    }
+#pragma endregion
+
+#pragma region CreateStream
+    var sequenceList = NEW_(Stream);
+    sequenceList->writeByte(seqCount);
+    sequenceList->writeWord((word)masterSeq->length());
+    sequenceList->writeWord((word)bassSeq->length());
+    sequenceList->writeWord((word)pianoSeq->length());
+    sequenceList->writeWord((word)pad1Seq->length());
+    sequenceList->writeWord((word)pad2Seq->length());
+    sequenceList->writeWord((word)drums1Seq->length());
+    sequenceList->writeWord((word)drums2Seq->length());
+    sequenceList->writeWord((word)bass2Seq->length());
+    sequenceList->writeStream(masterSeq);
+    sequenceList->writeStream(bassSeq);
+    sequenceList->writeStream(pianoSeq);
+    sequenceList->writeStream(pad1Seq);
+    sequenceList->writeStream(pad2Seq);
+    sequenceList->writeStream(drums1Seq);
+    sequenceList->writeStream(drums2Seq);
+    sequenceList->writeStream(bass2Seq);
+    DEL_(masterSeq);
+    DEL_(bassSeq);
+    DEL_(pianoSeq);
+    DEL_(pad1Seq);
+    DEL_(pad2Seq);
+    DEL_(drums1Seq);
+    DEL_(drums2Seq);
+    DEL_(bass2Seq);
+
+    var soundBank = getSoundBank();
+    var bassSoundBank = getBassSoundBank();
+
+    // header
+    // 2+3 data blocks
+    data->writeWord(5);
+    data->writeDword(initData->length());
+    data->writeDword(adapterList->length());
+    data->writeDword(sequenceList->length());
+    data->writeDword(soundBank->length());
+    data->writeDword(bassSoundBank->length());
+
+    data->writeStream(initData);
+    DEL_(initData);
+    data->writeStream(adapterList);
+    DEL_(adapterList);
+    data->writeStream(sequenceList);
+    DEL_(sequenceList);
+    data->writeStream(soundBank);
+    DEL_(soundBank);
+    data->writeStream(bassSoundBank);
+    DEL_(bassSoundBank);
+#pragma endregion
+
+    Player::addAdapter(NEW_(SynthAdapter));
+    var ptr = data->extract();
+    DEL_(data);
+    var device = PlayerDevice::create(&ptr);
+    var player = device->player();
+    player->assignChannel(0, (Sequence*)player->sequences().get(0), 0, 0);
+
+    Key ix = 0;
+    var drums = ((DrumsDevice*)player->devices().get(drumsId))->drums();
+    drums->setControl(bdDecay, 60);
+    drums->openHihat().setProgram(prgHHa0a);
+    drums->closedHihat().setProgram(prgHHa0a);
+
+    var mixer = (Mixer8x4*)((MixerDevice*)player->devices().get(mixerId))->object();
+    //(Mixer8x4*)((Device*)player->devices().search(NULL, ix,
+    //    [](COLLECTION_ARGUMENTS) { return ((Device*)value)->type() == SynthDevices::DeviceMixer ? 0 : 1; }))->object();
+
+    if (!isSaveToWave_) {
+        if (SoundPlayer::start((int)SAMPLING_RATE, 2, Mixer8x4::fillSoundBuffer, mixer) == 0) {
+            player->useThread();
+            player->start();
+            while (device->isActive()) {
+                Sleep(3);
+            }
+            SoundPlayer::stop();
+        }
+    }
+    else {
+        var cons = getConsole();
+        var samplesPerFrame = SAMPLING_RATE / player->refreshRate();
+        int bufferSizeInSamples = 16384;
+        int bufferSize = 2 * sizeof(short) * bufferSizeInSamples;
+        var buffer = MALLOC(short, bufferSize);
+        var offset = buffer;
+        var wave = NEW_(WaveFmt, "moon-walzer.wav", SAMPLING_RATE, 2, 16);
+        var frameCounter = 0.0f;
+        var frameCount = 0;
+        int totalCount = 0;
+        bool isStopped = false;
+        var patternTicks = 16 * framePerRow_;
+        var toggle = false;
+        do {
+            int remainingSamples = bufferSizeInSamples;
+            memset(buffer, 0, bufferSize);
+            var offset = buffer;
+            while (remainingSamples > 0) {
+                var count = remainingSamples > SAMPLE_BUFFER_SIZE ? SAMPLE_BUFFER_SIZE : remainingSamples;
+                if (frameCounter <= 0) {
+                    if (!player->run(1)) break;
+                    frameCount++;
+                    frameCounter += samplesPerFrame;
+                }
+                if (frameCounter <= count) {
+                    count = (int)ceil(frameCounter);
+                }
+                Mixer8x4::fillSoundBuffer(offset, count, mixer);
+                offset += 2 * count;
+                totalCount += count;
+                cons->showCursor(false);
+                cons->printf("% 5d / % 5d", frameCount, totalFrameCount);
+                cons->movexy(-13, 0);
+                remainingSamples -= count;
+                frameCounter -= count;
+            }
+            wave->write((byte*)buffer, (int)(2 * (offset - buffer)));
+        } while (player->masterChannel()->isActive());
+        cons->printf("\n%d samples saved\n", totalCount);
+
+        wave->close();
+        DEL_(wave);
+        FREE(buffer);
+    }
+
+    DEL_(device);
+    Player::cleanUp();
+}
 
 int _main(NS_FW_BASE::Map* args) {
 #ifdef _DEBUG
     Debug::initialize(/*DEBUG_UNICODE | DEBUG_MEMORY*/);
 #endif
-
+/*
     var j = 10;
     for (var i = 199; i < 600;)
     {
@@ -2116,9 +2915,9 @@ int _main(NS_FW_BASE::Map* args) {
             i++;
         }
     }
+*/
 
-
-    LOG("Player tests\n");
+    LOG("Synth tests\n");
     var tests = NEW_(SynthTest);
 
     //tests->test("Test envelopes", (TestMethod) & (SynthTest::testEnvelopes));
@@ -2131,9 +2930,10 @@ int _main(NS_FW_BASE::Map* args) {
     //tests->test("Save to wave", (TestMethod) & (SynthTest::testSaveToWave));
     //tests->test("Load XM module", (TestMethod) & (SynthTest::testLoadXm));
     //tests->test("Filter comparison", (TestMethod) & (SynthTest::testFilterSound));
-    tests->test("Save drum loop", (TestMethod) & (SynthTest::testDrumLoop));
+    tests->test("Test drum loop", (TestMethod) & (SynthTest::testDrumLoop));
+    //tests->displayFinalResults();
 
-    tests->displayFinalResults();
+    //createMoonWalzer();
 
     DEL_(tests);
 
@@ -2145,7 +2945,7 @@ int _main(NS_FW_BASE::Map* args) {
 //    var player = (Player*)Player::creator(NULL);
 //    var adapter = player->addAdapter(SynthAdapter::Info.id, 1);
 //    adapter->player(player);
-//    var soundBank = createSoundBank();
+//    var soundBank = getSoundBank();
 //    var xmLoader = NEW_(XmLoader, player, soundBank);
 //    var error = xmLoader->load(path);
 //    if (error != 0) {

@@ -27,31 +27,31 @@ namespace SYNTH {
     class FltStage {
         friend class Flt;
     public:
-        float ai_[3];    // nominator coeffs
-        float bi_[3];    // LP denominator coeffs
-        float ci_[3];    // HP denominator coeffs
-        float ui_[3];    // LP inputs
-        float vi_[3];    // HP inputs
-        float lp_[2];    // LP outputs
-        float hp_[2];    // HP outputs
+        double ai_[3];    // nominator coeffs
+        double bi_[3];    // LP denominator coeffs
+        double ci_[3];    // HP denominator coeffs
+        double ui_[3];    // LP inputs
+        double vi_[3];    // HP inputs
+        double lp_[2];    // LP outputs
+        double hp_[2];    // HP outputs
     public:
         FltStage();
         virtual void run(Arg) = 0;
-        virtual void update(float, float) = 0;
+        virtual void update(double, double) = 0;
     };
 
     class FltStage1Pole : public FltStage {
     public:
         void run(Arg);
-        void update(float, float);
+        void update(double, double);
     };
 
     class FltStage2Pole : public FltStage {
-        float linearFactor_;
+        double linearFactor_;
     public:
-        FltStage2Pole(float f);
+        FltStage2Pole(double f);
         void run(Arg);
-        void update(float, float);
+        void update(double, double);
     };
 
     #define FltCtrlCount (sizeof(FltCtrls)/sizeof(PotBase))
@@ -75,8 +75,8 @@ namespace SYNTH {
 
         FltStage* stage(int si) { return stages_[si]; }
 
-        static float cutoffTable[256];
-        static float* linearFactors[];
+        static double cutoffTable[256];
+        static double* linearFactors[];
         static void initialize();
     };
 }

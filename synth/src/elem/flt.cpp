@@ -39,7 +39,7 @@ using namespace SYNTH;
 
 #pragma region FltStage
 FltStage::FltStage() {
-    memset(&ai_, 0, sizeof(float) * 19);
+    memset(&ai_, 0, sizeof(double) * 19);
 }
 void FltStage1Pole::run(Arg params) {
     //var gain = 1.0f / ai_[0];
@@ -52,13 +52,13 @@ void FltStage1Pole::run(Arg params) {
     hp_[0] = hp;
 }
     
-void FltStage1Pole::update(float e, float g) {
+void FltStage1Pole::update(double e, double g) {
     bi_[0] = bi_[1] = e;
     ci_[0] = 1.0f;      ci_[1] = -1.0f;
     ai_[0] = e + 1;     ai_[1] = e - 1;
 }
 
-FltStage2Pole::FltStage2Pole(float f) {
+FltStage2Pole::FltStage2Pole(double f) {
     linearFactor_ = f;
 }
 
@@ -73,7 +73,7 @@ void FltStage2Pole::run(Arg params) {
     hp_[1] = hp_[0]; hp_[0] = hp;
 }
 
-void FltStage2Pole::update(float e, float g) {
+void FltStage2Pole::update(double e, double g) {
     g *= linearFactor_;
     var b0 = e * e;
     bi_[0] = bi_[2] = b0; bi_[1] = 2.0f * b0;
@@ -85,18 +85,18 @@ void FltStage2Pole::update(float e, float g) {
 #pragma endregion
 
 #pragma region Filter
-float Flt::cutoffTable[256];
-float pole2Factors[] = { (float)M_SQRT2 };  // sqrt(2)
-float pole3Factors[] = { 1.0f };
-float pole4Factors[] = { 0.7653668647301795434569199680608f, 1.8477590650225735122563663787936f };  // sqrt(2 + sqrt(2)), sqrt(2 - sqrt(2))
-float pole5Factors[] = { 0.61803398874989484820458683436564f, 1.6180339887498948482045868343656f };  // 0.5(1 + sqrt(5)), 0.5(sqrt(5) - 1)
-float pole6Factors[] = { 0.5176380902050415246977976752481f, (float)M_SQRT2, 1.9318516525781365734994863994578f }; // sqrt(2 - sqrt(3)), sqrt(2), sqrt(2 + sqrt(3))
-float pole7Factors[] = { 0.445042f, 1.24698f, 1.801938f };
-float pole8Factors[] = { 0.390181f, 1.11114f, 1.662939f, 1.961571f };
-float pole9Factors[] = { 0.347296f, 1.0f, 1.532089f, 1.879385f };
-float pole10Factors[] = { 0.312869f, 0.907981f, (float)M_SQRT2, 1.782013f, 1.975377f };
+double Flt::cutoffTable[256];
+double pole2Factors[] = { M_SQRT2 };  // sqrt(2)
+double pole3Factors[] = { 1.0 };
+double pole4Factors[] = { 0.7653668647301795434569199680608, 1.8477590650225735122563663787936 };  // sqrt(2 + sqrt(2)), sqrt(2 - sqrt(2))
+double pole5Factors[] = { 0.61803398874989484820458683436564, 1.6180339887498948482045868343656 };  // 0.5(1 + sqrt(5)), 0.5(sqrt(5) - 1)
+double pole6Factors[] = { 0.5176380902050415246977976752481, M_SQRT2, 1.9318516525781365734994863994578 }; // sqrt(2 - sqrt(3)), sqrt(2), sqrt(2 + sqrt(3))
+double pole7Factors[] = { 0.445042, 1.24698, 1.801938 };
+double pole8Factors[] = { 0.390181, 1.11114, 1.662939, 1.961571 };
+double pole9Factors[] = { 0.347296, 1.0, 1.532089, 1.879385 };
+double pole10Factors[] = { 0.312869, 0.907981, M_SQRT2, 1.782013, 1.975377 };
 
-float* Flt::linearFactors[] = { NULL, (float*)&pole2Factors, (float*)&pole3Factors, (float*)&pole4Factors, (float*)&pole5Factors, (float*)&pole6Factors, (float*)&pole7Factors, (float*)&pole8Factors, (float*)&pole9Factors, (float*)&pole10Factors };
+double* Flt::linearFactors[] = { NULL, (double*)&pole2Factors, (double*)&pole3Factors, (double*)&pole4Factors, (double*)&pole5Factors, (double*)&pole6Factors, (double*)&pole7Factors, (double*)&pole8Factors, (double*)&pole9Factors, (double*)&pole10Factors};
 
 Flt::Flt(int poleCount) {
     controls_ = NULL;
@@ -112,7 +112,7 @@ Flt::~Flt() {
 void Flt::assignControls(PotBase* controls) {
     controls_ = (FltCtrls*)controls;
     controls_->cut.init(0, 255, 1, 0);
-    controls_->res.init(0.0f, 1.0f, 0.01f, 0.0f);
+    controls_->res.init(0, 255, 1, 0);
     controls_->mod.init(0.0f, 1.0f, 0.01f, 0.5f);
     controls_->mode.init(0, FmAllPass, 1, FmLowPass);
 }
@@ -144,8 +144,8 @@ void Flt::setFromStream(byte*& stream) {
 
 float Flt::run(Arg params) {
     var input = params.f;
-    var lp = input;
-    var hp = input;
+    var lp = (double)input;
+    var hp = lp;
 
     for (var i = 0; i < stageCount_; i++) {
         stages_[i]->ui_[0] = lp;
@@ -169,7 +169,7 @@ float Flt::run(Arg params) {
 
 void Flt::update(float cut) {
     var res = (controls_->res.value.f < 0.000001f) ? 1.0f : 1.0f - controls_->res.value.f;
-    var e = (float)M_PI * (0.001f + 0.499f * (Flt::cutoffTable[controls_->cut.value.b] + cut));
+    var e = 0.001f + 0.499 * (Flt::cutoffTable[controls_->cut.value.b] + cut);
     var g = -res * e;   // (float)-pow(res, 0.5f / poleCount_) * e;
 
     for (var i = 0; i < stageCount_; i++) {
@@ -179,6 +179,6 @@ void Flt::update(float cut) {
 
 void Flt::initialize() {
     // calculate cutoff
-    createBezierTable(cutoffTable, 0.85f, 255, [](float y, int i) { return 0.0002f + (float)(3.1415926535897932384626433832795 * y * 0.9998); });
+    createBezierTable(cutoffTable, 0.85f, 255, [](double y, int i) { return M_PI * (0.0002 + y * 0.9998); });
 }
 #pragma endregion

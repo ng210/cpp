@@ -11,6 +11,7 @@ Osc::Osc() : Elem() {
 
 void Osc::reset() {
     timer = 0.0;
+    smp_ = 0.0f;
 }
 
 // float params[] = { 0.0f, 1.0f, 0.0f };
@@ -62,11 +63,11 @@ float Osc::run(Arg params) {
 
 void Osc::assignControls(PotBase* controls) {
     controls_ = (OscCtrls*)controls;
-    controls_->amp.init(0.0f, 1.0f, 0.01f, 1.0f);
-    controls_->fre.init(0.0f, 0.5f * *Elem::samplingRate, 100.0f, 0.0f);
+    controls_->amp.init(0, 255, 1, 128);
+    controls_->fre.init(-10.0f, 10.0f, 0.1f, 0.0f);
     controls_->note.init(0, 255, 1, 0);
     controls_->tune.init(0, 255, 1, 0);
-    controls_->psw.init(0.0f, 1.0f, 0.01f, 0.5f);
+    controls_->psw.init(0, 255, 1, 128);
     controls_->wave.init(0, 255, 1, WfSaw);
 }
 

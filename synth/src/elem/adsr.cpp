@@ -15,7 +15,7 @@ Adsr::Adsr() {
 
 void Adsr::assignControls(PotBase* controls) {
     controls_ = (AdsrCtrls*)controls;
-    controls_->amp.init(0.0f, 1.0f, 0.01f, 0.0f);
+    controls_->amp.init(0.0f, 1.0f, 0.01f, 0.5f);
     controls_->dc.init( 0.0f, 1.0f, 0.01f, 0.0f);
     controls_->atk.init(0, 255, 1,  4);
     controls_->dec.init(0, 255, 1, 16);

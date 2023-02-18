@@ -61,10 +61,10 @@ int MixerDevice::writeToStream(Stream* stream) {
 	for (var i = 0; i < mx->channelCount_; i++) {
 		var chn = mx->getChannel(i);
 		var devId = player_->devices().findIndex(chn->input, ModuleDevice::compareToModule);
-		stream->writeByte(devId);
+		stream->writeByte(devId.i);
 		for (var j = 0; j < chn->stageCount; j++) {
 			var fxId = player_->devices().findIndex(chn->stages[j].effect, ModuleDevice::compareToModule);
-			stream->writeByte(fxId);
+			stream->writeByte(fxId.i);
 		}
 	}
 

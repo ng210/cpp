@@ -26,8 +26,8 @@ void Env::initialize() {
         double x = (double)i / steps;
         double r = (-bx + sqrt(bx * bx + 4.0 * ax * x)) / (2.0 * ax);
         double y = r * r * ay + by * r;
-        var t1 = 0.0001 + 0.9999 * y;
-        var t2 = 0.0001 + 3.9999 * y;
+        var t1 = 0.0001 + 3.9999 * y;
+        var t2 = 0.0001 + 7.9999 * y;
         Env::attackRates[i] = 1.0 / (*Elem::samplingRate * t1);
         Env::releaseRates[i] = 1.0 / (*Elem::samplingRate * t2);
         var n = t2 * *Elem::samplingRate;

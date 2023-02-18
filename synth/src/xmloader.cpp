@@ -95,7 +95,7 @@ XmLoader::XmLoader(Player* player, Stream* soundBank) {
 		synthAdapter_ = (SynthAdapter*)Player::addAdapter(NEW_(SynthAdapter));
 	}
 	// check synth-device
-	var ix = 0;
+	Key ix = 0;
 	synthDevice_ = (SynthDevice*)player->devices().search(SynthDevices::DeviceSynth, ix);
 	if (synthDevice_ == NULL) {
 		synthDevice_ = (SynthDevice*)player->addDevice(synthAdapter_, SynthDevices::DeviceSynth);

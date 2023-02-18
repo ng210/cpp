@@ -6,7 +6,7 @@ using namespace SYNTH;
 
 #pragma region Creation
 DrumsDevice::DrumsDevice(SynthAdapter* adapter) : ModuleDevice(NEW_(Drums), adapter) {
-	type(SynthDevices::DeviceBass);
+	type(SynthDevices::DeviceDrums);
 }
 
 DrumsDevice::~DrumsDevice() {
