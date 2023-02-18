@@ -9,6 +9,7 @@ using namespace PLAYER;
 
 Channel::Channel() {
     const char* id = "ChannelXX";
+    isEndless_ = false;
     initialize((byte**)&id);
 }
 
@@ -95,7 +96,7 @@ void Channel::assign(Device* device, Sequence* sequence, int loopCount) {
 
 void Channel::reset() {
     cursor_ = sequence_->data() + 1;
-    if (--loopCount_ > 0) {
+    if (isEndless_ || --loopCount_ > 0) {
         currentTick_ = 0;
         isActive_ = true;
     }

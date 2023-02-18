@@ -212,14 +212,14 @@ void PlayerTest::testCreateSequenceFromFrames() {
 #pragma endregion
     var sequence1 = createTestSequence(device);
     var sequence2 = Sequence::fromFrames(frames, device);
-    frames->apply([](void* f, Key key1, UINT32 ix, Collection* c, void* args1) {
-        var frame = (Frame*)f;
-        frame->commands_.apply([](void* p, Key key2, UINT32 ix, Collection* c, void* args2) {
-            FREE((byte*)p);
-            return 1;
+    frames->apply([](COLLECTION_ARGUMENTS) {
+        var frame = (Frame*)value;
+        frame->commands_.apply([](COLLECTION_ARGUMENTS) {
+            FREE((byte*)value);
+            return value;
         });
         DEL_(frame);
-        return 1;
+        return value;
     });
     DEL_(frames);
     var info = sequence2->print();

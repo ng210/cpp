@@ -48,9 +48,9 @@ namespace PLAYER {
         counter_ = 0;
 
         channels_.init(16);
-        channels_.compare([](void* p, Key key, UINT32 ix, Collection* collection, void* args) { return fmw::strncmp(((Channel*)p)->id(), (char*)key.p, 16); });
+        channels_.compare([](COLLECTION_ARGUMENTS) { return fmw::strncmp(((Channel*)value)->id(), (char*)key.p, 16); });
         devices_.init(16);
-        devices_.compare([](void* p, Key key, UINT32 ix, Collection* collection, void* args) { return ((Device*)p)->type() - key.i; });
+        devices_.compare([](COLLECTION_ARGUMENTS) { return ((Device*)value)->type() - key.i; });
         sequences_.init(16);
         sequences_.compare(Collection::compareByRef);
         dataBlocks_.init(sizeof(DataBlockItem), 16);
@@ -109,7 +109,7 @@ namespace PLAYER {
                 counter -= countPerFrame;
                 ticks++;
             }
-            player->isTerminating_ = !player->run(ticks);
+            if (!player->run(ticks)) break;
             lastTime = currentTime;
             //Sleep(6);
         }
@@ -204,26 +204,32 @@ namespace PLAYER {
             stop();
         }
 
-        dataBlocks_.apply([](void* p, Key key, UINT32 ix, Collection* arr, void* args) {
-            var dbi = (DataBlockItem*)p;
-            if (dbi->flag & DataBlockItemFlag::Allocated) {
-                FREE(dbi->dataBlock);
+        dataBlocks_.apply(
+            [](COLLECTION_ARGUMENTS) {
+                var dbi = (DataBlockItem*)value;
+                if (dbi->flag & DataBlockItemFlag::Allocated) {
+                    FREE(dbi->dataBlock);
+                }
+                return value;
             }
-            return 1;
-            });
-        sequences_.apply([](void* sequence, Key key, UINT32 ix, Collection* arr, void* args) {
-            DEL_((Sequence*)sequence);
-            return 1;
-            });
+        );
+        sequences_.apply(
+            [](COLLECTION_ARGUMENTS) {
+                DEL_((Sequence*)value);
+                return value;
+            }
+        );
         // don't delete the master device yet
         for (var i = 1; i < devices_.length(); i++) {
             var dev = (Device*)devices_.get(i);
             DEL_(dev);
         }
-        channels_.apply([](void* channel, Key key, UINT32 ix, Collection* arr, void* args) {
-            DEL_((Channel*)channel);
-            return 1;
-            });
+        channels_.apply(
+            [](COLLECTION_ARGUMENTS) {
+                DEL_((Channel*)value);
+                return value;
+            }
+        );
 
         if (initData_.dataBlock != NULL && (initData_.flag & DataBlockItemFlag::Allocated) != 0) {
             FREE(initData_.dataBlock);

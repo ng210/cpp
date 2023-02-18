@@ -28,7 +28,7 @@ namespace PLAYER {
         virtual void writeToStream(Stream* data);
 #endif
 
-        static int compare(void* item, Key key, UINT32 ix, Collection* collection, void* args);
+        static COLLECTION_COMPARE compare;
     };
 }
 

@@ -9,14 +9,15 @@ NS_FW_BASE_USE
 namespace PLAYER {
 
     class Channel {
-    private: char id_[16];
-    private: PROP(Sequence*, sequence);
+    protected: char id_[16];
+    protected: PROP(Sequence*, sequence);
     //private: PROP(PArray, frames);
-    private: PROP(Device*, device);
-    private: PROP(int, currentTick);
-    private: PROP(int, loopCount);
-    private: PROP(byte*, cursor);
-    private: PROP(bool, isActive);
+    protected: PROP(Device*, device);
+    protected: PROP(int, currentTick);
+    protected: PROP(int, loopCount);
+    protected: PROP(byte*, cursor);
+    protected: PROP(bool, isActive);
+    protected: PROP(bool, isEndless);
 
     public:
 
