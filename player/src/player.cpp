@@ -2,6 +2,7 @@
 #include <windows.h>
 #include "base/memory.h"
 #include "utils/file.h"
+#include "base/debug.h"
 #include "player/src/player.h"
 #include "player/src/sequence.h"
 #include "player/src/channel.h"
@@ -23,7 +24,11 @@ namespace PLAYER {
             Player::adapters_ = NEW_(Map, sizeof(int), sizeof(Adapter*), Map::hashingInt, Collection::compareInt);
             Player::adapters_->hasRefKey(false);
         }
-        Player::adapters_->put(adapter->getInfo()->id, &adapter);
+        if (!Player::adapters_->containsKey(adapter->getInfo()->id)) {
+            adapter->prepare();
+            Player::adapters_->put(adapter->getInfo()->id, &adapter);
+        }
+        
         return adapter;
     }
     Adapter* Player::getAdapter(int type) {
@@ -34,6 +39,7 @@ namespace PLAYER {
     void Player::cleanUp() {
         for (var i = 0; i < Player::adapters_->values()->length(); i++) {
             var adapter = *(Adapter**)Player::adapters_->values()->get(i);
+            adapter->cleanUp();
             DEL_(adapter);
         }
         DEL_(Player::adapters_);
@@ -83,8 +89,8 @@ namespace PLAYER {
     
 #pragma region Threading
     void Player::useThread() {
-        hThread_ = CreateThread(0, 0x1000, &Player::threadProc, this, 0, &threadId_);
-        isPlaying_ = true;
+        hThread_ = CreateThread(0, 0x1000, &Player::threadProc, this, CREATE_SUSPENDED, &threadId_);
+        isPlaying_ = false;
         isTerminating_ = false;
     }
 
@@ -118,11 +124,14 @@ namespace PLAYER {
         return 0;
     }
 
-
     void Player::start() {
         isPlaying_ = true;
+        if (masterChannel_->sequence() == NULL) {
+            var masterSequence = (Sequence*)sequences_.get(0);
+            masterChannel_->assign(masterDevice_, masterSequence, 0);
+        }
         isTerminating_ = false;
-        ResumeThread(hThread_);
+        SYSPR(ResumeThread(hThread_));
     }
 
     void Player::stop() {

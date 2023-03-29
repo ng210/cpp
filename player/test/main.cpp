@@ -306,8 +306,6 @@ void PlayerTest::testRunPlayer() {
     DEL_(bin);
     var device = PlayerDevice::create(&data);
     var player = device->player();
-    // assign master sequence to master channel
-    player->assignChannel(0, (Sequence*)player->sequences().get(0), 0, 0);
     player->useThread();
     player->start();
     while (device->isActive()) {

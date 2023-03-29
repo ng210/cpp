@@ -23,6 +23,8 @@ namespace PLAYER {
 
         virtual AdapterInfo* const getInfo() = 0;
         virtual void initialize(byte** pData);
+        virtual void prepare();
+        virtual void cleanUp();
         virtual Device* createDevice(int deviceType) = 0;
 #ifdef PLAYER_EDIT_MODE
         virtual void writeToStream(Stream* data);
