@@ -35,9 +35,6 @@ namespace SYNTH {
 
 #pragma region Synth
 		void setNote(byte note, byte velocity);
-		void setProgram(byte prgId);
-		byte* soundBank();
-		void soundBank(byte* data);
 		//void run(short* buffer, int start, int end);
 #pragma endregion
 	};

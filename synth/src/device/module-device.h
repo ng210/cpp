@@ -2,6 +2,8 @@
 #define __MODULE_DEVICE_H
 
 #include "player/src/device.h"
+#include "synth/src/elem/pot.h"
+#include "synth/src/module/module.h"
 
 NS_FW_BASE_USE
 using namespace PLAYER;
@@ -9,15 +11,16 @@ namespace SYNTH {
 
 
 	typedef enum ModuleCommands {
-		CmdSetUint8		= 2,
-		CmdSetFloat8	= 3,
-		CmdSetFloat 	= 4,
-		CmdSetNote		= 10,
-		CmdSetVelocity	= 11,
-		CmdSetProgram	= 12
+		CmdSetUint8		= 2,	// ctrlId, value
+		CmdSetFloat8	= 3,	// ctrlId, value
+		CmdSetFloat 	= 4,	// ctrlId, value
+		CmdSetNote		= 10,	// ctrlId, note, velocity
+		CmdSetVelocity	= 11,	// velocity
+		CmdSetProgram	= 12	// programId
 	} ModuleCommands;
 
 	class ModuleDevice : public Device {
+	protected: PROP_R(int, datablockId);
 	public:
 		ModuleDevice(void* object, Adapter* adapter);
 
@@ -28,12 +31,19 @@ namespace SYNTH {
 		void setRefreshRate(float fps);
 		void processCommand(byte cmd, byte*& cursor);
 
-		void setControl(byte ctrlId, byte value);
-		void setControl(byte ctrlId, float value);
+		PotBase* getControl(byte ctrlId);
+		void setControl(byte ctrlId, S value);
+		byte program();
+		void setProgram(byte prgId);
+		Soundbank* soundbank();
+		void setSoundbank(Soundbank* data);
+
+		Module* module() { return (Module*)object_; }
 
 #ifdef PLAYER_EDIT_MODE
 		void makeCommandImpl(int command, Stream* stream, va_list args);
 		int getCommandSize(byte cmd, byte* args);
+		int writeToStream(Stream* stream);
 #endif
 		static COLLECTION_COMPARE compareToModule;
 

@@ -20,11 +20,12 @@ namespace SYNTH {
     #define DahrCtrlCount (sizeof(DahrCtrls) / sizeof(PotBase))
 
     class Dahr : public Env {
-    private: PROP_R(DahrCtrls*, controls);
     protected: PROP_R(double, smp);
     protected: PROP_R(double, rate2);
     public:
         Dahr();
+
+        DahrCtrls* controls() { return (DahrCtrls*)controls_; }
 
         void assignControls(PotBase* controls);
         void setFromStream(byte*& stream);

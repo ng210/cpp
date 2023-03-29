@@ -9,6 +9,7 @@ using namespace PLAYER;
 namespace SYNTH {
 
 	class DistortDevice: public ModuleDevice {
+		static Stream defaultSoundBank_;
 	public:
 		DistortDevice(SynthAdapter* adapter);
 		~DistortDevice();
@@ -16,7 +17,6 @@ namespace SYNTH {
 #ifdef PLAYER_EDIT_MODE
 		int writeToStream(Stream* stream);
 #endif
-
 	};
 }
 #endif

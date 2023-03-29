@@ -29,10 +29,10 @@ namespace SYNTH {
         bFlt1Cut,/*=fmAdsrDc*/ bFlt1Res, bFlt1Mod,/*=fmAdsrAmp*/ bFlt1Mode
     } BassCtrlId;
 
-#define BassCtrlCount (sizeof(BassCtrls)/sizeof(Pot*))
+#define BassCtrlCount (sizeof(BassCtrls)/sizeof(PotBase))
 
     class Bass : public SynthBase {
-    protected: BassCtrls controls_;
+        static Soundbank* defaultSoundbank_;
         // Voice handling
         VOICEHANDLER setupVoiceHandler;
         VOICERENDERER renderVoiceHandler;
@@ -43,10 +43,13 @@ namespace SYNTH {
         Bass(float* samplingRate, int voiceCount = 1);
         virtual ~Bass();
 
-        inline BassCtrls* controls() { return &controls_; };
+        BassCtrls controls;
 
         // Module
-        void initialize(byte** pData);
+        Soundbank* getDefaultSoundbank();
+
+        static void prepare();
+        static void cleanUp();
     };
 }
 

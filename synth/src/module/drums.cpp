@@ -13,69 +13,32 @@ using namespace SYNTH;
 #define SMPNOISE(delta, timer, store) ((timer < delta || timer > 0.5 && timer < 0.5 + delta) ? store = (float)Utils::randomSigned() : store)
 
 #pragma region GenericDrum
-GenericDrum::GenericDrum() {
+GenericDrum::GenericDrum() : Module((PotBase*)&controls, GenericDrumCtrlCount) {
     memset(timers, 0, sizeof(float) * 6);
     noise = 0.0f;
+    for (var i = 0; i < 4; i++) {
+        envelopes[i].assignControls((PotBase*)&controls.dahr[i]);
+    }
+    for (var i = 0; i < 2; i++) {
+        filters[i].assignControls((PotBase*)&controls.flt[i]);
+    }
+    controls.type.init(0, 1, 1, 0);
+    controls.type.set.add(this, GenericDrum::typeSetter);
+    for (var i = 0; i < 6; i++) {
+        controls.fre[i].init(0.0f, 0.5f * *Elem::samplingRate, 1.0f, 0.0f);
+        controls.amp[i].init(0, 255, 1, 80);
+    }
+    //controls.fre[3].init(3000.0f, 9000.0f, 1.0f, 7891.0f);
 }
 GenericDrum::~GenericDrum() {
-}
-
-void GenericDrum::assignControls(PotBase* controls) {
-    pControls_ = controls;
-}
-
-void GenericDrum::initialize(byte** pData) {
-    // 4 EnvCtrls
-    // 1+1 FltCtrls
-    // 3 float, 3 byte
-    var controls = pControls_;
-    // read envelopes
-    envCount = READ(*pData, byte);
-    for (var i = 0; i < envCount; i++) {
-        envelopes[i].assignControls(controls);
-        envelopes[i].setFromStream(*pData);
-        controls += DahrCtrlCount;
-    }
-    // prepare fm envelope
-    envelopes[1].controls()->amp.value.f /= *Elem::samplingRate;
-    envelopes[1].controls()->dc.value.f /= *Elem::samplingRate;
-
-    var fltCount = READ(*pData, byte);
-    controls = (PotBase*)&((GenericDrumCtrls*)pControls_)->flt1;
-    for (var i = 0; i < fltCount; i++) {
-        filters[i].assignControls(controls);
-        filters[i].setFromStream(*pData);
-        controls += FltCtrlCount;
-    }
-
-    // read oscillator data
-    var oscCount = READ(*pData, byte);
-    for (var i = 0; i < oscCount; i++) {
-        var f = READ(*pData, float);
-        fre[i] = f / *Elem::samplingRate;
-        var a = READ(*pData, byte);
-        amp[i] = a/255.0f;
-    }
 }
 
 bool GenericDrum::isActive() {
     return envelopes[0].isActive();
 }
 
-void GenericDrum::setProgram(int prgId) {
-    var sb = soundBank_;
-    program_ = prgId;
-    isActive_ = true;
-    var count = (int)*sb;
-    if (prgId < count) {
-        var offset = *(short*)(sb + 1 + 16 * prgId + 14);
-        sb += offset;
-        initialize(&sb);
-    }
-}
-
 void GenericDrum::setGate(byte velocity) {
-    for (var i = 0; i < envCount; i++) {
+    for (var i = 0; i < 4; i++) {
         envelopes[i].setGate(velocity);
     }
     for (var i = 0; i < 6; i++) {
@@ -93,362 +56,267 @@ float GenericDrum::runFilter(Flt* flt, float cut, float input) {
     return (float)st->ai_[1];
 }
 
-void GenericDrum::render(float* buffer, int start, int end) {
+void GenericDrum::renderDefault(float* buffer, int start, int end) {
     for (var i = start; i < end; i++) {
         // run envelopes
         // - env1: main AM
-        // - env1: main FM
+        // - env2: main FM
         // - env3: click AM
         // - env4: cutoff
-        float env[4];
-        for (var ei = 0; ei < 4; ei++) {
-            env[ei] = envelopes[ei].run();
-        }
-        // run oscillators
-        // - 1st and 2nd are sinus
-        float smp = amp[0] * (float)SMPSINUS(timers[0]) + amp[1] * (float)SMPSINUS(timers[1]);
-        // - 3rd is noise
-        SMPNOISE(fre[2], timers[2], noise);
-
-        var f = env[1] + fre[1] * env[2];
-        if ((timers[0] += f) > 1.0) timers[0] -= 1.0;
-        if ((timers[1] += fre[0] + f) > 1.0) timers[1] -= 1.0;
-        if ((timers[2] += fre[2]) > 1.0) timers[2] -= 1.0;
+        float am = envelopes[0].run();
+        float cl = envelopes[2].run();
+        float fm = envelopes[1].run() + cl * envelopes[1].controls()->amp.value.f;
+        float mod = envelopes[3].run();
+           
+        var delta1 = (fm + controls.fre[0].value.f) / *Elem::samplingRate;
+        var delta2 = (fm + controls.fre[1].value.f) / *Elem::samplingRate;
+        var delta3 = controls.fre[2].value.f / *Elem::samplingRate;
+        float smp = controls.amp[0].value.f * (float)SMPSINUS(timers[0])
+            + controls.amp[1].value.f * (float)SMPSINUS(timers[1]);
+        SMPNOISE(delta3, timers[2], noise);
+        if ((timers[0] += delta1) > 1.0f) timers[0] -= 1.0f;
+        if ((timers[1] += delta2) > 1.0f) timers[1] -= 1.0f;
+        if ((timers[2] += delta3) > 1.0f) timers[2] -= 1.0f;
 
         // run 1 filter
-        filters[0].update(env[3]);
-        smp += amp[2] * filters[0].run((float)noise);
+        filters[0].update(mod + cl);
+        smp += controls.amp[2].value.f * filters[0].run((float)noise);
         // smp = runFilter(&filters[0], env[3], smp);
-        buffer[i] += (env[0] + env[2]) * smp;
+        buffer[i] += (am + cl) * smp;
     }
 }
 
-void OpenHihat::setProgram(int prgId) {
-    GenericDrum::setProgram(prgId);
-    var hld = 2 * ((GenericDrumCtrls*)pControls_)->dahr1.rel.value.b;
-    if (hld > 255) hld = 255;
-    ((GenericDrumCtrls*)pControls_)->dahr1.hld.value.b = hld;
-}
+void GenericDrum::renderHihat(float* buffer, int start, int end) {
+    for (var i = start; i < end; i++) {
+        float am = envelopes[0].run();
+        float fm = envelopes[1].run();
+        float click = envelopes[2].run();
+        float cut = envelopes[3].run();
+        am += click;
+        //cut += click;
 
-void MidTom::setProgram(int prgId) {
-    GenericDrum::setProgram(prgId);
-    ((GenericDrumCtrls*)pControls_)->dahr2.dc.value.f = 137.2f / *Elem::samplingRate;
-}
+        // create 6 pulses
+        double smp = 0.0f;
+        float delta;
+        for (var i = 0; i < 6; i++) {
+            delta = (controls.fre[i].value.f + fm) / *Elem::samplingRate;
+            smp += controls.amp[i].value.f * SMPPULSE(timers[i]);
+            timers[i] += delta;
+            if (timers[i] > 1.0f) timers[i] -= 1.0f;
+        }
 
-void HighTom::setProgram(int prgId) {
-    GenericDrum::setProgram(prgId);
-    ((GenericDrumCtrls*)pControls_)->dahr2.dc.value.f = 188.4f / *Elem::samplingRate;
-}
-
-
-#pragma endregion
-
-byte* createDefaultSoundBank() {
-    int count = 0;
-    void* data[2 * 16];
-#pragma region BassDrum
-    byte bd808_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(1.0f), DF(0.0f), DB(2), DB(2), DB(10), DB(100) /*=Decay*/,
-        // dahr2
-        DF(44.0f), DF(47.0f) /*=Tune*/, DB(0), DB(0), DB(1), DB(40),
-        // dahr3
-        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(4),
-        // dahr4
-        DF(1.0f), DF(0.0f), DB(0), DB(0), DB(1), DB(4),
-        // filter
-        1,
-        DB(2) /*=Tone*/, DB(20), DB(0), DB(FmLowPass),
-        // frequences
-        3,
-        DF(3.2f), DB(160), DF(273.0f), DB(10), DF(9511.0f), DB(20)
-    };
-    data[2 * count] = NEW_(Stream, bd808_, arraysize(bd808_));
-    data[2 * count + 1] = "bd808........";
-    count++;
-    byte bd909_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(1.0f), DF(0.0f), DB(2), DB(6), DB(60), DB(100) /*=Decay*/,
-        // dahr2
-        DF(169.0f), DF(51.0f) /*=Tune*/, DB(0), DB(0), DB(1), DB(50),
-        // dahr3
-        DF(0.3f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(1), DB(6),
-        // dahr4
-        DF(1.0f), DF(0.0f), DB(0), DB(0), DB(1), DB(2),
-        // filter
-        1,
-        DB(2) /*=Tone*/, DB(40), DB(0), DB(FmLowPass),
-        // frequences
-        3,
-        DF(3.2f), DB(200), DF(273.0f), DB(20), DF(9511.0f), DB(10)
-    };
-    data[2 * count] = NEW_(Stream, bd909_, arraysize(bd909_));
-    data[2 * count + 1] = "bd909........";
-    count++;
-    byte bd707_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(1.0f), DF(0.0f), DB(3), DB(3), DB(20), DB(54) /*=Decay*/,
-        // dahr2
-        DF(19.0f), DF(42.0f) /*=Tune*/, DB(0), DB(1), DB(2), DB(20),
-        // dahr3
-        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(2), DB(2), DB(14),
-        // dahr4
-        DF(0.6f), DF(0.0f), DB(0), DB(2), DB(3), DB(6),
-        // filter
-        1,
-        DB(4) /*=Tone*/, DB(10), DB(0), DB(FmLowPass),
-        // frequences
-        3,
-        DF(11.2f), DB(160), DF(73.0f), DB(30), DF(9511.0f), DB(40)
-    };
-    data[2 * count] = NEW_(Stream, bd707_, arraysize(bd707_));
-    data[2 * count + 1] = "bd707........";
-    count++;
-#pragma endregion
-#pragma region SnareDrum
-    byte sd808_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(0.9f), DF(0.0f), DB(1), DB(1), DB(24), /*=Decay*/ DB(40),
-        // dahr2
-        DF(39.0f), DF(171.0f) /*=Tune*/, DB(0), DB(1), DB(0), DB(24),
-        // dahr3
-        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(4),
-        // dahr4
-        DF(0.2f), DF(0.0f), DB(0), DB(1), DB(10), DB(60),
-        // filter
-        1,
-        DB(90) /*=Tone*/, DB(40), DB(0), DB(FmHighPass),
-        // frequences
-        3,
-        DF(151.0f), DB(80), DF(15.7f), DB(10), DF(6511.0f), DB(80)
-    };
-    data[2 * count] = NEW_(Stream, sd808_, arraysize(sd808_));
-    data[2 * count + 1] = "sd808........";
-    count++;
-    byte sd909_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(1.0f), DF(0.0f), DB(1), DB(1), DB(20), DB(40) /*=Decay*/,
-        // dahr2
-        DF(39.0f), DF(231.0f) /*=Tune*/, DB(0), DB(1), DB(0), DB(20),
-        // dahr3
-        DF(0.8f) /*=Tone*/, DF(0.0f), DB(0), DB(0), DB(0), DB(3),
-        // dahr4
-        DF(0.5f), DF(0.0f), DB(0), DB(0), DB(0), DB(60),
-        // filter
-        1,
-        DB(100) /*=Tone*/, DB(60), DB(0), DB(FmBandPass),
-        // frequences
-        3,
-        DF(81.0f), DB(140), DF(105.7f), DB(40), DF(9511.0f), DB(40)
-    };
-    data[2 * count] = NEW_(Stream, sd909_, arraysize(sd909_));
-    data[2 * count + 1] = "sd909........";
-    count++;
-    byte sda0a_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(1.0f), DF(0.0f), DB(3), DB(2), DB(12), DB(60) /*=Decay*/,
-        // dahr2
-        DF(19.0f), DF(173.0f) /*=Tune*/, DB(0), DB(2), DB(10), DB(20),
-        // dahr3
-        DF(1.0f) /*=Tone*/, DF(0.0f), DB(0), DB(1), DB(2), DB(5),
-        // dahr4
-        DF(-0.2f), DF(0.0f), DB(2), DB(2), DB(4), DB(14),
-        // filter
-        1,
-        DB(80) /*=Tone*/, DB(40), DB(0), DB(FmBandPass),
-        // frequences
-        3,
-        DF(48.0f), DB(80), DF(17.7f), DB(60), DF(6511.0f), DB(100)
-    };
-    data[2 * count] = NEW_(Stream, sda0a_, arraysize(sda0a_));
-    data[2 * count + 1] = "sda0a........";
-    count++;
-#pragma endregion
-#pragma region Hihat
-    byte hh808_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(1.0f), DF(0.0f), DB(2), DB(0), DB(2), DB(26),
-        // dahr2
-        DF(27.2f), DF(0.0f), DB(0), DB(2), DB(1), DB(12),
-        // dahr3
-        DF(0.8f), DF(0.0f), DB(0), DB(0), DB(1), DB(4),
-        // dahr4
-        DF(-0.2f), DF(0.0f), DB(0), DB(0), DB(1), DB(20),
-        // filter
-        2,
-        DB(182) /*=Tone*/, DB( 60), DB( 0), DB(FmHighPass),
-        DB(240) /*=Tone*/, DB(  0), DB( 0), DB(FmBandPass | FmHighPass),
-        // frequences
-        6,
-        DF(205.0f), DB(22), DF(284.0f), DB(0), DF(303.0f), DB(0), DF(369.0f), DB(0), DF(426.0f), DB(0), DF(521.0f), DB(0)
-    };
-    data[2 * count] = NEW_(Stream, hh808_, arraysize(hh808_));
-    data[2 * count + 1] = "hh808........";
-    count++;
-    byte hha0a_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(1.0f), DF(0.0f), DB(3), DB(0), DB(4), DB(22),
-        // dahr2
-        DF(0.0f), DF(0.0f), DB(0), DB(2), DB(2), DB(20),
-        // dahr3
-        DF(0.8f), DF(0.0f), DB(0), DB(2), DB(2), DB(8),
-        // dahr4
-        DF(-0.1f), DF(0.0f), DB(0), DB(1), DB(30), DB(82),
-        // filter
-        2,
-        DB(153) /*=Tone*/, DB( 40), DB(0), DB(FmHighPass),
-        DB(127) /*=Tone*/, DB(  0), DB(0), DB(FmBandPass | FmHighPass),
-        // frequences
-        6,
-        //DF(205.0f), DB(60), DF(284.0f), DB(0), DF(303.0f), DB(0), DF(369.0f), DB(0), DF(426.0f), DB(0), DF(521.0f), DB(0)
-        DF(457.0f), DB(24), DF(211.0f), DB(0), DF(241.0f), DB(0), DF(293.0f), DB(0), DF(367.0f), DB(0), DF(569.0f), DB(0)
-    };
-    data[2 * count] = NEW_(Stream, hha0a_, arraysize(hha0a_));
-    data[2 * count + 1] = "hha0a........";
-    count++;
-#pragma endregion
-#pragma region Tom
-    byte tt808_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(1.0f), DF(0.0f), DB(2), DB(4), DB(10), DB(100) /*=Decay*/,
-        // dahr2
-        DF(69.0f), DF(88.0f) /*=Tune*/, DB(0), DB(1), DB(0), DB(60),
-        // dahr3
-        DF(0.8f) /*=Tone*/, DF(0.0f), DB(0), DB(1), DB(0), DB(4),
-        // dahr4
-        DF(0.6f), DF(0.0f), DB(0), DB(0), DB(1), DB(8),
-        // filter
-        1,
-        DB(10) /*=Tone*/, DB(40), DB(0), DB(FmLowPass | FmBandPass),
-        // frequences
-        3,
-        DF(1.0f), DB(100), DF(205.7f), DB(90), DF(9511.0f), DB(20)
-    };
-    data[2 * count] = NEW_(Stream, tt808_, arraysize(tt808_));
-    data[2 * count + 1] = "tt808........";
-    count++;
-#pragma endregion
-#pragma region Clap
-    byte clap_[] = {
-        // envelopes
-        4,
-        // dahr1
-        DF(0.6f), DF(0.0f), DB(0), DB(0), DB(2), DB(5),
-        // dahr2
-        DF(0.5f), DF(0.0f), DB(5), DB(0), DB(2), DB(4),
-        // dahr3
-        DF(0.65f), DF(0.0f), DB(9), DB(0), DB(3), DB(5),
-        // dahr4
-        DF(0.4f), DF(0.0f), DB(12), DB(0), DB(10), DB(90),
-        // filter
-        2,
-        DB( 42) /*=Tone*/, DB(220), DB(0), DB(FmHighPass),
-        DB(180) /*=Tone*/, DB( 20), DB(0), DB(FmLowPass | FmBandPass),
-        // frequences
-        3,
-        DF(221.0f), DB(0), DF(0.1f), DB(0), DF(8753.0f), DB(180)
-    };
-    data[2 * count] = NEW_(Stream, clap_, arraysize(clap_));
-    data[2 * count + 1] = "cp808a.......";
-    count++;
-#pragma endregion
-
-#pragma region soundbank
-    word offset = 1 + count * 16;
-    Stream* s = NEW_(Stream, 1024);
-    s->writeByte(count);
-    for (var i = 0; i < count; i++) {
-        s->writeString((char*)data[2 * i + 1]);
-        s->writeWord(offset); offset += (word)((Stream*)data[2 * i])->length();
+        filters[0].update(cut);
+        filters[1].update(cut); // +controls.flt[1].cut.value.f);
+        var hp = filters[0].run((float)smp);
+        buffer[i] += filters[1].run(am * hp);
     }
-    for (var i = 0; i < count; i++) {
-        var stream = (Stream*)data[2 * i];
-        s->writeStream(stream);
-        DEL_(stream);
-    }
-#pragma endregion
-
-    var bytes = s->extract();
-    DEL_(s);
-
-    return bytes;
 }
 
-Drums::Drums() {
-    pControls_ = (PotBase*)&controls_;
+void GenericDrum::renderClap(float* buffer, int start, int end) {
+    if (envelopes[0].phase() == EnvPhase::Up) {
+        attribute1(1);
+    }
+    if (attribute1() != 0) {
+        for (var i = start; i < end; i++) {
+
+            float am = envelopes[0].run() + envelopes[1].run() + envelopes[2].run() + envelopes[3].run();
+
+            var delta = getControl(gdFreq1)->value.f / *Elem::samplingRate;
+            float sin1 = getControl(gdAmp1)->value.f * (float)SMPSINUS(timers[0]);
+            timers[0] += delta; if (timers[0] > 1.0f) timers[0] -= 1.0f;
+
+            delta = getControl(gdFreq2)->value.f / *Elem::samplingRate;
+            float sin2 = getControl(gdAmp2)->value.f * (float)SMPSINUS(timers[1]);
+            timers[1] += delta; if (timers[1] > 1.0f) timers[1] -= 1.0f;
+
+            delta = getControl(gdFreq3)->value.f / *Elem::samplingRate;
+            SMPNOISE(delta, timers[2], noise);
+            timers[2] += delta; if (timers[2] > 1.0f) timers[2] -= 1.0f;
+
+            var smp = sin1 + sin2 + getControl(gdAmp3)->value.f * noise;
+
+            filters[0].update(0.0f);
+            filters[1].update(am);
+            var hp = filters[0].run((float)smp);
+            var lp = filters[1].run(am * hp);
+            buffer[i] += lp;
+        }
+        if (envelopes[3].phase() == EnvPhase::Up) {
+            attribute1(2);
+        }
+        if (attribute1() == 2 && envelopes[3].phase() == EnvPhase::Idle) {
+            attribute1(0);
+        }
+    }
+}
+
+int GenericDrum::typeSetter(void* obj, S value) {
+    var drum = (GenericDrum*)obj;
+    drum->render = &GenericDrum::renderDefault;
+    switch (value.b) {
+        case BassDrumType:
+            drum->getControl(gdDahr2Amp)->init(0.0f, 880.0f, 1.0f, 15.0f);
+            drum->getControl(gdFreq1)->init(30.0f, 440.0f, 0.1f, 110.0f);
+            drum->getControl(gdFreq2)->init(30.0f, 440.0f, 0.1f, 110.0f);
+            break;
+        case HihatType:
+            drum->render = &GenericDrum::renderHihat;
+            drum->getControl(gdDahr2Amp)->init(0.0f, 880.0f, 1.0f, 15.0f);
+            drum->getControl(gdDahr4Amp)->init(-1.0f, 1.0f, 0.1f, 0.0f);
+            drum->filters[0].createStages(8);
+            drum->filters[1].createStages(3);
+            break;
+        case ClapType:
+            drum->render = &GenericDrum::renderClap;
+        default:
+            break;
+    }
+    return 1;
+}
+#pragma endregion
+
+//#pragma region Hihat
+//Hihat::Hihat() {
+//    controls.dahr2.amp.init(0.0f, 880.0f, 1.0f, 15.0f);
+//    controls.dahr4.amp.init(-1.0f, 1.0f, 0.1f, 0.0f);
+//
+//    for (var i = 0; i < 6; i++) {
+//        ((PotF*)&controls.fre1)[i].init(110.0f, 1100.0f, 1.0f, 110.0f);
+//    }
+//
+//    filters[0].createStages(8);
+//    filters[1].createStages(3);
+//}
+//
+//void Hihat::program(int prgId) {
+//    GenericDrum::setProgram(prgId);
+//    if (isOpen_) {
+//        var hld = 2 * controls.dahr1.rel.value.b;
+//        if (hld > 255) hld = 255;
+//        controls.dahr1.hld.value.b = hld;
+//    }
+//}
+//
+//void Hihat::render(float* buffer, int start, int end) {
+//    for (var i = start; i < end; i++) {
+//        float am = envelopes[0].run();
+//        float fm = envelopes[1].run();
+//        float click = envelopes[2].run();
+//        float cut = envelopes[3].run();
+//        am += click;
+//        //cut += click;
+//
+//        // create 6 pulses
+//        double smp = 0.0f;
+//        float delta;
+//        for (var i = 0; i < 6; i++) {
+//            delta = (((PotBase*)&controls.fre1)[i].value.f + fm) / *Elem::samplingRate;
+//            smp += ((PotBase*)&controls.amp1)[i].value.f * SMPPULSE(timers[i]);
+//            timers[i] += delta;
+//            if (timers[i] > 1.0f) timers[i] -= 1.0f;
+//        }
+//
+//        filters[0].update(cut);
+//        filters[1].update(cut + controls.flt2.cut.value.f);
+//        var hp = filters[0].run((float)smp);
+//        buffer[i] += filters[1].run(am * hp);
+//    }
+//}
+//#pragma endregion
+//
+//#pragma region Toms
+//void MidTom::program(int prgId) {
+//    GenericDrum::setProgram(prgId);
+//    controls.dahr2.dc.value.f = 107.2f;
+//}
+//
+//void HighTom::program(int prgId) {
+//    GenericDrum::setProgram(prgId);
+//    controls.dahr2.dc.value.f = 167.4f;
+//}
+//
+//#pragma endregion
+
+Soundbank* Drums::defaultSoundbank_;
+
+Drums::Drums() : Module(NULL, GenericDrumCtrlCount) {
     createOutputBuffers(1);
-    soundBank_ = createDefaultSoundBank();
+    setSoundbank.clear();
+    setSoundbank.add(this, &Drums::soundbankSetter);
+    drums = drums_;
+    //GenericDrum& bassDrum = drums_[0];
+    //GenericDrum& snareDrum = drums_[1];
+    //GenericDrum& closedHihat = drums_[2];
+    //GenericDrum& openHihat = drums_[3];
+    //drums_[4] = NULL;
+    //drums_[5] = NULL;
+    //drums_[6] = NULL;
+    //drums_[7] = NULL;
+    setSoundbank(getDefaultSoundbank());
 
-    bassDrum_.assignControls((PotBase*)&controls_.bd);
-    bassDrum_.soundBank(soundBank_);
-    bassDrum_.setProgram(prgBD808);
+    //bassDrum_.getControl(gdDahr2Amp)->init(0.0f, 440.0f, 1.0f, 15.0f);
+    //bassDrum_.getControl(gdFreq1)->init(30.0f, 110.0f, 0.1f, 55.0f);
+    //bassDrum_.getControl(gdFreq2)->init(30.0f, 110.0f, 0.1f, 55.0f);
+    //bassDrum_.setProgram(0);
 
-    snareDrum_.assignControls((PotBase*)&controls_.sd);
-    snareDrum_.filters[0].createStages(2);
-    snareDrum_.soundBank(soundBank_);
-    snareDrum_.setProgram(prgSD808);
+    //snareDrum_.filters[0].createStages(2);
+    //snareDrum_.getControl(gdDahr2Amp)->init(0.0f, 220.0f, 1.0f, 15.0f);
+    //snareDrum_.getControl(gdFreq1)->init(55.0f, 440.0f, 0.1f, 95.0f);
+    //snareDrum_.getControl(gdFreq2)->init(55.0f, 440.0f, 0.1f, 95.0f);
+    //snareDrum_.setProgram(0);
 
-    closedHihat_.assignControls((PotBase*)&controls_.ch);
-    closedHihat_.filters[0].createStages(8);
-    closedHihat_.filters[1].createStages(8);
-    closedHihat_.soundBank(soundBank_);
-    closedHihat_.setProgram(prgHH808);
+    //closedHihat_.setProgram(0);
 
-    openHihat_.assignControls((PotBase*)&controls_.oh);
-    openHihat_.filters[0].createStages(8);
-    closedHihat_.filters[1].createStages(8);
-    openHihat_.soundBank(soundBank_);
-    openHihat_.setProgram(prgHH808);
+    ////openHihat_.isOpen(true);
+    //openHihat_.setProgram(0);
 
-    lowTom_.assignControls((PotBase*)&controls_.lt);
-    lowTom_.filters[0].createStages(4);
-    lowTom_.soundBank(soundBank_);
-    lowTom_.setProgram(prgTT808);
+    //lowTom_.assignControls((PotBase*)&controls_.lt);
+    //lowTom_.filters[0].createStages(4);
+    //lowTom_.setSoundbank(soundbank_);
+    //lowTom_.envelopes[1].controls()->amp.init(10.0f, 50.0f, 1.0f, 15.0f);
+    //lowTom_.envelopes[1].controls()->dc.init(100.0f, 160.0f, 1.0f, 120.0f);
+    //lowTom_.setProgram(prgTT808);
 
-    midTom_.assignControls((PotBase*)&controls_.mt);
-    midTom_.filters[0].createStages(4);
-    midTom_.soundBank(soundBank_);
-    midTom_.setProgram(prgTT808);
+    //midTom_.assignControls((PotBase*)&controls_.mt);
+    //midTom_.filters[0].createStages(4);
+    //midTom_.setSoundbank(soundbank_);
+    //midTom_.envelopes[1].controls()->amp.init(10.0f, 50.0f, 1.0f, 15.0f);
+    //midTom_.envelopes[1].controls()->dc.init(140.0f, 200.0f, 1.0f, 160.0f);
+    //midTom_.setProgram(prgTT808);
 
-    highTom_.assignControls((PotBase*)&controls_.ht);
-    highTom_.filters[0].createStages(4);
-    highTom_.soundBank(soundBank_);
-    highTom_.setProgram(prgTT808);
+    //highTom_.assignControls((PotBase*)&controls_.ht);
+    //highTom_.filters[0].createStages(4);
+    //highTom_.setSoundbank(soundbank_);
+    //highTom_.envelopes[1].controls()->amp.init(10.0f, 50.0f, 1.0f, 15.0f);
+    //highTom_.envelopes[1].controls()->dc.init(180.0f, 240.0f, 1.0f, 200.0f);
+    //highTom_.setProgram(prgTT808);
 
-    clap_.assignControls((PotBase*)&controls_.cp);
-    closedHihat_.filters[0].createStages(6);
-    closedHihat_.filters[1].createStages(4);
-    clap_.soundBank(soundBank_);
-    clap_.setProgram(prgCP808);
-    clap_.envelopes[1].controls()->amp.value.f *= *Elem::samplingRate;
-    clap_.envelopes[1].controls()->dc.value.f *= *Elem::samplingRate;
+    //clap_.assignControls((PotBase*)&controls_.cp);
+    //closedHihat_.filters[0].createStages(6);
+    //closedHihat_.filters[1].createStages(4);
+    //clap_.setSoundbank(soundbank_);
+    //clap_.setProgram(prgCP808);
+    //clap_.envelopes[1].controls()->amp.value.f *= *Elem::samplingRate;
+    //clap_.envelopes[1].controls()->dc.value.f *= *Elem::samplingRate;
 }
 
 Drums::~Drums() {
-    FREE(soundBank_);
 }
 
-//float* Drums::getInput(int id) {
-//    return inputs_[0];
-//}
+void Drums::initializeFromStream(byte** pData) {
+    var hasData = pData != NULL && *pData != NULL;
+    for (var i = 0; i < 8; i++) {
+        int prg = 0;
+        if (hasData) {
+            prg = READ(*pData, byte);
+        }
+        drums[i].setProgram(prg);
+    }
+}
+
+Soundbank* Drums::createSoundbank() {
+    return drums_[0].createSoundbank();
+}
 
 float* Drums::getOutput(int id) {
     return outputs_[0];
@@ -473,198 +341,301 @@ float* Drums::getOutput(int id) {
 //    }
 //}
 
-void Drums::renderBassDrum(float* buffer, int start, int end) {
-    if (bassDrum_.isActive()) {
-        bassDrum_.render(buffer, start, end);
+int Drums::soundbankSetter(void* obj, Soundbank* sb) {
+    var mdl = (Drums*)obj;
+    for (var i = 0; i < 8; i++) {
+        mdl->drums_[i].setSoundbank(sb);
     }
-}
-
-void Drums::renderSnareDrum(float* buffer, int start, int end) {
-    if (snareDrum_.isActive()) {
-        snareDrum_.render(buffer, start, end);
-        //for (var i = start; i < end; i++) {
-
-        //    float a = snareDrum_.envelopes[0].run();
-        //    float am2 = snareDrum_.envelopes[1].run();
-        //    var am = a * a; // a* (3 * a + 1) / (5 - a) + 0.2f * am2;
-        //    float fm = snareDrum_.envelopes[2].run();
-        //    float cut = snareDrum_.envelopes[3].run();
-
-        //    var delta = fm / *Osc::samplingRate + snareDrum_.fre[0];
-        //    float sin1 = 0.57f * (float)SMPSINUS(snareDrum_.timers[0]);
-        //    snareDrum_.timers[0] += delta; if (snareDrum_.timers[0] > 1.0) snareDrum_.timers[0] -= 1.0;
-
-        //    delta = fm / *Osc::samplingRate + snareDrum_.fre[1];
-        //    float sin2 = 0.08f * (float)SMPSINUS(snareDrum_.timers[1]);
-        //    snareDrum_.timers[1] += delta; if (snareDrum_.timers[1] > 1.0) snareDrum_.timers[1] -= 1.0;
-
-        //    float noise = 0.6f * (float)SMPNOISE(snareDrum_.fre[2], snareDrum_.timers[2], snareDrum_.noise);
-
-        //    snareDrum_.filters[0].update(cut);
-        //    var lp = snareDrum_.filters[0].run(noise);
-        //    buffer[i] += am * (sin1 + sin2) + am * lp;
-        //}
-    }
-}
-
-void Drums::renderHihat(GenericDrum* hihat, float* buffer, int start, int end) {
-    for (var i = start; i < end; i++) {
-
-        float am = hihat->envelopes[0].run();
-        float fm = hihat->envelopes[1].run();
-        float click = hihat->envelopes[2].run();
-        float cut = hihat->envelopes[3].run();
-        am += click;
-        //cut += click;
-
-        // create 6 pulses
-        double smp = 0.0f;
-        float delta;
-        for (var i = 0; i < 6; i++) {
-            delta = hihat->fre[i] + fm;
-            smp += SMPPULSE(hihat->timers[i]);  //hihat->amp[i] * 
-            hihat->timers[i] += delta;
-            if (hihat->timers[i] > 1.0) hihat->timers[i] -= 1.0;
-        }
-        smp *= hihat->amp[0];
-
-        hihat->filters[0].update(cut);
-        hihat->filters[1].update(cut);
-        var hp = hihat->filters[0].run((float)smp);
-        buffer[i] += hihat->filters[1].run(am * hp);
-    }
-}
-
-void Drums::renderOpenHihat(float* buffer, int start, int end) {
-    if (openHihat_.isActive()) {
-        renderHihat(&openHihat_, buffer, start, end);
-    }
-}
-
-void Drums::renderClosedHihat(float* buffer, int start, int end) {
-    if (closedHihat_.isActive()) {
-        renderHihat(&closedHihat_, buffer, start, end);
-    }
-}
-
-void Drums::renderLowTom(float* buffer, int start, int end) {
-    if (lowTom_.isActive()) {
-        lowTom_.render(buffer, start, end);
-    }
-}
-void Drums::renderMidTom(float* buffer, int start, int end) {
-    if (midTom_.isActive()) {
-        midTom_.render(buffer, start, end);
-    }
-}
-void Drums::renderHighTom(float* buffer, int start, int end) {
-    if (highTom_.isActive()) {
-        highTom_.render(buffer, start, end);
-    }
-}
-
-void Drums::renderClap(float* buffer, int start, int end) {
-    if (clap_.envelopes[0].phase() == EnvPhase::Up) {
-        clap_.attribute1(1);
-    }
-    if (clap_.attribute1() != 0) {
-        for (var i = start; i < end; i++) {
-
-            float am = clap_.envelopes[0].run() + clap_.envelopes[1].run() + clap_.envelopes[2].run() + clap_.envelopes[3].run();
-
-            var delta = clap_.fre[0];
-            float sin1 = clap_.amp[0] * (float)SMPSINUS(clap_.timers[0]);
-            clap_.timers[0] += delta; if (clap_.timers[0] > 1.0) clap_.timers[0] -= 1.0;
-
-            delta = clap_.fre[1];
-            float sin2 = clap_.amp[1] * (float)SMPSINUS(clap_.timers[1]);
-            clap_.timers[1] += delta; if (clap_.timers[1] > 1.0) clap_.timers[1] -= 1.0;
-
-            SMPNOISE(clap_.fre[2], clap_.timers[2], clap_.noise);
-            clap_.timers[2] += delta; if (clap_.timers[2] > 1.0) clap_.timers[2] -= 1.0;
-
-            var smp = sin1 + sin2 + clap_.amp[2] * clap_.noise;
-
-            clap_.filters[0].update(0.0f);
-            clap_.filters[1].update(am);
-            var hp = clap_.filters[0].run((float)smp);
-            var lp = clap_.filters[1].run(am * hp);
-            buffer[i] += lp;
-        }
-        if (clap_.envelopes[3].phase() == EnvPhase::Up) {
-            clap_.attribute1(2);
-        }
-        if (clap_.attribute1() == 2 && clap_.envelopes[3].phase() == EnvPhase::Idle) {
-            clap_.attribute1(0);
-        }
-    }
+    return 1;
 }
 
 void Drums::setControl(int id, S value) {
-    switch (id)
-    {
-        //case bdTone: break;
-        //case bdTune: break;
-        //case bdDecay: break;
-        //case sdDecay: break;
-        //case sdTune: break;
-        //case sdSnappy: break;
-        //case sdTone: break;
-        case hhTone:
-            controls_.ch.flt1.cut.value.b = value.b;
-            controls_.oh.flt1.cut.value.b = value.b;
-            value.b += value.b;
-            controls_.ch.flt2.cut.value.b = value.b;
-            controls_.oh.flt2.cut.value.b = value.b; 
-            break;
-        //case ohDecay: break;
-        default:
-            pControls_[id].value = value; break;
-    }
+    //switch (id)
+    //{
+    //    case bdTone: break;
+    //    case bdTune: break;
+    //    case bdDecay: break;
+    //    case sdDecay: break;
+    //    case sdTune: break;
+    //    case sdSnappy: break;
+    //    case sdTone: break;
+    //    case hhTone:
+    //        controls_.ch.flt1.cut.value.b = value.b;
+    //        controls_.oh.flt1.cut.value.b = value.b;
+    //        value.b += value.b;
+    //        controls_.ch.flt2.cut.value.b = value.b;
+    //        controls_.oh.flt2.cut.value.b = value.b; 
+    //        break;
+    //    //case ohDecay: break;
+    //    default:
+    //        pControls_[id].value = value; break;
+    //}
 }
 
 void Drums::run(int start, int end) {
     memset(outputs_[0], 0, sizeof(float) * (end - start));
-    renderBassDrum(outputs_[0], start, end);
-    renderSnareDrum(outputs_[0], start, end);
-    renderOpenHihat(outputs_[0], start, end);
-    renderClosedHihat(outputs_[0], start, end);
-    renderLowTom(outputs_[0], start, end);
-    renderMidTom(outputs_[0], start, end);
-    renderHighTom(outputs_[0], start, end);
-    renderClap(outputs_[0], start, end);
+    for (var i = 0; i < 8; i++) {
+        if (drums_[i].isActive()) {
+            (drums_[i].*(drums_[i].render))(outputs_[0], start, end);
+        }
+    }
+    //renderBassDrum(outputs_[0], start, end);
+    //renderSnareDrum(outputs_[0], start, end);
+    //renderOpenHihat(outputs_[0], start, end);
+    //renderClosedHihat(outputs_[0], start, end);
+    //renderLowTom(outputs_[0], start, end);
+    //renderMidTom(outputs_[0], start, end);
+    //renderHighTom(outputs_[0], start, end);
+    //renderClap(outputs_[0], start, end);
 }
+
 void Drums::setNote(byte note, byte velocity) {
     // C1:BD  D1:SD  E1:LT  F1:MT  G1:HT  A1:RS  H1:CL
     // C2:OH  D2:CH  E2:--  F2:--  G2:--  A2:CY  H2:CB
-    GenericDrum* drum = &bassDrum_;
-    switch (note) {
-    case drBD:
-        break;
-    case drSD:
-        drum = &snareDrum_;
-        break;
-    case drOH:
-        drum = &openHihat_;
-        //if (closedHihat_.isActive()) closedHihat_.setGate(0);
-        break;
-    case drCH:
-        drum = &closedHihat_;
-        //if (openHihat_.isActive()) openHihat_.setGate(0);
-        break;
-    case drLT:
-        drum = &lowTom_;
-        break;
-    case drMT:
-        drum = &midTom_;
-        break;
-    case drHT:
-        drum = &highTom_;
-        break;
-    case drCP:
-        drum = &clap_;
-        break;
+    var ix = note - drBD;
+    if (ix >= 0 && ix < 4) {
+        drums_[ix].setGate(velocity);
     }
+}
 
-    drum->setGate(velocity);
+Soundbank* Drums::getDefaultSoundbank() {
+    return Drums::defaultSoundbank_;
+}
+
+void Drums::prepare() {
+    Stream soundbank;
+    GenericDrum drum;
+    Drums::defaultSoundbank_ = drum.createSoundbank();
+
+    #pragma region BassDrums
+    var bd808 = NEW_(Stream, 256);
+    {
+        bd808->writeByte(BassDrumType);
+        //gdDahr1Amp, gdDahr1Dc, gdDahr1Del, gdDahr1Atk, gdDahr1Hld, gdDahr1Rel,
+        bd808->writeFloat(1.0f)->writeFloat(0.0f)->writeByte(3)->writeByte(2)->writeByte(10)->writeByte(100);
+        //gdDahr2Amp, gdDahr2Dc, gdDahr2Del, gdDahr2Atk, gdDahr2Hld, gdDahr2Rel,
+        bd808->writeFloat(21.0f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(2)->writeByte(100);
+        //gdDahr3Amp, gdDahr3Dc, gdDahr3Del, gdDahr3Atk, gdDahr3Hld, gdDahr3Rel,
+        bd808->writeFloat(0.6f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(1)->writeByte(2);
+        //gdDahr4Amp, gdDahr4Dc, gdDahr4Del, gdDahr4Atk, gdDahr4Hld, gdDahr4Rel,
+        bd808->writeFloat(0.2f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(0)->writeByte(1);
+
+        //gdFlt1Cut, gdFlt1Res, gdFlt1Mod, gdFlt1Mode,
+        bd808->writeByte(0)->writeByte(0)->writeByte(0)->writeByte(FmLowPass);
+        //gdFlt2Cut, gdFlt2Res, gdFlt2Mod, gdFlt2Mode,
+        bd808->writeByte(0)->writeByte(0)->writeByte(0)->writeByte(FmLowPass);
+
+        //gdFreq1, gdFreq2, gdFreq3, gdFreq4, gdFreq5, gdFreq6,
+        bd808->writeFloat(48.2f)->writeFloat(48.5f)->writeFloat(9511.0f)->writeFloat(0.0f)->writeFloat(0.0f)->writeFloat(0.0f);
+        //gdAmp1, gdAmp2, gdAmp3, gdAmp4, gdAmp5, gdAmp6
+        bd808->writeByte(180)->writeByte(140)->writeByte(20)->writeByte(0)->writeByte(0)->writeByte(0);
+    }
+    var gd909 = NEW_(Stream, 256);
+    {
+        gd909->writeByte(BassDrumType);
+        //gdDahr1Amp, gdDahr1Dc, gdDahr1Del, gdDahr1Atk, gdDahr1Hld, gdDahr1Rel,
+        gd909->writeFloat(0.5f)->writeFloat(0.0f)->writeByte(3)->writeByte(2)->writeByte(20)->writeByte(100);
+        //gdDahr2Amp, gdDahr2Dc, gdDahr2Del, gdDahr2Atk, gdDahr2Hld, gdDahr2Rel,
+        gd909->writeFloat(21.0f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(2)->writeByte(10);
+        //gdDahr3Amp, gdDahr3Dc, gdDahr3Del, gdDahr3Atk, gdDahr3Hld, gdDahr3Rel,
+        gd909->writeFloat(0.8f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(1)->writeByte(10);
+        //gdDahr4Amp, gdDahr4Dc, gdDahr4Del, gdDahr4Atk, gdDahr4Hld, gdDahr4Rel,
+        gd909->writeFloat(0.1f)->writeFloat(0.0f)->writeByte(10)->writeByte(0)->writeByte(1)->writeByte(80);
+
+        //gdFlt1Cut, gdFlt1Res, gdFlt1Mod, gdFlt1Mode,
+        gd909->writeByte(0)->writeByte(0)->writeByte(0)->writeByte(FmLowPass);
+        //gdFlt2Cut, gdFlt2Res, gdFlt2Mod, gdFlt2Mode,
+        gd909->writeByte(0)->writeByte(0)->writeByte(0)->writeByte(FmLowPass);
+
+        //gdFreq1, gdFreq2, gdFreq3, gdFreq4, gdFreq5, gdFreq6,
+        gd909->writeFloat(54.2f)->writeFloat(56.5f)->writeFloat(9511.0f)->writeFloat(0.0f)->writeFloat(0.0f)->writeFloat(0.0f);
+        //gdAmp1, gdAmp2, gdAmp3, gdAmp4, gdAmp5, gdAmp6
+        gd909->writeByte(220)->writeByte(180)->writeByte(80)->writeByte(0)->writeByte(0)->writeByte(0);
+    }
+    
+    Drums::defaultSoundbank_->add("bd808..........", bd808->data());
+    Drums::defaultSoundbank_->add("gd909..........", gd909->data());
+    DEL_(bd808);
+    DEL_(gd909);
+    
+    #pragma endregion
+
+    #pragma region SnareDrums
+    var sd808 = NEW_(Stream, 256);
+    {
+        sd808->writeByte(SnareDrumType);
+        //gdDahr1Amp, gdDahr1Dc, gdDahr1Del, gdDahr1Atk, gdDahr1Hld, gdDahr1Rel,
+        sd808->writeFloat(0.8f)->writeFloat(0.0f)->writeByte(2)->writeByte(2)->writeByte(4)->writeByte(40);
+        //gdDahr2Amp, gdDahr2Dc, gdDahr2Del, gdDahr2Atk, gdDahr2Hld, gdDahr2Rel,
+        sd808->writeFloat(15.0f)->writeFloat(0.0f)->writeByte(0)->writeByte(2)->writeByte(21)->writeByte(180);
+        //gdDahr3Amp, gdDahr3Dc, gdDahr3Del, gdDahr3Atk, gdDahr3Hld, gdDahr3Rel,
+        sd808->writeFloat(0.6f)->writeFloat(0.0f)->writeByte(0)->writeByte(1)->writeByte(4)->writeByte(10);
+        //gdDahr4Amp, gdDahr4Dc, gdDahr4Del, gdDahr4Atk, gdDahr4Hld, gdDahr4Rel,
+        sd808->writeFloat(0.4f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(1)->writeByte(4);
+
+        //gdFlt1Cut, gdFlt1Res, gdFlt1Mod, gdFlt1Mode,
+        sd808->writeByte(80)->writeByte(20)->writeByte(0)->writeByte(FmBandPass | FmHighPass);
+        //gdFlt2Cut, gdFlt2Res, gdFlt2Mod, gdFlt2Mode,
+        sd808->writeByte(0)->writeByte(0)->writeByte(0)->writeByte(FmAllPass);
+
+        //gdFreq1, gdFreq2, gdFreq3, gdFreq4, gdFreq5, gdFreq6,
+        sd808->writeFloat(216.2f)->writeFloat(281.5f)->writeFloat(9511.0f)->writeFloat(0.0f)->writeFloat(0.0f)->writeFloat(0.0f);
+        //gdAmp1, gdAmp2, gdAmp3, gdAmp4, gdAmp5, gdAmp6
+        sd808->writeByte(120)->writeByte(100)->writeByte(20)->writeByte(0)->writeByte(0)->writeByte(0);
+    }
+    Drums::defaultSoundbank_->add("sd808..........", sd808->data());
+    DEL_(sd808);
+    #pragma endregion
+
+    #pragma region ClosedHihats
+    var ch808 = NEW_(Stream, 256);
+    {
+        ch808->writeByte(HihatType);
+        //gdDahr1Amp, gdDahr1Dc, gdDahr1Del, gdDahr1Atk, gdDahr1Hld, gdDahr1Rel,
+        ch808->writeFloat(0.5f)->writeFloat(0.0f)->writeByte(2)->writeByte(2)->writeByte(4)->writeByte(12);
+        //gdDahr2Amp, gdDahr2Dc, gdDahr2Del, gdDahr2Atk, gdDahr2Hld, gdDahr2Rel,
+        ch808->writeFloat(100.0f)->writeFloat(0.0f)->writeByte(0)->writeByte(2)->writeByte(4)->writeByte(8);
+        //gdDahr3Amp, gdDahr3Dc, gdDahr3Del, gdDahr3Atk, gdDahr3Hld, gdDahr3Rel,
+        ch808->writeFloat(0.8f)->writeFloat(0.0f)->writeByte(0)->writeByte(1)->writeByte(2)->writeByte(4);
+        //gdDahr4Amp, gdDahr4Dc, gdDahr4Del, gdDahr4Atk, gdDahr4Hld, gdDahr4Rel,
+        ch808->writeFloat(0.2f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(1)->writeByte(120);
+
+        //gdFlt1Cut, gdFlt1Res, gdFlt1Mod, gdFlt1Mode,
+        ch808->writeByte(160)->writeByte(50)->writeByte(0)->writeByte(FmHighPass);
+        //gdFlt2Cut, gdFlt2Res, gdFlt2Mod, gdFlt2Mode,
+        ch808->writeByte(200)->writeByte(127)->writeByte(0)->writeByte(FmBandPass | FmHighPass);
+
+        //gdFreq1, gdFreq2, gdFreq3, gdFreq4, gdFreq5, gdFreq6,
+        ch808->writeFloat(205.2f)->writeFloat(284.0f)->writeFloat(303.0f)->writeFloat(369.2f)->writeFloat(426.0f)->writeFloat(521.0f);
+        //gdAmp1, gdAmp2, gdAmp3, gdAmp4, gdAmp5, gdAmp6
+        ch808->writeByte(25)->writeByte(27)->writeByte(29)->writeByte(31)->writeByte(33)->writeByte(35);
+    }
+    var ch909 = NEW_(Stream, 256);
+    {
+        ch909->writeByte(HihatType);
+        //gdDahr1Amp, gdDahr1Dc, gdDahr1Del, gdDahr1Atk, gdDahr1Hld, gdDahr1Rel,
+        ch909->writeFloat(0.1f)->writeFloat(0.0f)->writeByte(3)->writeByte(1)->writeByte(8)->writeByte(40);
+        //gdDahr2Amp, gdDahr2Dc, gdDahr2Del, gdDahr2Atk, gdDahr2Hld, gdDahr2Rel,
+        ch909->writeFloat(40.0f)->writeFloat(0.0f)->writeByte(1)->writeByte(0)->writeByte(1)->writeByte(6);
+        //gdDahr3Amp, gdDahr3Dc, gdDahr3Del, gdDahr3Atk, gdDahr3Hld, gdDahr3Rel,
+        ch909->writeFloat(0.8f)->writeFloat(0.0f)->writeByte(0)->writeByte(1)->writeByte(4)->writeByte(10);
+        //gdDahr4Amp, gdDahr4Dc, gdDahr4Del, gdDahr4Atk, gdDahr4Hld, gdDahr4Rel,
+        ch909->writeFloat(-0.6f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(2)->writeByte(120);
+
+        //gdFlt1Cut, gdFlt1Res, gdFlt1Mod, gdFlt1Mode,
+        ch909->writeByte(200)->writeByte(50)->writeByte(0)->writeByte(FmBandPass);
+        //gdFlt2Cut, gdFlt2Res, gdFlt2Mod, gdFlt2Mode,
+        ch909->writeByte(160)->writeByte(40)->writeByte(0)->writeByte(FmHighPass);
+
+        //gdFreq1, gdFreq2, gdFreq3, gdFreq4, gdFreq5, gdFreq6,
+        ch909->writeFloat(205.2f)->writeFloat(284.0f)->writeFloat(303.0f)->writeFloat(369.2f)->writeFloat(426.0f)->writeFloat(521.0f);
+        //gdAmp1, gdAmp2, gdAmp3, gdAmp4, gdAmp5, gdAmp6
+        ch909->writeByte(40)->writeByte(40)->writeByte(41)->writeByte(42)->writeByte(44)->writeByte(48);
+    }
+    Drums::defaultSoundbank_->add("ch808..........", ch808->data());
+    Drums::defaultSoundbank_->add("ch909..........", ch909->data());
+    DEL_(ch808);
+    DEL_(ch909);
+    #pragma endregion
+
+    #pragma region OpenHihats
+    var oh808 = NEW_(Stream, 256);
+    {
+        oh808->writeByte(HihatType);
+        //gdDahr1Amp, gdDahr1Dc, gdDahr1Del, gdDahr1Atk, gdDahr1Hld, gdDahr1Rel,
+        oh808->writeFloat(0.5f)->writeFloat(0.0f)->writeByte(2)->writeByte(2)->writeByte(32)->writeByte(12);
+        //gdDahr2Amp, gdDahr2Dc, gdDahr2Del, gdDahr2Atk, gdDahr2Hld, gdDahr2Rel,
+        oh808->writeFloat(100.0f)->writeFloat(0.0f)->writeByte(0)->writeByte(2)->writeByte(4)->writeByte(8);
+        //gdDahr3Amp, gdDahr3Dc, gdDahr3Del, gdDahr3Atk, gdDahr3Hld, gdDahr3Rel,
+        oh808->writeFloat(0.8f)->writeFloat(0.0f)->writeByte(0)->writeByte(1)->writeByte(2)->writeByte(4);
+        //gdDahr4Amp, gdDahr4Dc, gdDahr4Del, gdDahr4Atk, gdDahr4Hld, gdDahr4Rel,
+        oh808->writeFloat(0.2f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(1)->writeByte(120);
+
+        //gdFlt1Cut, gdFlt1Res, gdFlt1Mod, gdFlt1Mode,
+        oh808->writeByte(160)->writeByte(50)->writeByte(0)->writeByte(FmHighPass);
+        //gdFlt2Cut, gdFlt2Res, gdFlt2Mod, gdFlt2Mode,
+        oh808->writeByte(200)->writeByte(127)->writeByte(0)->writeByte(FmBandPass | FmHighPass);
+
+        //gdFreq1, gdFreq2, gdFreq3, gdFreq4, gdFreq5, gdFreq6,
+        oh808->writeFloat(205.2f)->writeFloat(284.0f)->writeFloat(303.0f)->writeFloat(369.2f)->writeFloat(426.0f)->writeFloat(521.0f);
+        //gdAmp1, gdAmp2, gdAmp3, gdAmp4, gdAmp5, gdAmp6
+        oh808->writeByte(25)->writeByte(27)->writeByte(29)->writeByte(31)->writeByte(33)->writeByte(35);
+    }
+    var oh909 = NEW_(Stream, 256);
+    {
+        oh909->writeByte(HihatType);
+        //gdDahr1Amp, gdDahr1Dc, gdDahr1Del, gdDahr1Atk, gdDahr1Hld, gdDahr1Rel,
+        oh909->writeFloat(0.2f)->writeFloat(0.0f)->writeByte(3)->writeByte(2)->writeByte(16)->writeByte(80);
+        //gdDahr2Amp, gdDahr2Dc, gdDahr2Del, gdDahr2Atk, gdDahr2Hld, gdDahr2Rel,
+        oh909->writeFloat(40.0f)->writeFloat(0.0f)->writeByte(1)->writeByte(0)->writeByte(2)->writeByte(6);
+        //gdDahr3Amp, gdDahr3Dc, gdDahr3Del, gdDahr3Atk, gdDahr3Hld, gdDahr3Rel,
+        oh909->writeFloat(0.8f)->writeFloat(0.0f)->writeByte(0)->writeByte(2)->writeByte(8)->writeByte(40);
+        //gdDahr4Amp, gdDahr4Dc, gdDahr4Del, gdDahr4Atk, gdDahr4Hld, gdDahr4Rel,
+        oh909->writeFloat(-0.6f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(1)->writeByte(120);
+
+        //gdFlt1Cut, gdFlt1Res, gdFlt1Mod, gdFlt1Mode,
+        oh909->writeByte(200)->writeByte(10)->writeByte(0)->writeByte(FmBandPass);
+        //gdFlt2Cut, gdFlt2Res, gdFlt2Mod, gdFlt2Mode,
+        oh909->writeByte(160)->writeByte(40)->writeByte(0)->writeByte(FmHighPass);
+
+        //gdFreq1, gdFreq2, gdFreq3, gdFreq4, gdFreq5, gdFreq6,
+        oh909->writeFloat(205.2f)->writeFloat(284.0f)->writeFloat(303.0f)->writeFloat(369.2f)->writeFloat(426.0f)->writeFloat(521.0f);
+        //gdAmp1, gdAmp2, gdAmp3, gdAmp4, gdAmp5, gdAmp6
+        oh909->writeByte(40)->writeByte(40)->writeByte(41)->writeByte(42)->writeByte(44)->writeByte(48);
+    }
+    Drums::defaultSoundbank_->add("oh808..........", oh808->data());
+    Drums::defaultSoundbank_->add("oh909..........", oh909->data());
+    DEL_(oh808);
+    DEL_(oh909);
+    #pragma endregion
+    
+    //var td808 = NEW_(Stream, 256);
+    //{
+    //    // envelopes
+    //    td808->writeByte(4);
+    //    // dahr1
+    //    td808->writeFloat(1.0f)->writeFloat(0.0f)->writeByte(2)->writeByte(4)->writeByte(16)->writeByte(64);
+    //    // dahr2
+    //    td808->writeFloat(44.0f)->writeFloat(77.0f)->writeByte(0)->writeByte(8)->writeByte(32)->writeByte(48);
+    //    // dahr3
+    //    td808->writeFloat(0.8f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(3)->writeByte(16);
+    //    // dahr4
+    //    td808->writeFloat(0.5f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(1)->writeByte(24);
+    //    // filter
+    //    td808->writeByte(1);
+    //    td808->writeByte(24)->writeByte(0)->writeByte(0)->writeByte(FmLowPass);
+    //    // frequences
+    //    td808->writeByte(3);
+    //    td808->writeFloat(23.2f)->writeByte(180)->writeFloat(57.0f)->writeByte(10)->writeFloat(6511.0f)->writeByte(14);
+    //}
+    //count++;
+
+    //var cp808 = NEW_(Stream, 256);
+    //{
+    //    // envelopes
+    //    cp808->writeByte(4);
+    //    // dahr1
+    //    cp808->writeFloat(0.51f)->writeFloat(0.0f)->writeByte(0)->writeByte(0)->writeByte(2)->writeByte(5);
+    //    // dahr2
+    //    cp808->writeFloat(0.45f)->writeFloat(0.0f)->writeByte(5)->writeByte(0)->writeByte(2)->writeByte(4);
+    //    // dahr3
+    //    cp808->writeFloat(0.43f)->writeFloat(0.0f)->writeByte(9)->writeByte(0)->writeByte(3)->writeByte(5);
+    //    // dahr4
+    //    cp808->writeFloat(0.47f)->writeFloat(0.0f)->writeByte(12)->writeByte(0)->writeByte(10)->writeByte(90);
+    //    // filter
+    //    cp808->writeByte(2);
+    //    cp808->writeByte(46) /*=Tone*/->writeByte(180)->writeByte(0)->writeByte(FmHighPass);
+    //    cp808->writeByte(160) /*=Tone*/->writeByte(120)->writeByte(0)->writeByte(FmLowPass | FmBandPass);
+    //    // frequences
+    //    cp808->writeByte(3);
+    //    cp808->writeFloat(221.0f)->writeByte(0)->writeFloat(0.2f)->writeByte(0)->writeFloat(8753.0f)->writeByte(180);
+    //}
+    //count++;
+
+    //DEL_(td808);
+    //DEL_(cp808);
+}
+
+void Drums::cleanUp() {
+    DEL_(Drums::defaultSoundbank_);
 }

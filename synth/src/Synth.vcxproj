@@ -134,7 +134,7 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PLAYER_EDIT_MODE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
@@ -181,6 +181,7 @@
     <ClCompile Include="module\bass.cpp" />
     <ClCompile Include="module\distort.cpp" />
     <ClCompile Include="module\drums.cpp" />
+    <ClCompile Include="module\soundbank.cpp" />
     <ClCompile Include="module\stereo-delay.cpp" />
     <ClCompile Include="module\mixer.cpp" />
     <ClCompile Include="module\module.cpp" />
@@ -208,10 +209,12 @@
     <ClInclude Include="device\module-device.h" />
     <ClInclude Include="device\mixer-device.h" />
     <ClInclude Include="device\synth-device.h" />
+    <ClInclude Include="handler.h" />
     <ClInclude Include="module\bass.h" />
     <ClInclude Include="module\drums.h" />
     <ClInclude Include="module\module.h" />
     <ClInclude Include="module\distort.h" />
+    <ClInclude Include="module\soundbank.h" />
     <ClInclude Include="module\stereo-delay.h" />
     <ClInclude Include="module\mixer.h" />
     <ClInclude Include="module\synth-base.h" />

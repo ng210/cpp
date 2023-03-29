@@ -32,6 +32,9 @@
     <None Include="drums2.pat">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="drums3.pat">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="test.xm">

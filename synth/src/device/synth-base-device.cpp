@@ -14,13 +14,8 @@ SynthBaseDevice::SynthBaseDevice(SynthAdapter* adapter, void* object) : ModuleDe
 void SynthBaseDevice::initialize(byte** pData) {
 	if (pData != NULL && *pData != NULL) {
 		var voiceCount = READ(*pData, byte);
-		//object_ = NEW_(Synth, ((SynthAdapter*)adapter_)->samplingRate());
 		synthBase()->voiceCount(voiceCount);
-		var dbId = READ(*pData, byte);
-		byte* sb = ((DataBlockItem*)player_->dataBlocks().get(dbId))->dataBlock;
-		synthBase()->soundBank(sb);
-		var prg = READ(*pData, byte);
-		synthBase()->setProgram(prg);
+		ModuleDevice::initialize(pData);
 	}
 }
 
@@ -87,15 +82,7 @@ int SynthBaseDevice::writeToStream(Stream* stream) {
 	var start = stream->cursor();
 	Device::writeToStream(stream);
 	stream->writeByte(synthBase()->voiceCount());
-	// get data-block id
-	var sb = synthBase()->soundBank();
-	Key ix = 0;
-	player_->dataBlocks().search(&sb, ix, [](COLLECTION_ARGUMENTS) {
-		return (int)(((DataBlockItem*)value)->dataBlock - (byte*)key.p);
-		});
-	stream->writeByte(ix.i);
-	stream->writeByte(synthBase()->program());
-
+	ModuleDevice::writeToStream(stream);
 	return (int)(stream->cursor() - start);
 }
 #endif
@@ -106,17 +93,6 @@ int SynthBaseDevice::writeToStream(Stream* stream) {
 void SynthBaseDevice::setNote(byte note, byte velocity) {
 	synthBase()->setNote(note, velocity);
 }
-void SynthBaseDevice::setProgram(byte prgId) {
-	synthBase()->setProgram(prgId);
-}
-
-byte* SynthBaseDevice::soundBank() {
-	return synthBase()->soundBank();
-}
-void SynthBaseDevice::soundBank(byte* data) {
-	synthBase()->soundBank(data);
-}
-
 //void SynthBaseDevice::run(short* buffer, int start, int end) {
 //	synth_->run(buffer, start, end);
 //}

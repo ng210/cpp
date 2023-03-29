@@ -5,7 +5,7 @@ NS_FW_BASE_USE
 
 using namespace SYNTH;
 
-Clp::Clp() {
+Clp::Clp() : Elem(ClpCtrlsCount) {
     controls_ = NULL;
 }
 
@@ -14,9 +14,10 @@ Clp::~Clp() {
 }
 
 void Clp::assignControls(PotBase* controls) {
-    controls_ = (ClpCtrls*)controls;
-    controls_->amp.init(0.0f, 1.0f, 0.01f, 1.0f);
-    controls_->lvl.init(0.0f, 1.0f, 0.01f, 1.0f);
+    controls_ = controls;
+    var ctrls = (ClpCtrls*)controls_;
+    ctrls->amp.init(0.0f, 10.0f, 0.01f, 1.0f);
+    ctrls->lvl.init(0, 255, 1, 240);
 }
 
 void Clp::setFromStream(byte*& stream) {
@@ -24,8 +25,9 @@ void Clp::setFromStream(byte*& stream) {
 }
 
 float Clp::run(Arg params) {
-    var smp = params.f * controls_->amp.value.f;
-    if (smp < -controls_->lvl.value.f) smp = -controls_->lvl.value.f;
-    else if (smp > controls_->lvl.value.f) smp = controls_->lvl.value.f;
+    var ctrls = (ClpCtrls*)controls_;
+    var smp = params.f * ctrls->amp.value.f;
+    if (smp < -ctrls->lvl.value.f) smp = -ctrls->lvl.value.f;
+    else if (smp > ctrls->lvl.value.f) smp = ctrls->lvl.value.f;
     return smp;
 }

@@ -18,7 +18,7 @@ namespace SYNTH {
 		~SynthDevice();
 		void initialize(int voiceCount);
 #pragma region Device
-		void initialize(byte** pData = NULL);
+		//void initialize(byte** pData = NULL);
 
 		//bool isActive();
 		//void isActive(bool b);

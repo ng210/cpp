@@ -27,7 +27,7 @@ void Elem::createFrequencyTable() {
 	}
 }
 
-Elem::Elem() {
+Elem::Elem(int controlCount) : controlCount_(controlCount) {
 }
 
 //float Mdl::mix(Pot in1, Pot in2) {
@@ -60,8 +60,11 @@ void Elem::setFromStream(byte*& stream) {}
 
 void Elem::connect(int id, void* input) { }
 
-//void Elem::run(float* buffer, int start, int end) {
-//}
+void Elem::writeToStream(byte*& stream) {
+	for (var i = 0; i < controlCount_; i++) {
+		controls_[i].writeToStream(stream);
+	}
+}
 
 float Elem::p2f(float p) {
 	//if (p > 1.0f) {

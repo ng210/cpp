@@ -15,11 +15,12 @@ namespace SYNTH {
     #define LfoCtrlCount (sizeof(LfoCtrls)/sizeof(PotBase))
 
     class Lfo : public Elem {
-    private: PROP_R(LfoCtrls*, controls);
     private: float smp;
     private: double timer;
     public:
         Lfo();
+
+        LfoCtrls* controls() { return (LfoCtrls*)controls_; }
         void reset();
         void assignControls(PotBase* controls);
         void setFromStream(byte*& stream);

@@ -23,7 +23,6 @@ SynthAdapter::SynthAdapter() {
 	samplingRate = 48000;
 }
 SynthAdapter::~SynthAdapter() {
-
 }
 void SynthAdapter::initialize(byte** pData) {
 	if (pData != NULL && *pData != NULL) {
@@ -31,8 +30,26 @@ void SynthAdapter::initialize(byte** pData) {
 		// default bpm = 80
 		//setRefreshRate(80.0f);
 	}
+}
+void SynthAdapter::prepare() {
+	Elem::samplingRate = &samplingRate;
+	Env::initialize();
+	Flt::initialize();
+	Bass::prepare();
+	Synth::prepare();
+	Drums::prepare();
+	Distort::prepare();
+	StereoDelay::prepare();
 	//SoundPlayer::start(samplingRate_, 2, SynthAdapter::fillSoundBuffer, this);
 }
+void SynthAdapter::cleanUp() {
+	Bass::cleanUp();
+	Synth::cleanUp();
+	Drums::cleanUp();
+	Distort::cleanUp();
+	StereoDelay::cleanUp();
+}
+
 Device* SynthAdapter::createDevice(int deviceType) {
 	Device* device = NULL;
 	switch (deviceType) {
@@ -48,10 +65,10 @@ Device* SynthAdapter::createDevice(int deviceType) {
 	case SynthDevices::DeviceMixer:
 		device = NEW_(MixerDevice, this);
 		break;
-	case SynthDevices::DeviceClip:
+	case SynthDevices::DeviceDistort:
 		device = NEW_(DistortDevice, this);
 		break;
-	case SynthDevices::DeviceDelay:
+	case SynthDevices::DeviceStereoDelay:
 		device = NEW_(StereoDelayDevice, this);
 		break;
 	}

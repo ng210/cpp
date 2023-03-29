@@ -12,8 +12,8 @@ namespace SYNTH {
 		DeviceBass,
 		DeviceDrums,
 		DeviceMixer,
-		DeviceDelay,
-		DeviceClip
+		DeviceStereoDelay,
+		DeviceDistort
 	} SynthDevices;
 
 	class SynthAdapter : public Adapter {
@@ -26,6 +26,8 @@ namespace SYNTH {
 
 		AdapterInfo* const getInfo();
 		void initialize(byte** pData);
+		void prepare();
+		void cleanUp();
 		Device* createDevice(int deviceType);
 #ifdef PLAYER_EDIT_MODE
 		void writeToStream(Stream* data);

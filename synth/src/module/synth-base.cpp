@@ -2,7 +2,7 @@
 
 using namespace SYNTH;
 
-SynthBase::SynthBase() {
+SynthBase::SynthBase(PotBase* controls, int count) : Module(controls, count) {
     voiceCount_ = 1;
     setupVoice = NULL;
     renderVoice = NULL;
@@ -23,8 +23,6 @@ void SynthBase::initialize(float* pSmpRate, int count) {
 }
 void SynthBase::samplingRate(float* pSmpRate) {
     samplingRate_ = pSmpRate;
-    Adsr::initialize();
-    Flt::initialize();
 
     for (var i = 0; i < voiceCount_; i++) {
         Voice& v = voices_[i];
@@ -89,8 +87,6 @@ bool SynthBase::isActive() {
     //    isActive |= voices_[i].envelopes[0].isActive();
     //}
     return isActive_;
-}
-void SynthBase::initialize(byte** pData) {
 }
 void SynthBase::run(int start, int end) {
     if (isActive()) {

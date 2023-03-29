@@ -139,10 +139,10 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PLAYER_EDIT_MODE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <Optimization>MinSpace</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\fw</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <DiagnosticsFormat>Classic</DiagnosticsFormat>
@@ -180,6 +180,7 @@
     <None Include="drums2.pat">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="drums3.pat" />
     <None Include="test-data.bin" />
     <None Include="test-data2.bin" />
     <CopyFileToFolders Include="test.xm">

@@ -7,7 +7,7 @@ double Env::attackRates[256];
 double Env::releaseRates[256];
 double Env::releaseRatesExp[256];
 
-Env::Env() {
+Env::Env(int count) : Elem(count) {
     velocity_ = 0.0;
     phase_ = EnvPhase::Idle;
     timer_ = 0.0;

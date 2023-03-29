@@ -1,4 +1,5 @@
 #include "base/memory.h"
+#include "player/src/player.h"
 #include "synth/src/device/drums-device.h"
 #include "synth/src/device/synth-base-device.h"
 
@@ -17,7 +18,17 @@ DrumsDevice::~DrumsDevice() {
 }
 
 //void DrumsDevice::initialize(byte** pData) {
-//	drums()->initialize(pData);
+//	if (pData != NULL && *pData != NULL) {
+//		ModuleDevice::initialize(pData);
+//		//drums()->setSoundbank(drums()->getDefaultSoundbank());
+//		//var dbId = READ(*pData, byte);
+//		//var db = ((DataBlockItem*)player_->dataBlocks().get(dbId));
+//		//if (db != NULL) {
+//		//	var sb = drums()->createSoundbank();
+//		//	sb->data(db->dataBlock);
+//		//	drums()->setSoundbank(sb);
+//		//}
+//	}
 //}
 
 void DrumsDevice::processCommand(byte cmd, byte*& cursor) {

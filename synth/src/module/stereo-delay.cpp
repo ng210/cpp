@@ -5,32 +5,43 @@
 NS_FW_BASE_USE
 using namespace SYNTH;
 
-StereoDelay::StereoDelay() {
-	pControls_ = (PotBase*)&controls_;
+Soundbank* StereoDelay::defaultSoundbank_;
+
+StereoDelay::StereoDelay() : Module((PotBase*)&controls, StereoDelayCtrlCount) {
 	left_.setSamplingRate();
-	left_.assignControls(&controls_.feedbackLeft);
+	left_.assignControls(&controls.feedbackLeft);
 	right_.setSamplingRate();
-	right_.assignControls(&controls_.feedbackRight);
+	right_.assignControls(&controls.feedbackRight);
+	fltL_.createStages(2);
+	fltL_.assignControls(&controls.cut);
+	fltR_.createStages(2);
+	fltR_.assignControls(&controls.cut);
+	updateFilter();
+	program_ = 0;
 	createOutputBuffers(2);
 	isMono_ = false;
+	setSoundbank(getDefaultSoundbank());
+
+	controls_[stdlDelayLeft].set.add(this, &StereoDelay::delayLeftSetter);
+	controls_[stdlDelayRight].set.add(this, &StereoDelay::delayRightSetter);
 }
 
 StereoDelay::~StereoDelay() {
 	
 }
 
-void StereoDelay::initialize(byte** pData) {
-	if (pData != NULL && *pData != NULL) {
-		controls_.feedbackLeft.setFromStream(*pData);
-		controls_.delayLeft.setFromStream(*pData);
-		controls_.feedbackRight.setFromStream(*pData);
-		controls_.delayRight.setFromStream(*pData);
-		controls_.mixLeft.setFromStream(*pData);
-		controls_.mixRight.setFromStream(*pData);
-		setDelayLeft(controls_.delayLeft.value.f);
-		setDelayRight(controls_.delayRight.value.f);
-	}
-}
+//void StereoDelay::initializeFromStream(byte** pData) {
+//	if (pData != NULL && *pData != NULL) {
+//		left_.setFromStream(*pData);
+//		right_.setFromStream(*pData);
+//		controls.mixLeft.setFromStream(*pData);
+//		controls.mixRight.setFromStream(*pData);
+//		controls.cut.setFromStream(*pData);
+//		controls.res.setFromStream(*pData);
+//		controls.mode.setFromStream(*pData);
+//		updateFilter();
+//	}
+//}
 
 void StereoDelay::connectInput(int id, float* buffer) {
 	Module::connectInput(id, buffer);
@@ -42,6 +53,7 @@ void StereoDelay::connectInput(int id, float* buffer) {
 }
 
 void StereoDelay::run(int start, int end) {
+	updateFilter();
 	for (var i = start; i < end; i++) {
 		var delayedLeft = left_.run(inputs_[0][i]);
 		var delayedRight = right_.run(inputs_[1][i]);
@@ -50,15 +62,78 @@ void StereoDelay::run(int start, int end) {
 		//st->ai_[0] = st->ai_[0] + f * (smp - st->ai_[0] + fb * (st->ai_[0] - st->ai_[1]));
 		//smp = st->ai_[1] = st->ai_[1] + f * (st->ai_[0] - st->ai_[1]);
 
-		outputs_[0][i] = controls_.mixLeft.value.f * delayedLeft + (1.0f - controls_.mixLeft.value.f) * inputs_[0][i];
-		outputs_[1][i] = controls_.mixRight.value.f * delayedRight + (1.0f - controls_.mixRight.value.f) * inputs_[1][i];
+		var left = fltL_.run(delayedLeft);
+		var right = fltR_.run(delayedRight);
+
+		outputs_[0][i] = controls.mixLeft.value.f* left + (1.0f - controls.mixLeft.value.f) * inputs_[0][i];
+		outputs_[1][i] = controls.mixRight.value.f* right + (1.0f - controls.mixRight.value.f) * inputs_[1][i];
 	}
 }
 
-void StereoDelay::setDelayLeft(float delay) {
-	left_.setDelay(controls_.delayLeft.value.f);
+void StereoDelay::setDelayLeft() {
+	left_.setDelay(controls.delayLeft.value.f);
 }
 
-void StereoDelay::setDelayRight(float delay) {
-	right_.setDelay(controls_.delayRight.value.f);
+void StereoDelay::setDelayRight() {
+	right_.setDelay(controls.delayRight.value.f);
+}
+
+void StereoDelay::updateFilter() {
+	fltL_.update(0.0f);
+	fltR_.update(0.0f);
+}
+
+Soundbank* StereoDelay::getDefaultSoundbank() {
+	return StereoDelay::defaultSoundbank_;
+}
+
+void StereoDelay::prepare() {
+	var spatialLeft = NEW_(Stream);
+	{
+		// feedbackLeft, delayLeft
+		spatialLeft->writeByte(10)->writeFloat(1.0f);
+		// feedbackRight, delayRight
+		spatialLeft->writeByte(20)->writeFloat(2.0f);
+		// mixLeft, mixRight
+		spatialLeft->writeByte(120)->writeByte(200);
+		// cut, res, mod, mode
+		spatialLeft->writeByte(100)->writeByte(0)->writeByte(0)->writeByte(FmLowPass | FmBandPass);
+	};
+
+	var spatialRight = NEW_(Stream);
+	{
+		// feedbackLeft, delayLeft
+		spatialRight->writeByte(20)->writeFloat(2.0f);
+		// feedbackRight, delayRight
+		spatialRight->writeByte(10)->writeFloat(1.0f);
+		// mixLeft, mixRight
+		spatialRight->writeByte(200)->writeByte(120);
+		// cut, res, mod, mode
+		spatialRight->writeByte(100)->writeByte(0)->writeByte(0)->writeByte(FmLowPass | FmBandPass);
+	};
+
+	StereoDelay stereoDelay;
+	StereoDelay::defaultSoundbank_ = stereoDelay.createSoundbank();
+	StereoDelay::defaultSoundbank_->add("spatial left...", spatialLeft->data());
+	StereoDelay::defaultSoundbank_->add("spatial right..", spatialRight->data());
+	DEL_(spatialLeft);
+	DEL_(spatialRight);
+}
+
+void StereoDelay::cleanUp() {
+	DEL_(StereoDelay::defaultSoundbank_);
+}
+
+int StereoDelay::delayLeftSetter(void* obj, S value) {
+	var that = (StereoDelay*)obj;
+	PotBase::setter(that->getControl(stdlDelayLeft), value);
+	that->setDelayLeft();
+	return 1;
+}
+
+int StereoDelay::delayRightSetter(void* obj, S value) {
+	var that = (StereoDelay*)obj;
+	PotBase::setter(that->getControl(stdlDelayRight), value);
+	that->setDelayRight();
+	return 1;
 }

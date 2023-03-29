@@ -6,7 +6,7 @@
 using namespace SYNTH;
 
 DistortDevice::DistortDevice(SynthAdapter* adapter) : ModuleDevice(NEW_(Distort, &adapter->samplingRate), adapter) {
-	type(DeviceClip);
+	type(DeviceDistort);
 }
 
 DistortDevice::~DistortDevice() {
@@ -19,11 +19,12 @@ int DistortDevice::writeToStream(Stream* stream) {
 	Device::writeToStream(stream);
 	// write controls
 	var dist = (Distort*)object_;
-	stream->writeFloat(dist->controls().amp.value.f);
-	stream->writeByte((byte)(dist->controls().lvl.value.f * 255.0f));
-	stream->writeByte(dist->controls().cut.value.b);
-	stream->writeByte((byte)(dist->controls().res.value.f * 255.0f));
-	stream->writeByte(dist->controls().mode.value.b);
+	stream->writeFloat(dist->controls.amp.value.f);
+	stream->writeByte((byte)(dist->controls.lvl.value.f * 255.0f));
+	stream->writeByte(dist->controls.cut.value.b);
+	stream->writeByte((byte)(dist->controls.res.value.f * 255.0f));
+	stream->writeByte(dist->controls.mode.value.b);
 	return (int)(stream->cursor() - start);
 }
+
 #endif

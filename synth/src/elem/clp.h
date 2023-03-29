@@ -15,10 +15,10 @@ namespace SYNTH {
 
 
 	class Clp : public Elem {
-	private: PROP_R(ClpCtrls*, controls);
 	public:
 		Clp();
 		virtual ~Clp();
+		ClpCtrls* controls() { return (ClpCtrls*)controls_;  }
 		void assignControls(PotBase* controls);
 		void setFromStream(byte*& stream);
 		float run(Arg param = (void*)NULL);

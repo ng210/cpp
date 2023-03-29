@@ -5,7 +5,7 @@
 NS_FW_BASE_USE
 using namespace SYNTH;
 
-Lfo::Lfo() {
+Lfo::Lfo() : Elem(LfoCtrlCount) {
     reset();
 }
 
@@ -14,21 +14,24 @@ void Lfo::reset() {
 }
 
 void Lfo::assignControls(PotBase* controls) {
-    controls_ = (LfoCtrls*)controls;
-    controls_->amp.init(0.0f, 1.0f, 0.01f, 1.0f);
-    //controls_->dc.init(0.0f, 1.0f, 0.01f, 0.0f);
-    controls_->fre.init(0.0f, 20.0f, 0.01f, 2.0f);
+    controls_ = controls;
+    var ctrls = (LfoCtrls*)controls_;
+    ctrls->amp.init(0.0f, 1.0f, 0.01f, 0.0f);
+    //ctrls->dc.init(0.0f, 1.0f, 0.01f, 0.0f);
+    ctrls->fre.init(0.0f, 20.0f, 0.01f, 0.0f);
 }
 
 void Lfo::setFromStream(byte*& stream) {
+    var ctrls = (LfoCtrls*)controls_;
     //controls_->dc.setFromStream(stream);
-    controls_->amp.setFromStream(stream);
-    controls_->fre.setFromStream(stream);
+    ctrls->amp.setFromStream(stream);
+    ctrls->fre.setFromStream(stream);
 }
 
 float Lfo::run(Arg params) {
+    var ctrls = (LfoCtrls*)controls_;
     var smp = sin(SYNTH_THETA * timer);
-    var delta = controls_->fre.value.f / *Elem::samplingRate;
+    var delta = ctrls->fre.value.f / *Elem::samplingRate;
     if (delta >= 1.0) {
         delta = 0.99999999f;
     }
@@ -37,5 +40,5 @@ float Lfo::run(Arg params) {
         timer -= 1.0;
     }
 
-    return (float)(controls_->amp.value.f * smp/* + controls_->dc.value.f*/);
+    return (float)(ctrls->amp.value.f * smp/* + controls_->dc.value.f*/);
 }

@@ -4,7 +4,7 @@
 
 using namespace SYNTH;
 
-Dly::Dly() {
+Dly::Dly() : Elem(DlyCtrlCount) {
 	buffer_ = NULL;
 	controls_ = NULL;
 	length_ = 0.0f;
@@ -16,15 +16,18 @@ Dly::~Dly() {
 }
 
 void Dly::assignControls(PotBase* controls) {
-	controls_ = (DlyCtrls*)controls;
-	controls_->feedback.init(0.0f, 1.0f, 0.01f, 1.0f);
-	controls_->delay.init(0.0f, DELAY_MAX / 100.0f, 5.0f, 1000.0f);
+	controls_ = controls;
+	var ctrls = (DlyCtrls*)controls_;
+	ctrls->feedback.init(0, 255, 1, 40);
+	ctrls->delay.init(0.0f, DELAY_MAX, 1.0f, 1000.0f);
 }
 
 void Dly::setFromStream(byte*& stream) {
-	//Elem::setFromStream(stream, (Pot*)controls_);
-	controls_->feedback.setFromStream(stream);
-	controls_->delay.setFromStream(stream);
+	var ctrls = (DlyCtrls*)controls_;
+	ctrls->feedback.setFromStream(stream);
+	var delay = READ(stream, float);
+	setDelay(delay);
+	//ctrls->delay.setFromStream(stream);
 }
 
 //void Dly::connect(int id, void* input) {
@@ -33,12 +36,14 @@ void Dly::setFromStream(byte*& stream) {
 
 float Dly::run(Arg params) {
 	var ci = (int)trunc(cursor_);
+	cursor_++;
+	if (cursor_ > length_) cursor_ -= length_;
+	var cj = (int)trunc(cursor_);
+	var ctrls = (DlyCtrls*)controls_;
 	// read delayed
 	var delayed = buffer_[ci];
 	// store delayed*feedback + input
-	buffer_[ci] = delayed * controls_->feedback.value.f + params.f;
-	cursor_++;
-	if (cursor_ > length_) cursor_ -= length_;
+	buffer_[ci] = delayed * ctrls->feedback.value.f + params.f;
 	return delayed;
 }
 
@@ -63,7 +68,9 @@ void Dly::setSamplingRate() {
 }
 
 void Dly::setDelay(float delay) {
+	if (delay < 1.0f) delay = 1.0f;
+	var ctrls = (DlyCtrls*)controls_;
 	length_ = delay * *Elem::samplingRate / 1000.0f;
-	controls_->delay.value.f = delay;
+	ctrls->delay.value.f = delay;
 	cursor_ = length_ - 1;
 }

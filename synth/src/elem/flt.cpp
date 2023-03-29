@@ -98,7 +98,7 @@ double pole10Factors[] = { 0.312869, 0.907981, M_SQRT2, 1.782013, 1.975377 };
 
 double* Flt::linearFactors[] = { NULL, (double*)&pole2Factors, (double*)&pole3Factors, (double*)&pole4Factors, (double*)&pole5Factors, (double*)&pole6Factors, (double*)&pole7Factors, (double*)&pole8Factors, (double*)&pole9Factors, (double*)&pole10Factors};
 
-Flt::Flt(int poleCount) {
+Flt::Flt(int poleCount) :Elem(FltCtrlCount) {
     controls_ = NULL;
     poleCount_ = poleCount;
     createStages(poleCount);
@@ -110,11 +110,12 @@ Flt::~Flt() {
 }
 
 void Flt::assignControls(PotBase* controls) {
-    controls_ = (FltCtrls*)controls;
-    controls_->cut.init(0, 255, 1, 0);
-    controls_->res.init(0, 255, 1, 0);
-    controls_->mod.init(0.0f, 1.0f, 0.01f, 0.5f);
-    controls_->mode.init(0, FmAllPass, 1, FmLowPass);
+    controls_ = controls;
+    var ctrls = (FltCtrls*)controls_;
+    ctrls->cut.init(0, 255, 1, 0);
+    ctrls->res.init(0, 255, 1, 0);
+    ctrls->mod.init(0.0f, 1.0f, 0.01f, 0.5f);
+    ctrls->mode.init(0, FmAllPass, 1, FmLowPass);
 }
 
 void Flt::createStages(int poleCount) {
@@ -136,10 +137,11 @@ void Flt::createStages(int poleCount) {
 }
 
 void Flt::setFromStream(byte*& stream) {
-    controls_->cut.setFromStream(stream);
-    controls_->res.setFromStream(stream);
-    controls_->mod.setFromStream(stream);
-    controls_->mode.setFromStream(stream);
+    var ctrls = (FltCtrls*)controls_;
+    ctrls->cut.setFromStream(stream);
+    ctrls->res.setFromStream(stream);
+    ctrls->mod.setFromStream(stream);
+    ctrls->mode.setFromStream(stream);
 }
 
 float Flt::run(Arg params) {
@@ -158,7 +160,8 @@ float Flt::run(Arg params) {
     //hp = input - lp;
 
     var output = 0.0;
-    var mode = controls_->mode.value.b;
+    var ctrls = (FltCtrls*)controls_;
+    var mode = ctrls->mode.value.b;
     if ((mode & FmLowPass) != 0) output += lp;
     if ((mode & FmHighPass) != 0) output += hp;
     if ((mode & FmBandPass) != 0) {
@@ -168,8 +171,10 @@ float Flt::run(Arg params) {
 }
 
 void Flt::update(float cut) {
-    var res = (controls_->res.value.f < 0.000001f) ? 1.0f : 1.0f - controls_->res.value.f;
-    var e = 0.001f + 0.499 * (Flt::cutoffTable[controls_->cut.value.b] + cut);
+    var ctrls = (FltCtrls*)controls_;
+    var res = (ctrls->res.value.f < 0.000001f) ? 1.0f : 1.0f - ctrls->res.value.f;
+    var e = 0.5f * (Flt::cutoffTable[ctrls->cut.value.b] + cut);
+    if (e <= 0) e = 0.001f;
     var g = -res * e;   // (float)-pow(res, 0.5f / poleCount_) * e;
 
     for (var i = 0; i < stageCount_; i++) {
@@ -181,4 +186,5 @@ void Flt::initialize() {
     // calculate cutoff
     createBezierTable(cutoffTable, 0.85f, 255, [](double y, int i) { return M_PI * (0.0002 + y * 0.9998); });
 }
+
 #pragma endregion

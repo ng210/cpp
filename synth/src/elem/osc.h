@@ -27,12 +27,13 @@ namespace SYNTH {
     #define OscCtrlCount (sizeof(OscCtrls) / sizeof(PotBase))
 
     class Osc : public Elem {
-    private: PROP_R(OscCtrls*, controls);
     private: Pot* note_;
     private: double timer;
     private: double smp_;
     public:
         Osc();
+        OscCtrls* controls() { return (OscCtrls*)controls_; }
+
         void reset();
         void assignControls(PotBase* controls);
         void setFromStream(byte*& stream);

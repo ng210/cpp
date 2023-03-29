@@ -20,11 +20,10 @@ namespace SYNTH {
     #define AdsrCtrlCount (sizeof(AdsrCtrls) / sizeof(PotBase))
 
     class Adsr : public Env {
-    private: PROP_R(AdsrCtrls*, controls);
     protected: byte gate_;
     public:
         Adsr();
-
+        AdsrCtrls* controls() { return (AdsrCtrls*)controls_; }
         void assignControls(PotBase* controls);
         void setGate(byte velocity);
         void setFromStream(byte*& stream);

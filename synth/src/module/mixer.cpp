@@ -7,23 +7,24 @@ using namespace SYNTH;
 int Mixer8x4::frame_ = 0;
 float Mixer8x4::buffer_[SAMPLE_BUFFER_SIZE];
 
-Mixer8x4::Mixer8x4() {
-    pControls_ = (PotBase*)&controls_;
+Soundbank* Mixer8x4::defaultSoundbank_;
+
+Mixer8x4::Mixer8x4() : Module((PotBase*)&controls, MixerCtrlsCount) {
     //combinedBuffer_ = MALLOC(float, 8 * 4 * 1024);
     //var buffer = combinedBuffer_;
     for (var i = 0; i < 8; i++) {
         var channel = &channels_[i];
-        channel->controls = &controls_.channels[i];
-        channel->controls->gain.init(0.0f, 1.0f, 0.01f, 1.0f);
-        channel->controls->pan.init(0.0f, 1.0f, 0.01f, 0.5f);
-        channel->controls->amp.init(0.0f, 1.0f, 0.01f, 1.0f);
+        channel->controls = &controls.channels[i];
+        channel->controls->amp.init(0, 255, 1, 80);
+        channel->controls->pan.init(0, 255, 1, 127);
+        channel->controls->gain.init(0, 255, 1, 100);
         //channel->buffer = buffer;
         //buffer += 1024;
         for (var si = 0; si < 4; si++) {
             var stage = &channel->stages[si];
             stage->controls = &channel->controls->stages[si];
             //stage->controls->blend.init(0.0f, 1.0f, 0.01f, 0.0f);
-            stage->controls->gain.init(0.0f, 1.0f, 0.01f, 0.2f);
+            stage->controls->gain.init(0, 255, 1, 100);
             stage->effect = NULL;
             //stage->buffer = buffer;
             //buffer += 1024;
@@ -39,15 +40,14 @@ Mixer8x4::~Mixer8x4() {
     //FREE(combinedBuffer_);
 }
 
-void Mixer8x4::initialize(byte** pData) {
+void Mixer8x4::initializeFromStream(byte** pData) {
     channelCount_ = READ(*pData, byte);
     if (channelCount_ >= 8) channelCount_ = 8;
     for (var ci = 0; ci < channelCount_; ci++) {
         var channel = &channels_[ci];
-        channel->controls->gain.setFromStream(*pData);
-        var pan = **pData / 100.0f; (*pData)++;
-        channel->controls->pan.value.f = pan;
         channel->controls->amp.setFromStream(*pData);
+        channel->controls->pan.setFromStream(*pData);
+        channel->controls->gain.setFromStream(*pData);
         channel->stageCount = READ(*pData, byte);
         if (channel->stageCount >= 4) channel->stageCount = 4;
         for (var si = 0; si < channel->stageCount; si++) {
@@ -91,7 +91,6 @@ MixerChannel* Mixer8x4::connectEffect(MixerChannel* channel, Module* effect, int
 MixerChannel* Mixer8x4::getChannel(int id) {
     return id < channelCount_ ? &channels_[id] : NULL;
 }
-
 
 void Mixer8x4::fillSoundBuffer(short* buffer, int sampleCount, void* args) {
     var mixer = (Mixer8x4*)args;
@@ -137,7 +136,9 @@ void Mixer8x4::fillSoundBuffer(short* buffer, int sampleCount, void* args) {
                 }
             }
 
-            // panning and final amplification
+            // panning clipping and final amplification
+            if (chLeft > 1.0f) chLeft = 1.0f; else if (chLeft < -1.0f) chLeft = -1.0f;
+            if (chRight > 1.0f) chRight = 1.0f; else if (chRight < -1.0f) chRight = -1.0f;
             var amp = 32768.0f * ch->controls->amp.value.f;
             var pan = 2.0f * ch->controls->pan.value.f;
             chLeft *= amp * (2.0f - pan);
@@ -188,4 +189,8 @@ void Mixer8x4::fillSoundBuffer(short* buffer, int sampleCount, void* args) {
     //        buffer[j++] += (short)right;
     //    }
     //}
+}
+
+Soundbank* Mixer8x4::getDefaultSoundbank() {
+    return Mixer8x4::defaultSoundbank_;
 }

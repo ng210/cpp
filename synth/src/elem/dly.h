@@ -6,16 +6,17 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
-#define DELAY_MAX 5000	// milliseconds
+#define DELAY_MAX 5000.0f	// milliseconds
 
 	typedef struct DlyCtrls {
 		PotF8 feedback;
 		PotF delay;
 	} DlyCtrls;
 
+#define DlyCtrlCount (sizeof(DlyCtrls) / sizeof(PotBase))
+
 
 	class Dly : public Elem {
-	protected: PROP_R(DlyCtrls*, controls);
 	private: float* buffer_;
 	private: float length_;
 	private: float cursor_;
@@ -24,6 +25,8 @@ namespace SYNTH {
 	public:
 		Dly();
 		virtual ~Dly();
+
+		DlyCtrls* controls() { return (DlyCtrls*)controls_; }
 
 		void assignControls(PotBase* controls);
 		void setFromStream(byte*& stream);

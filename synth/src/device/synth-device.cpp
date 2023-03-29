@@ -16,19 +16,6 @@ void SynthDevice::initialize(int voiceCount) {
 	object_ = NEW_(Synth, &((SynthAdapter*)adapter_)->samplingRate, voiceCount);
 }
 
-void SynthDevice::initialize(byte** pData) {
-	if (pData != NULL && *pData != NULL) {
-		var voiceCount = READ(*pData, byte);
-		//object_ = NEW_(Synth, ((SynthAdapter*)adapter_)->samplingRate());
-		synth()->voiceCount(voiceCount);
-		var dbId = READ(*pData, byte);
-		byte* sb = ((DataBlockItem*)player_->dataBlocks().get(dbId))->dataBlock;
-		synth()->soundBank(sb);
-		var prg = READ(*pData, byte);
-		synth()->setProgram(prg);
-	}
-}
-
 SynthDevice::~SynthDevice() {
 	if (object_ != NULL) {
 		DEL_((Synth*)object_);
@@ -157,7 +144,7 @@ Synth* SynthDevice::synth() {
 //	return synth()->soundBank();
 //}
 //void SynthDevice::soundBank(byte* data) {
-//	synth()->soundBank(data);
+//	synth()->setSoundbank(data);
 //}
 
 //void SynthDevice::run(short* buffer, int start, int end) {

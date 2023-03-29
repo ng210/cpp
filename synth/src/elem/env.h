@@ -27,7 +27,7 @@ namespace SYNTH {
 	protected: double rate_;
 	protected: PROP_R(EnvPhase, phase);
 	public:
-		Env();
+		Env(int count);
 
 		virtual void setGate(byte velocity) = 0;
 		inline bool isActive() { return phase_ != EnvPhase::Idle; }

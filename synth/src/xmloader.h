@@ -88,12 +88,21 @@ namespace SYNTH {
 	} XmPattern;
 
 	typedef struct InstrumentInfo {
-		Sequence* sequence;
+		Device* device;
 		int voiceCount;
+		int programId;
+		Stream* dataBlock;
+		Sequence* sequence;
 	} InstrumentInfo;
+
+	typedef Device* (ADD_DEVICE_HANDLER)(SynthAdapter*, InstrumentInfo*);
+
+	typedef Device* (ADD_EFFECT_HANDLER)(Player*, MixerChannel*);
 
 	class XmLoader {
 		static Map effects_;
+		static ADD_DEVICE_HANDLER addDefaultDevice;
+		static ADD_EFFECT_HANDLER addNoEffect;
 
 		int bpm_;
 		int ticks_;
@@ -104,20 +113,20 @@ namespace SYNTH {
 		SynthDevice* synthDevice_;
 		Player* player_;
 		PlayerDevice* playerDevice_;
-		Stream* soundBank_;
+		Stream* soundbank_;
 
 		void getVolumeEffect(byte code, byte*& ptr, XmNote* xmNote);
 		void getEffect(byte code, byte*& ptr, XmNote* xmNote);
 		XmNote* readNote(byte*& ptr, XmNote* xmNote);
 		XmPattern* readPattern(XmFilePattern* ptr);		
 		//Sequence* optimizeSequence(Sequence* sequence);
-		void process();
+		void process(ADD_DEVICE_HANDLER addDevice, ADD_EFFECT_HANDLER addEffect);
 	public:
 		PROP_R(PArray, patterns);
 		XmLoader(Player* player, Stream* soundBank = NULL);
 		virtual ~XmLoader(void);
 
-		int load(const char* path);
+		int load(const char* path, ADD_DEVICE_HANDLER addDevice = XmLoader::addDefaultDevice, ADD_EFFECT_HANDLER addEffect = XmLoader::addNoEffect);
 
 #ifdef _DEBUG
 		char* printPattern(int id);

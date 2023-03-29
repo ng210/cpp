@@ -13,128 +13,130 @@ NS_FW_BASE_USE
 namespace SYNTH {
 
     typedef struct GenericDrumCtrls {
-        DahrCtrls dahr1, dahr2, dahr3, dahr4;
-        FltCtrls flt1, flt2;
+        Pot type;
+        DahrCtrls dahr[4];
+        FltCtrls flt[2];
+        PotF fre[6];
+        PotF8 amp[6];
     } GenericDrumCtrls;
 
+    typedef enum GenericDrumCtrlIds {
+        gdType,
+        gdDahr1Amp, gdDahr1Dc, gdDahr1Del, gdDahr1Atk, gdDahr1Hld, gdDahr1Rel,
+        gdDahr2Amp, gdDahr2Dc, gdDahr2Del, gdDahr2Atk, gdDahr2Hld, gdDahr2Rel,
+        gdDahr3Amp, gdDahr3Dc, gdDahr3Del, gdDahr3Atk, gdDahr3Hld, gdDahr3Rel,
+        gdDahr4Amp, gdDahr4Dc, gdDahr4Del, gdDahr4Atk, gdDahr4Hld, gdDahr4Rel,
+
+        gdFlt1Cut, gdFlt1Res, gdFlt1Mod, gdFlt1Mode,
+        gdFlt2Cut, gdFlt2Res, gdFlt2Mod, gdFlt2Mode,
+
+        gdFreq1, gdFreq2, gdFreq3, gdFreq4, gdFreq5, gdFreq6,
+        gdAmp1, gdAmp2, gdAmp3, gdAmp4, gdAmp5, gdAmp6        
+    } GenericDrumCtrlIds;
+
+    typedef enum DrumTypes {
+        BassDrumType = 0,
+        SnareDrumType,
+        HihatType,
+        ClapType,
+        DefaultDrumType
+    } DrumTypes;
+
+    #define GenericDrumCtrlCount sizeof(GenericDrumCtrls) / sizeof(PotBase)
+
+    class GenericDrum;
+    typedef void (GenericDrum::*RENDER)(float* buffer, int start, int end);
+
     class GenericDrum : public Module {
-        //GenericDrumCtrls controls_;
+        void renderDefault(float* buffer, int start, int end);
+        void renderHihat(float* buffer, int start, int end);
+        void renderClap(float* buffer, int start, int end);
     protected: PROP(int, attribute1);
     protected: float runFilter(Flt* flt, float cut, float input);
     public:
+        GenericDrumCtrls controls;
         double noise;
         // osc
-        int freCount;
-        float fre[6];
-        float amp[6];
         double timers[6];
         // envelope
-        int envCount;
         Dahr envelopes[4];
         // Filter
         Flt filters[2];
 
         GenericDrum();
         virtual ~GenericDrum();
+        RENDER render;
 
-        void assignControls(PotBase* controls);
-        //void connectInput(int id, float* buffer);
-        //PotBase* getControl(int id);
-        //float* getInput(int id);
-        //float* getOutput(int id);
-        void initialize(byte** pData);
         bool isActive();
-        void setProgram(int prgId);
         void setGate(byte velocity);
-        void render(float* buffer, int start, int end);
+
+        static SetterFunc typeSetter;
     };
 
-    class OpenHihat : public GenericDrum {
-    public:
-        void setProgram(int prgId);
-    };
+    //class Hihat : public GenericDrum {
+    //protected: PROP(bool, isOpen);
+    //public:
+    //    Hihat();
+    //    void program(int prgId);
+    //    void render(float* buffer, int start, int end);
+    //};
+    //class MidTom : public GenericDrum {
+    //public:
+    //    void program(int prgId);
+    //};
+    //class HighTom : public GenericDrum {
+    //public:
+    //    void program(int prgId);
+    //};
 
-    class MidTom : public GenericDrum {
-    public:
-        void setProgram(int prgId);
-    };
-
-    class HighTom : public GenericDrum {
-    public:
-        void setProgram(int prgId);
-    };
-
-    typedef struct DrumCtrls {
-        GenericDrumCtrls bd, sd, oh, ch, lt, mt, ht, cp;
-    } DrumCtrls;
+    //typedef struct DrumCtrls {
+    //    GenericDrumCtrls bd, sd, hh, lt, mt, ht, cp;
+    //} DrumCtrls;
 
     typedef enum DrumsNotes {
         drBD = 1,
         drSD = 2,
-        drOH = 3,
-        drCH = 4,
+        drCH = 3,
+        drOH = 4,
         drLT = 5,
         drMT = 6,
         drHT = 7,
         drCP = 8
     } DrumsNotes;
 
-    typedef enum DrumCtrlId {
-        bdTone = ((size_t)&((DrumCtrls*)0)->bd.dahr3.amp) / sizeof(PotBase),
-        bdTune = ((size_t)&((DrumCtrls*)0)->bd.dahr2.dc) / sizeof(PotBase),
-        bdDecay = ((size_t)&((DrumCtrls*)0)->bd.dahr1.rel) / sizeof(PotBase),
-        sdDecay = ((size_t) & ((DrumCtrls*)0)->sd.dahr1.rel) / sizeof(PotBase),
-        sdTune = ((size_t) & ((DrumCtrls*)0)->sd.dahr3.dc) / sizeof(PotBase),
-        sdSnappy = ((size_t) & ((DrumCtrls*)0)->sd.dahr4.amp) / sizeof(PotBase),
-        sdTone = ((size_t) & ((DrumCtrls*)0)->sd.flt1.cut) / sizeof(PotBase),
-        hhTone = ((size_t) & ((DrumCtrls*)0)->oh.flt1.cut) / sizeof(PotBase),
-        ohDecay = ((size_t) & ((DrumCtrls*)0)->oh.dahr1.hld) / sizeof(PotBase)
-    } DrumCtrlId;
-
-    typedef enum DrumPrgId {
-        prgBD808,
-        prgBD909,
-        prgBD707,
-        prgSD808,
-        prgSD909,
-        prgSDa0a,
-        prgHH808,
-        prgHHa0a,
-        prgTT808,
-        prgCP808
-    } DrumPrgId;
-
-
     class Drums : public Module {
-    protected: DrumCtrls controls_;
-    protected: PROP_R(GenericDrum, bassDrum);
-    protected: PROP_R(GenericDrum, snareDrum);
-    protected: PROP_R(GenericDrum, closedHihat);
-    protected: PROP_R(OpenHihat, openHihat);
-    protected: PROP_R(GenericDrum, lowTom);
-    protected: PROP_R(MidTom, midTom);
-    protected: PROP_R(HighTom, highTom);
-    protected: PROP_R(GenericDrum, clap);
-             //void renderGenericDrum(GenericDrum& drum, float* buffer, int start, int end);
-             void renderHihat(GenericDrum* hihat, float* buffer, int start, int end);
-             void renderBassDrum(float* buffer, int start, int end);
-             void renderSnareDrum(float* buffer, int start, int end);
-             void renderClosedHihat(float* buffer, int start, int end);
-             void renderOpenHihat(float* buffer, int start, int end);
-             void renderLowTom(float* buffer, int start, int end);
-             void renderMidTom(float* buffer, int start, int end);
-             void renderHighTom(float* buffer, int start, int end);
-             void renderClap(float* buffer, int start, int end);
+        static Soundbank* defaultSoundbank_;
+    protected: GenericDrum drums_[8];
+        //void renderGenericDrum(GenericDrum& drum, float* buffer, int start, int end);
+        //void renderBassDrum(float* buffer, int start, int end);
+        //void renderSnareDrum(float* buffer, int start, int end);
+        //void renderClosedHihat(float* buffer, int start, int end);
+        //void renderOpenHihat(float* buffer, int start, int end);
+        //void renderLowTom(float* buffer, int start, int end);
+        //void renderMidTom(float* buffer, int start, int end);
+        //void renderHighTom(float* buffer, int start, int end);
+        //void renderClap(float* buffer, int start, int end);
     public:
+        GenericDrum* drums;
+
         Drums();
         virtual ~Drums();
+        void initializeFromStream(byte** pData);
 
-        //void connectInput(int id, float* buffer);
-        //void initialize(byte** pData);
+        void soundbank(Soundbank* sb);
         float* getOutput(int id);
         void setControl(int id, S value);
         void run(int start, int end);
         void setNote(byte note, byte velocity);
+        Soundbank* createSoundbank();
+        
+
+        Soundbank* getDefaultSoundbank();
+
+        static void prepare();
+        static void cleanUp();
+
+        static SetSoundbankFunc soundbankSetter;
     };
 }
 

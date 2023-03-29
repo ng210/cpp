@@ -57,7 +57,6 @@ namespace SYNTH {
     #define FltCtrlCount (sizeof(FltCtrls)/sizeof(PotBase))
 
     class Flt : public Elem {
-    protected: PROP_R(FltCtrls*, controls);
     protected: FltStage* stages_[5];   // 5x2 = max 10 poles
     //private: PROP_R(float, theta);
     protected: PROP_R(int, stageCount);
@@ -66,6 +65,8 @@ namespace SYNTH {
     public:
         Flt(int poleCount = 2);
         ~Flt();
+
+        FltCtrls* controls() { return (FltCtrls*)controls_; }
 
         void update(float cut);
         void assignControls(PotBase* controls);

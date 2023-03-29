@@ -13,16 +13,28 @@ HBRUSH PotCtrl::backgroundBrush_ = NULL;
 HBRUSH PotCtrl::foregroundBrush_ = NULL;
 HBRUSH PotCtrl::frameBrush_ = NULL;
 COLORREF PotCtrl::textColor_;
-HFONT PotCtrl::font_ = NULL;
+HFONT PotCtrl::smallFont_ = NULL;
+HFONT PotCtrl::mediumFont_ = NULL;
+HFONT PotCtrl::largeFont_ = NULL;
 WndClass PotCtrl::wndClass_;
 HBITMAP bitmapVPot1_ = NULL;
 HDC backBuffer_ = NULL;
+
+int PotCtrl::setter(void* obj, S value) {
+	var potCtrl = (PotCtrl*)obj;
+	SYSPR(InvalidateRect(potCtrl->hWnd_, NULL, false));
+	//return PotBase::setter(potCtrl->pot_, value);
+	//return potCtrl->oldSet_(value);
+	return 1;
+}
 
 PotCtrl::PotCtrl() {
 	if (PotCtrl::wndClass_.atom == 0) {
 		PotCtrl::wndClass_.atom = registerClass("PotCtrl", NULL);
 		setColors(0x00400000, 0x00c08060, 0x00804030, 0x00ffffff);
-		PotCtrl::font_ = (HFONT)GetStockObject(SYSTEM_FONT);
+		PotCtrl::smallFont_ = CreateFont(12, 0, 0, 0, 100, false, false, false, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
+		PotCtrl::mediumFont_ = CreateFont(14, 0, 0, 0, 400, false, false, false, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial");
+		PotCtrl::largeFont_ = CreateFont(18, 0, 0, 0, 800, false, false, false, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial");
 	}
 	memset((byte*)&labelSize_, 0, sizeof(SIZE) * 2);
 	type_ = PotCtrlType::HPotmeter;
@@ -30,6 +42,7 @@ PotCtrl::PotCtrl() {
 	isCapturing_ = false;
 	showLabel_ = true;
 	showValue_ = true;
+	font_ = PotCtrl::mediumFont_;
 
 	backBuffer_ = NULL;
 	bitmapVPot1_ = NULL;
@@ -41,61 +54,23 @@ PotCtrl::~PotCtrl() {
 
 void PotCtrl::create(Window* parent, char* name) {
 	Ctrl::create(PotCtrl::wndClass_, parent, name);
-	var hdc = GetDC(hWnd_);
+	//var hdc = GetDC(hWnd_);
+	size_ = 100;
 	label(name);
-	setSize(100);
-	// load and prepare images
-	if (backBuffer_ == NULL) {
-		var SYSFN(resInfo, FindResource(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_VPOT1), "Image"));
-		if (resInfo) {
-			SYSFN(bitmapVPot1_, (HBITMAP)LoadResource(GetModuleHandle(NULL), resInfo));
-			SYSFN(backBuffer_, CreateCompatibleDC(hdc));
-			if (backBuffer_ && bitmapVPot1_) {
-				SYSPR(SelectObject(backBuffer_, bitmapVPot1_));
-			}
-		}
-	}
-	//var wi = 20, he = 110;
-	//BITMAPINFO bmi = {
-	//	sizeof(BITMAPINFOHEADER),	// DWORD biSize;
-	//	wi,			// LONG  biWidth;
-	//	he,			// LONG  biHeight;
-	//	1,			// WORD  biPlanes;
-	//	32,			// WORD  biBitCount;
-	//	BI_RGB,		// DWORD biCompression;
-	//	wi*he*4,	// DWORD biSizeImage;
-	//	0,			// LONG  biXPelsPerMeter;
-	//	0,			// LONG  biYPelsPerMeter;
-	//	0,			// DWORD biClrUsed;
-	//	0			// DWORD biClrImportant;
-	//};
-
-	ReleaseDC(hWnd_, hdc);
+	//ReleaseDC(hWnd_, hdc);
 	//if (potV_ == NULL) {
 	//	// load PNG from resource
 	//	potV_ = LoadBitmap(hInstance_, MAKEINTRESOURCE(IDB_POT));
 	//}
+	onLeftDown(PotCtrl::onLeftDownProc);
+	onLeftUp(PotCtrl::onLeftUpProc);
+	onRightUp(PotCtrl::onRightUpProc);
+	onMouseMove(PotCtrl::onMouseMoveProc);
 }
 
 void PotCtrl::label(TCHAR* lbl) {
-	strncpy(label_, 32, lbl);
-	// get label rect
-	if (showLabel_ || label_ == NULL) {
-		RECT rect;
-		memset(&rect, 0, sizeof(RECT));
-		var hdc = GetDC(hWnd_);
-		SelectObject(hdc, PotCtrl::font_);
-		DrawText(hdc, (TCHAR*)&label_, -1, &rect, DT_SINGLELINE | DT_CALCRECT);
-		ReleaseDC(hWnd_, hdc);
-		labelSize_.cx = rect.right;
-		labelSize_.cy = rect.bottom;
-	}
-	else {
-		labelSize_.cx = 0;
-		labelSize_.cy = 0;
-	}
-
-	updateClientRect();
+	fmw::strncpy(label_, 32, lbl);
+	setSize(size_);
 }
 
 void PotCtrl::setColors(DWORD background, DWORD foreground, DWORD frame, DWORD text) {
@@ -131,6 +106,26 @@ void PotCtrl::setSize(int size) {
 		levelSize_.cy = size;
 		break;
 	}
+	if (size < 100) font_ = PotCtrl::smallFont_;
+	else if (size > 140) font_ = PotCtrl::largeFont_;
+	else font_ = PotCtrl::mediumFont_;
+
+	// get label rect
+	if (showLabel_ || label_ == NULL) {
+		RECT rect;
+		memset(&rect, 0, sizeof(RECT));
+		var hdc = GetDC(hWnd_);
+		SelectObject(hdc, PotCtrl::font_);
+		DrawText(hdc, (TCHAR*)&label_, -1, &rect, DT_SINGLELINE | DT_CALCRECT);
+		ReleaseDC(hWnd_, hdc);
+		labelSize_.cx = rect.right;
+		labelSize_.cy = rect.bottom;
+	}
+	else {
+		labelSize_.cx = 0;
+		labelSize_.cy = 0;
+	}
+
 
 	updateClientRect();
 }
@@ -171,46 +166,61 @@ void PotCtrl::pot(PotBase* p) {
 	// calculate angle
 	var v = pot_->getNormalized();
 	angle_ = (1.0f - v) * 300.0f - 60.0f;
+	//oldSet_.obj = pot_->set.obj;
+	pot_->set.add(this, &PotCtrl::setter);
 }
 
-LRESULT PotCtrl::onLeftDown(POINT& pos, WPARAM state) {
-	isCapturing_ = true;
-	SetCapture(hWnd_);
+LRESULT PotCtrl::onLeftDownProc(Window* wnd, POINT& pos, WPARAM state) {
+	var ctrl = (PotCtrl*)wnd;
+	ctrl->isCapturing_ = true;
+	SYSPR(SetCapture(ctrl->hWnd_));
 	return 0;
 }
 
-LRESULT PotCtrl::onLeftUp(POINT& pos, WPARAM state) {
-	isCapturing_ = false;
-	ReleaseCapture();
+LRESULT PotCtrl::onLeftUpProc(Window* wnd, POINT& pos, WPARAM state) {
+	var ctrl = (PotCtrl*)wnd;
+	ctrl->isCapturing_ = false;
+	SYSPR(ReleaseCapture());
 	return 0;
 }
 
-LRESULT PotCtrl::onRightUp(POINT& pos, WPARAM state) {
+LRESULT PotCtrl::onRightUpProc(Window* wnd, POINT& pos, WPARAM state) {
+	var ctrl = (PotCtrl*)wnd;
 	return 0;
 }
 
-LRESULT PotCtrl::onMouseMove(POINT& pos, POINT& delta, WPARAM state) {
-	if (isCapturing_ && (state & MK_LBUTTON)) {
+LRESULT PotCtrl::onMouseMoveProc(Window* wnd, POINT& pos, POINT& delta, WPARAM state) {
+	var potCtrl = (PotCtrl*)wnd;
+	if (potCtrl->isCapturing_ && (state & MK_LBUTTON)) {
 		int count = state & MK_CONTROL ? 4 : 1;
-		switch (type_) {
+		count *= state & MK_SHIFT ? 10 : 1;
+		switch (potCtrl->type_) {
 		case PotCtrlType::Knob:
 			//if (delta.y < 0) pot_->dec(count);
 			//else if (delta.y > 0) pot_->inc(count);
 			//break;
 		case PotCtrlType::HPotmeter:
-			if (delta.x < 0) pot_->dec(count);
-			else if (delta.x > 0) pot_->inc(count);
+			if (delta.x < 0) {
+				potCtrl->pot_->dec(count);
+			}
+			else if (delta.x > 0) {
+				potCtrl->pot_->inc(count);
+			}
 			//pot_->setFromNormalized((float)(pos.x - 1) / (rect_.right - 2));
 			break;
 		case PotCtrlType::VPotmeter:
-			if (delta.y > 0) pot_->dec(count);
-			else if (delta.y < 0) pot_->inc(count);
+			if (delta.y > 0) {
+				potCtrl->pot_->dec(count);
+			}
+			else if (delta.y < 0) {
+				potCtrl->pot_->inc(count);
+			}
 			//if (pos.y < levelRect_.bottom) {
 			//	pot_->setFromNormalized(1.0f - (float)pos.y / levelRect_.bottom);
 			//}
 			break;
 		}
-		InvalidateRect(hWnd_, NULL, true);
+		//InvalidateRect(potCtrl->hWnd_, NULL, true);
 	}
 	return 0;
 }

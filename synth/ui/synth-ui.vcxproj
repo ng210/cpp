@@ -50,7 +50,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -83,6 +83,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -135,29 +138,45 @@
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>Default</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)\..</AdditionalIncludeDirectories>
+      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalDependencies>fw.lib;synth.lib;player.lib;soundlib.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\fw\$(Platform)\$(Configuration);$(ProjectDir)$(Platform)\$(Configuration);$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)..\player\$(Platform)\$(Configuration);$(SolutionDir)..\soundlib\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="bass-ctrl.h" />
+    <ClInclude Include="distort-ctrl.h" />
+    <ClInclude Include="drums-ctrl.h" />
+    <ClInclude Include="mixer-ctrl.h" />
     <ClInclude Include="module-ctrl.h" />
     <ClInclude Include="pot-ctrl.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="stereo-delay-ctrl.h" />
     <ClInclude Include="synth-app.h" />
+    <ClInclude Include="synth-ctrl.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bass-ctrl.cpp" />
+    <ClCompile Include="distort-ctrl.cpp" />
+    <ClCompile Include="drums-ctrl.cpp" />
+    <ClCompile Include="mixer-ctrl.cpp" />
     <ClCompile Include="module-ctrl.cpp" />
     <ClCompile Include="pot-ctrl.cpp" />
+    <ClCompile Include="stereo-delay-ctrl.cpp" />
     <ClCompile Include="synth-app.cpp" />
+    <ClCompile Include="synth-ctrl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="vpot1.png" />

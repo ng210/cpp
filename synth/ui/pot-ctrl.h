@@ -21,13 +21,17 @@ namespace SYNTH_UI {
 
 	class PotCtrl : public Ctrl {
 		static WndClass wndClass_;
-		static HFONT font_;
+		static HFONT smallFont_;
+		static HFONT mediumFont_;
+		static HFONT largeFont_;
 		int size_;
 		SIZE labelSize_, levelSize_;
 		bool isCapturing_;
 		void updateClientRect(bool resize = true);
 		float angle_;
-		HBITMAP bitmapVPot1_;
+		HFONT font_;
+		//Functor1<void*, S> oldSet_;
+		//HBITMAP bitmapVPot1_;
 	protected: PROP_R(PotCtrlType, type);
 	protected: PROP_R(PotBase*, pot);
 	protected: PROP(bool, showLabel);
@@ -50,14 +54,15 @@ namespace SYNTH_UI {
 		void type(PotCtrlType t);
 		void pot(PotBase* pot);
 
-		LRESULT onLeftDown(POINT& pos, WPARAM state);
-		LRESULT onLeftUp(POINT& pos, WPARAM state);
-		LRESULT onRightUp(POINT& pos, WPARAM state);
-		LRESULT onMouseMove(POINT& pos, POINT& delta, WPARAM state);
+		static MOUSEEVENTPROC onLeftDownProc, onLeftUpProc, onRightUpProc;
+		static MOUSEMOVEEVENTPROC onMouseMoveProc;
 		LRESULT onPaint();
 
 		static HBRUSH frameBrush_, backgroundBrush_, foregroundBrush_;
 		static COLORREF textColor_;
+
+		static SetterFunc setter;
+		static SetterFunc setterF8;
 	};
 
 }

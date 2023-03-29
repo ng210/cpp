@@ -17,20 +17,37 @@ namespace SYNTH {
 		Pot mode;	// mode
 	} DistortCtrls;
 
+	typedef enum DistortCtrlId {
+		distAmp,
+		distLvl,
+		distCut,
+		distRes,
+		distMod,
+		distMode
+	} DistortCtrlId;
+
 #define DistortCtrlsCount (sizeof(DistortCtrls) / sizeof(Pot))
 
 
 	class Distort : public Module {
-	private: PROP_R(DistortCtrls, controls);
+		static Soundbank* defaultSoundbank_;
+	
 	private: Clp clp_;
 	private: Flt flt_;
 	public:
+		DistortCtrls controls;
+
 		Distort(float* samplingRate);
 		virtual ~Distort();
-		void initialize(byte** pData);
+		//void initializeFromStream(byte** pData);
 		inline float* getOutput(int id);
 		void run(int start, int end);
 		void updateFilter();
+
+		Soundbank* getDefaultSoundbank();
+
+		static void prepare();
+		static void cleanUp();
 	};
 }
 

@@ -37,7 +37,6 @@ namespace SYNTH {
     typedef void(VOICERENDERER)(Voice& v, float* buffer, int start, int end);
     typedef void(SynthBase::*PVOICERENDERER)(Voice& v, float* buffer, int start, int end);
 
-
 	class SynthBase : public Module {
     protected: PROP_R(float*, samplingRate);
     protected: PROP_R(int, voiceCount);
@@ -49,7 +48,7 @@ namespace SYNTH {
         PVOICESETNOTEHANDLER setNoteVoice;
         PVOICERENDERER renderVoice;
     public:
-        SynthBase();
+        SynthBase(PotBase* controls, int count);
         ~SynthBase();
 
         void initialize(float* samplingRate, int voiceCount);
@@ -61,7 +60,6 @@ namespace SYNTH {
         void connectInput(int id, float* buffer);
         bool isActive();
         inline float* getOutput(int id);
-        void initialize(byte** pData);
         void run(int start, int end);
 	};
 }

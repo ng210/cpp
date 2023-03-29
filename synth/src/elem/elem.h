@@ -8,6 +8,8 @@
 #include "basedef.h"
 #include "pot.h"
 
+#include "base/stream.h"
+
 #define _USE_MATH_DEFINES
 
 #define SYNTH_THETA 6.283185307179586476925286766559
@@ -25,43 +27,21 @@ namespace SYNTH {
 		Arg() : p(NULL) {}
 	} Arg;
 
-	//typedef union CtrlUnion {
-	//	float f;
-	//	int i;
-	//	CtrlUnion() : i(0) {}
-	//	CtrlUnion(int v) : i(v) {}
-	//	CtrlUnion(float v) : f(v) {}
-	//} CtrlUnion;
-
-	//typedef CtrlUnion Ctrl;
-
 	typedef float FloatInt2Float(float y, int ix);
 	typedef double DoubleInt2Double(double y, int ix);
 
-	//struct ElemCtrls {
-	//	PotF amp;
-	//};
-
-	//enum MixMode : unsigned char {
-	//	SSN1K_MM_OVR = 0x00	// overwrite
-	//,	SSN1K_MM_ADD = 0x01	// add
-	//,	SSN1K_MM_MUL = 0x02	// multiply
-	//,	SSN1K_MM_BPS = 0x03	// bypass
-	//,	SSN1K_MM_MIX = 0x04	// mix
-
-	//,	SSN1K_MM_COUNT
-	//};
-
 	class Elem {
-	//protected: PROP(const float*, samplingRate);
+	protected: PotBase* controls_;
+	protected: PROP(int, controlCount);
 	public:
-		Elem();
+		Elem(int controlCount);
 
 		virtual void assignControls(PotBase* controls) = 0;
 		virtual void setFromStream(byte*& stream);
 		virtual void connect(int id, void* input);
 		virtual float run(Arg params = (void*)NULL);
 		//virtual void run(float* buffer, int start, int end);
+		virtual void writeToStream(byte*& stream);
 
 		static float FrequencyTable[128];
 		static void createFrequencyTable();

@@ -1,6 +1,7 @@
 #include "base/memory.h"
-#include "module-device.h"
-#include "../module/module.h"
+#include "player/src/player.h"
+#include "synth/src/device/module-device.h"
+#include "synth/src/module/module.h"
 
 using namespace SYNTH;
 
@@ -9,7 +10,21 @@ ModuleDevice::ModuleDevice(void* object, Adapter* adapter) : Device(object, adap
 }
 
 void ModuleDevice::initialize(byte** pData) {
-	((Module*)object_)->initialize(pData);
+	// set soundbank
+	Soundbank* sb = module()->getDefaultSoundbank();
+	int prgId = 0;
+	if (pData != NULL && *pData != NULL) {
+		datablockId_ = READ(*pData, byte);
+		var db = ((DataBlockItem*)player_->dataBlocks().get(datablockId_));
+		if (db != NULL) {
+			var sb = module()->createSoundbank();
+			sb->data(db->dataBlock);
+			module()->setSoundbank(sb);
+		}
+		module()->setSoundbank(sb);
+	}
+	// set program and further initializations
+	((Module*)object_)->initializeFromStream(pData);
 }
 
 bool ModuleDevice::isActive() {
@@ -48,15 +63,27 @@ void ModuleDevice::processCommand(byte cmd, byte*& cursor) {
 	}
 }
 
-void ModuleDevice::setControl(byte ctrlId, byte value) {
-	var ctrl = ((Module*)object_)->getControl(ctrlId);
-	ctrl->value.b = value;
+PotBase* ModuleDevice::getControl(byte ctrlId) {
+	return ((Module*)object_)->getControl(ctrlId);
 }
-void ModuleDevice::setControl(byte ctrlId, float value) {
-	var ctrl = ((Module*)object_)->getControl(ctrlId);
-	ctrl->value.f = value;
+void ModuleDevice::setControl(byte ctrlId, S value) {
+	((Module*)object_)->setControl(ctrlId, value);
+}
+void ModuleDevice::setSoundbank(Soundbank* soundbank) {
+	var mdl = (Module*)object_;
+	mdl->setSoundbank(soundbank);
 }
 
+Soundbank* ModuleDevice::soundbank() {
+	return ((Module*)object_)->soundbank();
+}
+
+void ModuleDevice::setProgram(byte prgId) {
+	((Module*)object_)->setProgram(prgId);
+}
+byte ModuleDevice::program() {
+	return ((Module*)object_)->program();
+}
 
 #ifdef PLAYER_EDIT_MODE
 void ModuleDevice::makeCommandImpl(int command, Stream* stream, va_list args) {
@@ -97,6 +124,12 @@ int ModuleDevice::getCommandSize(byte cmd, byte* args) {
 		break;
 	}
 	return length;
+}
+int ModuleDevice::writeToStream(Stream* stream) {
+	int start = stream->length();
+	stream->writeByte(datablockId_);
+	((Module*)object_)->writeToStream(stream);
+	return stream->length() - start;
 }
 #endif
 

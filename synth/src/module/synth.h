@@ -31,10 +31,10 @@ namespace SYNTH {
 		flt1Cut,/*=fmAdsrDc*/ flt1Res, flt1Mod,/*=fmAdsrAmp*/ flt1Mode
 	} SynthCtrlId;
 
-    #define SynthCtrlCount (sizeof(SynthCtrls)/sizeof(Pot*))
+    #define SynthCtrlCount (sizeof(SynthCtrls)/sizeof(PotBase))
 
     class Synth : public SynthBase {
-    protected: SynthCtrls controls_;
+		static Soundbank* defaultSoundbank_;
 		// Voice handling
 		VOICEHANDLER setupVoiceHandler;
 		VOICERENDERER renderVoiceHandler;
@@ -44,10 +44,15 @@ namespace SYNTH {
         Synth(float* samplingRate, int voiceCount = 1);
         virtual ~Synth();
 
-        inline SynthCtrls* controls() { return &controls_; };
+		SynthCtrls controls;
 
         // Module
-        void initialize(byte** pData);
+		Soundbank* getDefaultSoundbank();
+
+		Stream* writeProgramToStream();
+
+		static void prepare();
+		static void cleanUp();
     };
 }
 

@@ -9,6 +9,7 @@
 #include "base/memory.h"
 #include "utils/file.h"
 #include "player/src/player-lib.h"
+#include "synth/src/module/mixer.h"
 #include "synth/src/xmloader.h"
 #include "synth/src/device/synth-device.h"
 
@@ -82,12 +83,25 @@ public:
 
 static XmEffectMap* xmEffectMap_ = NULL;
 
+Device* XmLoader::addDefaultDevice(SynthAdapter* synthAdapter, InstrumentInfo* instrumentInfo) {
+	instrumentInfo->device = NEW_(SynthDevice, synthAdapter);
+	instrumentInfo->voiceCount = 0;
+	var stream = NEW_(Stream);
+	((Module*)instrumentInfo->device->object())->getDefaultSoundbank()->writeToStream(stream);
+	instrumentInfo->dataBlock = stream;
+	return NULL;
+}
+
+Device* XmLoader::addNoEffect(Player* player, MixerChannel* channel) {
+	return NULL;
+}
+
 XmLoader::XmLoader(Player* player, Stream* soundBank) {
 	bpm_ = 120;
 	channelCount_ = 4;
 	ticks_ = 4;
 	player_ = player;
-	soundBank_ = soundBank;
+	soundbank_ = soundBank;
 	playerDevice_ = player->masterDevice();
 	// check synth-adapter
 	synthAdapter_ = (SynthAdapter*)player->getAdapter(2);	// SynthAdapter::info_.id
@@ -181,7 +195,7 @@ XmPattern* XmLoader::readPattern(XmFilePattern* ptr) {
 	}
 	return pattern;
 }
-int XmLoader::load(const char* szPath) {
+int XmLoader::load(const char* szPath, ADD_DEVICE_HANDLER addDevice, ADD_EFFECT_HANDLER addEffect) {
 	int error = 1;
 	byte* xmData = NULL;
 	var bytesRead = File::read(szPath, &xmData);
@@ -208,8 +222,7 @@ int XmLoader::load(const char* szPath) {
 			patterns_.push(readPattern(xmPattern));
 			ptr += offsetof(XmFilePattern, packedData) + xmPattern->packedDataSize;
 		}
-
-		process();
+		process(addDevice, addEffect);
 		error = 0;
 		FREE(xmData);
 	}
@@ -218,16 +231,18 @@ int XmLoader::load(const char* szPath) {
 #pragma endregion
 
 #pragma region XmProcessing
-void XmLoader::process() {
+void XmLoader::process(ADD_DEVICE_HANDLER addDevice, ADD_EFFECT_HANDLER addEffect) {
 	// create an array of instrument info
 	// - sequence
 	// - voice count
 	var instrumentInfo = NEW_(Array, sizeof(InstrumentInfo), instruments_.length());
 	for (var i = 0; i < instruments_.length(); i++) {
+		InstrumentInfo info;
+		addDevice(synthAdapter_, &info);
 		var seq = NEW_(Sequence, synthDevice_);
 		var cmd = synthDevice_->makeCommand(CmdSetProgram, i);
 		seq->writeHeader()->writeDelta(0)->writeStream(cmd);
-		InstrumentInfo info = { seq, 0 };
+		info.sequence = seq;
 		instrumentInfo->push(&info);
 		DEL_(cmd);
 	}
@@ -376,8 +391,8 @@ void XmLoader::process() {
 	//DEL_(stream);
 	#pragma endregion
 
-	//playerDevice_->addDataBlock(soundBank_->extract(), soundBank_->length());
-	//DEL_(soundBank_);
+	//playerDevice_->addDataBlock(soundbank_->extract(), soundbank_->length());
+	//DEL_(soundbank_);
 }
 
 #ifdef _DEBUG
