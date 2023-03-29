@@ -146,6 +146,7 @@
     <ClInclude Include="syntax\syntax.h" />
     <ClInclude Include="test.h" />
     <ClInclude Include="utils\directory.h" />
+    <ClInclude Include="win\buttonctrl.h" />
     <ClInclude Include="win\comboboxctrl.h" />
     <ClInclude Include="win\ctrl.h" />
     <ClInclude Include="win\editctrl.h" />
@@ -190,6 +191,7 @@
     <ClCompile Include="syntax\syntax.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="utils\directory.cpp" />
+    <ClCompile Include="win\buttonctrl.cpp" />
     <ClCompile Include="win\comboboxctrl.cpp" />
     <ClCompile Include="win\ctrl.cpp" />
     <ClCompile Include="win\editctrl.cpp" />

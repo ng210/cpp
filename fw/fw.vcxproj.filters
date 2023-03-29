@@ -173,6 +173,9 @@
     <ClInclude Include="syntax\grammar-defs.h">
       <Filter>syntax\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="win\buttonctrl.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\memory.cpp">
@@ -283,6 +286,9 @@
     </ClCompile>
     <ClCompile Include="syntax\grammar.cpp">
       <Filter>syntax\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\buttonctrl.cpp">
+      <Filter>win\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

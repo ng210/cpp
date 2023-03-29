@@ -49,6 +49,8 @@ public:
 
 	byte* readBytesFromFile(const char* path, size_t byteCount, size_t offset);
 	byte* readBytesFromFile(FILE* fp, size_t byteCount, size_t offset);
+	size_t writeBytesToFile(const char* path, size_t byteCount = -1, size_t offset = 0);
+	size_t writeBytesToFile(FILE* fp, size_t byteCount = -1, size_t offset = 0);
 };
 
 

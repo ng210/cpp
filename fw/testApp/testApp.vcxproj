@@ -154,8 +154,16 @@
     <ClCompile Include="testapp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="test-ctrl.h" />
     <ClInclude Include="testapp.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="testApp.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="plus.bmp" />
+    <Image Include="plus.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

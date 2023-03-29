@@ -17,8 +17,10 @@ public:
 
 	void setText(char* text);
 
-	LRESULT onLeftUp(POINT& pos, WPARAM state);
+	LRESULT onCreate();
 	LRESULT onPaint();
+
+	static MOUSEEVENTPROC onLeftUpProc;
 };
 
 #endif

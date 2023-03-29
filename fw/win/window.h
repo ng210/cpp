@@ -5,6 +5,7 @@
 #include "basedef.h"
 #include "base/memory.h"
 #include "base/debug.h"
+#include "collection/map.h"
 
 //*********************************************************
 #define NS_FW_WIN fw_win
@@ -28,7 +29,30 @@ typedef union WndClass_ {
 	WndClass_() { className = NULL; }
 } WndClass;
 
+class Window;
+typedef LRESULT(MOUSEEVENTPROC)(Window*, POINT&, WPARAM);
+typedef LRESULT(MOUSEMOVEEVENTPROC)(Window*, POINT&, POINT&, WPARAM);
+
 class Window {
+#pragma region DefMouseEventProc
+	static MOUSEMOVEEVENTPROC defOnMouseMoveProc_;
+	static MOUSEEVENTPROC defOnMouseEventProc_;
+
+protected: PROP(MOUSEMOVEEVENTPROC*, onMouseMove);
+	protected: PROP(MOUSEEVENTPROC*, onLeftUp);
+	protected: PROP(MOUSEEVENTPROC*, onLeftDown);
+	protected: PROP(MOUSEEVENTPROC*, onLeftClick);
+	protected: PROP(MOUSEEVENTPROC*, onLeftDblClick);
+	protected: PROP(MOUSEEVENTPROC*, onRightUp);
+	protected: PROP(MOUSEEVENTPROC*, onRightDown);
+	protected: PROP(MOUSEEVENTPROC*, onRightClick);
+	protected: PROP(MOUSEEVENTPROC*, onRightDblClick);
+	protected: PROP(MOUSEEVENTPROC*, onMiddleUp);
+	protected: PROP(MOUSEEVENTPROC*, onMiddleDown);
+	protected: PROP(MOUSEEVENTPROC*, onMiddleClick);
+	protected: PROP(MOUSEEVENTPROC*, onMiddleDblClick);
+#pragma endregion
+
 	protected: WNDPROC defWindowProc_;
 	protected: PROP_R(HINSTANCE, hInstance);
 	protected: PROP_R(HWND, hWnd);
@@ -36,7 +60,7 @@ class Window {
 	protected: PROP_R(POINT, mousePos);
 	protected: PROP_R(WndClass, wndClass);
 	protected: PROP_R(Window*, parent);
-	//protected: PROP_R(bool, propagateMessage);
+
 public:
 	Window();
 	virtual ~Window();
@@ -44,26 +68,9 @@ public:
 	virtual void create(WndClass wndClass, Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
 	LONG setWindowStyle(LONG style, DWORD exStyle = 0);
 	virtual LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
+	Map* Window::createChildWindowMap();
 #pragma region EventHandling
-
-#pragma region MouseEvents
-	virtual LRESULT onMouse(HWND hWnd, UINT message, POINT& point, WPARAM wParam);
-	virtual LRESULT onLeftUp(POINT& pos, WPARAM state);
-	virtual LRESULT onLeftDown(POINT& pos, WPARAM state);
-	virtual LRESULT onLeftClick(POINT& pos, WPARAM state);
-	virtual LRESULT onLeftDblClick(POINT& pos, WPARAM state);
-	virtual LRESULT onRightUp(POINT& pos, WPARAM state);
-	virtual LRESULT onRightDown(POINT& pos, WPARAM state);
-	virtual LRESULT onRightClick(POINT& pos, WPARAM state);
-	virtual LRESULT onRightDblClick(POINT& pos, WPARAM state);
-	virtual LRESULT onMiddleUp(POINT& pos, WPARAM state);
-	virtual LRESULT onMiddleDown(POINT& pos, WPARAM state);
-	virtual LRESULT onMiddleClick(POINT& pos, WPARAM state);
-	virtual LRESULT onMiddleDblClick(POINT& pos, WPARAM state);
-	virtual LRESULT onMouseMove(POINT& pos, POINT& delta, WPARAM state);
-#pragma endregion
-
+	LRESULT onMouse(HWND, UINT, POINT&, WPARAM);
 #pragma region SystemEvents
 	virtual LRESULT onCreate();
 	virtual LRESULT onDestroy();

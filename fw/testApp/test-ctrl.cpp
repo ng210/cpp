@@ -25,10 +25,8 @@ void TestCtrl::setText(char* text) {
 	InvalidateRect(hWnd_, NULL, true);
 }
 
-LRESULT TestCtrl::onLeftUp(POINT& pos, WPARAM state) {
-	text_[0] = '\0';
-	UpdateWindow(hWnd_);
-	parent_->onLeftUp(pos, state);
+LRESULT TestCtrl::onCreate() {
+	onLeftUp(TestCtrl::onLeftUpProc);
 	return 0;
 }
 
@@ -39,5 +37,13 @@ LRESULT TestCtrl::onPaint() {
 	//FillRect(hdc, &rect_, hBrush_);
 	DrawText(hdc, text_, -1, &rect_, DT_CENTER);
 	EndPaint(hWnd_, &ps);
+	return 0;
+}
+
+LRESULT TestCtrl::onLeftUpProc(Window* wnd, POINT& pos, WPARAM state) {
+	var ctrl = (TestCtrl*)wnd;
+	ctrl->text_[0] = '\0';
+	UpdateWindow(ctrl->hWnd_);
+	ctrl->parent_->onLeftUp()(ctrl->parent_, pos, state);
 	return 0;
 }

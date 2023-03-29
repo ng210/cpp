@@ -150,7 +150,7 @@ void* Map::add(Key key, void* value) {
 			kvp.key_ = keys_->push(key.p);
 		}
 		else {
-			kvp.key_ = keys_->push(&key);
+			kvp.key_ = keys_->push(&key.i);
 		}
 
 		kvp.index_ = ix;

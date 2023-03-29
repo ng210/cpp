@@ -173,7 +173,9 @@ byte* Stream::extract(long offset, long length) {
 
 byte* Stream::readBytesFromFile(const char* path, size_t byteCount, size_t offset) {
 	var fp = File::open(path);
-	return readBytesFromFile(fp, byteCount, offset);
+	var bytes = readBytesFromFile(fp, byteCount, offset);
+	fclose(fp);
+	return bytes;
 }
 
 byte* Stream::readBytesFromFile(FILE* fp, size_t byteCount, size_t offset) {
@@ -187,4 +189,19 @@ byte* Stream::readBytesFromFile(FILE* fp, size_t byteCount, size_t offset) {
 	var cursor = cursor_;
 	cursor_ += fread_s(cursor_, byteCount, sizeof(byte), byteCount, fp);
 	return cursor;
+}
+
+size_t Stream::writeBytesToFile(const char* path, size_t byteCount, size_t offset) {
+	FILE* fp = NULL;
+	size_t bytesWritten = 0;
+	if (fopen_s(&fp, path, "w+b") == 0 && fp != NULL) {
+		bytesWritten = writeBytesToFile(fp, byteCount, offset);
+		fclose(fp);
+	}
+	return bytesWritten;
+}
+size_t Stream::writeBytesToFile(FILE* fp, size_t byteCount, size_t offset) {
+	var bytes = byteCount < length_ ? byteCount : length_;
+	if (offset + bytes > length_) bytes = length_ - offset;
+	return File::write(fp , &data_[offset], bytes);
 }

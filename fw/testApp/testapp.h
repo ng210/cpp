@@ -1,5 +1,8 @@
 #include "win/winapp.h"
+#include "win/staticctrl.h"
 #include "win/editctrl.h"
+#include "win/comboboxctrl.h"
+#include "win/buttonctrl.h"
 #include "utils/buffer.h"
 #include "test-ctrl.h"
 
@@ -15,8 +18,12 @@ class TestApp : public WinApp {
 	int state_;
 	static char* eos_;
 	TestCtrl testCtrl_;
+	EditCtrl editCtrl_;
+	ComboboxCtrl cbSimple_, cbDropDown_, cbDropDownList_;
+	StaticCtrl staticText_, staticIcon_, staticBitmap_;
+	ButtonCtrl textButton_, imageButton_;
 
-	void log(const char* text);
+	void log(const char* text, ...);
 protected:
 	EditCtrl logCtrl_;
 	LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -30,5 +37,5 @@ public:
 	LRESULT onCreate();
 	LRESULT onDestroy();
 
-	LRESULT onLeftUp(POINT& pos, WPARAM state);
+	static MOUSEEVENTPROC onLeftUpProc;
 };

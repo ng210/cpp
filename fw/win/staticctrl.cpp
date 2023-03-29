@@ -6,7 +6,7 @@ NS_FW_WIN_BEGIN
 WndClass StaticCtrl::WndClass_("STATIC");
 
 void StaticCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
-	Window::create(StaticCtrl::WndClass_, parent, name, style, exStyle);
+	Ctrl::create(StaticCtrl::WndClass_, parent, name, style, exStyle);
 }
 
 NS_FW_WIN_END

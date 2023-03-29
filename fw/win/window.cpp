@@ -23,7 +23,6 @@ Window::Window() {
 	defWindowProc_ = DefWindowProc;
 	mousePos_ = { 0, 0 };
 	rect_ = { 0, 0, 0, 0 };
-
 }
 
 void Window::create(WndClass wndClass, Window* parent, char* name, LONG style, DWORD exStyle) {
@@ -50,6 +49,12 @@ void Window::create(WndClass wndClass, Window* parent, char* name, LONG style, D
 		SetWindowLongPtr(hWnd_, GWLP_WNDPROC, (LONG_PTR)Window::wndProcWrapper);
 	}
 	SetWindowLongPtr(hWnd_, GWLP_USERDATA, (LONG_PTR)this);
+
+	// set default event handlers
+	MOUSEEVENTPROC** p = &onLeftUp_;
+	while (p <= &onMiddleDblClick_) *p++ = &defOnMouseEventProc_;
+	onMouseMove_ = &defOnMouseMoveProc_;
+
 	this->onCreate();
 }
 
@@ -143,6 +148,19 @@ LRESULT CALLBACK Window::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 	return ret;
 }
 
+BOOL enumChildWindowsCallback(HWND hWnd, LPARAM lParam) {
+	var map = (Map*)lParam;
+	var SYSFN(id, GetDlgCtrlID(hWnd));
+	map->add(&id, &hWnd);
+	return true;
+}
+
+Map* Window::createChildWindowMap() {
+	var map = NEW_(Map, sizeof(int), sizeof(HWND), Map::hashingInt, Collection::compareInt);
+	SYSPR(EnumChildWindows(hWnd_, enumChildWindowsCallback, (LPARAM)map));
+	return map;
+}
+
 #pragma region EventHandling
 
 #pragma region MouseEvents
@@ -153,89 +171,54 @@ LRESULT Window::onMouse(HWND hWnd, UINT message, POINT& point, WPARAM wParam) {
 	case WM_MOUSEMOVE:
 		delta.x = point.x - mousePos_.x;
 		delta.y = point.y - mousePos_.y;
-		ret = onMouseMove(point, delta, wParam);
+		ret = onMouseMove_(this, point, delta, wParam);
 		mousePos_ = point;
 		break;
 	case WM_LBUTTONDOWN:
-		ret = onLeftDown(point, wParam);
+		ret = onLeftDown_(this, point, wParam);
 		break;
 	case WM_LBUTTONUP:
-		ret = onLeftUp(point, wParam);
+		ret = onLeftUp_(this, point, wParam);
 		if (!ret) {
-			ret = onLeftClick(point, wParam);
+			ret = onLeftClick_(this, point, wParam);
 		}
 		break;
 	case WM_LBUTTONDBLCLK:
-		ret = onLeftDblClick(point, wParam);
+		ret = onLeftDblClick_(this, point, wParam);
 		break;
 	case WM_RBUTTONDOWN:
-		ret = onRightDown(point, wParam);
+		ret = onRightDown_(this, point, wParam);
 		break;
 	case WM_RBUTTONUP:
-		ret = onRightUp(point, wParam);
+		ret = onRightUp_(this, point, wParam);
 		if (!ret) {
-			ret = onRightClick(point, wParam);
+			ret = onRightClick_(this, point, wParam);
 		}
 		break;
 	case WM_RBUTTONDBLCLK:
-		ret = onRightDblClick(point, wParam);
+		ret = onRightDblClick_(this, point, wParam);
 		break;
 	case WM_MBUTTONDOWN:
-		ret = onMiddleDown(point, wParam);
+		ret = onMiddleDown_(this, point, wParam);
 		break;
 	case WM_MBUTTONUP:
-		ret = onMiddleUp(point, wParam);
+		ret = onMiddleUp_(this, point, wParam);
 		if (!ret) {
-			ret = onMiddleClick(point, wParam);
+			ret = onMiddleClick_(this, point, wParam);
 		}
 		break;
 	case WM_MBUTTONDBLCLK:
-		ret = onMiddleDblClick(point, wParam);
+		ret = onMiddleDblClick_(this, point, wParam);
 		break;
 	}
 	return ret;
 }
-
-LRESULT Window::onLeftUp(POINT & pos, WPARAM state) {
+LRESULT Window::defOnMouseEventProc_(Window*, POINT&, WPARAM) {
 	return 1;
 }
-LRESULT Window::onLeftDown(POINT & pos, WPARAM state) {
+LRESULT Window::defOnMouseMoveProc_(Window*, POINT&, POINT&, WPARAM) {
 	return 1;
 }
-LRESULT Window::onLeftClick(POINT & pos, WPARAM state) {
-	return 1;
-}
-LRESULT Window::onLeftDblClick(POINT & pos, WPARAM state) {
-	return 1;
-}
-LRESULT Window::onRightUp(POINT & pos, WPARAM state) {
-	return 1;
-}
-LRESULT Window::onRightDown(POINT & pos, WPARAM state) {
-	return 1;
-}
-LRESULT Window::onRightClick(POINT & pos, WPARAM state) {
-	return 1;
-}
-LRESULT Window::onRightDblClick(POINT & pos, WPARAM state) {
-	return 1;
-}
-LRESULT Window::onMiddleUp(POINT & pos, WPARAM state) {
-	return 1;
-}
-LRESULT Window::onMiddleDown(POINT & pos, WPARAM state) {
-	return 1;
-}
-LRESULT Window::onMiddleClick(POINT & pos, WPARAM state) {
-	return 1;
-}
-LRESULT Window::onMiddleDblClick(POINT & pos, WPARAM state) {
-	return 1;
-}
-LRESULT Window::onMouseMove(POINT& pos, POINT& delta, WPARAM state) {
-	return 1;
-}
-
 #pragma endregion
 
 #pragma region SystemEvents
