@@ -119,8 +119,9 @@ void Flt::assignControls(PotBase* controls) {
 }
 
 void Flt::createStages(int poleCount) {
+    FltStage* stages[8];
     for (var i = 0; i < stageCount_; i++) {
-        DEL_(stages_[i]);
+        stages[i] = stages_[i];
     }
     // create stages according to poles
     var si = 0;
@@ -132,6 +133,9 @@ void Flt::createStages(int poleCount) {
     }
     if (poleCount == 1) {
         stages_[si++] = NEW_(FltStage1Pole);
+    }
+    for (var i = 0; i < stageCount_; i++) {
+        DEL_(stages[i]);
     }
     stageCount_ = si;
 }

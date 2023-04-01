@@ -162,8 +162,12 @@
     <ResourceCompile Include="testApp.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="plus.bmp" />
-    <Image Include="plus.png" />
+    <Image Include="plus.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="plus.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

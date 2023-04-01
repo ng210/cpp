@@ -4,9 +4,12 @@ using namespace SYNTH_UI;
 
 WndClass ModuleCtrl::wndClass_;
 
+HANDLE ModuleCtrl::hBackground_ = NULL;
+
 ModuleCtrl::ModuleCtrl(Module* module) {
 	if (ModuleCtrl::wndClass_.atom == 0) {
 		ModuleCtrl::wndClass_.atom = registerClass("ModuleCtrl", NULL, CS_OWNDC);
+		hBackground_ = NULL;
 	}
 	module_ = module;
 	//module_->setControl = { this, &ModuleCtrl::setControlProc };
@@ -53,6 +56,10 @@ void ModuleCtrl::create(Window* parent, char* name) {
 		removeButton_.onLeftUp(ModuleCtrl::onRemoveProgram);
 		programCtrl_.select(module_->program());
 	}
+	var hBackground = getBackgroundImage();
+	background_.create(this, "bgbitmap", WS_CLIPSIBLINGS | SS_BITMAP | SS_SUNKEN);
+	SYSPR(SendMessage(background_.hWnd(), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBackground));
+	SYSPR(SetWindowPos(background_.hWnd(), NULL, 0, 0, rect_.right, rect_.bottom, SWP_SHOWWINDOW));
 }
 
 void ModuleCtrl::initFromStream(Stream* data, int size) {
@@ -92,6 +99,13 @@ void ModuleCtrl::initFromStream(Stream* data, int size) {
 	SetWindowPos(hWnd_, NULL, 0, 0, width + borderWidth_, height + borderWidth_, SWP_NOMOVE);
 }
 
+HANDLE ModuleCtrl::getBackgroundImage() {
+	if (hBackground_ == NULL) {
+		SYSFN(hBackground_, LoadImage(NULL, "mdl-default-bg.bmp", IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT | LR_LOADFROMFILE));
+	}
+	return hBackground_;
+}
+
 //LRESULT ModuleCtrl::onPaint() {
 //	PAINTSTRUCT ps;
 //	var hdc = BeginPaint(hWnd_, &ps);
@@ -101,6 +115,12 @@ void ModuleCtrl::initFromStream(Stream* data, int size) {
 //	EndPaint(hWnd_, &ps);
 //	return 0;
 //}
+
+LRESULT ModuleCtrl::onSize(RECT& rect, WPARAM state) {
+	SYSPR(SetWindowPos(background_.hWnd(), HWND_BOTTOM, 0, 0, rect.right, rect.bottom, SWP_SHOWWINDOW));
+	return 1;
+}
+
 
 void ModuleCtrl::updateSoundbank() {
 	if (module_ != NULL) {

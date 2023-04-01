@@ -51,6 +51,8 @@ byte bassUiLayout[] = {
 	//	bFlt1Cut,/*=fmAdsrDc*/ bFlt1Res, bFlt1Mod,/*=fmAdsrAmp*/ bFlt1Mode
 };
 
+HANDLE BassCtrl::hBackground_ = NULL;
+
 BassCtrl::BassCtrl(Module* module) : ModuleCtrl(module) {
 	
 }
@@ -65,6 +67,13 @@ void BassCtrl::create(Window* parent, char* name) {
 	Stream stream(bassUiLayout, arraysize(bassUiLayout));
 	stream.reset();
 	initFromStream(&stream);
+}
+
+HANDLE BassCtrl::getBackgroundImage() {
+	if (hBackground_ == NULL) {
+		SYSFN(hBackground_, LoadImage(NULL, "bass-ctrl.bmp", IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT | LR_LOADFROMFILE));
+	}
+	return hBackground_;
 }
 
 //LRESULT BassCtrl::onPaint() {

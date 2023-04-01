@@ -34,6 +34,8 @@ LRESULT TestApp::onCreate() {
 	var laneHeight = 0;
 	rect.left = 4;  rect.top = 4;
 
+	var SYSFN(hBitmap, LoadImage(NULL, "plus.bmp", IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT | LR_LOADFROMFILE));
+
 #pragma region Combobox
 	PArray items;
 	items.push("Alma1");
@@ -103,11 +105,13 @@ LRESULT TestApp::onCreate() {
 
 	staticBitmap_.create(this, "StaticBitmap", SS_BITMAP | SS_SUNKEN);
 	rect.right = 32;
+	SendMessage(staticBitmap_.hWnd(), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap);
 	SYSFN(result, SetWindowPos(staticBitmap_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 	if (laneHeight < rect.bottom) laneHeight = rect.bottom;
 #pragma endregion
 
+	SYSFN(hBitmap, LoadImage(hInstance_, MAKEINTRESOURCE(IDB_PLUS), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT));
 #pragma region Button
 	rect.right = 48;
 	rect.bottom = 24;
@@ -116,9 +120,9 @@ LRESULT TestApp::onCreate() {
 	SYSFN(result, SetWindowPos(textButton_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 
-	var bitmap = LoadImage(hInstance_, MAKEINTRESOURCE(IDB_PLUS), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
+	//var bitmap = LoadImage(hInstance_, MAKEINTRESOURCE(IDB_PLUS), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
 	imageButton_.create(this, "Button", BS_BITMAP);
-	SYSPR(SendMessage(imageButton_.hWnd(), BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)bitmap));
+	SYSPR(SendMessage(imageButton_.hWnd(), BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap));
 	SYSFN(result, SetWindowPos(imageButton_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 

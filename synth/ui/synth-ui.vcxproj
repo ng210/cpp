@@ -80,6 +80,7 @@
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -179,6 +180,12 @@
     <ClCompile Include="synth-ctrl.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="bass-ctrl.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="mdl-default-bg.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
     <Image Include="vpot1.png" />
   </ItemGroup>
   <ItemGroup>

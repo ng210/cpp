@@ -74,10 +74,11 @@ void PotCtrl::label(TCHAR* lbl) {
 }
 
 void PotCtrl::setColors(DWORD background, DWORD foreground, DWORD frame, DWORD text) {
-	SYSPR(DeleteObject(PotCtrl::backgroundBrush_));
-	SYSPR(DeleteObject(PotCtrl::foregroundBrush_));
-	SYSPR(DeleteObject(PotCtrl::frameBrush_));
-
+	if (PotCtrl::backgroundBrush_ != NULL) {
+		SYSPR(DeleteObject(PotCtrl::backgroundBrush_));
+		SYSPR(DeleteObject(PotCtrl::foregroundBrush_));
+		SYSPR(DeleteObject(PotCtrl::frameBrush_));
+	}
 	SYSFN(PotCtrl::backgroundBrush_, CreateSolidBrush(background));
 	SYSFN(PotCtrl::foregroundBrush_, CreateSolidBrush(foreground));
 	SYSFN(PotCtrl::frameBrush_, CreateSolidBrush(frame));

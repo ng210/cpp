@@ -79,6 +79,12 @@
     <Image Include="vpot1.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="mdl-default-bg.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="bass-ctrl.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="synth-ui.rc">

@@ -41,21 +41,25 @@ void Window::create(WndClass wndClass, Window* parent, char* name, LONG style, D
 	if (style == 0) style = Window::defaultStyle;
 	SYSFN(hWnd_, CreateWindowEx(exStyle, wndClass.className, name, style, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hWndParent, NULL, hInstance_, this));
 
-	// check wrapper function
-	WNDCLASSEX wndClassEx;
-	SYSPR(GetClassInfoEx(hInstance_, wndClass.className, &wndClassEx));
-	if (wndClassEx.lpfnWndProc != Window::wndProcWrapper) {
-		defWindowProc_ = wndClassEx.lpfnWndProc;
-		SetWindowLongPtr(hWnd_, GWLP_WNDPROC, (LONG_PTR)Window::wndProcWrapper);
+	if (hWnd_ != NULL) {
+		// check wrapper function
+		WNDCLASSEX wndClassEx;
+		SYSPR(GetClassInfoEx(hInstance_, wndClass.className, &wndClassEx));
+		if (wndClassEx.lpfnWndProc != Window::wndProcWrapper) {
+			defWindowProc_ = wndClassEx.lpfnWndProc;
+			SetLastError(0);
+			SYSPR(SetWindowLongPtr(hWnd_, GWLP_WNDPROC, (LONG_PTR)Window::wndProcWrapper));
+		}
+		SetLastError(0);
+		SYSPR(SetWindowLongPtr(hWnd_, GWLP_USERDATA, (LONG_PTR)this));
+
+		// set default event handlers
+		MOUSEEVENTPROC** p = &onLeftUp_;
+		while (p <= &onMiddleDblClick_) *p++ = &defOnMouseEventProc_;
+		onMouseMove_ = &defOnMouseMoveProc_;
+
+		this->onCreate();
 	}
-	SetWindowLongPtr(hWnd_, GWLP_USERDATA, (LONG_PTR)this);
-
-	// set default event handlers
-	MOUSEEVENTPROC** p = &onLeftUp_;
-	while (p <= &onMiddleDblClick_) *p++ = &defOnMouseEventProc_;
-	onMouseMove_ = &defOnMouseMoveProc_;
-
-	this->onCreate();
 }
 
 Window::~Window() {

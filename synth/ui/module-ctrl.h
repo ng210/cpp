@@ -4,6 +4,7 @@
 #include "win/ctrl.h"
 #include "win/buttonctrl.h"
 #include "win/comboboxctrl.h"
+#include "win/staticctrl.h"
 #include "synth/ui/pot-ctrl.h"
 #include "synth/src/module/module.h"
 #include "base/stream.h"
@@ -29,12 +30,13 @@ namespace SYNTH_UI {
 	class ModuleCtrl : public Ctrl {
 		static WndClass wndClass_;
 		static CBSELECTITEMPROC onSelectProgram;
+		static HANDLE hBackground_;
 	protected:
 		int potCtrlCount_;
 		ComboboxCtrl programCtrl_;
 		ButtonCtrl addButton_;
 		ButtonCtrl removeButton_;
-	//protected: PROP_R(ComboboxCtrl*, programSelect);
+		StaticCtrl background_;
 	protected: PROP_R(PotCtrl**, potCtrls);
 	protected: PROP_R(Module*, module);
 	protected: PROP_R(int, borderWidth);
@@ -45,8 +47,10 @@ namespace SYNTH_UI {
 
 		virtual void create(Window* parent, char* name);
 		virtual void initFromStream(Stream* data, int size = 128);
-
+		virtual HANDLE getBackgroundImage();
+		
 		//LRESULT onPaint();
+		LRESULT onSize(RECT& rect, WPARAM state);
 
 		void updateSoundbank();
 		//void updateProgram();

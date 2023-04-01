@@ -7,11 +7,14 @@
 namespace SYNTH_UI {
 
 	class BassCtrl : public ModuleCtrl {
+		static HANDLE hBackground_;
 	public:
 		BassCtrl(Module* module);
 		~BassCtrl();
 
 		void create(Window* parent, char* name);
+
+		HANDLE getBackgroundImage();
 
 		//LRESULT onPaint();
 	};

@@ -137,8 +137,6 @@ void Mixer8x4::fillSoundBuffer(short* buffer, int sampleCount, void* args) {
             }
 
             // panning clipping and final amplification
-            if (chLeft > 1.0f) chLeft = 1.0f; else if (chLeft < -1.0f) chLeft = -1.0f;
-            if (chRight > 1.0f) chRight = 1.0f; else if (chRight < -1.0f) chRight = -1.0f;
             var amp = 32768.0f * ch->controls->amp.value.f;
             var pan = 2.0f * ch->controls->pan.value.f;
             chLeft *= amp * (2.0f - pan);
@@ -146,6 +144,8 @@ void Mixer8x4::fillSoundBuffer(short* buffer, int sampleCount, void* args) {
             left += chLeft;
             right += chRight;
         }
+        if (left > 32767.0f) left = 32767.0f; else if (left < -32767.0f) left = -32767.0f;
+        if (right > 32767.0f) right = 32767.0f; else if (right < -32767.0f) right = -32767.0f;
         buffer[j++] += (short)left;
         buffer[j++] += (short)right;
     }

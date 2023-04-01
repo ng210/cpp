@@ -33,10 +33,14 @@ Stream* SynthApp::createBinaryData() {
         sequence1->writeHeader();
 
         sequence1->writeDelta(0);
-        sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(1)->writeByte(1)->writeByte(1)->writeByte(4);
+        sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(1)->writeByte(1)->writeByte(1)->writeByte(8);
         sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(2)->writeByte(2)->writeByte(3)->writeByte(8);
         sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(3)->writeByte(3)->writeByte(2)->writeByte(1);
-        //sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(4)->writeByte(4)->writeByte(1)->writeByte(4);
+        //sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(4)->writeByte(5)->writeByte(1)->writeByte(4);
+        sequence1->writeEOF();
+
+        sequence1->writeDelta(steps);
+        sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(3)->writeByte(4)->writeByte(2)->writeByte(1);
         sequence1->writeEOF();
 
         sequence1->writeDelta(steps);
@@ -105,7 +109,7 @@ Stream* SynthApp::createBinaryData() {
         sequence2->writeDelta(4);
         sequence2->writeEOS();
     }
-    //#region Sequence #2 - 32st "drums"
+    //#region Sequence #3 - 32st "drums"
     var sequence3 = NEW_(Sequence, &drumsDevice);
     {
         sequence3->writeHeader();
@@ -156,7 +160,7 @@ Stream* SynthApp::createBinaryData() {
         sequence3->writeDelta(8);
         sequence3->writeEOS();
     }
-    //#region Sequence #2 - 128st "chords"
+    //#region Sequence #4 - 256st "chords"
     var sequence4 = NEW_(Sequence, &synthDevice);
     {
         sequence4->writeHeader();
@@ -257,31 +261,137 @@ Stream* SynthApp::createBinaryData() {
         sequence4->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
         sequence4->writeEOF();
 
-        sequence2->writeDelta(16);
-        sequence2->writeEOS();
+        sequence4->writeDelta(16);
+        sequence4->writeEOS();
     }
+    //#region Sequence #2 - 128st "chords"
+    // A C
     var sequence5 = NEW_(Sequence, &synthDevice);
     {
         sequence5->writeHeader();
 
         sequence5->writeDelta(0);
-        sequence5->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.1f);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA4)->writeByte(90);
         sequence5->writeEOF();
 
         sequence5->writeDelta(16);
-        sequence5->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.2f);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA4)->writeByte(0);
         sequence5->writeEOF();
 
         sequence5->writeDelta(16);
-        sequence5->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.4f);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC5)->writeByte(90);
         sequence5->writeEOF();
 
         sequence5->writeDelta(16);
-        sequence5->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.6f);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC5)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0);
         sequence5->writeEOF();
 
         sequence5->writeDelta(16);
         sequence5->writeEOS();
+    }
+
+    var sequence6 = NEW_(Sequence, &synthDevice);
+    {
+        sequence6->writeHeader();
+
+        sequence6->writeDelta(0);
+        sequence6->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.1f);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.2f);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.4f);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.6f);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeEOS();
     }
     #pragma endregion
 
@@ -308,7 +418,7 @@ Stream* SynthApp::createBinaryData() {
         adapterList->writeByte(SynthDevices::DeviceSynth);  //dev #2: synth
         adapterList->writeByte(6);  // voice count
         adapterList->writeByte(255);// default soundbank
-        adapterList->writeByte(3);  // program
+        adapterList->writeByte(4);  // program
         adapterList->writeByte(SynthDevices::DeviceDrums);  //dev #3: drums
         adapterList->writeByte(255);// default soundbank
         adapterList->writeByte(1)->writeByte(2)->writeByte(4)->writeByte(6);    // programs
@@ -324,7 +434,7 @@ Stream* SynthApp::createBinaryData() {
 
         adapterList->writeByte(SynthDevices::DeviceStereoDelay);  //dev #6
         adapterList->writeByte(255);    // default soundbank
-        adapterList->writeByte(1);      // program id
+        adapterList->writeByte(2);      // program id
 
         adapterList->writeByte(SynthDevices::DeviceMixer);      //dev #6
         // 3 channels
@@ -348,7 +458,7 @@ Stream* SynthApp::createBinaryData() {
         adapterList->writeByte(100);    // stage1 gain
 
         // channel #3
-        adapterList->writeByte(  0);    // amp#2
+        adapterList->writeByte( 60);    // amp#2
         adapterList->writeByte(127);    // pan#2
         adapterList->writeByte(200);    // gain#2 - drums
         adapterList->writeByte(  0);    // stage count
@@ -363,22 +473,25 @@ Stream* SynthApp::createBinaryData() {
 
     #pragma region CreateStream
     var sequenceList = NEW_(Stream);
-    sequenceList->writeByte(5);
+    sequenceList->writeByte(6);
     sequenceList->writeWord((word)sequence1->length());
     sequenceList->writeWord((word)sequence2->length());
     sequenceList->writeWord((word)sequence3->length());
     sequenceList->writeWord((word)sequence4->length());
     sequenceList->writeWord((word)sequence5->length());
+    sequenceList->writeWord((word)sequence6->length());
     sequenceList->writeStream(sequence1);
     sequenceList->writeStream(sequence2);
     sequenceList->writeStream(sequence3);
     sequenceList->writeStream(sequence4);
     sequenceList->writeStream(sequence5);
+    sequenceList->writeStream(sequence6);
     DEL_(sequence1);
     DEL_(sequence2);
     DEL_(sequence3);
     DEL_(sequence4);
     DEL_(sequence5);
+    DEL_(sequence6);
 
     // header
     // 5 data blocks
