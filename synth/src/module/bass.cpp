@@ -4,7 +4,7 @@
 NS_FW_BASE_USE
 using namespace SYNTH;
 
-Soundbank* Bass::defaultSoundbank_;
+Soundbank* Bass::defaultSoundbank_ = NULL;
 
 Bass::Bass(float* smpRate, int count) : SynthBase((PotBase*)&controls, BassCtrlCount) {
     setupVoice = (PVOICEHANDLER)&Bass::setupVoiceHandler;
@@ -99,4 +99,5 @@ void Bass::prepare() {
 
 void Bass::cleanUp() {
     DEL_(Bass::defaultSoundbank_);
+    Bass::defaultSoundbank_ = NULL;
 }

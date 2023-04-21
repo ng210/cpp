@@ -1311,11 +1311,20 @@ void SynthTest::testCreateDrums() {
     var drumsDevice = (DrumsDevice*)player->addDevice(adapter, SynthDevices::DeviceDrums);
     var drums = drumsDevice->drums();
 
-    GenericDrum& kd = drums->drums[0];
-    assert("Should have a kick drum", kd.controls.fre[0].value.f != 0.0f);
+    GenericDrum& bd = drums->drums[0];
+    assert("Should have a kick drum", bd.controls.fre[0].value.f != 0.0f);
+
+    drums->drums[0].setProgram(1);
+    drums->drums[1].setProgram(2);
+    drums->drums[2].setProgram(3);
+    drums->drums[3].setProgram(5);
+    drums->drums[4].setProgram(7);
+    drums->drums[5].setProgram(8);
+    drums->drums[6].setProgram(9);
+    drums->drums[7].setProgram(10);
 
     drums->drums[0].getControl(gdDahr1Amp)->value.f = 0.8f;
-    drums->drums[1].getControl(gdDahr1Amp)->value.f = 0.0f;
+    //drums->drums[1].getControl(gdDahr1Amp)->value.f = 0.0f;
     drums->drums[2].getControl(gdDahr1Amp)->value.f = 0.6f;
     drums->drums[3].getControl(gdDahr1Amp)->value.f = 0.6f;
     drums->drums[3].getControl(gdDahr1Rel)->value.b = 24;
@@ -1384,44 +1393,45 @@ void SynthTest::testCreateDrums() {
         if (SoundPlayer::start((int)samplingRate, 1, simpleSynthCallback, drums) == 0) {
             var frame = SAMPLE_BUFFER_SIZE;
             do {
-                drums->setNote(drBD, 240);
+                drums->setNote(drBD, 200);
+                drums->setNote(drCH, 100);
+                Sleep(240);
+
                 drums->setNote(drCH, 200);
+                drums->setNote(drLT, 100);
                 Sleep(240);
 
-                drums->setNote(drOH, 200);
-                drums->setNote(drLT, 120);
+                drums->setNote(drBD, 200);
+                drums->setNote(drCH, 100);
+                drums->setNote(drCP, 180);
                 Sleep(240);
 
-                drums->setNote(drBD, 240);
                 drums->setNote(drCH, 200);
-                drums->setNote(drCP, 80);
+                drums->setNote(drHT, 100);
                 Sleep(240);
 
-                drums->setNote(drOH, 200);
-                drums->setNote(drHT, 120);
+                drums->setNote(drBD, 200);
+                drums->setNote(drCH, 100);
                 Sleep(240);
 
-                drums->setNote(drBD, 240);
                 drums->setNote(drCH, 200);
+                drums->setNote(drLT, 100);
                 Sleep(240);
 
-                drums->setNote(drOH, 200);
-                drums->setNote(drLT, 120);
+                drums->setNote(drBD, 200);
+                drums->setNote(drCH, 100);
+                drums->setNote(drCP, 180);
                 Sleep(240);
 
-                drums->setNote(drBD, 240);
                 drums->setNote(drCH, 200);
-                drums->setNote(drCP, 80);
-                Sleep(240);
-
-                drums->setNote(drOH, 200);
-                drums->setNote(drHT, 120);
+                drums->setNote(drHT, 100);
                 Sleep(120);
 
-                drums->setNote(drMT, 120);
+                drums->setNote(drMT, 100);
                 Sleep(120);
 
-            } while (count++ < 1);
+            } while (++count < 4);
+            Sleep(240);
             SoundPlayer::stop();
         }
     }
@@ -2045,7 +2055,7 @@ void SynthTest::testLoadXm() {
 }
 
 void SynthTest::testDrumLoop() {
-    char* file = "drums3.pat";
+    char* file = "drums1.pat";
     char* output = "drums1.wav";
     // read pattern file
     if (File::exists(file)) {
@@ -2059,33 +2069,34 @@ void SynthTest::testDrumLoop() {
 
         byte* bp = NULL;
         var drumsDevice = (DrumsDevice*)player->addDevice(synthAdapter, SynthDevices::DeviceDrums);
-        player->addDevice(synthAdapter, SynthDevices::DeviceDistort, NULL);
-        player->addDevice(synthAdapter, SynthDevices::DeviceStereoDelay, NULL);
+        #pragma region Effects
+        var distortDevice = (DistortDevice*)player->addDevice(synthAdapter, SynthDevices::DeviceDistort, NULL);
+        var distort = (Module*)distortDevice->object();
+        distort->setControl(distAmp, 1.2f); distort->setControl(distLvl, 0.6f);
+        distort->setControl(distCut, 20); distort->setControl(distRes, 0.6f);
+        distort->setControl(distMode, FmBandPass);
+        var stereoDelayDevice = (StereoDelayDevice*)player->addDevice(synthAdapter, SynthDevices::DeviceStereoDelay, NULL);
+        var stereoDelay = (Module*)stereoDelayDevice->object();
+        stereoDelay->setControl(stdlFeedbackLeft, 0.5f); stereoDelay->setControl(stdlFeedbackRight, 0.4f);
+        stereoDelay->setControl(stdlDelayLeft, 141.6f); stereoDelay->setControl(stdlDelayRight, 134.6f);
+        stereoDelay->setControl(stdlMixLeft, 0.1f); stereoDelay->setControl(stdlMixRight, 0.2f);
+        stereoDelay->setControl(stdlCut, 40); stereoDelay->setControl(stdlRes, 0.2f);
+        stereoDelay->setControl(stdlMode, FmBandPass | FmHighPass);
+        #pragma endregion
 
-        //byte delayInit2[] = {
-        //    DB(255), DB(1)
-        //};
-        //bp = delayInit2;
-        player->addDevice(synthAdapter, SynthDevices::DeviceStereoDelay, &bp);
+        #pragma region Mixer
+        var mixer = (Mixer8x4*)(player->addDevice(synthAdapter, SynthDevices::DeviceMixer)->object());
+        mixer->channelCount(1);
+        var ch1 = mixer->getChannel(0);
+        mixer->connectInput(ch1, drumsDevice->drums());
+        mixer->connectEffect(ch1, (Module*)distortDevice->object());
+        mixer->connectEffect(ch1, (Module*)stereoDelayDevice->object());
+        ch1->controls->amp.value = 0.8f;
+        ch1->controls->gain.value = 0.5f;
+        ch1->controls->pan.value = 0.5f;
+        ch1->controls->stages[0].gain.value = 0.1f;
+        ch1->controls->stages[1].gain.value = 0.2f;
 
-        byte mixerInit[] = {
-            DB(1),   // 1 channel
-            // channel#1
-                DB(  0),        // gain
-                DB( 50),        // pan
-                DB(200),        // amp
-                DB(1),          // stage count
-                    DB(200),    // stage #1 gain
-                    //DB( 40),  // stage #2 gain
-                    //DB( 20),  // stage #3 gain
-            // inputs
-                DB(1),          // device1 -> channel#1
-                    DB(3)       // stereo delay #1    
-                    //DB(3),    // distort #1
-                    //DB(4)     // stereo delay #2
-        };
-        bp = mixerInit;
-        var mixer = (Mixer8x4*)(player->addDevice(synthAdapter, SynthDevices::DeviceMixer, &bp)->object());
         var channel = NEW_(Channel, "drums");
         player->channels().push(channel);
         #pragma endregion
@@ -2104,21 +2115,24 @@ void SynthTest::testDrumLoop() {
         
         #pragma region Playback
         var drums = drumsDevice->drums();
-        drums->drums[0].setProgram(0);
-        drums->drums[1].setControl(gdDahr1Hld, 26);
-        drums->drums[0].setControl(gdDahr1Rel, 140);
-        drums->drums[0].setControl(gdDahr2Rel, 180);
+        drums->drums[0].setProgram(1);
+        //drums->drums[0].setControl(gdDahr1Rel, 140);
+        //drums->drums[0].setControl(gdDahr2Rel, 180);
         drums->drums[1].setProgram(2);
-        drums->drums[1].setControl(gdDahr1Amp,  60/255.0f);
+        //drums->drums[1].setControl(gdDahr1Hld, 26);
+        //drums->drums[1].setControl(gdDahr1Amp,  60/255.0f);
         drums->drums[1].setControl(gdDahr1Hld,  12);
         drums->drums[1].setControl(gdDahr1Rel,  24);
-        drums->drums[1].setControl(gdDahr3Amp, 250 / 255.0f);
-        drums->drums[1].setControl(gdDahr3Rel,  8);
-        drums->drums[1].setControl(gdFlt1Cut,   80);
-        drums->drums[1].setControl(gdAmp3, 150/255.0f);
+        //drums->drums[1].setControl(gdDahr3Amp, 250 / 255.0f);
+        //drums->drums[1].setControl(gdDahr3Rel,  8);
+        drums->drums[1].setControl(gdFlt1Cut,   40);
+        //drums->drums[1].setControl(gdAmp3, 150/255.0f);
         drums->drums[2].setProgram(3);
         drums->drums[3].setProgram(5);
         drums->drums[3].setControl(gdDahr1Hld, 50);
+        drums->drums[4].setProgram(7);
+        drums->drums[5].setProgram(8);
+        drums->drums[6].setProgram(9);
         //drums->setControl(bdTone, 1.0f);
         //drums->setControl(bdTune, 41.0f);
         //drums->setControl(bdDecay, 80);

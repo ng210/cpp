@@ -1,4 +1,4 @@
-TEMPO 81 8
+TEMPO 121 8
 DEVICES Drums
 MASTER 1 2 1 3
 PATTERN 1 1##############

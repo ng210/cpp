@@ -6,7 +6,7 @@ NS_FW_BASE_USE
 
 using namespace SYNTH;
 
-Soundbank* Distort::defaultSoundbank_;
+Soundbank* Distort::defaultSoundbank_ = NULL;
 
 Distort::Distort(float* samplingRate) : Module((PotBase*)&controls, DistortCtrlsCount) {
     controls.mod.value.f = 0.0f;
@@ -84,4 +84,5 @@ void Distort::prepare() {
 
 void Distort::cleanUp() {
     DEL_(Distort::defaultSoundbank_);
+    Distort::defaultSoundbank_ = NULL;
 }

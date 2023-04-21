@@ -98,9 +98,10 @@ double pole10Factors[] = { 0.312869, 0.907981, M_SQRT2, 1.782013, 1.975377 };
 
 double* Flt::linearFactors[] = { NULL, (double*)&pole2Factors, (double*)&pole3Factors, (double*)&pole4Factors, (double*)&pole5Factors, (double*)&pole6Factors, (double*)&pole7Factors, (double*)&pole8Factors, (double*)&pole9Factors, (double*)&pole10Factors};
 
-Flt::Flt(int poleCount) :Elem(FltCtrlCount) {
+Flt::Flt(int poleCount) : Elem(FltCtrlCount) {
     controls_ = NULL;
     poleCount_ = poleCount;
+    stageCount_ = 0;
     createStages(poleCount);
 }
 Flt::~Flt() {

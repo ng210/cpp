@@ -5,7 +5,7 @@
 NS_FW_BASE_USE
 using namespace SYNTH;
 
-Soundbank* StereoDelay::defaultSoundbank_;
+Soundbank* StereoDelay::defaultSoundbank_ = NULL;
 
 StereoDelay::StereoDelay() : Module((PotBase*)&controls, StereoDelayCtrlCount) {
 	left_.setSamplingRate();
@@ -122,6 +122,7 @@ void StereoDelay::prepare() {
 
 void StereoDelay::cleanUp() {
 	DEL_(StereoDelay::defaultSoundbank_);
+	StereoDelay::defaultSoundbank_ = NULL;
 }
 
 int StereoDelay::delayLeftSetter(void* obj, S value) {
