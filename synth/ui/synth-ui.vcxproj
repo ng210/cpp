@@ -41,7 +41,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
+    <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
@@ -125,6 +125,7 @@
       <ConformanceMode>Default</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)\..</AdditionalIncludeDirectories>
       <PrecompiledHeader />
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -132,12 +133,13 @@
       <AdditionalDependencies>fw.lib;synth.lib;player.lib;soundlib.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\fw\$(Platform)\$(Configuration);$(ProjectDir)$(Platform)\$(Configuration);$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)..\player\$(Platform)\$(Configuration);$(SolutionDir)..\soundlib\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <GenerateMapFile>true</GenerateMapFile>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -145,6 +147,11 @@
       <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)\..</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,6 +161,7 @@
       <AdditionalDependencies>fw.lib;synth.lib;player.lib;soundlib.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\fw\$(Platform)\$(Configuration);$(ProjectDir)$(Platform)\$(Configuration);$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)..\player\$(Platform)\$(Configuration);$(SolutionDir)..\soundlib\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <GenerateMapFile>true</GenerateMapFile>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

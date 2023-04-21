@@ -17,8 +17,9 @@ ModuleCtrl::ModuleCtrl(Module* module) {
 	//module_->setProgram = { this, &ModuleCtrl::setProgramProc };
 	potCtrlCount_ = 0;
 	potCtrls_ = NULL;
-	borderWidth_ = 4;
+	borderWidth_ = 2;
 	gapWidth_ = 1;
+	hasLabel_ = false;
 
 	module_->setSoundbank.add(this, &ModuleCtrl::soundbankSetter);
 	module_->setProgram.add(this, &ModuleCtrl::programSetter);
@@ -33,7 +34,7 @@ ModuleCtrl::~ModuleCtrl() {
 
 void ModuleCtrl::create(Window* parent, char* name) {
 	Ctrl::create(ModuleCtrl::wndClass_, parent, name);
-	RECT rect = { borderWidth_, borderWidth_, 144, 96 };
+	RECT rect = { borderWidth_ + gapWidth_, borderWidth_ + gapWidth_, 96, 96 };
 	if (module_->soundbank() != NULL) {
 		// add combobox for soundbank
 		programCtrl_.create(this, "Program", CBS_DROPDOWN | WS_VSCROLL);
@@ -41,14 +42,14 @@ void ModuleCtrl::create(Window* parent, char* name) {
 		programCtrl_.onSelectItem([](ComboboxCtrl* cb, int ix, void* item){});
 		SYSPR(SetWindowPos(programCtrl_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 		programCtrl_.onSelectItem(ModuleCtrl::onSelectProgram);
-		rect.left += rect.right + 2;
+		rect.left += rect.right + 2*gapWidth_;
 		updateSoundbank();
 		// add buttons add/del
 		rect.right = 24; rect.bottom = 24;
 		addButton_.create(this, "Add Prg", BS_CENTER | BS_TEXT);
 		SYSPR(SetWindowText(addButton_.hWnd(), "+"));
 		SYSPR(SetWindowPos(addButton_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
-		rect.left += rect.right + 2;
+		rect.left += rect.right + 2 * gapWidth_;
 		addButton_.onLeftUp(ModuleCtrl::onAddProgram);
 		removeButton_.create(this, "Del Prg", BS_CENTER | BS_TEXT);
 		SYSPR(SetWindowText(removeButton_.hWnd(), "-"));
@@ -57,26 +58,39 @@ void ModuleCtrl::create(Window* parent, char* name) {
 		programCtrl_.select(module_->program());
 	}
 	var hBackground = getBackgroundImage();
-	background_.create(this, "bgbitmap", WS_CLIPSIBLINGS | SS_BITMAP | SS_SUNKEN);
+	background_.create(this, "bgbitmap", WS_CLIPSIBLINGS | SS_BITMAP);
 	SYSPR(SendMessage(background_.hWnd(), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBackground));
-	SYSPR(SetWindowPos(background_.hWnd(), NULL, 0, 0, rect_.right, rect_.bottom, SWP_SHOWWINDOW));
 }
 
-void ModuleCtrl::initFromStream(Stream* data, int size) {
-	int x = borderWidth_, y = borderWidth_ + 24 + borderWidth_;
-	int width = 0, height = 0;
+void ModuleCtrl::initFromStream(Stream* data, int size, unsigned long *colors) {
+	var margin = borderWidth_ + gapWidth_;
+	var labelHeight = hasLabel_ ? gapWidth_ + 16 + gapWidth_ : 0;
+	int x = margin + borderWidth_, y = margin + borderWidth_ + 26 + labelHeight;
+	int rowHeight = 0;
 	potCtrls_ = MALLOC(PotCtrl*, 256);
 	var pCtrl = potCtrls_;
 	potCtrlCount_ = 0;
 
 	int ctrlId;
+	var sb = module_->soundbank();
+	if (sb) {
+		LOG("%s\n", (char*)sb->keys()->get(0));
+	}
+
+	// create brushes from colors
+	var SYSFN(backgroundBrush, CreateSolidBrush(data->readDword()));
+	var SYSFN(foregroundBrush, CreateSolidBrush(data->readDword()));
+	var SYSFN(frameBrush, CreateSolidBrush(data->readDword()));
+	COLORREF textColor = data->readDword();
+
 	while ((ctrlId = data->readByte()) != LayoutEnd) {
 		if (ctrlId == LayoutHorizontalGap) {
-			x += 2*gapWidth_;
+			x += margin + borderWidth_ - gapWidth_;
 			continue;
 		} else if (ctrlId == LayoutVerticalGap) {
-			x = borderWidth_;
-			y = height + gapWidth_;
+			x = margin + borderWidth_;
+			y += rowHeight + borderWidth_ + borderWidth_;
+			rowHeight = 0;
 			continue;
 		}
 
@@ -88,15 +102,23 @@ void ModuleCtrl::initFromStream(Stream* data, int size) {
 		(*pCtrl)->pot(ctrl);
 		(*pCtrl)->type((PotCtrlType)data->readByte());
 		(*pCtrl)->setSize(size);
+		(*pCtrl)->setColors(backgroundBrush, foregroundBrush, frameBrush, textColor);
 		SetWindowPos((*pCtrl)->hWnd(), NULL, x, y, 0, 0, SWP_NOSIZE);
+		LOG("x:%d, y:%d, %d, %d\n", x, y, (*pCtrl)->rect().right, (*pCtrl)->rect().bottom);
 		x += (*pCtrl)->rect().right + gapWidth_;
-		var cy = y + (*pCtrl)->rect().bottom;
-		if (width < x) width = x;
-		if (height < cy) height = cy;
+		var controlHeight = (*pCtrl)->rect().bottom;
+		if (rect_.right < x) rect_.right = x;
+		if (rowHeight < controlHeight) rowHeight = controlHeight;
 		pCtrl++;
 	}
 
-	SetWindowPos(hWnd_, NULL, 0, 0, width + borderWidth_, height + borderWidth_, SWP_NOMOVE);
+	rect_.right += borderWidth_ + margin - gapWidth_;
+	rect_.bottom = y + rowHeight + borderWidth_ + margin;
+	SetWindowPos(hWnd_, NULL, 0, 0, rect_.right, rect_.bottom, SWP_NOMOVE);
+	SYSPR(SetWindowPos(background_.hWnd(), NULL, 0, 0, rect_.right, rect_.bottom, SWP_SHOWWINDOW));
+	RECT rect;
+	GetClientRect(background_.hWnd(), &rect);
+	LOG("2. %d, %d, %d, %d\n", rect.left, rect.top, rect.right, rect.bottom);
 }
 
 HANDLE ModuleCtrl::getBackgroundImage() {

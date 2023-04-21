@@ -49,6 +49,8 @@ namespace SYNTH_UI {
 		void create(Window* parent, char* name);
 
 		void setColors(DWORD background, DWORD foreground, DWORD frame, DWORD text);
+		void setColors(DWORD* colors);
+		void setColors(HBRUSH background, HBRUSH foreground, HBRUSH frame, COLORREF text);
 		void label(TCHAR* lbl);
 		void setSize(int size);
 		void type(PotCtrlType t);
@@ -58,8 +60,8 @@ namespace SYNTH_UI {
 		static MOUSEMOVEEVENTPROC onMouseMoveProc;
 		LRESULT onPaint();
 
-		static HBRUSH frameBrush_, backgroundBrush_, foregroundBrush_;
-		static COLORREF textColor_;
+		HBRUSH frameBrush_, backgroundBrush_, foregroundBrush_;
+		COLORREF textColor_;
 
 		static SetterFunc setter;
 		static SetterFunc setterF8;

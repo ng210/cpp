@@ -7,6 +7,10 @@ using namespace SYNTH_UI;
 #define SMF	 4		// synth module frame
 
 byte synthUiLayout[] = {
+	// colors
+	// background, foreground, frame, text
+	DD(0x00285010), DD(0x0078ff30), DD(0x0050a020), DD(0x0040ff40),
+	// controls
 	// AM
 	DB(amAdsrAmp), DB('a'),DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
 	DB(amAdsrAtk), DB('a'),DB('t'), DB('k'), DB(0), DB(PotCtrlType::Knob),

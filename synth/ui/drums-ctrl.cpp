@@ -4,6 +4,11 @@
 using namespace SYNTH_UI;
 
 byte genericDrumLayout[] = {
+	// colors
+	// background, foreground, frame, text
+	DD(0x00285010), DD(0x0078ff30), DD(0x0050a020), DD(0x0040ff40),
+	// controls
+	DB(gdType),		DB('t'), DB('y'), DB('p'), DB('e'), DB(0), DB(PotCtrlType::Knob),
 	// Dahr1
 	DB(gdDahr1Amp), DB('a'), DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdDahr1Del), DB('d'), DB('e'), DB('l'), DB(0), DB(PotCtrlType::Knob),

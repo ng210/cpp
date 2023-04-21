@@ -33,8 +33,11 @@ public:
 	~SynthApp();
 
 	void create(WndClass wndClass, LONG style = 0, DWORD exStyle = 0);
+	//LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	LRESULT onCreate();
+	LRESULT onSize(RECT& rect, WPARAM state);
+	void updateLayout();
 
 	int main(NS_FW_BASE::Map* args);
 

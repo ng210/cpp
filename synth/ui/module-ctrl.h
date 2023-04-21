@@ -37,6 +37,7 @@ namespace SYNTH_UI {
 		ButtonCtrl addButton_;
 		ButtonCtrl removeButton_;
 		StaticCtrl background_;
+	protected: PROP(bool, hasLabel);
 	protected: PROP_R(PotCtrl**, potCtrls);
 	protected: PROP_R(Module*, module);
 	protected: PROP_R(int, borderWidth);
@@ -46,7 +47,7 @@ namespace SYNTH_UI {
 		virtual ~ModuleCtrl();
 
 		virtual void create(Window* parent, char* name);
-		virtual void initFromStream(Stream* data, int size = 128);
+		virtual void initFromStream(Stream* data, int size = 100, unsigned long *colors = NULL);
 		virtual HANDLE getBackgroundImage();
 		
 		//LRESULT onPaint();

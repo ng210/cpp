@@ -3,7 +3,10 @@
 using namespace SYNTH_UI;
 
 byte distortUiLayout[] = {
-	// AM
+	// colors
+	// background, foreground, frame, text
+	DD(0x00285010), DD(0x0078ff30), DD(0x0050a020), DD(0x0040ff40),
+	// controls
 	DB(distAmp), DB('a'), DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
 	DB(distLvl), DB('l'), DB('v'), DB('l'), DB(0), DB(PotCtrlType::Knob),
 	DB(distCut), DB('c'), DB('u'), DB('t'), DB(0), DB(PotCtrlType::Knob),

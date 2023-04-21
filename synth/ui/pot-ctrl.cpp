@@ -9,10 +9,6 @@ using namespace SYNTH_UI;
 
 #define GAP 4
 
-HBRUSH PotCtrl::backgroundBrush_ = NULL;
-HBRUSH PotCtrl::foregroundBrush_ = NULL;
-HBRUSH PotCtrl::frameBrush_ = NULL;
-COLORREF PotCtrl::textColor_;
 HFONT PotCtrl::smallFont_ = NULL;
 HFONT PotCtrl::mediumFont_ = NULL;
 HFONT PotCtrl::largeFont_ = NULL;
@@ -29,6 +25,11 @@ int PotCtrl::setter(void* obj, S value) {
 }
 
 PotCtrl::PotCtrl() {
+	backgroundBrush_ = NULL;
+	foregroundBrush_ = NULL;
+	frameBrush_ = NULL;
+	textColor_ = NULL;
+
 	if (PotCtrl::wndClass_.atom == 0) {
 		PotCtrl::wndClass_.atom = registerClass("PotCtrl", NULL);
 		setColors(0x00400000, 0x00c08060, 0x00804030, 0x00ffffff);
@@ -73,16 +74,33 @@ void PotCtrl::label(TCHAR* lbl) {
 	setSize(size_);
 }
 
+void PotCtrl::setColors(DWORD *colors) {
+	var background = colors[0], foreground = colors[1], frame = colors[2], text = colors[3];
+	setColors(background, foreground, frame, text);
+}
+
 void PotCtrl::setColors(DWORD background, DWORD foreground, DWORD frame, DWORD text) {
-	if (PotCtrl::backgroundBrush_ != NULL) {
-		SYSPR(DeleteObject(PotCtrl::backgroundBrush_));
-		SYSPR(DeleteObject(PotCtrl::foregroundBrush_));
-		SYSPR(DeleteObject(PotCtrl::frameBrush_));
+	if (backgroundBrush_ != NULL) {
+		SYSPR(DeleteObject(backgroundBrush_));
+		SYSPR(DeleteObject(foregroundBrush_));
+		SYSPR(DeleteObject(frameBrush_));
 	}
-	SYSFN(PotCtrl::backgroundBrush_, CreateSolidBrush(background));
-	SYSFN(PotCtrl::foregroundBrush_, CreateSolidBrush(foreground));
-	SYSFN(PotCtrl::frameBrush_, CreateSolidBrush(frame));
-	PotCtrl::textColor_ = text;
+	SYSFN(backgroundBrush_, CreateSolidBrush(background));
+	SYSFN(foregroundBrush_, CreateSolidBrush(foreground));
+	SYSFN(frameBrush_, CreateSolidBrush(frame));
+	textColor_ = text;
+}
+
+void PotCtrl::setColors(HBRUSH background, HBRUSH foreground, HBRUSH frame, COLORREF text) {
+	if (backgroundBrush_ != NULL) {
+		SYSPR(DeleteObject(backgroundBrush_));
+		SYSPR(DeleteObject(foregroundBrush_));
+		SYSPR(DeleteObject(frameBrush_));
+	}
+	backgroundBrush_ = background;
+	foregroundBrush_ = foreground;
+	frameBrush_ = frame;
+	textColor_ = text;
 }
 
 void PotCtrl::setSize(int size) {
@@ -237,9 +255,9 @@ void PotCtrl::drawHPotmeter(HDC hdc, float value) {
 
 	// draw level
 	RECT rect = { x, GAP, x + levelSize_.cx, GAP + levelSize_.cy };
-	FrameRect(hdc, &rect, PotCtrl::frameBrush_);
+	FrameRect(hdc, &rect, frameBrush_);
 	rect.right = x + (int)floor(value * levelSize_.cx);
-	FillRect(hdc, &rect, PotCtrl::foregroundBrush_);
+	FillRect(hdc, &rect, foregroundBrush_);
 
 	// draw value
 	if (showValue_) {
@@ -262,9 +280,9 @@ void PotCtrl::drawVPotmeter(HDC hdc, float value) {
 
 	// draw level
 	RECT rect = { x, y, x + levelSize_.cx, y + levelSize_.cy };
-	FrameRect(hdc, &rect, PotCtrl::frameBrush_);
+	FrameRect(hdc, &rect, frameBrush_);
 	rect.top = y + (int)floor((1.0f - value) * levelSize_.cy);
-	FillRect(hdc, &rect, PotCtrl::foregroundBrush_);
+	FillRect(hdc, &rect, foregroundBrush_);
 	y += levelSize_.cy + GAP;
 
 	// draw value
@@ -287,7 +305,7 @@ void PotCtrl::drawKnob(HDC hdc, float value) {
 	}
 
 	// draw level
-	SelectObject(hdc, PotCtrl::foregroundBrush_);
+	SelectObject(hdc, foregroundBrush_);
 	Ellipse(hdc, GAP, y, GAP + levelSize_.cx, y + levelSize_.cy);
 	var cx = GAP + (levelSize_.cx >> 1);
 	var cy = GAP + (levelSize_.cy >> 1);
@@ -295,7 +313,7 @@ void PotCtrl::drawKnob(HDC hdc, float value) {
 	var f = (1.0f - value) * 300.0f + 60.0f;
 
 	BeginPath(hdc);
-	SelectObject(hdc, PotCtrl::frameBrush_);
+	SelectObject(hdc, frameBrush_);
 	MoveToEx(hdc, cx, cy, (LPPOINT)NULL);
 	AngleArc(hdc, cx, cy, levelSize_.cx>>1, 240.0f, f);
 
@@ -328,7 +346,7 @@ LRESULT PotCtrl::onPaint() {
 	PAINTSTRUCT ps;
 	var hdc = BeginPaint(hWnd_, &ps);
 	// draw background
-	FillRect(hdc, &rect_, PotCtrl::backgroundBrush_);
+	FillRect(hdc, &rect_, backgroundBrush_);
 	SelectObject(hdc, PotCtrl::font_);
 	SetBkMode(hdc, TRANSPARENT);
 	SetTextColor(hdc, textColor_);

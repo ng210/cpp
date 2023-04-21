@@ -3,6 +3,10 @@
 using namespace SYNTH_UI;
 
 byte stereoDelayUiLayout[] = {
+	// colors
+	// background, foreground, frame, text
+	DD(0x00285010), DD(0x0078ff30), DD(0x0050a020), DD(0x0040ff40),
+	// controls
 	DB(stdlFeedbackLeft), DB('f'), DB('e'), DB('e'), DB('d'), DB('b'), DB('a'), DB('c'), DB('k'), DB(0), DB(PotCtrlType::Knob),
 	DB(stdlDelayLeft), DB('d'), DB('e'), DB('l'), DB('a'), DB('y'), DB(0), DB(PotCtrlType::Knob),
 	DB(stdlMixLeft), DB('m'), DB('i'), DB('x'), DB(0), DB(PotCtrlType::Knob),

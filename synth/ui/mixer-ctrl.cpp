@@ -11,6 +11,12 @@ MixerCtrl::~MixerCtrl() {
 
 Stream* MixerCtrl::createVerticalLayout() {
 	var stream = NEW_(Stream, 1024);
+	// colors
+	// background, foreground, frame, text
+	stream->writeDword(0x00285010);
+	stream->writeDword(0x0078ff30);
+	stream->writeDword(0x0050a020);
+	stream->writeDword(0x0040ff40);
 	var mixer = (Mixer8x4*)module_;
 	int offset = 0;
 	for (var i = 0; i < mixer->channelCount_; i++) {
@@ -35,6 +41,13 @@ Stream* MixerCtrl::createVerticalLayout() {
 }
 Stream* MixerCtrl::createHorizontalLayout() {
 	var stream = NEW_(Stream, 1024);
+	// colors
+	// background, foreground, frame, text
+	stream->writeDword(0x00285010);
+	stream->writeDword(0x0078ff30);
+	stream->writeDword(0x0050a020);
+	stream->writeDword(0x0040ff40);
+	// controls
 	var mixer = (Mixer8x4*)module_;
 	int offset = MxCh1amp;
 	for (var i = 0; i < mixer->channelCount(); i++) {

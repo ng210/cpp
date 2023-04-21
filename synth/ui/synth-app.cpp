@@ -596,13 +596,14 @@ void SynthApp::create(WndClass wndClass, LONG style, DWORD exStyle) {
 
 LRESULT SynthApp::onCreate() {
 	LRESULT result = 0;
-	SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, 1280, 920, SWP_NOMOVE));
+	SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, 1364, 920, SWP_NOMOVE));
 
     loadBinary();
 
     loadSoundbanks();
 
     int left = 0, top = 0;
+    int synthStackHeight = 0;
     for (var i = 0; i < player_->devices().length(); i++) {
         ModuleCtrl* ctrl = NULL;
         var dev = (Device*)player_->devices().get(i);
@@ -620,6 +621,7 @@ LRESULT SynthApp::onCreate() {
             case DeviceDrums:
                 ctrl = NEW_(DrumsCtrl, mdl);
                 ctrl->create(this, "Drums");
+                synthStackHeight += ctrl->rect().bottom;
                 break;
             case DeviceDistort:
                 ctrl = NEW_(DistortCtrl, mdl);
@@ -636,14 +638,37 @@ LRESULT SynthApp::onCreate() {
             }
         }
         if (ctrl != NULL) {
-            SYSPR(SetWindowPos(ctrl->hWnd(), NULL, left, top, 0, 0, SWP_NOSIZE));
-            top += ctrl->rect().bottom;
-            //mdl->soundbank(mdl->soundbank());
-            //mdl->program(mdl->program());
             ctrls_.push(ctrl);
         }
     }
+    updateLayout();
     return 0;
+}
+
+LRESULT SynthApp::onSize(RECT& rect, WPARAM state) {
+    updateLayout();
+    return 1;
+}
+
+void SynthApp::updateLayout() {
+    var wi = rect_.right, he = rect_.bottom;
+    char name[16];
+    int x = 0, y = 0, dw = wi, rowHe = 0;
+    for (var i = 0; i < ctrls_.length(); i++) {
+        var mdl = (ModuleCtrl*)ctrls_.get(i);
+        if (dw < mdl->rect().right) {
+            x = 0;
+            dw = wi;
+            y += rowHe;
+            rowHe = 0;
+        }
+        dw -= mdl->rect().right;
+        GetWindowText(mdl->hWnd(), name, 16);
+        LOG("%s, %d, %d\n", name, x, y);
+        SYSPR(SetWindowPos(mdl->hWnd(), NULL, x, y, 0, 0, SWP_NOSIZE));
+        if (rowHe < mdl->rect().bottom) rowHe = mdl->rect().bottom;
+        x += mdl->rect().right;
+    }
 }
 
 int SynthApp::main(NS_FW_BASE::Map* args) {
