@@ -41,7 +41,7 @@ NS_FW_BASE_END
 #define SYSFN2(var, fn, err) var = fn
 #define DEBUG(format, ...) 
 #define INFO(format, ...)
-#define LOG(format, ...) printf(format, __VA_ARGS__)
+#define LOG(format, ...)
 #endif
 
 #endif
