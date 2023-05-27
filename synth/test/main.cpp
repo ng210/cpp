@@ -673,6 +673,7 @@ class SynthTest : public Test {
     //Device* device_;
 
     Stream* createBinaryData();
+    Stream* createBinaryData2();
     void createTestSequence(PlayerDevice* device);
     //Stream* createSynthInitData();
 public:
@@ -688,6 +689,7 @@ public:
     void testCreateDrums();
     void testLoadBinary();
     void testCreateBinary();
+    void testLoadSoundbank();
     void testLoadXm();
     void testDrumLoop();
 
@@ -1736,6 +1738,9 @@ Stream* SynthTest::createBinaryData() {
         // 9 devices
         adapterList->writeByte(9);
         adapterList->writeByte(SynthDevices::DeviceDrums);  //dev #1: drums
+        adapterList->writeByte(255);// default soundbank
+        adapterList->writeByte(1)->writeByte(2)->writeByte(4)->writeByte(6);    // programs
+        adapterList->writeByte(0)->writeByte(0)->writeByte(0)->writeByte(0);
 
         #pragma region Synths
         adapterList->writeByte(SynthDevices::DeviceBass);  //dev #2: bass
@@ -1756,46 +1761,22 @@ Stream* SynthTest::createBinaryData() {
 
         #pragma region Effects
         adapterList->writeByte(SynthDevices::DeviceDistort);  //dev #5
-            adapterList->writeFloat(2.1f);      // amp
-            adapterList->writeByte(220);        // lvl
-            adapterList->writeByte(50);         // cut
-            adapterList->writeByte(100);        // res
-            adapterList->writeByte(FmLowPass || FmBandPass /*|| FmHighPass */ );    // mode
+        adapterList->writeByte(255);    // default soundbank
+        adapterList->writeByte(0);      // program id
 
         adapterList->writeByte(SynthDevices::DeviceStereoDelay);  //dev #6
-            adapterList->writeByte(160);        // feedbackL
-            adapterList->writeFloat(120.0f);    // delayL
-            adapterList->writeByte(140);        // feedbackR
-            adapterList->writeFloat(240.0f);    // delayR
-            adapterList->writeByte(120);        // mixL
-            adapterList->writeByte(120);        // mixR
-            adapterList->writeByte(80);         // cut
-            adapterList->writeByte(10);         // res
-            adapterList->writeByte(FmLowPass);  // mode
+        adapterList->writeByte(255);    // default soundbank
+        adapterList->writeByte(0);      // program id
 
 
         adapterList->writeByte(SynthDevices::DeviceStereoDelay);  //dev #7
-            adapterList->writeByte(140);        // feedbackL
-            adapterList->writeFloat(64.0f);    // delayL
-            adapterList->writeByte(140);        // feedbackR
-            adapterList->writeFloat( 96.0f);    // delayR
-            adapterList->writeByte(120);        // mixL
-            adapterList->writeByte(220);        // mixR
-            adapterList->writeByte(80);         // cut
-            adapterList->writeByte(10);         // res
-            adapterList->writeByte(FmLowPass);  // mode
+        adapterList->writeByte(255);    // default soundbank
+        adapterList->writeByte(1);      // program id
 
 
         adapterList->writeByte(SynthDevices::DeviceStereoDelay);  //dev #8
-            adapterList->writeByte( 40);        // feedbackl
-            adapterList->writeFloat( 11.5f);    // delayL
-            adapterList->writeByte(120);        // feedbackR
-            adapterList->writeFloat(380.1f);    // delayR
-            adapterList->writeByte(200);        // mixL
-            adapterList->writeByte(180);        // mixR
-            adapterList->writeByte(80);         // cut
-            adapterList->writeByte(10);         // res
-            adapterList->writeByte(FmLowPass);  // mode
+        adapterList->writeByte(255);    // default soundbank
+        adapterList->writeByte(2);      // program id
         #pragma endregion
 
         #pragma region Mixer
@@ -1803,32 +1784,32 @@ Stream* SynthTest::createBinaryData() {
             adapterList->writeByte(4);
             
         // channel #1
-            adapterList->writeByte(240);    // gain#1 - drums
-            adapterList->writeByte( 50);    // pan#1
-            adapterList->writeByte(120);    // amp#1
+            adapterList->writeByte(180);    // amp#1 - drums
+            adapterList->writeByte(127);    // pan#1
+            adapterList->writeByte(200);    // gain#1
             adapterList->writeByte(  0);    // stage count
 
         // channel #2
-            adapterList->writeByte(60);     // gain#2 - bass
-            adapterList->writeByte( 60);    // pan#2
-            adapterList->writeByte( 60);    // amp#2
+            adapterList->writeByte(120);    // amp#2 - bass
+            adapterList->writeByte(140);    // pan#2
+            adapterList->writeByte( 40);    // gain#2
             adapterList->writeByte(1);      // stage count
-                adapterList->writeByte(80); // stage gain
+            adapterList->writeByte(120);    // stage gain
 
         // channel #3
-            adapterList->writeByte(100);    // gain#4 - chords
-            adapterList->writeByte( 30);    // pan#4
-            adapterList->writeByte( 80);    // amp#4
+            adapterList->writeByte( 80);    // amp#4 - chords
+            adapterList->writeByte( 60);    // pan#4
+            adapterList->writeByte( 80);    // gain#4
             adapterList->writeByte(2);      // stage count
-                adapterList->writeByte(120);  // stage gain
-                adapterList->writeByte( 80);  // stage gain
+            adapterList->writeByte(120);    // stage gain
+            adapterList->writeByte(180);    // stage gain
 
         // channel #4                                            
-            adapterList->writeByte(160);    // gain#3 - mono
-            adapterList->writeByte( 40);    // pan#5
-            adapterList->writeByte( 70);    // amp#5
+            adapterList->writeByte(160);    // amp#3 - mono
+            adapterList->writeByte(180);    // pan#5
+            adapterList->writeByte( 40);    // gain#5
             adapterList->writeByte(1);      // stage count
-                adapterList->writeByte(180);  // stage gain
+            adapterList->writeByte(180);    // stage gain
                 
         adapterList->writeByte(1);      // channel1 input: drums
         adapterList->writeByte(2);      // channel2 input: bass
@@ -1888,6 +1869,554 @@ Stream* SynthTest::createBinaryData() {
     #pragma endregion
 
     return data;
+}
+
+Stream* SynthTest::createBinaryData2() {
+    var data = NEW_(Stream);
+    PlayerDevice playerDevice(NULL, &playerAdapter_);
+    SynthDevice synthDevice(&synthAdapter_);
+    BassDevice bassDevice(&synthAdapter_);
+    DrumsDevice drumsDevice(&synthAdapter_);
+
+    var initData = NEW_(Stream);
+    initData->writeFloat(32.0f);
+    // 4 channels
+    initData->writeByte(4);
+
+#pragma region Sequences
+    var steps = 256;
+    //#region MASTER sequence - 12
+    // k kbh kbhc kbhcm kbhcm kbhm kbhm
+    var sequence1 = NEW_(Sequence, &playerDevice);
+    {
+        sequence1->writeHeader();
+
+        sequence1->writeDelta(0);
+        sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(1)->writeByte(1)->writeByte(1)->writeByte(8);
+        sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(2)->writeByte(2)->writeByte(3)->writeByte(8);
+        sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(3)->writeByte(3)->writeByte(2)->writeByte(1);
+        sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(4)->writeByte(5)->writeByte(4)->writeByte(4);
+        sequence1->writeEOF();
+
+        sequence1->writeDelta(steps);
+        sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(3)->writeByte(4)->writeByte(2)->writeByte(1);
+        sequence1->writeEOF();
+
+        sequence1->writeDelta(steps);
+        sequence1->writeEOS();
+    }
+    //#region Sequence #1 - 64st "bass"
+    var sequence2 = NEW_(Sequence, &bassDevice);
+    {
+        sequence2->writeHeader();
+        sequence2->writeDelta(0);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pD1)->writeByte(128);
+        sequence2->writeEOF();
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pD1)->writeByte(0);
+        sequence2->writeEOF();
+
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pD2)->writeByte(128);
+        sequence2->writeEOF();
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pD2)->writeByte(0);
+        sequence2->writeEOF();
+
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pF1)->writeByte(128);
+        sequence2->writeEOF();
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pF1)->writeByte(0);
+        sequence2->writeEOF();
+
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pF2)->writeByte(128);
+        sequence2->writeEOF();
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pF2)->writeByte(0);
+        sequence2->writeEOF();
+
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(128);
+        sequence2->writeEOF();
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(0);
+        sequence2->writeEOF();
+
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(128);
+        sequence2->writeEOF();
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(0);
+        sequence2->writeEOF();
+
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pG1)->writeByte(128);
+        sequence2->writeEOF();
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pG1)->writeByte(0);
+        sequence2->writeEOF();
+
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pF2)->writeByte(128);
+        sequence2->writeEOF();
+        sequence2->writeDelta(4);
+        sequence2->writeCommand(CmdSetNote)->writeByte(pF2)->writeByte(0);
+        sequence2->writeEOF();
+
+        sequence2->writeDelta(4);
+        sequence2->writeEOS();
+    }
+    //#region Sequence #3 - 32st "drums"
+    var sequence3 = NEW_(Sequence, &drumsDevice);
+    {
+        sequence3->writeHeader();
+
+        sequence3->writeDelta(0);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drBD)->writeByte(200);
+        sequence3->writeEOF();
+
+        sequence3->writeDelta(8);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte(208);
+        sequence3->writeEOF();
+
+        sequence3->writeDelta(8);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drSD)->writeByte(120);
+        sequence3->writeEOF();
+
+        sequence3->writeDelta(8);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte(208);
+        sequence3->writeEOF();
+
+        sequence3->writeDelta(4);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drBD)->writeByte(200);
+        sequence3->writeEOF();
+        sequence3->writeDelta(3);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(198);
+        sequence3->writeEOF();
+        sequence3->writeDelta(5);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(148);
+        sequence3->writeEOF();
+
+        sequence3->writeDelta(4);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte(208);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drBD)->writeByte(160);
+        sequence3->writeEOF();
+
+        sequence3->writeDelta(8);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drSD)->writeByte(120);
+        sequence3->writeEOF();
+
+        sequence3->writeDelta(8);
+        sequence3->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte(208);
+        sequence3->writeEOF();
+
+        sequence3->writeDelta(8);
+        sequence3->writeEOS();
+    }
+    //#region Sequence #4 - 256st "chords"
+    var sequence4 = NEW_(Sequence, &synthDevice);
+    {
+        sequence4->writeHeader();
+
+        sequence4->writeDelta(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(100);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(110);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA4)->writeByte(90);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA4)->writeByte(0);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(100);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(110);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(90);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(0);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(100);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(110);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(90);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(0);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(100);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(110);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(90);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pF3)->writeByte(100);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(110);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(90);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pF3)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pE3)->writeByte(100);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(110);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(90);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pE3)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(0);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pF3)->writeByte(100);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(110);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(90);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pF3)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pG3)->writeByte(100);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pH3)->writeByte(110);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(90);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pG3)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pH3)->writeByte(0);
+        sequence4->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence4->writeEOF();
+
+        sequence4->writeDelta(16);
+        sequence4->writeEOS();
+    }
+    //#region Sequence #2 - 128st "chords"
+    // A C
+    var sequence5 = NEW_(Sequence, &synthDevice);
+    {
+        sequence5->writeHeader();
+
+        sequence5->writeDelta(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC5)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC5)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pG4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pD4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pF4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(100);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(110);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(90);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pA3)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pC4)->writeByte(0);
+        sequence5->writeCommand(CmdSetNote)->writeByte(pE4)->writeByte(0);
+        sequence5->writeEOF();
+
+        sequence5->writeDelta(16);
+        sequence5->writeEOS();
+    }
+
+    var sequence6 = NEW_(Sequence, &synthDevice);
+    {
+        sequence6->writeHeader();
+
+        sequence6->writeDelta(0);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(10);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(20);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(30);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(40);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(50);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(60);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(70);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(80);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(90);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(80);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(70);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(60);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(50);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(40);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(30);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(20);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeEOS();
+    }
+#pragma endregion
+
+    var adapterList = NEW_(Stream);
+    // 2 adapters
+    adapterList->writeByte(2);
+    // 1st adapter: PlayerAdapter
+    {
+        adapterList->writeByte(playerAdapter_.getInfo()->id);
+        // no init data
+        // no devices
+        adapterList->writeByte(0);
+    }
+    // 2nd adapter: SynthAdapter
+    {
+        adapterList->writeByte(synthAdapter_.getInfo()->id);
+        adapterList->writeWord(48000);
+        // 7 devices
+        adapterList->writeByte(7);
+        adapterList->writeByte(SynthDevices::DeviceBass);  //dev #1: bass
+        adapterList->writeByte(1);  // voice count
+        adapterList->writeByte(255);// default soundbank
+        adapterList->writeByte(0);  // program
+        adapterList->writeByte(SynthDevices::DeviceSynth);  //dev #2: synth
+        adapterList->writeByte(6);  // voice count
+        adapterList->writeByte(255);// default soundbank
+        adapterList->writeByte(4);  // program
+        adapterList->writeByte(SynthDevices::DeviceDrums);  //dev #3: drums
+        adapterList->writeByte(255);// default soundbank
+        adapterList->writeByte(1)->writeByte(2)->writeByte(4)->writeByte(6);    // programs
+        adapterList->writeByte(0)->writeByte(0)->writeByte(0)->writeByte(0);
+
+        adapterList->writeByte(SynthDevices::DeviceDistort);  //dev #4
+        adapterList->writeByte(255);    // default soundbank
+        adapterList->writeByte(0);      // program id
+
+        adapterList->writeByte(SynthDevices::DeviceStereoDelay);  //dev #5
+        adapterList->writeByte(255);    // default soundbank
+        adapterList->writeByte(0);      // program id
+
+        adapterList->writeByte(SynthDevices::DeviceStereoDelay);  //dev #6
+        adapterList->writeByte(255);    // default soundbank
+        adapterList->writeByte(2);      // program id
+
+        adapterList->writeByte(SynthDevices::DeviceMixer);      //dev #6
+        // 3 channels
+        adapterList->writeByte(3);
+        // adapterList->writeByte(255);// default soundbank
+        // adapterList->writeByte(0)    // program id
+
+        // channel #1
+        adapterList->writeByte(100);    // amp#1
+        adapterList->writeByte(127);    // pan#1
+        adapterList->writeByte(20);    // gain#1 - bass
+        adapterList->writeByte(2);    // stage count
+        adapterList->writeByte(20);    // stage1 gain
+        adapterList->writeByte(100);    // stage2 gain
+
+        // channel #2
+        adapterList->writeByte(60);    // amp#3
+        adapterList->writeByte(90);    // pan#3
+        adapterList->writeByte(200);    // gain#3 - synth
+        adapterList->writeByte(1);    // stage count
+        adapterList->writeByte(100);    // stage1 gain
+
+        // channel #3
+        adapterList->writeByte(60);    // amp#2
+        adapterList->writeByte(127);    // pan#2
+        adapterList->writeByte(200);    // gain#2 - drums
+        adapterList->writeByte(0);    // stage count
+
+        adapterList->writeByte(1);      // channel1 input: bass
+        adapterList->writeByte(4);      // channel1.stage1
+        adapterList->writeByte(5);      // channel1.stage2
+        adapterList->writeByte(2);      // channel2 input: synth
+        adapterList->writeByte(6);      // channel2.stage1
+        adapterList->writeByte(3);      // channel3 input: drums
+    }
+
+#pragma region CreateStream
+    var sequenceList = NEW_(Stream);
+    sequenceList->writeByte(6);
+    sequenceList->writeWord((word)sequence1->length());
+    sequenceList->writeWord((word)sequence2->length());
+    sequenceList->writeWord((word)sequence3->length());
+    sequenceList->writeWord((word)sequence4->length());
+    sequenceList->writeWord((word)sequence5->length());
+    sequenceList->writeWord((word)sequence6->length());
+    sequenceList->writeStream(sequence1);
+    sequenceList->writeStream(sequence2);
+    sequenceList->writeStream(sequence3);
+    sequenceList->writeStream(sequence4);
+    sequenceList->writeStream(sequence5);
+    sequenceList->writeStream(sequence6);
+    DEL_(sequence1);
+    DEL_(sequence2);
+    DEL_(sequence3);
+    DEL_(sequence4);
+    DEL_(sequence5);
+    DEL_(sequence6);
+
+    // header
+    // 5 data blocks
+    data->writeWord(3);
+    data->writeDword(initData->length());
+    data->writeDword(adapterList->length());
+    data->writeDword(sequenceList->length());
+
+    data->writeStream(initData);
+    DEL_(initData);
+    data->writeStream(adapterList);
+    DEL_(adapterList);
+    data->writeStream(sequenceList);
+    DEL_(sequenceList);
+#pragma endregion
+
+    return data;
+
 }
 
 void SynthTest::testCreateBinary() {
@@ -2034,10 +2563,89 @@ void SynthTest::testLoadBinary() {
 //    return NULL;
 //}
 
+void SynthTest::testLoadSoundbank() {
+    var device = PlayerDevice::create(NULL);
+    var player = device->player();
+    var masterDevice = player->masterDevice();
+    var synthAdapter = (SynthAdapter*)Player::addAdapter(NEW_(SynthAdapter));
+    var soundbanks = ModuleDevice::loadSoundbanks("soundbanks.bin", synthAdapter);
+    LOG("Soundbanks\n");
+    for (var ki = 0; ki < soundbanks->size(); ki++) {
+        var key = *(int*)soundbanks->keys()->get(ki);
+        var soundbank = (Soundbank*)soundbanks->get(key);
+        LOG("Device type: %d\n", key);
+        var str = soundbank->keys()->str_join(", ");
+        LOG("%s\n", str);
+        FREE(str);
+    }
+    assert("Should read the soundbanks", soundbanks != NULL && soundbanks->size() > 0);
+    if (soundbanks != NULL && soundbanks->size() > 0) {
+        var bassDevice = (ModuleDevice*)player->addDevice(synthAdapter, SynthDevices::DeviceBass);
+        var synthDevice = (ModuleDevice*)player->addDevice(synthAdapter, SynthDevices::DeviceSynth);
+        var mixerDevice = (ModuleDevice*)player->addDevice(synthAdapter, SynthDevices::DeviceMixer);
+        var bass = (Bass*)bassDevice->module();
+        bass->setSoundbank((Soundbank*)soundbanks->get(SynthDevices::DeviceBass));
+        var synth = (Synth*)synthDevice->module();
+        synth->setSoundbank((Soundbank*)soundbanks->get(SynthDevices::DeviceSynth));
+        synth->voiceCount(6);
+        var mixer = (Mixer8x4*)mixerDevice->module();
+        mixer->channelCount(2);
+        mixer->connectInput(0, bass, 1.0f, 0.8f, 0.5f);
+        mixer->connectInput(1, synth, 0.3f, 0.8f, 0.5f);
+
+        if (SoundPlayer::start((int)samplingRate, 2, Mixer8x4::fillSoundBuffer, mixer) == 0) {
+
+            for (var pi = 0; pi < bass->soundbank()->size(); pi++) {
+                var prgId = (char*)bass->soundbank()->keys()->get(pi);
+                LOG("%s\n", prgId);
+                bass->setProgram(pi);
+                for (var ti = 0; ti < 2; ti++) {
+                    bass->setNote(pC2, 180);
+                    Sleep(100);
+                    bass->setNote(pC2, 0);
+                    Sleep(200);
+                    bass->setNote(pC3, 180);
+                    Sleep(100);
+                    bass->setNote(pC3, 0);
+                    Sleep(200);
+                }
+            }
+
+            for (var pi = 0; pi < synth->soundbank()->size(); pi++) {
+                var prgId = (char*)synth->soundbank()->keys()->get(pi);
+                LOG("%s\n", prgId);
+                synth->setProgram(pi);
+                for (var ti = 0; ti < 2; ti++) {
+                    synth->setNote(pC4, 180);
+                    synth->setNote(pE4, 200);
+                    synth->setNote(pG4, 140);
+                    Sleep(300);
+                    synth->setNote(pC4, 0);
+                    synth->setNote(pE4, 0);
+                    synth->setNote(pG4, 0);
+                    Sleep(400);
+                    //synth->setNote(pC4, 180);
+                    //synth->setNote(pDs4, 200);
+                    //synth->setNote(pG4, 140);
+                    //Sleep(300);
+                    //synth->setNote(pC4, 0);
+                    //synth->setNote(pDs4, 0);
+                    //synth->setNote(pG4, 0);
+                    //Sleep(400);
+
+                }
+            }
+        }
+
+        DEL_(device);
+        Player::cleanUp();
+    }
+}
+
 void SynthTest::testLoadXm() {
     var device = PlayerDevice::create();
     var player = device->player();
-    var xmLoader = NEW_(XmLoader, player);
+    var xmLoader = NEW_(XmLoader, device);
     // load xm
     // - add sequences
     // - create master sequence
@@ -2047,7 +2655,96 @@ void SynthTest::testLoadXm() {
     // - add effects
     // - add soundbanks
     //xmLoader->load("test.xm", addDevice, addEffectToChannel);
-    xmLoader->load("test.xm");
+    var synthAdapter = (SynthAdapter*)Player::addAdapter(NEW_(SynthAdapter));
+    var soundbanks = ModuleDevice::loadSoundbanks("soundbanks.bin", synthAdapter);
+    xmLoader->load("1m.xm", soundbanks);
+    assert("Should have 7 patterns", xmLoader->patterns().length() == 7);
+    assert("Should have 5 instruments", xmLoader->instrumentInfos().length() == 5);
+    assert("Should have 5 devices", player->devices().length() == 5);
+    assert("Should have 5 sequences", player->sequences().length() == 5);
+    assert("Should have 4 data blocks", player->dataBlocks().length() == 4);
+    assert("Should set programs", ((ModuleDevice*)player->devices().get(2))->module()->program() == 3 &&
+    ((ModuleDevice*)player->devices().get(3))->module()->program() == 3 &&
+    ((ModuleDevice*)player->devices().get(4))->module()->program() == 6);
+    for (var ii = 2; ii < player->devices().length() - 1; ii++) {
+        var mdlDev = (ModuleDevice*)player->devices().get(ii);
+        var prgId = mdlDev->module()->program();
+        mdlDev->module()->setProgram(prgId);
+    }
+    //var p1 = ((Sequence*)player->sequences().get(3))->print();
+    //LOG("%s", p1);
+    //FREE(p1);
+
+    var mixer = (Mixer8x4*)((MixerDevice*)player->addDevice(&synthAdapter_, SynthDevices::DeviceMixer))->module();
+    mixer->channelCount(player->devices().length() - 2);
+    for (var di = 0; di < mixer->channelCount(); di++) {
+        var channel = mixer->getChannel(di);
+        mixer->connectInput(channel, ((ModuleDevice*)player->devices().get(di + 1))->module());
+        channel->controls->amp.value.f = 0.3f;
+        channel->controls->gain.value.f = 0.8f;
+        channel->controls->pan.value.f = 0.5f;
+        channel->stageCount = 0;
+    }
+
+    //var text = ((Sequence*)player->sequences().get(0))->print();
+    //LOG("%s\n", text);
+    //FREE(text);
+    
+
+    if (!isSaveToWave_) {
+        if (SoundPlayer::start((int)SAMPLING_RATE, 2, Mixer8x4::fillSoundBuffer, mixer) == 0) {
+            player->useThread();
+            player->start();
+            while (device->isActive()) {
+                Sleep(3);
+            }
+            SoundPlayer::stop();
+        }
+    }
+    //else {
+    //    var cons = getConsole();
+    //    var samplesPerFrame = SAMPLING_RATE / player->refreshRate();
+    //    int bufferSizeInSamples = 16384;
+    //    int bufferSize = 2 * sizeof(short) * bufferSizeInSamples;
+    //    var buffer = MALLOC(short, bufferSize);
+    //    var offset = buffer;
+    //    var wave = NEW_(WaveFmt, "moon-walzer-s.wav", SAMPLING_RATE, 2, 16);
+    //    var frameCounter = 0.0f;
+    //    var frameCount = 0;
+    //    int totalCount = 0;
+    //    bool isStopped = false;
+    //    var patternTicks = 16 * framePerRow_;
+    //    var toggle = false;
+    //    do {
+    //        int remainingSamples = bufferSizeInSamples;
+    //        memset(buffer, 0, bufferSize);
+    //        var offset = buffer;
+    //        while (remainingSamples > 0) {
+    //            var count = remainingSamples > SAMPLE_BUFFER_SIZE ? SAMPLE_BUFFER_SIZE : remainingSamples;
+    //            if (frameCounter <= 0) {
+    //                if (!player->run(1)) break;
+    //                frameCount++;
+    //                frameCounter += samplesPerFrame;
+    //            }
+    //            if (frameCounter <= count) {
+    //                count = (int)ceil(frameCounter);
+    //            }
+    //            Mixer8x4::fillSoundBuffer(offset, count, mixer);
+    //            offset += 2 * count;
+    //            totalCount += count;
+    //            cons->showCursor(false);
+    //            cons->printf("% 5d / % 5d", frameCount, totalFrameCount);
+    //            cons->movexy(-13, 0);
+    //            remainingSamples -= count;
+    //            frameCounter -= count;
+    //        }
+    //        wave->write((byte*)buffer, (int)(2 * (offset - buffer)));
+    //    } while (player->masterChannel()->isActive());
+    //    cons->printf("\n%d samples saved\n", totalCount);
+    //    wave->close();
+    //    DEL_(wave);
+    //    FREE(buffer);
+    //}
 
     DEL_(xmLoader);
     DEL_(device);
@@ -2055,7 +2752,7 @@ void SynthTest::testLoadXm() {
 }
 
 void SynthTest::testDrumLoop() {
-    char* file = "drums1.pat";
+    char* file = "drums2.pat";
     char* output = "drums1.wav";
     // read pattern file
     if (File::exists(file)) {
@@ -3007,9 +3704,10 @@ int _main(NS_FW_BASE::Map* args) {
     //tests->test("Create drums", (TestMethod) & (SynthTest::testCreateDrums));
     //tests->test("Create binary", (TestMethod) & (SynthTest::testCreateBinary));
     //tests->test("Load from binary", (TestMethod) & (SynthTest::testLoadBinary));
-    //tests->test("Load XM module", (TestMethod) & (SynthTest::testLoadXm));
+    //tests->test("Load soundbank", (TestMethod) & (SynthTest::testLoadSoundbank));
+    tests->test("Load XM module", (TestMethod) & (SynthTest::testLoadXm));
     //tests->test("Filter comparison", (TestMethod) & (SynthTest::testFilterSound));
-    tests->test("Test drum loop", (TestMethod) & (SynthTest::testDrumLoop));
+    //tests->test("Test drum loop", (TestMethod) & (SynthTest::testDrumLoop));
     tests->displayFinalResults();
 
     //createMoonWalzer();

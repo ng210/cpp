@@ -2,7 +2,8 @@
 #define __XMLOADER_H
 
 #include "player/src/player.h"
-#include "synth/src/device/synth-device.h"
+#include "synth/src/device/synth-adapter.h"
+#include "synth/src/device/module-device.h"
 
 NS_FW_BASE_USE
 using namespace PLAYER;
@@ -36,7 +37,6 @@ namespace SYNTH {
 		word packedDataSize;
 		byte packedData;
 	} XmFilePattern;
-#pragma pack(pop)
 
 	typedef struct XmEffect {
 		byte code;
@@ -51,16 +51,12 @@ namespace SYNTH {
 		XmEffect effects[2];
 	} XmNote;
 
-	typedef struct XmInstrumentHeader {
-		dword size;
-		char name[22];
-		byte type;		// (always 0)
-		word sampleCount;
-	} XmInstrumentHeader;
-
 	typedef struct XmInstrument {
-		XmInstrumentHeader header;
-		dword size;
+		dword instrumentHeaderSize;
+		char name[22];
+		byte type;				// (always 0)
+		word sampleCount;
+		dword sampleHeaderSize;
 		byte sampleForNotes[96];
 		byte volumneEnvelope[48];
 		byte panningEnvelope[48];
@@ -72,8 +68,8 @@ namespace SYNTH {
 		byte panningSustainPoint;
 		byte panningLoopStart;
 		byte panningLoopEnd;
-		byte volumeType;	// bit 0 : On; bit 1: Sustain; bit 2: Loop;
-		byte panningType;	// bit 0 : On; bit 1: Sustain; bit 2: Loop;
+		byte volumeType;		// bit 0 : On; bit 1: Sustain; bit 2: Loop;
+		byte panningType;		// bit 0 : On; bit 1: Sustain; bit 2: Loop;
 		byte vibratoType;
 		byte vibratoSweep;
 		byte vibratoDepth;
@@ -82,56 +78,72 @@ namespace SYNTH {
 		word Reserved;
 	} XmInstrument;
 
+	typedef struct XmSample {
+		dword  length;
+		dword  loopStart;
+		dword  loopLength;
+		byte   volume;
+		byte   fineTune;
+		byte   type;
+		byte   panning;
+		byte   note;
+		byte   reserved;
+		char   name[22];
+	} XmSample;
+
 	typedef struct XmPattern {
 		int rowCount;
 		XmNote* notes;
 	} XmPattern;
+#pragma pack(pop)
 
 	typedef struct InstrumentInfo {
-		Device* device;
+		char name[24];
+		int channelId;
+		int deviceId;
+		int drumId;
+		ModuleDevice* device;
 		int voiceCount;
 		int programId;
-		Stream* dataBlock;
+		Soundbank* soundbank;
+		int dataBlockId;
+		int sequenceId;
 		Sequence* sequence;
 	} InstrumentInfo;
 
 	typedef Device* (ADD_DEVICE_HANDLER)(SynthAdapter*, InstrumentInfo*);
 
-	typedef Device* (ADD_EFFECT_HANDLER)(Player*, MixerChannel*);
+	typedef Device* (ADD_EFFECT_HANDLER)(Player*/*, MixerChannel*/);
 
 	class XmLoader {
 		static Map effects_;
-		static ADD_DEVICE_HANDLER addDefaultDevice;
+		//static ADD_DEVICE_HANDLER addDefaultDevice;
 		static ADD_EFFECT_HANDLER addNoEffect;
 
 		int bpm_;
 		int ticks_;
 		int channelCount_;
 		Array patternOrder_;
-		Array instruments_;
+		PROP_R(Array, instrumentInfos);
 		SynthAdapter* synthAdapter_;
-		SynthDevice* synthDevice_;
 		Player* player_;
 		PlayerDevice* playerDevice_;
-		Stream* soundbank_;
 
 		void getVolumeEffect(byte code, byte*& ptr, XmNote* xmNote);
 		void getEffect(byte code, byte*& ptr, XmNote* xmNote);
 		XmNote* readNote(byte*& ptr, XmNote* xmNote);
 		XmPattern* readPattern(XmFilePattern* ptr);		
 		//Sequence* optimizeSequence(Sequence* sequence);
-		void process(ADD_DEVICE_HANDLER addDevice, ADD_EFFECT_HANDLER addEffect);
+		void convertPatterns();
 	public:
 		PROP_R(PArray, patterns);
-		XmLoader(Player* player, Stream* soundBank = NULL);
+		XmLoader(PlayerDevice* playerDevice);
 		virtual ~XmLoader(void);
 
-		int load(const char* path, ADD_DEVICE_HANDLER addDevice = XmLoader::addDefaultDevice, ADD_EFFECT_HANDLER addEffect = XmLoader::addNoEffect);
+		int load(const char* xmPath, Map* soundbanks);
 
-#ifdef _DEBUG
 		char* printPattern(int id);
 		int printNote(XmNote* xmNote, char* buffer);
-#endif
 	};
 }
 #endif

@@ -35,6 +35,12 @@
     <None Include="drums3.pat">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\ui\soundbanks.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="1m.xm">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="test.xm">

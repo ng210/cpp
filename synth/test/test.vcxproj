@@ -81,6 +81,7 @@
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
+    <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -175,6 +176,12 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ui\soundbanks.bin">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="1m.xm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="drums1.pat">
       <DeploymentContent>true</DeploymentContent>
     </None>
