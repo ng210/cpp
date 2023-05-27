@@ -34,7 +34,7 @@ ModuleCtrl::~ModuleCtrl() {
 
 void ModuleCtrl::create(Window* parent, char* name) {
 	Ctrl::create(ModuleCtrl::wndClass_, parent, name);
-	RECT rect = { borderWidth_ + gapWidth_, borderWidth_ + gapWidth_, 96, 96 };
+	RECT rect = { borderWidth_ + 16 + gapWidth_, borderWidth_ + gapWidth_, 96, 96 };
 	if (module_->soundbank() != NULL) {
 		// add combobox for soundbank
 		programCtrl_.create(this, "Program", CBS_DROPDOWN | WS_VSCROLL);
@@ -65,7 +65,8 @@ void ModuleCtrl::create(Window* parent, char* name) {
 void ModuleCtrl::initFromStream(Stream* data, int size, unsigned long *colors) {
 	var margin = borderWidth_ + gapWidth_;
 	var labelHeight = hasLabel_ ? gapWidth_ + 16 + gapWidth_ : 0;
-	int x = margin + borderWidth_, y = margin + borderWidth_ + 26 + labelHeight;
+	int x = margin + 16 + borderWidth_, y = margin + borderWidth_ + labelHeight;
+	if (module_->soundbank() != NULL) y += 26;
 	int rowHeight = 0;
 	potCtrls_ = MALLOC(PotCtrl*, 256);
 	var pCtrl = potCtrls_;
@@ -73,14 +74,15 @@ void ModuleCtrl::initFromStream(Stream* data, int size, unsigned long *colors) {
 
 	int ctrlId;
 	var sb = module_->soundbank();
-	if (sb) {
-		LOG("%s\n", (char*)sb->keys()->get(0));
-	}
 
-	// create brushes from colors
+	// create brushes and pen from colors
 	var SYSFN(backgroundBrush, CreateSolidBrush(data->readDword()));
 	var SYSFN(foregroundBrush, CreateSolidBrush(data->readDword()));
-	var SYSFN(frameBrush, CreateSolidBrush(data->readDword()));
+	var color = data->readDword();
+	var p = (byte*)&color;
+	var SYSFN(frameBrush, CreateSolidBrush(color));
+	p[0] >>= 1; p[1] >>= 1; p[2] >>= 1;
+	var SYSFN(pen, CreatePen(PS_SOLID, 2, color));
 	COLORREF textColor = data->readDword();
 
 	while ((ctrlId = data->readByte()) != LayoutEnd) {
@@ -88,7 +90,7 @@ void ModuleCtrl::initFromStream(Stream* data, int size, unsigned long *colors) {
 			x += margin + borderWidth_ - gapWidth_;
 			continue;
 		} else if (ctrlId == LayoutVerticalGap) {
-			x = margin + borderWidth_;
+			x = margin + 16 + borderWidth_;
 			y += rowHeight + borderWidth_ + borderWidth_;
 			rowHeight = 0;
 			continue;
@@ -102,9 +104,8 @@ void ModuleCtrl::initFromStream(Stream* data, int size, unsigned long *colors) {
 		(*pCtrl)->pot(ctrl);
 		(*pCtrl)->type((PotCtrlType)data->readByte());
 		(*pCtrl)->setSize(size);
-		(*pCtrl)->setColors(backgroundBrush, foregroundBrush, frameBrush, textColor);
+		(*pCtrl)->setColors(backgroundBrush, foregroundBrush, frameBrush, pen, textColor);
 		SetWindowPos((*pCtrl)->hWnd(), NULL, x, y, 0, 0, SWP_NOSIZE);
-		LOG("x:%d, y:%d, %d, %d\n", x, y, (*pCtrl)->rect().right, (*pCtrl)->rect().bottom);
 		x += (*pCtrl)->rect().right + gapWidth_;
 		var controlHeight = (*pCtrl)->rect().bottom;
 		if (rect_.right < x) rect_.right = x;
@@ -118,7 +119,9 @@ void ModuleCtrl::initFromStream(Stream* data, int size, unsigned long *colors) {
 	SYSPR(SetWindowPos(background_.hWnd(), NULL, 0, 0, rect_.right, rect_.bottom, SWP_SHOWWINDOW));
 	RECT rect;
 	GetClientRect(background_.hWnd(), &rect);
-	LOG("2. %d, %d, %d, %d\n", rect.left, rect.top, rect.right, rect.bottom);
+	char name[16];
+	GetWindowText(hWnd_, name, 16);
+	//LOG("%s %d, %d, %d, %d\n", name, rect.left, rect.top, rect.right, rect.bottom);
 }
 
 HANDLE ModuleCtrl::getBackgroundImage() {
@@ -143,7 +146,6 @@ LRESULT ModuleCtrl::onSize(RECT& rect, WPARAM state) {
 	return 1;
 }
 
-
 void ModuleCtrl::updateSoundbank() {
 	if (module_ != NULL) {
 		programCtrl_.reset();
@@ -154,12 +156,6 @@ void ModuleCtrl::updateSoundbank() {
 		}
 	}
 }
-
-//void ModuleCtrl::updateProgram() {
-//	if (module_ != NULL) {
-//		SYSPR(SendMessage(programCtrl_.hWnd(), CB_SETCURSEL, module_->program(), NULL));
-//	}
-//}
 
 void ModuleCtrl::onSelectProgram(ComboboxCtrl* cb, int ix, void* item) {
 	var ctrl = (ModuleCtrl*)cb->parent();
@@ -191,14 +187,21 @@ LRESULT ModuleCtrl::onAddProgram(Window* button, POINT& pos, WPARAM state) {
 
 LRESULT ModuleCtrl::onRemoveProgram(Window* button, POINT& pos, WPARAM state) {
 	var mdlCtrl = (ModuleCtrl*)button->parent();
+	var mdl = mdlCtrl->module_;
 	char name[16];
 	mdlCtrl->programCtrl_.getText(name, 16);
-	var sb = mdlCtrl->module()->soundbank();
-	var ix = sb->indexOf(name);
-	if (ix != -1) {
-		// remove program
-		sb->remove(ix);
-		mdlCtrl->updateSoundbank();
+	var sb = mdl->soundbank();
+	if (sb->size() > 1) {
+		var ix = sb->indexOf(name);
+		if (ix != -1) {
+			if (mdl->program() == ix) {
+				Module::programSetter(mdl, ix > 0 ? 0 : 1);
+			}
+			// remove program
+			Key key(&name);
+			sb->remove(key);
+			mdlCtrl->updateSoundbank();
+		}
 	}
 	return 1;
 }

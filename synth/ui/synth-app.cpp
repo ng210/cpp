@@ -7,6 +7,7 @@
 #include "synth/src/device/drums-device.h"
 #include "synth/src/device/distort-device.h"
 #include "synth/src/device/stereo-delay-device.h"
+#include "synth/src/xmloader.h"
 
 NS_FW_WIN_USE
 
@@ -36,7 +37,7 @@ Stream* SynthApp::createBinaryData() {
         sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(1)->writeByte(1)->writeByte(1)->writeByte(8);
         sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(2)->writeByte(2)->writeByte(3)->writeByte(8);
         sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(3)->writeByte(3)->writeByte(2)->writeByte(1);
-        //sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(4)->writeByte(5)->writeByte(1)->writeByte(4);
+        sequence1->writeCommand(PlayerCommands::CmdAssign)->writeByte(4)->writeByte(5)->writeByte(4)->writeByte(4);
         sequence1->writeEOF();
 
         sequence1->writeDelta(steps);
@@ -375,19 +376,67 @@ Stream* SynthApp::createBinaryData() {
         sequence6->writeHeader();
 
         sequence6->writeDelta(0);
-        sequence6->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.1f);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(10);
         sequence6->writeEOF();
 
         sequence6->writeDelta(16);
-        sequence6->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.2f);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(20);
         sequence6->writeEOF();
 
         sequence6->writeDelta(16);
-        sequence6->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.4f);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(30);
         sequence6->writeEOF();
 
         sequence6->writeDelta(16);
-        sequence6->writeCommand(CmdSetFloat)->writeByte(bFtAdsrDc)->writeFloat(0.6f);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(40);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(50);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(60);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(70);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(80);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(90);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(80);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(70);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(60);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(50);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(40);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(30);
+        sequence6->writeEOF();
+
+        sequence6->writeDelta(16);
+        sequence6->writeCommand(CmdSetUint8)->writeByte(distCut)->writeByte(20);
         sequence6->writeEOF();
 
         sequence6->writeDelta(16);
@@ -513,7 +562,6 @@ Stream* SynthApp::createBinaryData() {
 }
 
 void SynthApp::loadBinary() {
-    Player::addAdapter(NEW_(SynthAdapter));
     var bin = createBinaryData();
     var data = bin->extract();
     DEL_(bin);
@@ -523,28 +571,49 @@ void SynthApp::loadBinary() {
     Key ix = 0;
     mixer_ = (Mixer8x4*)((Device*)player_->devices().search(NULL, ix,
         [](COLLECTION_ARGUMENTS) { return ((Device*)value)->type() == SynthDevices::DeviceMixer ? 0 : 1; }))->object();
+    loadSoundbanks();
+}
+
+void SynthApp::loadModule(const char* path) {
+    masterDevice_ = PlayerDevice::create();
+    player_ = masterDevice_->player();
+    loadSoundbanks();
+    var xmLoader = NEW_(XmLoader, masterDevice_);
+    xmLoader->load(path, soundbanks_);
+    mixer_ = (Mixer8x4*)((MixerDevice*)player_->addDevice(&synthAdapter_, SynthDevices::DeviceMixer))->module();
+    mixer_->channelCount(player_->devices().length() - 2);
+    for (var di = 0; di < mixer_->channelCount(); di++) {
+        var channel = mixer_->getChannel(di);
+        mixer_->connectInput(channel, ((ModuleDevice*)player_->devices().get(di + 1))->module());
+        channel->controls->amp.value.f = 0.3f;
+        channel->controls->gain.value.f = 0.8f;
+        channel->controls->pan.value.f = 0.5f;
+        channel->stageCount = 0;
+    }
+    DEL_(xmLoader);
 }
 
 void SynthApp::loadSoundbanks() {
-    soundbanks_.hasRefKey(false);
-    byte *bytes = NULL, *end = NULL;
-    // try to read file
-    var bytesRead = File::read("soundbanks.bin", &bytes);
-    if (bytesRead != -1) {
-        var bptr = bytes;
-        end = bytes + bytesRead;
-        while (bptr < end) {
-            // read device type
-            var deviceType = READ(bptr, byte);
-            // create dummy device
-            var dev = (ModuleDevice*)synthAdapter_.createDevice(deviceType);
-            var sb = dev->module()->createSoundbank();
-            sb->initializeFromStream(bptr);
-            soundbanks_.put(deviceType, sb);
-            DEL_(dev);
-        }
-    }
-    FREE(bytes);
+    soundbanks_ = ModuleDevice::loadSoundbanks("soundbanks.bin", &synthAdapter_);
+    //soundbanks_->hasRefKey(false);
+    //byte *bytes = NULL, *end = NULL;
+    //// try to read file
+    //var bytesRead = File::read("soundbanks.bin", &bytes);
+    //if (bytesRead != -1) {
+    //    var bptr = bytes;
+    //    end = bytes + bytesRead;
+    //    while (bptr < end) {
+    //        // read device type
+    //        var deviceType = READ(bptr, byte);
+    //        // create dummy device
+    //        var dev = (ModuleDevice*)synthAdapter_.createDevice(deviceType);
+    //        var sb = dev->module()->createSoundbank();
+    //        sb->initializeFromStream(bptr);
+    //        soundbanks_->put(deviceType, sb);
+    //        DEL_(dev);
+    //    }
+    //}
+    //FREE(bytes);
 
     // the missing soundbanks are copied from device's default
     for (var i = 0; i < player_->devices().length(); i++) {
@@ -552,12 +621,12 @@ void SynthApp::loadSoundbanks() {
         if (dev->adapter()->getInfo()->id == synthAdapter_.getInfo()->id) {
             Key key(dev->type());
             var defaultSoundbank = dev->module()->getDefaultSoundbank();
-            var sb = (Soundbank*)soundbanks_.get(key);
+            var sb = (Soundbank*)soundbanks_->get(key);
             if (defaultSoundbank != NULL && sb == NULL) {
                 // duplicate the default soundbank
                 sb = dev->module()->createSoundbank();
                 sb->copy(defaultSoundbank, 0, -1);
-                soundbanks_.put(key, sb);
+                soundbanks_->put(key, sb);
             }
             dev->module()->setSoundbank(sb);
         }
@@ -566,9 +635,9 @@ void SynthApp::loadSoundbanks() {
 
 void SynthApp::saveSoundbanks() {
     Stream stream;
-    for (var i = 0; i < soundbanks_.size(); i++) {
-        stream.writeByte(*(int*)soundbanks_.keys()->get(i));
-        var sb = (Soundbank*)soundbanks_.values()->get(i);
+    for (var i = 0; i < soundbanks_->size(); i++) {
+        stream.writeByte(*(int*)soundbanks_->keys()->get(i));
+        var sb = (Soundbank*)soundbanks_->values()->get(i);
         sb->writeToStream(&stream);
         DEL_(sb);
     }
@@ -580,7 +649,7 @@ SynthApp::SynthApp() {
     player_ = NULL;
     mixer_ = NULL;
     ctrls_.init(16);
-    soundbanks_.initialize(sizeof(int), MAP_USE_REF, Map::hashingInt, Collection::compareInt);
+    soundbanks_ = NULL; // .initialize(sizeof(int), MAP_USE_REF, Map::hashingInt, Collection::compareInt);
 }
 
 SynthApp::~SynthApp() {
@@ -588,19 +657,22 @@ SynthApp::~SynthApp() {
         var ctrl = (ModuleCtrl*)ctrls_.get(i);
         DEL_(ctrl);
     }
+
+    if (soundbanks_ != NULL) {
+        DEL_(soundbanks_);
+    }
 }
 
-void SynthApp::create(WndClass wndClass, LONG style, DWORD exStyle) {
-	Window::create(wndClass, NULL, "TestApp", style, exStyle);
+void SynthApp::create(WndClass wndClass) {
+	Window::create(wndClass, NULL, "TestApp", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN);
 }
 
 LRESULT SynthApp::onCreate() {
 	LRESULT result = 0;
-	SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, 1364, 920, SWP_NOMOVE));
-
+	SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, 1208, 940, SWP_NOMOVE));
+    Player::addAdapter(NEW_(SynthAdapter));
     loadBinary();
-
-    loadSoundbanks();
+    //loadModule("1m.xm");
 
     int left = 0, top = 0;
     int synthStackHeight = 0;
@@ -636,6 +708,11 @@ LRESULT SynthApp::onCreate() {
                 ctrl->create(this, "Mixer");
                 break;
             }
+            var sb = mdl->soundbank();
+            if (sb) {
+                ModuleCtrl::soundbankSetter(ctrl, sb);
+                ModuleCtrl::programSetter(ctrl, mdl->program());
+            }
         }
         if (ctrl != NULL) {
             ctrls_.push(ctrl);
@@ -646,11 +723,15 @@ LRESULT SynthApp::onCreate() {
 }
 
 LRESULT SynthApp::onSize(RECT& rect, WPARAM state) {
-    updateLayout();
+    if (updateLayout()) {
+        // erase background
+        SYSPR(InvalidateRect(hWnd_, NULL, true));
+    }
     return 1;
 }
 
-void SynthApp::updateLayout() {
+int SynthApp::updateLayout() {
+    int hasChanged = 0;
     var wi = rect_.right, he = rect_.bottom;
     char name[16];
     int x = 0, y = 0, dw = wi, rowHe = 0;
@@ -663,12 +744,19 @@ void SynthApp::updateLayout() {
             rowHe = 0;
         }
         dw -= mdl->rect().right;
-        GetWindowText(mdl->hWnd(), name, 16);
-        LOG("%s, %d, %d\n", name, x, y);
-        SYSPR(SetWindowPos(mdl->hWnd(), NULL, x, y, 0, 0, SWP_NOSIZE));
+        SYSPR(GetWindowText(mdl->hWnd(), name, 16));
+        //LOG("%s: %d - %d, %d - %d\n", name, mdl->offset().x, x, mdl->offset().y, y);
+        var isMoved = mdl->offset().x != x || mdl->offset().y != y;
+        if (isMoved) {
+            mdl->move(x, y);
+            SYSPR(InvalidateRect(mdl->hWnd(), NULL, true));
+            hasChanged++;
+        }
         if (rowHe < mdl->rect().bottom) rowHe = mdl->rect().bottom;
         x += mdl->rect().right;
     }
+
+    return hasChanged;
 }
 
 int SynthApp::main(NS_FW_BASE::Map* args) {

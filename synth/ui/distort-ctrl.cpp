@@ -15,6 +15,8 @@ byte distortUiLayout[] = {
 	LayoutEnd
 };
 
+HANDLE DistortCtrl::hBackground_ = NULL;
+
 DistortCtrl::DistortCtrl(Module* module) : ModuleCtrl(module) {
 
 }
@@ -28,4 +30,18 @@ void DistortCtrl::create(Window* parent, char* name) {
 	Stream stream(distortUiLayout, arraysize(distortUiLayout));
 	stream.reset();
 	initFromStream(&stream);
+	var ctrl1 = module_->getControl(distMode);
+	for (var i = 0; i < potCtrlCount_; i++) {
+		if (potCtrls_[i]->pot() == ctrl1) {
+			potCtrls_[i]->mouseSpeed1(1);
+			potCtrls_[i]->mouseSpeed2(1);
+		}
+	}
+}
+
+HANDLE DistortCtrl::getBackgroundImage() {
+	if (hBackground_ == NULL) {
+		SYSFN(hBackground_, LoadImage(NULL, "distort-ctrl.bmp", IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT | LR_LOADFROMFILE));
+	}
+	return hBackground_;
 }

@@ -7,12 +7,14 @@
 namespace SYNTH_UI {
 
 	class GenericDrumCtrl : public ModuleCtrl {
+		static HANDLE hBackground_;
 	public:
 		GenericDrumCtrl(Module* module);
 		~GenericDrumCtrl();
 
 		void create(Window* parent, char* name);
-		LRESULT onPaint();
+		//LRESULT onPaint();
+		HANDLE getBackgroundImage();
 
 		//static SETPROGRAMPROC setProgramProc;
 	};

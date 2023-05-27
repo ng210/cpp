@@ -9,7 +9,7 @@ KeyValuePair::KeyValuePair() {
 	index_ = 0;
 }
 
-KeyValuePair::KeyValuePair(Key key, void* value) {
+KeyValuePair::KeyValuePair(void* key, void* value) {
 	key_ = key;
 	value_ = value;
 	index_ = 0;

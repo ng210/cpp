@@ -76,8 +76,7 @@ void SynthBaseDevice::processCommand(byte cmd, byte*& cursor) {
 
 #pragma endregion
 
-#ifdef PLAYER_EDIT_MODE
-
+#pragma region Synth
 int SynthBaseDevice::writeToStream(Stream* stream) {
 	var start = stream->cursor();
 	Device::writeToStream(stream);
@@ -85,16 +84,8 @@ int SynthBaseDevice::writeToStream(Stream* stream) {
 	ModuleDevice::writeToStream(stream);
 	return (int)(stream->cursor() - start);
 }
-#endif
 
-#pragma endregion
-
-#pragma region Synth
 void SynthBaseDevice::setNote(byte note, byte velocity) {
 	synthBase()->setNote(note, velocity);
 }
-//void SynthBaseDevice::run(short* buffer, int start, int end) {
-//	synth_->run(buffer, start, end);
-//}
 #pragma endregion
-

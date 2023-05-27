@@ -48,7 +48,7 @@ void* Array::get(Key key) {
 }
 void* Array::insert(Key key, void* item) {
 	int i = key.i;
-	char* dst = NULL;
+	byte* dst = NULL;
 	if (i >= 0 && i <= length_) {
 		if (length_ == capacity_) {
 			// increase capacity
@@ -56,7 +56,7 @@ void* Array::insert(Key key, void* item) {
 			// realloc data
 			data_ = (void**)REALLOC(data_, char, (size_t)capacity_ * itemSize_);
 		}
-		dst = &((char*)data_)[i * itemSize_];
+		dst = &((byte*)data_)[i * itemSize_];
 		// shift items beyond ix up
 		int size = (length_ - i) * itemSize_;
 		if (size > 0) {
@@ -77,7 +77,9 @@ void Array::remove(Key key) {
 		// shift items beyond ix down
 		char* dst = &((char*)data_)[i * itemSize_];
 		length_--;
-		memcpy(dst, dst + itemSize_, (size_t)(length_ - i) * itemSize_);
+		if (length_ > 0) {
+			memcpy(dst, dst + itemSize_, (size_t)(length_ - i) * itemSize_);
+		}
 		if ((UINT32)length_ < capacity_ - extendSize_) {
 			// decrease capacity
 			capacity_ -= extendSize_;

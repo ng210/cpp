@@ -15,7 +15,8 @@ namespace SYNTH_UI {
 	typedef enum PotCtrlType {
 		HPotmeter,
 		VPotmeter,
-		Knob
+		Knob,
+		Number
 	} PotCtrlType;
 
 
@@ -25,6 +26,7 @@ namespace SYNTH_UI {
 		static HFONT mediumFont_;
 		static HFONT largeFont_;
 		int size_;
+		int fontSize_;
 		SIZE labelSize_, levelSize_;
 		bool isCapturing_;
 		void updateClientRect(bool resize = true);
@@ -38,10 +40,13 @@ namespace SYNTH_UI {
 	protected: PROP(bool, showValue);
 	protected: TCHAR label_[32];
 	protected: TCHAR valueText_[32];
+	protected: PROP(int, mouseSpeed1);
+	protected: PROP(int, mouseSpeed2);
 	protected:
 		void drawHPotmeter(HDC hdc, float value);
 		void drawVPotmeter(HDC hdc, float value);
-		void drawKnob(HDC hdc, float value);
+		void drawKnob(HDC hdc, int& x, int& y, float value);
+		void drawNumber(HDC hdc, float value);
 	public:
 		PotCtrl();
 		~PotCtrl();
@@ -50,7 +55,7 @@ namespace SYNTH_UI {
 
 		void setColors(DWORD background, DWORD foreground, DWORD frame, DWORD text);
 		void setColors(DWORD* colors);
-		void setColors(HBRUSH background, HBRUSH foreground, HBRUSH frame, COLORREF text);
+		void setColors(HBRUSH background, HBRUSH foreground, HBRUSH frame, HPEN pen, COLORREF text);
 		void label(TCHAR* lbl);
 		void setSize(int size);
 		void type(PotCtrlType t);
@@ -59,8 +64,10 @@ namespace SYNTH_UI {
 		static MOUSEEVENTPROC onLeftDownProc, onLeftUpProc, onRightUpProc;
 		static MOUSEMOVEEVENTPROC onMouseMoveProc;
 		LRESULT onPaint();
+		LRESULT onEraseBkgnd(HDC hDC);
 
 		HBRUSH frameBrush_, backgroundBrush_, foregroundBrush_;
+		HPEN pen_;
 		COLORREF textColor_;
 
 		static SetterFunc setter;

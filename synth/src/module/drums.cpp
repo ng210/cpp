@@ -249,6 +249,8 @@ Drums::Drums() : Module(NULL, GenericDrumCtrlCount) {
     createOutputBuffers(1);
     setSoundbank.clear();
     setSoundbank.add(this, &Drums::soundbankSetter);
+    setProgram.clear();
+    setProgram.add(this, &Drums::programSetter);
     drums = drums_;
     //GenericDrum& bassDrum = drums_[0];
     //GenericDrum& snareDrum = drums_[1];
@@ -311,7 +313,7 @@ Drums::~Drums() {
 
 void Drums::initializeFromStream(byte** pData) {
     var hasData = pData != NULL && *pData != NULL;
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < DrumsCount; i++) {
         int prg = 0;
         if (hasData) {
             prg = READ(*pData, byte);
@@ -349,11 +351,21 @@ float* Drums::getOutput(int id) {
 
 int Drums::soundbankSetter(void* obj, Soundbank* sb) {
     var mdl = (Drums*)obj;
-    for (var i = 0; i < 8; i++) {
+    mdl->soundbank_ = sb;
+    for (var i = 0; i < DrumsCount; i++) {
         mdl->drums_[i].setSoundbank(sb);
     }
     return 1;
 }
+
+int Drums::programSetter(void* obj, int prgId) {
+    var drums = (Drums*)obj;
+    // hibyte of prgId selects drum
+    var drmId = ((word)prgId) >> 8;
+    prgId &= 0xff;
+    drums->drums_[drmId].setProgram(prgId);
+    return 1;
+}    
 
 void Drums::setControl(int id, S value) {
     //switch (id)
@@ -380,7 +392,7 @@ void Drums::setControl(int id, S value) {
 
 void Drums::run(int start, int end) {
     memset(outputs_[0], 0, sizeof(float) * (end - start));
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < DrumsCount; i++) {
         if (drums_[i].isActive()) {
             (drums_[i].*(drums_[i].render))(outputs_[0], start, end);
         }
@@ -399,7 +411,7 @@ void Drums::setNote(byte note, byte velocity) {
     // C1:BD  D1:SD  E1:LT  F1:MT  G1:HT  A1:RS  H1:CL
     // C2:OH  D2:CH  E2:--  F2:--  G2:--  A2:CY  H2:CB
     var ix = note - drBD;
-    if (ix >= 0 && ix < 8) {
+    if (ix >= 0 && ix < DrumsCount) {
         drums_[ix].setGate(velocity);
     }
 }

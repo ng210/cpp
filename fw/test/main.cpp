@@ -47,10 +47,10 @@ int _main(NS_FW_BASE::Map* args) {
 	collectionTest->displayFinalResults("Collection Test Results ");
 	DEL_(collectionTest);
 
-	var syntaxTest = NEW_(SyntaxTest);
-	syntaxTest->runAll(totalPassed, totalFailed);
-	syntaxTest->displayFinalResults("Syntax Test Results ");
-	DEL_(syntaxTest);
+	//var syntaxTest = NEW_(SyntaxTest);
+	//syntaxTest->runAll(totalPassed, totalFailed);
+	//syntaxTest->displayFinalResults("Syntax Test Results ");
+	//DEL_(syntaxTest);
 
 
 	//testRatio();

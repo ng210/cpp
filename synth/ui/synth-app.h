@@ -27,22 +27,24 @@ class SynthApp : public WinApp {
 	Mixer8x4* mixer_;
 
 	PArray ctrls_;
-	Map soundbanks_;
+	Map* soundbanks_;
 public:
 	SynthApp();
 	~SynthApp();
 
-	void create(WndClass wndClass, LONG style = 0, DWORD exStyle = 0);
+	void create(WndClass wndClass);
 	//LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	LRESULT onCreate();
 	LRESULT onSize(RECT& rect, WPARAM state);
-	void updateLayout();
+
+	int updateLayout();
 
 	int main(NS_FW_BASE::Map* args);
 
 	Stream* createBinaryData();
 	void loadBinary();
+	void loadModule(const char* path);
 	void loadSoundbanks();
 	void saveSoundbanks();
 };

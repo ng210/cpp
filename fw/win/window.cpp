@@ -100,6 +100,7 @@ LONG Window::setWindowStyle(LONG style, DWORD exStyle) {
 
 LRESULT CALLBACK Window::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	LRESULT ret = 1;
+	BOOL callDefault = true;
 	POINT point;
 	if (message >= WM_MOUSEMOVE && message <= WM_MBUTTONDBLCLK) {
 		point.x = LOWORD(lParam);
@@ -113,8 +114,8 @@ LRESULT CALLBACK Window::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		//	break;
 		case WM_DESTROY:
 			ret = onDestroy();
-			PostQuitMessage(0);
-			ret = 1;
+			PostQuitMessage((int)ret);
+			callDefault = ret != 0;
 			break;
 		case WM_MOVE:
 			point.x = LOWORD(lParam);
@@ -123,25 +124,34 @@ LRESULT CALLBACK Window::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			break;
 		case WM_MOVING:
 			ret = onMoving(*(RECT*)lParam);
+			callDefault = ret != 0;
 			break;
 		case WM_SIZE:
 			rect_.right = LOWORD(lParam);
 			rect_.bottom = HIWORD(lParam);
 			ret = onSize(rect_, wParam);
+			callDefault = ret != 0;
 			break;
 		case WM_SIZING:
 			ret = onSizing(*(RECT*)lParam, wParam);
+			callDefault = !ret;
 			break;
 		case WM_PAINT:
 			ret = onPaint();
+			callDefault = ret != 0;
 			break;
+		case WM_ERASEBKGND:
+			ret = onEraseBkgnd((HDC)wParam);
+			callDefault = ret == 0;
+			break;			
 		case WM_COMMAND:
 			ret = onCommand(wParam, lParam);
+			callDefault = ret != 0;
 			break;
 		}
 	}
 
-	if (ret) {
+	if (callDefault) {
 		ret = defWindowProc_(hWnd, message, wParam, lParam);
 	}
 
@@ -235,6 +245,9 @@ LRESULT Window::onDestroy() {
 LRESULT Window::onPaint() {
 	return 1;
 }
+LRESULT Window::onEraseBkgnd(HDC hDC) {
+	return 0;
+}
 LRESULT Window::onMove(POINT& point) { 
 	return 1;
 }
@@ -290,9 +303,9 @@ ATOM Window::registerClass(WNDCLASSEX& wndClassEx) {
 }
 
 ATOM Window::registerClass(char* name, HINSTANCE hInstance, UINT style) {
-	if (style == 0) {
-		style = CS_HREDRAW | CS_VREDRAW;
-	}
+	//if (style == 0) {
+	//	style = CS_HREDRAW | CS_VREDRAW;
+	//}
 	WNDCLASSEX wndClassEx = {
 		sizeof(WNDCLASSEX),				// cbSize;
 		style,							// style;

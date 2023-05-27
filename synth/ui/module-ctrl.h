@@ -50,7 +50,6 @@ namespace SYNTH_UI {
 		virtual void initFromStream(Stream* data, int size = 100, unsigned long *colors = NULL);
 		virtual HANDLE getBackgroundImage();
 		
-		//LRESULT onPaint();
 		LRESULT onSize(RECT& rect, WPARAM state);
 
 		void updateSoundbank();

@@ -6,11 +6,13 @@
 
 namespace SYNTH_UI {
 	class DistortCtrl : public ModuleCtrl {
+		static HANDLE hBackground_;
 	public:
 		DistortCtrl(Module* module);
 		~DistortCtrl();
 
 		void create(Window* parent, char* name);
+		HANDLE getBackgroundImage();
 	};
 }
 

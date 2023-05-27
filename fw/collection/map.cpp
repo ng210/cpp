@@ -56,7 +56,7 @@ size_t Map::hashingStr(Key key, size_t unused1) {
 int Map::compareWrapper_(COLLECTION_ARGUMENTS) {
 	Array* bucket = (Array*)collection;
 	KeyValuePair* keyValue = (KeyValuePair*)value;
-	return bucket->compare()(keyValue->key().p, key, bucket, args);
+	return bucket->compare()(keyValue->key(), key, bucket, args);
 }
 
 Map::Map(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTION_COMPARE* compare) {
@@ -80,6 +80,7 @@ Map::Map(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTION_
 void Map::initialize(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTION_COMPARE* compare) {
 	if (keySize == MAP_USE_REF) keys_ = NEW_(PArray, MAP_ITEM_COUNT);
 	else keys_= NEW_(Array, keySize, MAP_ITEM_COUNT);
+	compare_ = compare;
 	keys_->compare(compare);
 	if (valueSize == MAP_USE_REF) values_ = NEW_(PArray, MAP_ITEM_COUNT);
 	else values_ = NEW_(Array, valueSize, MAP_ITEM_COUNT);
@@ -172,24 +173,47 @@ void* Map::insert(Key key, void* value) {
 }
 void Map::remove(Key key) {
 	// unsorted Map, this method brakes the order of keys and values
-	Key pos = -1;
+	Key removeIx = -1;
 	var bucket = getBucket(key);
-	var kvp = (KeyValuePair*)bucket->binSearch(key, pos, Map::compareWrapper_);
-	if (kvp) {
-		// remove selected KeyValuePair
-		bucket->remove(key);
-		// reuse the freed index
-		var ix = kvp->index_;
-		// re-insert the last key - value
-		var key = keys_->pop();
-		keys_->set(ix, key);
-		var value = values_->pop();
-		values_->set(ix, value);
-		// get KeyValuePair with the last index
-		bucket = getBucket(key);
-		kvp = (KeyValuePair*)bucket->binSearch(key, pos, Map::compareWrapper_);
-		// set index to the new value
-		kvp->index_ = ix;
+	if (bucket) {
+		var kvp = (KeyValuePair*)bucket->binSearch(key, removeIx, Map::compareWrapper_);
+		if (kvp) {
+			void *pKey = kvp->key(), *pValue = kvp->value();
+			int ix = kvp->index();
+			// remove selected KeyValuePair
+			bucket->remove(removeIx);
+			size_--;
+			// move the last key and value
+			if (size_ > 0) {
+				// if map still has items and
+				var pLastKey = keys_->pop();
+				var pLastValue = values_->pop();
+				// the removed item was not the last one
+				if (ix < size_) {
+					// not the last item was removed
+					if (pLastKey != pKey) {
+						Key lastKey = NULL;
+						if (hasRefKey_) {
+							keys_->set(ix, pLastKey);
+							lastKey.p = pLastKey;
+						}
+						else {
+							keys_->set(ix, pLastKey);
+							memcpy(&lastKey.bytes, pLastKey, keys_->itemSize());
+						};
+						values_->set(ix, pLastValue);
+
+						// update the members of linked KeyValuePair
+						bucket = getBucket(lastKey);
+						Key pos = -1;
+						kvp = (KeyValuePair*)bucket->binSearch(lastKey, pos, Map::compareWrapper_);
+						kvp->key_ = keys_->get(ix);
+						kvp->value_ = values_->get(ix);
+						kvp->index_ = ix;
+					}
+				}
+			}
+		}
 	}
 }
 void* Map::get(Key key) {

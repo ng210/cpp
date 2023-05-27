@@ -28,7 +28,7 @@ void* ArrayBase::binSearch_(Key key, Key& found, COLLECTION_COMPARE* compare) {
 		int i = compare(item, key, this, NULL);
 		if (i == 0) {
 			// on equation the middle item was the searched item
-			found.i = mid;
+			found.l = mid;
 			return item;
 		}
 		if (i > 0) {
@@ -41,7 +41,7 @@ void* ArrayBase::binSearch_(Key key, Key& found, COLLECTION_COMPARE* compare) {
 		}
 	}
 	// item not found, index marks the place where the item should be.
-	found.i = max;
+	found.l = max;
 	return NULL;
 }
 Key ArrayBase::findIndex(Key key, COLLECTION_COMPARE* compare) {

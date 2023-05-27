@@ -10,13 +10,13 @@ class Map;
 //*****************************************************************************
 class KeyValuePair {
 	friend class Map;
-protected: PROP_R(Key, key);
+protected: PROP_R(void*, key);
 protected: PROP_R(void*, value);
 protected:
 	PROP_R(unsigned int, index);
 public:
 	KeyValuePair();
-	KeyValuePair(Key key, void* value);
+	KeyValuePair(void* key, void* value);
 };
 
 NS_FW_BASE_END

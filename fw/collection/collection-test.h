@@ -8,7 +8,7 @@ NS_FW_BASE_USE
 
 typedef struct TEST_DATA_ {
 	int id;
-	char name[16];
+	char name[12];
 } TEST_DATA;
 
 class CollectionTest : public Test {

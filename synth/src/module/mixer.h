@@ -71,6 +71,7 @@ namespace SYNTH {
         void run(float* buffer, int start, int end);
 
         MixerChannel* connectInput(MixerChannel* channel, Module* input);
+        MixerChannel* connectInput(int channelId, Module* input, float gain, float amp, float pan);
         MixerChannel* connectEffect(MixerChannel* channel, Module* effect, int stageId = -1);
         MixerChannel* getChannel(int id);
 

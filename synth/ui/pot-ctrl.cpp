@@ -7,7 +7,7 @@
 
 using namespace SYNTH_UI;
 
-#define GAP 4
+#define GAP 2
 
 HFONT PotCtrl::smallFont_ = NULL;
 HFONT PotCtrl::mediumFont_ = NULL;
@@ -28,10 +28,28 @@ PotCtrl::PotCtrl() {
 	backgroundBrush_ = NULL;
 	foregroundBrush_ = NULL;
 	frameBrush_ = NULL;
+	pen_ = NULL;
 	textColor_ = NULL;
 
 	if (PotCtrl::wndClass_.atom == 0) {
-		PotCtrl::wndClass_.atom = registerClass("PotCtrl", NULL);
+		WNDCLASSEX wndClassEx = {
+			sizeof(WNDCLASSEX),				// cbSize;
+			0/*CS_HREDRAW | CS_VREDRAW*/,		// style;
+			&Window::wndProcWrapper,		// lpfnWndProc;
+			0,                              // cbClsExtra;
+			0,                              // cbWndExtra;
+			NULL,							// hInstance;
+			NULL,                           // hIcon;
+			LoadCursor(NULL, IDC_ARROW),    // hCursor;
+			NULL,							// hbrBackground;
+			NULL,                           // lpszMenuName;
+			"PotCtrl",                      // lpszClassName;
+			NULL                            // hIconSm;
+		};
+
+
+		//PotCtrl::wndClass_.atom = Window::registerClass("PotCtrl", NULL);
+		PotCtrl::wndClass_.atom = Window::registerClass(wndClassEx);
 		setColors(0x00400000, 0x00c08060, 0x00804030, 0x00ffffff);
 		PotCtrl::smallFont_ = CreateFont(12, 0, 0, 0, 100, false, false, false, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
 		PotCtrl::mediumFont_ = CreateFont(14, 0, 0, 0, 400, false, false, false, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial");
@@ -47,6 +65,9 @@ PotCtrl::PotCtrl() {
 
 	backBuffer_ = NULL;
 	bitmapVPot1_ = NULL;
+
+	mouseSpeed1_ = 4;
+	mouseSpeed2_ = 10;
 }
 
 PotCtrl::~PotCtrl() {
@@ -54,7 +75,7 @@ PotCtrl::~PotCtrl() {
 }
 
 void PotCtrl::create(Window* parent, char* name) {
-	Ctrl::create(PotCtrl::wndClass_, parent, name);
+	Ctrl::create(PotCtrl::wndClass_, parent, name, WS_CHILD | WS_VISIBLE);
 	//var hdc = GetDC(hWnd_);
 	size_ = 100;
 	label(name);
@@ -84,22 +105,26 @@ void PotCtrl::setColors(DWORD background, DWORD foreground, DWORD frame, DWORD t
 		SYSPR(DeleteObject(backgroundBrush_));
 		SYSPR(DeleteObject(foregroundBrush_));
 		SYSPR(DeleteObject(frameBrush_));
+		SYSPR(DeleteObject(pen_));
 	}
 	SYSFN(backgroundBrush_, CreateSolidBrush(background));
 	SYSFN(foregroundBrush_, CreateSolidBrush(foreground));
 	SYSFN(frameBrush_, CreateSolidBrush(frame));
+	SYSFN(pen_, CreatePen(PS_SOLID, 1, frame));
 	textColor_ = text;
 }
 
-void PotCtrl::setColors(HBRUSH background, HBRUSH foreground, HBRUSH frame, COLORREF text) {
+void PotCtrl::setColors(HBRUSH background, HBRUSH foreground, HBRUSH frame, HPEN pen, COLORREF text) {
 	if (backgroundBrush_ != NULL) {
 		SYSPR(DeleteObject(backgroundBrush_));
 		SYSPR(DeleteObject(foregroundBrush_));
 		SYSPR(DeleteObject(frameBrush_));
+		SYSPR(DeleteObject(pen_));
 	}
 	backgroundBrush_ = background;
 	foregroundBrush_ = foreground;
 	frameBrush_ = frame;
+	pen_ = pen;
 	textColor_ = text;
 }
 
@@ -125,9 +150,18 @@ void PotCtrl::setSize(int size) {
 		levelSize_.cy = size;
 		break;
 	}
-	if (size < 100) font_ = PotCtrl::smallFont_;
-	else if (size > 140) font_ = PotCtrl::largeFont_;
-	else font_ = PotCtrl::mediumFont_;
+	if (size < 100) {
+		font_ = PotCtrl::smallFont_;
+		fontSize_ = 12;
+	}
+	else if (size > 140) {
+		font_ = PotCtrl::largeFont_;
+		fontSize_ = 14;
+	}
+	else {
+		font_ = PotCtrl::mediumFont_;
+		fontSize_ = 16;
+	}
 
 	// get label rect
 	if (showLabel_ || label_ == NULL) {
@@ -211,27 +245,25 @@ LRESULT PotCtrl::onRightUpProc(Window* wnd, POINT& pos, WPARAM state) {
 LRESULT PotCtrl::onMouseMoveProc(Window* wnd, POINT& pos, POINT& delta, WPARAM state) {
 	var potCtrl = (PotCtrl*)wnd;
 	if (potCtrl->isCapturing_ && (state & MK_LBUTTON)) {
-		int count = state & MK_CONTROL ? 4 : 1;
-		count *= state & MK_SHIFT ? 10 : 1;
+		int count = state & MK_CONTROL ? 1 : state & MK_SHIFT ? potCtrl->mouseSpeed2_ : potCtrl->mouseSpeed1_;
 		switch (potCtrl->type_) {
 		case PotCtrlType::Knob:
 			//if (delta.y < 0) pot_->dec(count);
 			//else if (delta.y > 0) pot_->inc(count);
 			//break;
 		case PotCtrlType::HPotmeter:
-			if (delta.x < 0) {
+			if (delta.x < -2) {
 				potCtrl->pot_->dec(count);
 			}
-			else if (delta.x > 0) {
+			else if (delta.x > 2) {
 				potCtrl->pot_->inc(count);
 			}
-			//pot_->setFromNormalized((float)(pos.x - 1) / (rect_.right - 2));
 			break;
 		case PotCtrlType::VPotmeter:
-			if (delta.y > 0) {
+			if (delta.y > 2) {
 				potCtrl->pot_->dec(count);
 			}
-			else if (delta.y < 0) {
+			else if (delta.y < -2) {
 				potCtrl->pot_->inc(count);
 			}
 			//if (pos.y < levelRect_.bottom) {
@@ -295,7 +327,27 @@ void PotCtrl::drawVPotmeter(HDC hdc, float value) {
 	}
 }
 
-void PotCtrl::drawKnob(HDC hdc, float value) {
+void PotCtrl::drawKnob(HDC hdc, int& x, int& y, float value) {
+	// draw level
+	SelectObject(hdc, foregroundBrush_);
+	SelectObject(hdc, frameBrush_);
+	Ellipse(hdc, GAP, y, GAP + levelSize_.cx, y + levelSize_.cy);
+	// 0.0 -> 240
+	// 0.5 ->  90
+	// 1.0 -> -60
+	var th = -M_PI / 180.0f * (240.0f - value * 300.0f);
+	var rd = levelSize_.cx >> 1;
+	var cx = GAP + rd;
+	var cy = GAP + rd;
+	if (showLabel_) cy += GAP + labelSize_.cy;
+	MoveToEx(hdc, cx, cy, (LPPOINT)NULL);
+	cx += (int)(rd * cos(th)); cy += (int)(rd * sin(th));
+	SelectObject(hdc, pen_);
+	LineTo(hdc, cx, cy);
+	y += levelSize_.cy + GAP;
+}
+
+void PotCtrl::drawNumber(HDC hdc, float value) {
 	var y = GAP, x = GAP;
 	// draw label
 	if (showLabel_) {
@@ -303,34 +355,6 @@ void PotCtrl::drawKnob(HDC hdc, float value) {
 		TextOut(hdc, cx, GAP, label_, fmw::strlen(label_));
 		y += labelSize_.cy + GAP;
 	}
-
-	// draw level
-	SelectObject(hdc, foregroundBrush_);
-	Ellipse(hdc, GAP, y, GAP + levelSize_.cx, y + levelSize_.cy);
-	var cx = GAP + (levelSize_.cx >> 1);
-	var cy = GAP + (levelSize_.cy >> 1);
-	if (showLabel_) cy += GAP + labelSize_.cy;
-	var f = (1.0f - value) * 300.0f + 60.0f;
-
-	BeginPath(hdc);
-	SelectObject(hdc, frameBrush_);
-	MoveToEx(hdc, cx, cy, (LPPOINT)NULL);
-	AngleArc(hdc, cx, cy, levelSize_.cx>>1, 240.0f, f);
-
-	EndPath(hdc);
-	FillPath(hdc);
-
-	//BLENDFUNCTION bf = {
-	//AC_SRC_OVER,	// BlendOp
-	//0,				// BlendFlags
-	//0x00,			// SourceConstantAlpha
-	//0				// AlphaFormat
-	//};
-
-	SYSPR(BitBlt(hdc, 0, 0, 10, 10, backBuffer_, 0, 0, SRCCOPY));
-
-	//AngleArc(hdc, cx, cy, levelSize_.cx >> 1, 0.0f, f);
-	y += levelSize_.cy + GAP;
 
 	// draw value
 	if (showValue_) {
@@ -345,20 +369,39 @@ void PotCtrl::drawKnob(HDC hdc, float value) {
 LRESULT PotCtrl::onPaint() {
 	PAINTSTRUCT ps;
 	var hdc = BeginPaint(hWnd_, &ps);
+	var y = GAP, x = GAP;
 	// draw background
-	FillRect(hdc, &rect_, backgroundBrush_);
+	RECT bgRect = { 0, 0, rect_.right, fontSize_ };
+	FillRect(hdc, &bgRect, backgroundBrush_);
 	SelectObject(hdc, PotCtrl::font_);
 	SetBkMode(hdc, TRANSPARENT);
 	SetTextColor(hdc, textColor_);
+	// draw label
+	if (showLabel_) {
+		var cx = ((rect_.right - labelSize_.cx) >> 1);
+		TextOut(hdc, cx, 0, label_, fmw::strlen(label_));
+		y += labelSize_.cy + GAP;
+	}
 	var value = pot_->getNormalized();
 	if (showValue_) pot_->getValueAsString(valueText_, 32);
 	switch (type_) {
 	case PotCtrlType::HPotmeter: drawHPotmeter(hdc, value); break;
 	case PotCtrlType::VPotmeter: drawVPotmeter(hdc, value); break;
-	case PotCtrlType::Knob: drawKnob(hdc, value); break;
+	case PotCtrlType::Knob: drawKnob(hdc, x, y, value); break;
+	case PotCtrlType::Number: drawNumber(hdc, value); break;
 	}
 
-	
+	// draw value
+	if (showValue_) {
+		RECT bgRect = { 0, y, rect_.right, rect_.bottom };
+		RECT valueRect;
+		memset(&valueRect, 0, sizeof(RECT));
+		DrawText(hdc, (TCHAR*)&valueText_, -1, &valueRect, DT_SINGLELINE | DT_CALCRECT);
+		FillRect(hdc, &bgRect, backgroundBrush_);
+		x = (rect_.right - valueRect.right) >> 1;
+		TextOut(hdc, x, y, valueText_, fmw::strlen(valueText_));
+	}
+
 	// get value rect
 	//memset(&valueRect_, 0, sizeof(RECT));
 	//DrawText(hdc_, (TCHAR*)&valueText_, -1, &valueRect_, DT_SINGLELINE | DT_CALCRECT);
@@ -368,6 +411,10 @@ LRESULT PotCtrl::onPaint() {
 	//TextOut(hdc_, x, y, valueText_, fmw::strlen(valueText_));
 	//DrawText(hdc_, (TCHAR*)&valueText_, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	EndPaint(hWnd_, &ps);
-	ValidateRect(hWnd_, NULL);
+	//ValidateRect(hWnd_, NULL);
 	return 0;
+}
+
+LRESULT PotCtrl::onEraseBkgnd(HDC hDC) {
+	return 1;
 }

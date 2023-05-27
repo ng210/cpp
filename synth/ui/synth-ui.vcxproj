@@ -87,6 +87,7 @@
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
     <GenerateManifest>false</GenerateManifest>
+    <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -126,6 +127,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)\..</AdditionalIncludeDirectories>
       <PrecompiledHeader />
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -191,13 +193,29 @@
     <Image Include="bass-ctrl.bmp">
       <DeploymentContent>true</DeploymentContent>
     </Image>
+    <Image Include="distort-ctrl.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="drum-ctrl.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
     <Image Include="mdl-default-bg.bmp">
       <DeploymentContent>true</DeploymentContent>
     </Image>
-    <Image Include="vpot1.png" />
+    <Image Include="stereo-delay-ctrl.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="synth-ctrl.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="synth-ui.rc" />
+    <None Include="..\test\1m.xm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="soundbanks.bin">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

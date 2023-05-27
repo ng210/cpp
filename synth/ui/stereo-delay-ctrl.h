@@ -6,11 +6,13 @@
 
 namespace SYNTH_UI {
 	class StereoDelayCtrl : public ModuleCtrl {
+		static HANDLE hBackground_;
 	public:
 		StereoDelayCtrl(Module* module);
 		~StereoDelayCtrl();
 
 		void create(Window* parent, char* name);
+		HANDLE getBackgroundImage();
 	};
 }
 

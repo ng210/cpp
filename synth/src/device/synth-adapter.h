@@ -28,6 +28,7 @@ namespace SYNTH {
 		void initialize(byte** pData);
 		void prepare();
 		void cleanUp();
+		PArray* getDevices();
 		Device* createDevice(int deviceType);
 #ifdef PLAYER_EDIT_MODE
 		void writeToStream(Stream* data);

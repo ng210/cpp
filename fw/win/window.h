@@ -75,6 +75,7 @@ public:
 	virtual LRESULT onCreate();
 	virtual LRESULT onDestroy();
 	virtual LRESULT onPaint();
+	virtual LRESULT onEraseBkgnd(HDC hDC);
 	virtual LRESULT onMove(POINT& point);
 	virtual LRESULT onMoving(RECT& rect);
 	virtual LRESULT onSize(RECT& rect, WPARAM state);

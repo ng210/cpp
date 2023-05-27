@@ -12,17 +12,23 @@ NS_FW_BASE_BEGIN
 class Collection;
 
 typedef union Key {
-	int i;
 	void* p;
+	byte bytes[8];
+	UINT64 l;
+	int i;
 
 	Key() { p = NULL; }
 	Key(void* p) { this->p = p; }
-	Key(int i) { this->i = i; }
-	bool operator==(int iv) { return i == iv; }
-	bool operator==(void* pv) { return p == pv; }
-	bool operator!=(int iv) { return i != iv; }
+	Key(int i) { this->l = (UINT64)i; }
+	bool operator==(size_t iv) { return l == iv; }
+	bool operator!=(size_t iv) { return l != iv; }
+	bool operator==(void* pv) { return p == pv; }	
 	bool operator!=(void* pv) { return p != pv; }
-
+	//Key operator ()(int v) {
+	//	Key k;
+	//	k.i = v;
+	//	return k;
+	//}
 } Key;
 
 #define COLLECTION_ARGUMENTS void* value, Key key, Collection* collection, va_list args

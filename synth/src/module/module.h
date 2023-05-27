@@ -45,6 +45,8 @@ namespace SYNTH {
 
 		static SetSoundbankFunc soundbankSetter;
 		static SetProgramFunc programSetter;
+
+		static byte* loadSoundbanks(const char* soundbankPath);
 	};
 }
 #endif

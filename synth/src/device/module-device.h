@@ -20,7 +20,7 @@ namespace SYNTH {
 	} ModuleCommands;
 
 	class ModuleDevice : public Device {
-	protected: PROP_R(int, datablockId);
+	protected: PROP(int, datablockId);
 	public:
 		ModuleDevice(void* object, Adapter* adapter);
 
@@ -34,7 +34,7 @@ namespace SYNTH {
 		PotBase* getControl(byte ctrlId);
 		void setControl(byte ctrlId, S value);
 		byte program();
-		void setProgram(byte prgId);
+		void setProgram(int prgId);
 		Soundbank* soundbank();
 		void setSoundbank(Soundbank* data);
 
@@ -46,6 +46,7 @@ namespace SYNTH {
 		int writeToStream(Stream* stream);
 #endif
 		static COLLECTION_COMPARE compareToModule;
+		static Map* loadSoundbanks(const char* soundbankPath, SynthAdapter* synthAdapter);
 
 	};
 }

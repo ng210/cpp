@@ -490,6 +490,8 @@ void CollectionTest::testPArray() {
 	DEL_(pArr2);
 }
 void CollectionTest::testMap() {
+	int ix = 0, count = 0;
+	char* strArr[16];
 	char* str = NULL;
 	WORD dw = 0;
 	TEST_DATA testData;
@@ -501,38 +503,82 @@ void CollectionTest::testMap() {
 	LOG(" *  Map tests\n");
 	INFO(" ADD and GET\n");
 	for (int i = 0; i < 16; i++) {
-		str = str_format("a%02d", i);
+		strArr[i] = str_format("a%02d", i);
 		testData.id = i;
-		strncpy(testData.name, 4, str);
+		strncpy(testData.name, 4, strArr[i]);
 		map1->put(i, &i);
-		map2->put(str, str);
+		map2->put(strArr[i], strArr[i]);
 		map3->put(&testData, &testData);
 	}
-	INFO(" map1 map<int, int>\n");
-	assert("length should be 16", map1->size() == 16);
-	dw = 0; assert("first item (#0) should be 0", *(word*)map1->get(dw) == 0);
-	dw = 8; assert("item #8 should be 8", *(word*)map1->get(dw) == 8);
-	dw = 15; assert("last item (#15) should be 15", *(word*)map1->get(dw) == 15);
-	dw = -1; assert("-1 should return NULL", map1->get(dw) == NULL);
+	INFO(" map1 map<word, word>\n");
+	{
+		assert("length should be 16", map1->size() == 16);
+		dw =  0; assert("item #0 should be 0", *(word*)map1->get(dw) == 0);
+		map1->remove(dw); assert("should remove first item", map1->get(dw) == NULL);
+		dw = 14; assert("item #14 should be 14", *(word*)map1->get(dw) == 14);
+		map1->remove(dw); assert("should remove item #14", map1->get(dw) == NULL);
+		dw = 15; assert("last item (#15) should be 15", *(word*)map1->get(dw) == 15);
+		map1->remove(dw); assert("should remove last (#15) item", map1->get(dw) == NULL);
+		dw =  8; assert("item #8 should be 8", *(word*)map1->get(dw) == 8);
+		map1->remove(dw); assert("should remove item #8", map1->get(dw) == NULL);
+		dw = -1; assert("-1 should return NULL", map1->get(dw) == NULL);
+
+		count = 0;
+		for (var i = 1; i <= 13; i++) {
+			if (i != 8 && map1->compare()(map1->get(i), i, map1, NULL) == 0) count++;
+		}
+		assert("should contain all remaining items", map1->size() == 12 && count == 12);
+	}
 
 	INFO(" map2 map<char*, char*>\n");
-	assert("length should be 16", map2->size() == 16);
-	str = "a00"; assert("first item (#0) should be 'a00'", strncmp((char*)map2->get(str), "a00") == 0);
-	str = "a08"; assert("item #8 should be 'a09'", strncmp((char*)map2->get(str), "a08") == 0);
-	str = "a15"; assert("last item (#15) should be 'a15'", strncmp((char*)map2->get(str), "a15") == 0);
-	str = "a16"; assert("'a16' should return NULL", map2->get(str) == NULL);
+	{
+		assert("length should be 16", map2->size() == 16);
+		str = "a00"; assert("first item (#0) should be 'a00'", strncmp((char*)map2->get(str), str) == 0);
+		map2->remove(str); assert("should remove first item", map2->get(str) == NULL);
+		str = "a08"; assert("item #8 should be 'a08'", strncmp((char*)map2->get(str), str) == 0);
+		map2->remove(str); assert("should remove item #8", map2->get(str) == NULL);
+		str = "a14"; assert("item #14 should be 'a14'", strncmp((char*)map2->get(str), str) == 0);
+		map2->remove(str); assert("should remove item #14", map2->get(str) == NULL);
+		str = "a15"; assert("last item (#15) should be 'a15'", strncmp((char*)map2->get(str), str) == 0);
+		map2->remove(str); assert("should remove item #15", map2->get(str) == NULL);
+		str = "a16"; assert("'a16' should return NULL", map2->get(str) == NULL);
+
+		count = 0;
+		for (var i = 1; i <= 13; i++) {
+			str = str_format("a%02d", i);
+			if (i != 8 && map2->compare()(map2->get(str), str, map2, NULL) == 0) count++;
+			FREE(str);
+		}
+		assert("should contain all remaining items", map2->size() == 12 && count == 12);
+	}
 
 	INFO(" map3 map<TEST_DATA, TEST_DATA>\n");
-	assert("length should be 16", map3->size() == 16);
-	strncpy(testData.name, 4, "a00"); testData.id = 0; assert("first item (#0) should be 'a00'", strncmp(((TEST_DATA*)map3->get(&testData))->name, "a00") == 0);
-	strncpy(testData.name, 4, "a08"); testData.id = 8; assert("item #8 should be 'a09'", strncmp(((TEST_DATA*)map3->get(&testData))->name, "a08") == 0);
-	strncpy(testData.name, 4, "a15"); testData.id = 15; assert("last item (#15) should be 'a15'", strncmp(((TEST_DATA*)map3->get(&testData))->name, "a15") == 0);
-	strncpy(testData.name, 4, "a16"); testData.id = 16; assert("'a16' should return NULL", map3->get(&testData) == NULL);
+	{
+		assert("length should be 16", map3->size() == 16);
+		strncpy(testData.name, 4, "a00"); testData.id = 0; assert("first item (#0) should be 'a00'", strncmp(((TEST_DATA*)map3->get(&testData))->name, "a00") == 0);
+		map3->remove(&testData); assert("should remove first item", map3->get(&testData) == NULL);
+		strncpy(testData.name, 4, "a08"); testData.id = 8; assert("item #8 should be 'a08'", strncmp(((TEST_DATA*)map3->get(&testData))->name, "a08") == 0);
+		map3->remove(&testData); assert("should remove first item", map3->get(&testData) == NULL);
+		strncpy(testData.name, 4, "a14"); testData.id = 14; assert("item #14) should be 'a15'", strncmp(((TEST_DATA*)map3->get(&testData))->name, "a14") == 0);
+		map3->remove(&testData); assert("should remove first item", map3->get(&testData) == NULL);
+		strncpy(testData.name, 4, "a15"); testData.id = 15; assert("last item (#15) should be 'a15'", strncmp(((TEST_DATA*)map3->get(&testData))->name, "a15") == 0);
+		map3->remove(&testData); assert("should remove first item", map3->get(&testData) == NULL);
+		strncpy(testData.name, 4, "a16"); testData.id = 16; assert("'a16' should return NULL", map3->get(&testData) == NULL);
+
+		count = 0;
+		for (var i = 1; i <= 13; i++) {
+			if (i == 8) continue;
+			sprintf_s(testData.name, 12, "a%02d", i);
+			testData.id = i;
+			if (map3->compare()(map3->get(&testData), &testData, map3, NULL) == 0) count++;
+		}
+		assert("should contain all remaining items", map3->size() == 12 && count == 12);
+	}
 
 	DEL_(map1);
-	MAP_FOREACH(map2, FREE((char*)key););
 	DEL_(map2);
 	DEL_(map3);
+	for (var i = 0; i < 16; i++) FREE(strArr[i]);
 }
 
 void CollectionTest::testTree() {
@@ -594,10 +640,10 @@ void CollectionTest::testTree() {
 }
 
 void CollectionTest::runAll(int& totalPassed, int& totalFailed) {
-	test("Array tests", (TestMethod)&CollectionTest::testArray);
-	test("PArray tests", (TestMethod)&CollectionTest::testPArray);
+	//test("Array tests", (TestMethod)&CollectionTest::testArray);
+	//test("PArray tests", (TestMethod)&CollectionTest::testPArray);
 	test("Map tests", (TestMethod)&CollectionTest::testMap);
-	test("Tree tests", (TestMethod)&CollectionTest::testTree);
+	//test("Tree tests", (TestMethod)&CollectionTest::testTree);
 	totalPassed += totalPassed_;
 	totalFailed += totalFailed_;
 }

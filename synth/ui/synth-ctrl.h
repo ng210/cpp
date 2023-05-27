@@ -7,13 +7,14 @@
 namespace SYNTH_UI {
 
 	class SynthCtrl : public ModuleCtrl {
+		static HANDLE hBackground_;
 	public:
 		SynthCtrl(Module* module);
 		~SynthCtrl();
 
 		void create(Window* parent, char* name);
 
-		//LRESULT onPaint();
+		HANDLE getBackgroundImage();
 	};
 }
 #endif

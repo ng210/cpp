@@ -1,5 +1,6 @@
 #include "base/memory.h"
 #include "player/src/player.h"
+#include "synth/src/device/synth-adapter.h"
 #include "synth/src/device/module-device.h"
 #include "synth/src/module/module.h"
 
@@ -78,7 +79,7 @@ Soundbank* ModuleDevice::soundbank() {
 	return ((Module*)object_)->soundbank();
 }
 
-void ModuleDevice::setProgram(byte prgId) {
+void ModuleDevice::setProgram(int prgId) {
 	((Module*)object_)->setProgram(prgId);
 }
 byte ModuleDevice::program() {
@@ -136,4 +137,27 @@ int ModuleDevice::writeToStream(Stream* stream) {
 int ModuleDevice::compareToModule(COLLECTION_ARGUMENTS) {
 	var mdl1 = ((ModuleDevice*)value)->object();
 	return (int)((size_t)mdl1 - (size_t)key.p);
+}
+
+Map* ModuleDevice::loadSoundbanks(const char* soundbankPath, SynthAdapter* synthAdapter) {
+	var soundbanks = NEW_(Map, sizeof(int), MAP_USE_REF, Map::hashingInt, Collection::compareInt); soundbanks->hasRefKey(false);
+	byte* bytes = NULL, * end = NULL;
+	// try to read file
+	var bytesRead = File::read(soundbankPath, &bytes);
+	if (bytesRead != -1) {
+		var bptr = bytes;
+		end = bytes + bytesRead;
+		while (bptr < end) {
+			// read device type
+			var deviceType = READ(bptr, byte);
+			// create dummy device
+			var dev = (ModuleDevice*)synthAdapter->createDevice(deviceType);
+			var sb = dev->module()->createSoundbank();
+			sb->initializeFromStream(bptr);
+			soundbanks->put(deviceType, sb);
+			DEL_(dev);
+		}
+	}
+	FREE(bytes);
+	return soundbanks;
 }

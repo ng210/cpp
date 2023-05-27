@@ -104,9 +104,11 @@ namespace SYNTH {
         drCP = 8
     } DrumsNotes;
 
+    #define DrumsCount 8
+
     class Drums : public Module {
         static Soundbank* defaultSoundbank_;
-    protected: GenericDrum drums_[8];
+    protected: GenericDrum drums_[DrumsCount];
         //void renderGenericDrum(GenericDrum& drum, float* buffer, int start, int end);
         //void renderBassDrum(float* buffer, int start, int end);
         //void renderSnareDrum(float* buffer, int start, int end);
@@ -123,10 +125,11 @@ namespace SYNTH {
         virtual ~Drums();
         void initializeFromStream(byte** pData);
 
-        void soundbank(Soundbank* sb);
+        //void soundbank(Soundbank* sb);
         float* getOutput(int id);
         void setControl(int id, S value);
         void run(int start, int end);
+        int drumId2note(int id);
         void setNote(byte note, byte velocity);
         Soundbank* createSoundbank();
         
@@ -137,6 +140,7 @@ namespace SYNTH {
         static void cleanUp();
 
         static SetSoundbankFunc soundbankSetter;
+        static SetProgramFunc programSetter;
     };
 }
 

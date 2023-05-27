@@ -49,7 +49,14 @@ void SynthAdapter::cleanUp() {
 	Distort::cleanUp();
 	StereoDelay::cleanUp();
 }
+PArray* SynthAdapter::getDevices() {
+	var types = NEW_(PArray, 8);
+	types->push(NEW_(BassDevice, this));
+	types->push(NEW_(SynthDevice, this));
+	types->push(NEW_(DrumsDevice, this));
+	return types;
 
+}
 Device* SynthAdapter::createDevice(int deviceType) {
 	Device* device = NULL;
 	switch (deviceType) {

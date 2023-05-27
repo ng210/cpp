@@ -72,6 +72,16 @@ void BassCtrl::create(Window* parent, char* name) {
 	stream.reset();
 	unsigned long colors[] = { 0x00285010, 0x0078ff30, 0x0050a020, 0x0040ff40 };
 	initFromStream(&stream, 100, colors);
+	var ctrl1 = module_->getControl(bOsc1Tune);
+	var ctrl2 = module_->getControl(bOsc2Tune);
+	var ctrl3 = module_->getControl(bFlt1Mode);
+	for (var i = 0; i < potCtrlCount_; i++) {
+		if (potCtrls_[i]->pot() == ctrl1 || potCtrls_[i]->pot() == ctrl2) potCtrls_[i]->mouseSpeed2(12);
+		else if (potCtrls_[i]->pot() == ctrl3) {
+			potCtrls_[i]->mouseSpeed1(1);
+			potCtrls_[i]->mouseSpeed2(1);
+		}
+	}
 }
 
 HANDLE BassCtrl::getBackgroundImage() {

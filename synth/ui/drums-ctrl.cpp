@@ -6,7 +6,7 @@ using namespace SYNTH_UI;
 byte genericDrumLayout[] = {
 	// colors
 	// background, foreground, frame, text
-	DD(0x00285010), DD(0x0078ff30), DD(0x0050a020), DD(0x0040ff40),
+	DD(0x00404040), DD(0x00808080), DD(0x00c0c0c0), DD(0x00e0e0e0),
 	// controls
 	DB(gdType),		DB('t'), DB('y'), DB('p'), DB('e'), DB(0), DB(PotCtrlType::Knob),
 	// Dahr1
@@ -62,8 +62,11 @@ byte genericDrumLayout[] = {
 	LayoutEnd
 };
 
+HANDLE GenericDrumCtrl::hBackground_ = NULL;
+
 GenericDrumCtrl::GenericDrumCtrl(Module* module) : ModuleCtrl(module) {
 	//module_->setProgram = { this, &GenericDrumCtrl::setProgramProc };
+	hasLabel_ = true;
 }
 
 GenericDrumCtrl::~GenericDrumCtrl() {
@@ -75,27 +78,39 @@ void GenericDrumCtrl::create(Window* parent, char* name) {
 	Stream stream(genericDrumLayout, arraysize(genericDrumLayout));
 	stream.reset();
 	initFromStream(&stream, 92);
+	var ctrl1 = module_->getControl(gdFlt1Mode);
+	var ctrl2 = module_->getControl(gdFlt2Mode);
+	for (var i = 0; i < potCtrlCount_; i++) {
+		if (potCtrls_[i]->pot() == ctrl1 || potCtrls_[i]->pot() == ctrl2) {
+			potCtrls_[i]->mouseSpeed1(1);
+			potCtrls_[i]->mouseSpeed2(1);
+		}
+	}
 };
 
-LRESULT GenericDrumCtrl::onPaint() {
-	return ModuleCtrl::onPaint();
+//LRESULT GenericDrumCtrl::onPaint() {
+//	return ModuleCtrl::onPaint();
+//}
+
+HANDLE GenericDrumCtrl::getBackgroundImage() {
+	if (hBackground_ == NULL) {
+		SYSFN(hBackground_, LoadImage(NULL, "drum-ctrl.bmp", IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT | LR_LOADFROMFILE));
+	}
+	return hBackground_;
 }
 
-//void GenericDrumCtrl::programProc(void* obj, int prgId) {
-//	ModuleCtrl::programProc(obj, prgId);
-//	((GenericDrumCtrl*)obj)->updateProgram();
-//}
+
 
 DrumsCtrl::DrumsCtrl(Module* module) : ModuleCtrl(module) {
 	var drums = (Drums*)module_;
 	drums->setSoundbank.add(this, &DrumsCtrl::soundbankSetter);
-	for (var i = 0; i < 8; i++) {
+	for (var i = 0; i < DrumsCount; i++) {
 		drumCtrls_[i] = NEW_(GenericDrumCtrl, &drums->drums[i]);
 	}
 }
 
 DrumsCtrl::~DrumsCtrl() {
-	for (var i = 0; i < 8; i++) {
+	for (var i = 0; i < DrumsCount; i++) {
 		DEL_(drumCtrls_[i]);
 	}
 }

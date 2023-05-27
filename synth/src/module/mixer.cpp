@@ -65,6 +65,17 @@ MixerChannel* Mixer8x4::connectInput(MixerChannel* channel, Module* input) {
     return channel;
 }
 
+MixerChannel* Mixer8x4::connectInput(int channelId, Module* input, float gain, float amp, float pan) {
+    var channel = getChannel(channelId);
+    if (channel != NULL) {
+        channel->input = input;
+        channel->controls->gain.value.f = gain;
+        channel->controls->amp.value.f = amp;
+        channel->controls->pan.value.f = pan;
+    }
+    return channel;
+}
+
 void Mixer8x4::run(float* buffer, int start, int end) {
     // currently unused   
 }

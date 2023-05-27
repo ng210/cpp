@@ -1,9 +1,10 @@
 #ifndef __DISTORT_H
 #define __DISTORT_H
 
-#include "module.h"
-#include "../elem/clp.h"
-#include "../elem/flt.h"
+#include "collection/array.h"
+#include "synth/src/module/module.h"
+#include "synth/src/elem/clp.h"
+#include "synth/src/elem/flt.h"
 
 NS_FW_BASE_USE
 namespace SYNTH {

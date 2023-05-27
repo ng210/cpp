@@ -9,7 +9,7 @@ using namespace SYNTH_UI;
 byte synthUiLayout[] = {
 	// colors
 	// background, foreground, frame, text
-	DD(0x00285010), DD(0x0078ff30), DD(0x0050a020), DD(0x0040ff40),
+	DD(0x00a08030), DD(0x00f0e060), DD(0x00787030), DD(0x00fff8a0),
 	// controls
 	// AM
 	DB(amAdsrAmp), DB('a'),DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
@@ -64,8 +64,10 @@ byte synthUiLayout[] = {
 	LayoutEnd
 };
 
-SynthCtrl::SynthCtrl(Module* module) : ModuleCtrl(module) {
+HANDLE SynthCtrl::hBackground_ = NULL;
 
+SynthCtrl::SynthCtrl(Module* module) : ModuleCtrl(module) {
+	hasLabel_ = true;
 }
 
 SynthCtrl::~SynthCtrl() {
@@ -78,12 +80,21 @@ void SynthCtrl::create(Window* parent, char* name) {
 	Stream stream(synthUiLayout, arraysize(synthUiLayout));
 	stream.reset();
 	initFromStream(&stream);
+	var ctrl1 = module_->getControl(osc1Tune);
+	var ctrl2 = module_->getControl(osc2Tune);
+	var ctrl3 = module_->getControl(flt1Mode);
+	for (var i = 0; i < potCtrlCount_; i++) {
+		if (potCtrls_[i]->pot() == ctrl1 || potCtrls_[i]->pot() == ctrl2) potCtrls_[i]->mouseSpeed2(12);
+		else if (potCtrls_[i]->pot() == ctrl3) {
+			potCtrls_[i]->mouseSpeed1(1);
+			potCtrls_[i]->mouseSpeed2(1);
+		}
+	}
 }
 
-//LRESULT synthCtrl::onPaint() {
-//	PAINTSTRUCT ps;
-//	var hdc = BeginPaint(hWnd_, &ps);
-//	FillRect(hdc, &rect_, PotCtrl::foregroundBrush_);
-//	EndPaint(hWnd_, &ps);
-//	return 0;
-//}
+HANDLE SynthCtrl::getBackgroundImage() {
+	if (hBackground_ == NULL) {
+		SYSFN(hBackground_, LoadImage(NULL, "synth-ctrl.bmp", IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT | LR_LOADFROMFILE));
+	}
+	return hBackground_;
+}

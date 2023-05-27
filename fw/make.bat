@@ -1,0 +1,2 @@
+rem fw.lib
+msbuild.exe /JMC /ifcOutput "D:\code\git\cpp\fw\x64\Debug\" /GS /W3 /Zc:wchar_t /I"D:\code\git\cpp\fw\" /ZI /Gm- /Od /sdl /Fd"D:\code\git\cpp\fw\x64\Debug\fw.pdb" /Zc:inline /fp:precise /errorReport:prompt /WX- /Zc:forScope /RTC1 /Gd /MDd /FC /Fa"D:\code\git\cpp\fw\x64\Debug\" /EHsc /nologo /Fo"D:\code\git\cpp\fw\x64\Debug\" /Fp"D:\code\git\cpp\fw\x64\Debug\fw.pch" /diagnostics:column 
