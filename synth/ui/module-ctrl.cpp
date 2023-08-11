@@ -155,6 +155,7 @@ void ModuleCtrl::updateSoundbank() {
 			programCtrl_.addItem(prgName);
 		}
 	}
+	// sort program list
 }
 
 void ModuleCtrl::onSelectProgram(ComboboxCtrl* cb, int ix, void* item) {
@@ -212,6 +213,7 @@ PotCtrl* ModuleCtrl::getControl(int id) {
 
 int ModuleCtrl::soundbankSetter(void* obj, Soundbank* sb) {
 	var ctrl = (ModuleCtrl*)obj;
+	ctrl->module_->setSoundbank(sb);
 	//Module::soundbankSetter(ctrl->module_, sb);
 	ctrl->updateSoundbank();
 	return 1;

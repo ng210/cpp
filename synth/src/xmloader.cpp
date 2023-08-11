@@ -1,4 +1,5 @@
 /* Load and convert XM patterns
+/* Load and convert XM patterns
  * - load XM and build structures: patterns
  * - create "raw" sequnces by tracking instruments through the sequenced patterns
  * - optimize sequences by replacing repetitive parts with true repeats
@@ -27,107 +28,92 @@ using namespace SYNTH;
 static const char* NOTES[] = { "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "H-" };
 
 static char dummy[16] = "";
-class XmEffectMap : public Map {
-public:
-	XmEffectMap() {
-		initialize(sizeof(int), 4*sizeof(char), Map::hashingItem, Collection::compareInt);
-		int key; char* value;
 
-		key = 0x00; value = "0"; put(&key, value); // 00 // Appregio
-		key = 0x01; value = "1"; put(&key, value); // 01 // Porta up
-		key = 0x02; value = "2"; put(&key, value); // 02 // Porta down
-		key = 0x03; value = "3"; put(&key, value); // 03 // Tone porta
-		key = 0x04; value = "4"; put(&key, value); // Vibrato
-		key = 0x05; value = "5"; put(&key, value); // Tone porta + Volume slide
-		key = 0x06; value = "6"; put(&key, value); // Vibrato + Volume slide
-		key = 0x07; value = "7"; put(&key, value); // Tremolo
-		key = 0x08; value = "8"; put(&key, value); // Set panning
-		key = 0x09; value = "9"; put(&key, value); // Sample offset
-		key = 0x0A; value = "A"; put(&key, value); // Volume slide
-		key = 0x0B; value = "B"; put(&key, value); // Position jump
-		key = 0x0C; value = "C"; put(&key, value); // Set volume
-		key = 0x0D; value = "D"; put(&key, value); // Pattern break
-		key = 0x0E; value = "E"; put(&key, value); // Fine porta up
-		//key = 0xE1; value = "E1"; put(&key, value); // Fine porta up
-		//key = 0xE2; value = "E2"; put(&key, value); // Fine porta down
-		//key = 0xE3; value = "E3"; put(&key, value); // Set gliss control
-		//key = 0xE4; value = "E4"; put(&key, value); // Set vibrato control
-		//key = 0xE5; value = "E5"; put(&key, value); // Set finetune
-		//key = 0xE6; value = "E6"; put(&key, value); // Set loop begin / loop
-		//key = 0xE7; value = "E7"; put(&key, value); // Set tremolo control
-		//key = 0xE9; value = "E9"; put(&key, value); // Retrig note
-		//key = 0xEA; value = "EA"; put(&key, value); // Fine volume slide up
-		//key = 0xEB; value = "EB"; put(&key, value); // Fine volume slide down
-		//key = 0xEC; value = "EC"; put(&key, value); // Note cut
-		//key = 0xED; value = "ED"; put(&key, value); // Note delay
-		//key = 0xEE; value = "EE"; put(&key, value); // Pattern delay
-		key = 0x0F; value = "F"; put(&key, value); // Set tempo / BPM
-		key = 0x10; value = "G"; put(&key, value); // Set global volume
-		key = 0x11; value = "H"; put(&key, value); // Global volume slide
-		key = 0x14; value = "K"; put(&key, value); // Key off 
-		key = 0x15; value = "L"; put(&key, value); // Set envelope position
-		key = 0x19; value = "P"; put(&key, value); // Panning slide
-		key = 0x1B; value = "R"; put(&key, value); // Multi retrig note
-		key = 0x1D; value = "T"; put(&key, value); // Tremor
-		key = 0x21; value = "X"; put(&key, value); // X1 - Extra fine porta up / X2 - Extra fine porta down
-//		key = 0x21; value = "-X2"; put(&key, value); // X2 - Extra fine porta down
-	};
+XmEffect::XmEffect() {
+	code_ = 0;
+	parameter_ = 0;
+	//sign_ = '\0';
+	//handler_ = NULL;
+}
 
-	~XmEffectMap() {
-	}
+XmEffect::XmEffect(int code, int parameter) {
+	code_ = code;
+	parameter_ = parameter;
+}
 
-	char* get(int key) {
-		void* value = Map::get(&key);
-		if (value == NULL) {
-			sprintf_s(dummy, 16, "%02x", key);
-			value = &dummy;
-		}
-		return (char*)value;
-	}
-};
+Map* xmEffectMap_;
 
-static XmEffectMap* xmEffectMap_ = NULL;
-
-//Device* XmLoader::addDefaultDevice(SynthAdapter* synthAdapter, InstrumentInfo* instrumentInfo) {
-//	instrumentInfo->device = NEW_(SynthDevice, synthAdapter);
-//	instrumentInfo->voiceCount = 0;
-//	var stream = NEW_(Stream);
-//	((Module*)instrumentInfo->device->object())->getDefaultSoundbank()->writeToStream(stream);
-//	instrumentInfo->dataBlock = stream;
-//	return NULL;
-//}
-
-Device* XmLoader::addNoEffect(Player* player/*, MixerChannel* channel*/) {
-	return NULL;
+void createXmEffectMap() {
+	xmEffectMap_ = NEW_(Map, sizeof(XmFxType), sizeof(char), Map::hashingInt, Collection::compareInt);
+	xmEffectMap_->hasRefKey(false);
+	char sign;
+	sign = '0'; xmEffectMap_->put(0x00, &sign);	// 0 Appregio
+	sign = '1'; xmEffectMap_->put(0x01, &sign);	// 1 Porta up
+	sign = '2'; xmEffectMap_->put(0x02, &sign);	// 2 Porta down
+	sign = '3'; xmEffectMap_->put(0x03, &sign);	// 3 Tone porta
+	sign = '4'; xmEffectMap_->put(0x04, &sign);	// 4 Vibrato
+	sign = '5'; xmEffectMap_->put(0x05, &sign);	// 5 Tone porta + Volume slide
+	sign = '6'; xmEffectMap_->put(0x06, &sign);	// 6 Vibrato + Volume slide
+	sign = '7'; xmEffectMap_->put(0x07, &sign);	// 7 Tremolo
+	sign = '8'; xmEffectMap_->put(0x08, &sign);	// 8 Set panning
+	sign = '9'; xmEffectMap_->put(0x09, &sign);	// 9 Sample offset
+	sign = 'A'; xmEffectMap_->put(0x0A, &sign);	// A Volume slide
+	sign = 'B'; xmEffectMap_->put(0x0B, &sign);	// B Position jump
+	sign = 'C'; xmEffectMap_->put(0x0C, &sign);	// C Set volume
+	sign = 'D'; xmEffectMap_->put(0x0D, &sign);	// D Pattern break
+	sign = 'E'; xmEffectMap_->put(0xE1, &sign);	// E1 Fine porta up
+	sign = 'E'; xmEffectMap_->put(0xE2, &sign);	// E2 Fine porta down
+	sign = 'E'; xmEffectMap_->put(0xE3, &sign);	// E3 Set gliss control
+	sign = 'E'; xmEffectMap_->put(0xE4, &sign);	// E4 Set vibrato control
+	sign = 'E'; xmEffectMap_->put(0xE5, &sign);	// E5 Set finetune
+	sign = 'E'; xmEffectMap_->put(0xE6, &sign);	// E6 Set loop begin / loop
+	sign = 'E'; xmEffectMap_->put(0xE7, &sign);	// E7 Set tremolo control
+	sign = 'E'; xmEffectMap_->put(0xE9, &sign);	// E9 Retrig note
+	sign = 'E'; xmEffectMap_->put(0xEA, &sign);	// EA Fine volume slide up
+	sign = 'E'; xmEffectMap_->put(0xEB, &sign);	// EB Fine volume slide down
+	sign = 'E'; xmEffectMap_->put(0xEC, &sign);	// EC Note cut
+	sign = 'E'; xmEffectMap_->put(0xED, &sign);	// ED Note delay
+	sign = 'E'; xmEffectMap_->put(0xEE, &sign);	// EE Pattern delay
+	sign = 'F'; xmEffectMap_->put(0x0F, &sign);	// F Set tempo / BPM
+	sign = 'G'; xmEffectMap_->put(0x10, &sign);	// G  (010h) Set global volume
+	sign = 'H'; xmEffectMap_->put(0x11, &sign);	// H  (011h) Global volume slide
+	sign = 'I'; xmEffectMap_->put(0x12, &sign);	// I  (012h) Unused
+	sign = 'J'; xmEffectMap_->put(0x13, &sign);	// J  (013h) Unused
+	sign = 'K'; xmEffectMap_->put(0x14, &sign);	// K  (014h) Unused
+	sign = 'L'; xmEffectMap_->put(0x15, &sign);	// L  (015h) Set envelope position
+	sign = 'M'; xmEffectMap_->put(0x16, &sign);	// M  (016h) Unused
+	sign = 'N'; xmEffectMap_->put(0x17, &sign);	// N  (017h) Unused
+	sign = 'O'; xmEffectMap_->put(0x18, &sign);	// O  (018h) Unused
+	sign = 'P'; xmEffectMap_->put(0x19, &sign);	// P  (019h) Panning slide
+	sign = 'Q'; xmEffectMap_->put(0x1A, &sign);	// Q  (01ah) Unused
+	sign = 'R'; xmEffectMap_->put(0x1B, &sign);	// R  (01bh) Multi retrig note
+	sign = 'S'; xmEffectMap_->put(0x1C, &sign);	// S  (01ch) Unused
+	sign = 'T'; xmEffectMap_->put(0x1D, &sign);	// T  (01dh) Tremor
+	sign = 'U'; xmEffectMap_->put(0x1E, &sign);	// U  (01eh) Unused
+	sign = 'V'; xmEffectMap_->put(0x1F, &sign);	// V  (01fh) Unused
+	sign = 'W'; xmEffectMap_->put(0x20, &sign);	// W  (020h) Unused
+	sign = 'X'; xmEffectMap_->put(0x21, &sign);	// X1 (021h) Extra fine porta up
+	sign = 'X'; xmEffectMap_->put(0x22, &sign);	// X2 (021h) Extra fine porta down
 }
 
 XmLoader::XmLoader(PlayerDevice* playerDevice) {
+	createXmEffectMap();
 	bpm_ = 120;
 	channelCount_ = 4;
 	ticks_ = 4;
-	player_ = playerDevice->player();
 	playerDevice_ = playerDevice;
+	player_ = playerDevice_->player();
+
 	// check synth-adapter
 	SynthAdapter synthAdapter;
 	synthAdapter_ = (SynthAdapter*)player_->getAdapter(synthAdapter.getInfo()->id);
 	if (synthAdapter_ == NULL) {
 		synthAdapter_ = (SynthAdapter*)Player::addAdapter(NEW_(SynthAdapter));
 	}
+
 	instrumentInfos_.init(sizeof(InstrumentInfo), 16);
-
-	// check synth-device
-	Key ix = 0;
-	//synthDevice_ = (SynthDevice*)player->devices().search(SynthDevices::DeviceSynth, ix);
-	//if (synthDevice_ == NULL) {
-	//	synthDevice_ = (SynthDevice*)player->addDevice(synthAdapter_, SynthDevices::DeviceSynth);
-	//}
-
 	patternOrder_.init(sizeof(byte), 256);
 	patterns_.init(256);
-	//instruments_.init(sizeof(XmInstrument), 64);
-	if (xmEffectMap_ == NULL) {
-		xmEffectMap_ = NEW_(XmEffectMap);
-	}
 }
 
 XmLoader::~XmLoader(void) {
@@ -136,57 +122,80 @@ XmLoader::~XmLoader(void) {
 }
 
 #pragma region XmReading
-void XmLoader::getVolumeEffect(byte code, byte*& ptr, XmNote* xmNote) {
-	if (code & 0x04) {
-		var vol = *ptr++;
-		xmNote->volume = 0xff;
-		while (true) {
-			if (vol < 0x10) break;
-			vol -= 0x10;
-			if (vol <= 0x40) {
-				xmNote->volume = vol;
-				break;
+void XmLoader::processVolumeEffect(byte code, byte*& ptr, XmNote* xmNote) {
+	// 10..50 V Set volume
+	// 60..6F D Volume slide down
+	// 70..7F C Volume slide up
+	// 80..8F B Fine volume down
+	// 90..9F A Fine volume up
+	// A0..AF U Vibrato speed
+	// B0..BF H Vibrato deph
+	// C0..CF P Set panning
+	// D0..DF L Pan slide left
+	// E0..EF R Pan slide right
+	// F0..FF G Tone portamento
+	xmNote->volume = xmNote->note != 96 && xmNote->instrument != -1 ? 0xff : -1;
+	xmNote->effects[0].code(XmFxTypeNone);
+	xmNote->effects[0].parameter(-1);
+	if (code & XmNoteBitsVolume) {
+		var value = *ptr++;
+		var code = value >> 4;
+		if (value > 0x10) {
+			if (value <= 0x50) {
+				xmNote->volume = (value - 0x11) << 4;
 			}
-			vol -= 0x30;
-			xmNote->effects[0].code = vol >> 4;
-			xmNote->effects[0].parameter = vol & 0x0f;
-			break;
+			else {
+				switch (code) {
+				case 0x06:
+					xmNote->effects[0].code(XmFxTypeVolumeSlide); break;
+				case 0x07:
+					xmNote->effects[0].code(XmFxTypeVolumeSlide); break;
+				case 0x08:
+					xmNote->effects[0].code(XmFxTypeVolumeSlide); break;
+				case 0x09:
+					xmNote->effects[0].code(XmFxTypeVolumeSlide); break;
+				case 0x0a:
+					xmNote->effects[0].code(XmFxTypeVibrato); break;
+				case 0x0b:
+					xmNote->effects[0].code(XmFxTypeVibrato); break;
+				case 0x0c:
+					xmNote->effects[0].code(XmFxTypeSetPanning); break;
+				case 0x0d:
+					xmNote->effects[0].code(XmFxTypePanningSlide); break;
+				case 0x0e:
+					xmNote->effects[0].code(XmFxTypePanningSlide); break;
+				case 0x0f:
+					xmNote->effects[0].code(XmFxTypeTonePorta); break;
+				}
+
+				xmNote->effects[0].parameter(value & 0x0f);
+			}
 		}
 	}
 }
-void XmLoader::getEffect(byte code, byte*& ptr, XmNote* xmNote) {
-	if (code & 0x08) {
-		xmNote->effects[1].code = *ptr++;
-	}
-	else {
-		xmNote->effects[1].code = -1;
-	}
-	
-	if (code & 0x10) {
-		xmNote->effects[1].parameter = *ptr++;
-	}
-	else {
-		xmNote->effects[1].parameter = -1;
-	}
+
+void XmLoader::processEffect(byte code, byte*& ptr, XmNote* xmNote) {
+	xmNote->effects[1].code(code & XmNoteBitsFxType ? *ptr++ : XmFxTypeNone);
+	xmNote->effects[1].parameter(code & XmNoteBitsFxParameter ? *ptr++ : -1);
 }
+
 XmNote* XmLoader::readNote(byte*& ptr, XmNote* xmNote) {
 	byte code = *ptr++;
-	xmNote->hasData = (code != 0x80);
-	bool isCompressed = code & 0x80;
+	xmNote->hasData = (code != XmNoteBitsCompressed);
+	bool isCompressed = code & XmNoteBitsCompressed;
 	int note = -1;
 	if (!isCompressed) {
 		note = code - 1;
-		code = 0x9e;
+		code = XmNoteBitsAll - XmNoteBitsNote;
 	}
-	code &= 0x1f;
-	xmNote->note = (code & 0x01) ? *ptr++ - 1 : note;
-	xmNote->instrument = (code & 0x02) ? *ptr++ - 1 : -1;
-	xmNote->volume = -1;
-	
-	getVolumeEffect(code, ptr, xmNote);
-	getEffect(code, ptr, xmNote);
+	code &= XmNoteBitsAll;
+	xmNote->note = (code & XmNoteBitsNote) ? *ptr++ - 1 : note;
+	xmNote->instrument = (code & XmNoteBitsInstrument) ? *ptr++ - 1 : -1;
+	processVolumeEffect(code, ptr, xmNote);
+	processEffect(code, ptr, xmNote);
 	return xmNote;
 }
+
 XmPattern* XmLoader::readPattern(XmFilePattern* ptr) {
 	int patternSize = sizeof(XmPattern) + sizeof(XmNote) * ptr->rowCount * channelCount_;
 	var pattern = (XmPattern*)MALLOC(byte, patternSize);
@@ -202,6 +211,7 @@ XmPattern* XmLoader::readPattern(XmFilePattern* ptr) {
 	}
 	return pattern;
 }
+
 int XmLoader::load(const char* xmPath, Map* soundbanks) {
 	int error = 1;
 	byte* xmData = NULL;
@@ -238,7 +248,7 @@ int XmLoader::load(const char* xmPath, Map* soundbanks) {
 		char instrumentName[22];
 		for (var ii = 0; ii < header->instrumentCount; ii++) {
 			var instrument = (XmInstrument*)ptr;
-			strncpy(instrumentName, 21, instrument->name);
+			fmw::strncpy(instrumentName, 21, instrument->name);
 			char *name = str_rtrim(instrumentName);
 			var hasMatch = false;
 			for (var si = 0; si < soundbanks->size(); si++) {
@@ -330,7 +340,7 @@ int XmLoader::load(const char* xmPath, Map* soundbanks) {
 #pragma endregion
 
 #pragma region XmProcessing
-void XmLoader::convertPatterns(/*ADD_DEVICE_HANDLER addDevice, ADD_EFFECT_HANDLER addEffect*/) {
+void XmLoader::convertPatterns() {
 	// create master sequence
 	var masterSequence = player_->addSequence(NEW_(Sequence, playerDevice_));
 	// create channel and sequence for each device
@@ -397,7 +407,7 @@ void XmLoader::convertPatterns(/*ADD_DEVICE_HANDLER addDevice, ADD_EFFECT_HANDLE
 					word delta = currentTick - lastTick[info->channelId];
 					// read note
 					var note = xmNote.note;
-					var volume = xmNote.volume;
+					int volume = xmNote.volume;
 					// won't write multiple note offs
 					// and won't write note offs for drums
 					if (note == 0x60 && (channelInfo[ci].note == 0x60 || isDrums)) continue;
@@ -425,16 +435,16 @@ void XmLoader::convertPatterns(/*ADD_DEVICE_HANDLER addDevice, ADD_EFFECT_HANDLE
 							cmd = info->device->makeCommand(CmdSetNote, channelInfo[ci].note, 0);
 							channelInfo[ci].note = 0x60;
 							if (voiceCount[info->channelId] > 0) voiceCount[info->channelId]--;
-							volume = 0xff;
+							volume = -1;
 						}
 						else if (xmNote.instrument != 0xff) {
 							// set note
-							var velocity = volume < 0x3f ? volume << 2 : 255;
+							var velocity = volume;
 							cmd = info->device->makeCommand(CmdSetNote, !isDrums ? note : info->drumId + 1, velocity);
 							voiceCount[info->channelId]++;
 							if (voiceCount[info->channelId] > info->voiceCount) info->voiceCount = voiceCount[info->channelId];
 							channelInfo[ci].note = note;
-							volume = 0xff;
+							volume = -1;
 						}
 						else {
 							// setController(note)
@@ -446,10 +456,9 @@ void XmLoader::convertPatterns(/*ADD_DEVICE_HANDLER addDevice, ADD_EFFECT_HANDLE
 						seq->writeStream(cmd);
 						DEL_(cmd);
 					}
-					if (volume != 0xff) {
+					if (volume != -1) {
 						// setController(amp)
-						var volume = xmNote.volume < 0x40 ? xmNote.volume << 2 : 0xff;
-						var stream = info->device->makeCommand(CmdSetFloat8, SynthCtrlId::amAdsrAmp, volume);
+						var stream = info->device->makeCommand(CmdSetFloat8, SynthCtrlId::amAdsrAmp, xmNote.volume);
 						seq->writeStream(stream);
 						DEL_(stream);
 					}
@@ -486,26 +495,26 @@ void XmLoader::convertPatterns(/*ADD_DEVICE_HANDLER addDevice, ADD_EFFECT_HANDLE
 	#pragma endregion
 }
 
-
 int XmLoader::printNote(XmNote* xmNote, char* buffer) {
 	char* ptr = buffer;
 	if (xmNote->hasData) {
-		byte v = xmNote->note;
-		ptr += (v != 0xff) ? (v != 96) ? sprintf_s(ptr, 16, "%s%d ", NOTES[v % 12], v / 12) : sprintf_s(ptr, 16, "off ") : sprintf_s(ptr, 16, "--- ");
+		int v = xmNote->note;
+		ptr += (v != 0xff) ? (v != 96) ? sprintf_s(ptr, 24, "%s%d ", NOTES[v % 12], v / 12) : sprintf_s(ptr, 24, "off ") : sprintf_s(ptr, 24, "--- ");
 		v = xmNote->instrument;
-		ptr += (v != 0xff) ? sprintf_s(ptr, 16, "%02X ", v) : sprintf_s(ptr, 16, "-- ");
+		ptr += (v != 0xff) ? sprintf_s(ptr, 24, "%02X ", v) : sprintf_s(ptr, 24, "-- ");
 		v = xmNote->volume;
-		ptr += (v != 0xff) ? sprintf_s(ptr, 16, "%02X ", v) : sprintf_s(ptr, 16, "-- ");
-		v = xmNote->effects[1].code;
-		ptr += (v != 0xff) ? sprintf_s(ptr, 16, "%s", xmEffectMap_->get(v)) : sprintf_s(ptr, 16, "-");
-		v = xmNote->effects[1].parameter;
-		ptr += (v != 0xff) ? sprintf_s(ptr, 16, "%02X", v) : sprintf_s(ptr, 16, "--");
+		ptr += (v != -1) ? sprintf_s(ptr, 24, "%02X ", v) : sprintf_s(ptr, 24, "-- ");
+		v = xmNote->effects[1].code();
+		ptr += (v != XmFxTypeNone) ? sprintf_s(ptr, 24, "%c", *(char*)xmEffectMap_->get(v)) : sprintf_s(ptr, 24, "-");
+		v = xmNote->effects[1].parameter();
+		ptr += (v != -1) ? sprintf_s(ptr, 24, "%02X", v) : sprintf_s(ptr, 24, "--");
 	}
 	else {
-		ptr += sprintf_s(ptr, 16, "... .. .. ...");
+		ptr += sprintf_s(ptr, 24, "... .. .. ...");
 	}
 	return (int)(ptr - buffer);
 }
+
 char* XmLoader::printPattern(int id) {
 	int n = 0;
 	var buffer = MALLOC(char, 65536);
@@ -524,165 +533,4 @@ char* XmLoader::printPattern(int id) {
 	}
 	return buffer;
 }
-
-//PArray* XmLoader::convertNote(XMNOTE* xmNote, XMNOTE& state) {
-//	PlayerCommands cmd;
-//	PArray* commands = NEW_(PArray);
-//	if (xmNote->hasData) {
-//		// process instrument
-//		int instrument = xmNote->instrument;
-//		if (instrument != 0xFF && instrument != state.instrument) {
-//			state.instrument = instrument;
-//			cmd = synthAdapter_->makeCommand(CmdSetProgram, instrument);
-//			commands->push(cmd);
-//		}
-//		// process volume
-//		int volume = xmNote->volume;
-//		if (volume != 0xFF) {
-//			volume -= 0x10;
-//			if (volume < 0 || volume > 0x40) {
-//volume = state.volume;
-//			}
-//			state.volume = volume;
-//		}
-//		// process note
-//		int note = xmNote->note;
-//		if (note >= 0x00 && note < 0x60) {
-//			note += 12;
-//			//if (instrument != 0xff) {
-//				// note on
-//			int v = volume == 0xFF ? 0x40 : volume;
-//			cmd = synthAdapter_->createCommand(Synth_Cmd_setControlF, SSN1K_CI_Env1Amp, 1.0);
-//			commands->push(cmd);
-//			cmd = synthAdapter_->createCommand(Synth_Cmd_setNoteOn, note, volume * 255 >> 6);
-//			commands->push(cmd);
-//			volume = 0xFF;
-//			//} else {
-//			//	if (note != state.note) {
-//			//		// set note
-//			//		cmd = synthAdapter_->createCommand(Synth_Cmd_setControlF, SSN1K_CI_Tune, (double)note);
-//			//		commands->push(cmd);
-//			//	}
-//			//}
-//			state.note = note;
-//		}
-//		if (note == 0x60 && xmNote->note != state.note) {
-//			cmd = synthAdapter_->createCommand(Synth_Cmd_setNoteOff, state.note);
-//			commands->push(cmd);
-//			state.note = xmNote->note;
-//		}
-//		if (volume != 0xFF) {
-//			cmd = synthAdapter_->createCommand(Synth_Cmd_setControlF, SSN1K_CI_Env1Amp, volume / 255.0);
-//			commands->push(cmd);
-//		}
-//	}
-//	//v = xmNote.instrument;
-//	//(v != 0xff) ? printf("%02X ", v) : printf("-- ");
-//	//v = xmNote.volume;
-//	//(v != 0xff) ? printf("%02X ", v) : printf("-- ");
-//	//v = xmNote.effect;
-//	//(v != 0xff) ? printf("%s", xmEffectMap_->get(v)) : printf("--");
-//	//v = xmNote.parameter;
-//	//(v != 0xff) ? printf("%02X", v) : printf("--");
-//	if (commands->length() == 0) {
-//		DEL_(commands);
-//		commands = NULL;
-//	}
-//	return commands;
-//}
-//void XmLoader::convertPattern(XMPATTERN* pattern, PArray* sequences) {
-//	PArray* seqMaps = NEW_(PArray);
-//	for (int ch = 0; ch < channelCount_; ch++) {
-//		Map* seqMap = NEW_(Map, sizeof(int), MAP_USE_REF, Map::hashingItem, Collection::compareInt);
-//		seqMaps->push(seqMap);
-//		pattern->channels[ch] = NEW_(Array, sizeof(int));
-//		for (int ri = 0; ri < pattern->rowCount; ri++) {
-//			XMNOTE* xmNote = &pattern->data[ch + ri*channelCount_];
-//			if (xmNote->hasData) {
-//				PArray* commands = convertNote(xmNote, states_[ch]);
-//				if (commands != NULL) {
-//					for (UINT32 ci = 0; ci < commands->length(); ci++) {
-//						PLAYER_COMMAND cmd = (PLAYER_COMMAND)commands->get(ci);
-//						int code = ((SYNTH_CMD_SET_CTRL_*)cmd)->code;
-//						if (code == Synth_Cmd_setControl ||
-//							code == Synth_Cmd_setControlB ||
-//							code == Synth_Cmd_setControlF) {
-//							code |= (((SYNTH_CMD_SET_CTRL_*)cmd)->id << 8);
-//						}
-//						Sequence* sequence = (Sequence*)seqMap->get(&code);
-//						if (sequence == NULL) {
-//							sequence = NEW_(Sequence);
-//							int seqId = sequences->length();
-//							sequences->push(sequence);
-//							pattern->channels[ch]->push(&seqId);
-//							seqMap->put(&code, sequence);
-//						}
-//						// int delta = getDelta(ri);
-//						Frame* frame = sequence->addFrame(ri);
-//						frame->addCommand(cmd);
-//					}
-//					DEL_(commands);
-//				}
-//			}
-//		}
-//	}
-//	for (UINT32 i = 0; i < seqMaps->length(); i++) {
-//		Map* seqMap = (Map*)seqMaps->get(i);
-//		for (UINT32 si = 0; si < seqMap->values()->length(); si++) {
-//			Sequence* sequence = (Sequence*)seqMap->values()->get(si);
-//			// int delta = getDelta(ri);
-//			Frame* frame = sequence->addFrame(pattern->rowCount);
-//			frame->addCommand(playerAdapter_->createEndCommand());
-//		}
-//	}
-//	ARRAY_FOREACH(seqMaps, DEL_((Map*)value));
-//	DEL_(seqMaps);
-//}
-
-// LOADER
-
-//PArray* XmLoader::convert() {
-//	// create master sequence
-//	PArray* sequences = NEW_(PArray);
-//	Sequence* masterSequence = NEW_(Sequence);
-//	sequences->push(masterSequence);
-//	Frame* frame = masterSequence->addFrame(0);
-//	frame->addCommand(playerAdapter_->createCommand(Player_Cmd_setTempo, bpm_*ticks_));
-//
-//	for (int i = 0; i < channelCount_; i++) {
-//		// reset channel states
-//		memset(states_, -1, sizeof(XMNOTE));
-//		states_[i].hasData = 0;
-//		// add synths
-//		//frame->addCommand(playerAdapter_->createCommand(Player_Cmd_create, 1, i));
-//	}	
-//
-//	// convert patterns
-//	for (UINT32 pi = 0; pi < patterns_.length(); pi++) {
-//		XMPATTERN* pattern = (XMPATTERN*)patterns_.get(pi);
-//		convertPattern(pattern, sequences);
-//	}
-//
-//	// add sequences to master sequence
-//	int rowCounter = 0;
-//	for (UINT32 i = 0; i < patternOrder_.length(); i++) {
-//		byte pi = *(byte*)patternOrder_.get(i);
-//		XMPATTERN* pattern = (XMPATTERN*)patterns_.get(pi);
-//		for (int ch = 0; ch < channelCount_; ch++) {
-//			Array* seqIds = pattern->channels[ch];
-//			for (UINT32 si = 0; si < seqIds->length(); si++) {
-//				int seqId = *(int*)seqIds->get(si);
-//				Frame* frame = masterSequence->frame(i);
-//					if (frame == NULL) {
-//						frame = masterSequence->addFrame(rowCounter);
-//					}
-//					frame->addCommand(playerAdapter_->createCommand(Player_Cmd_assign, ch + 1, seqId, Player_Flg_Active));
-//			}
-//		}
-//		rowCounter += pattern->rowCount;
-//	}
-//
-//	masterSequence->addFrame(rowCounter)->addCommand(playerAdapter_->createEndCommand());
-//	return sequences;
-//}
 #pragma endregion

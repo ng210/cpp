@@ -263,14 +263,7 @@ __pycache__/
 
 # Temporary files
 tmp/
-/ssn1k/test/test.xm
-/ssn1k/test/chords.xm
-/ssn1k/test/chip8k.xm
-/ssn1k/test/1asu.xm
-/ssn1k/test/1.xm
-/ssn1k/test/test.xm
-/ssn1k/test/chords.xm
-/ssn1k/test/chip8k.xm
-/ssn1k/test/1asu.xm
-/ssn1k/test/1.xm
-*.xm
+
+# Media files
+**/*.xm
+**/*.wav

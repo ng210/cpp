@@ -213,6 +213,9 @@
     <None Include="..\test\1m.xm">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\test\test2.xm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="soundbanks.bin">
       <DeploymentContent>true</DeploymentContent>
     </None>

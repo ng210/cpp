@@ -70,8 +70,8 @@ namespace SYNTH_UI {
 		HPEN pen_;
 		COLORREF textColor_;
 
-		static SetterFunc setter;
-		static SetterFunc setterF8;
+		static int setter(void*, S);
+		static int setterF8(void*, S);
 	};
 
 }

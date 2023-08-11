@@ -41,6 +41,9 @@
     <None Include="1m.xm">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="test2.xm">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="test.xm">

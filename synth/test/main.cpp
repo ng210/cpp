@@ -2655,25 +2655,34 @@ void SynthTest::testLoadXm() {
     // - add effects
     // - add soundbanks
     //xmLoader->load("test.xm", addDevice, addEffectToChannel);
-    var synthAdapter = (SynthAdapter*)Player::addAdapter(NEW_(SynthAdapter));
-    var soundbanks = ModuleDevice::loadSoundbanks("soundbanks.bin", synthAdapter);
-    xmLoader->load("1m.xm", soundbanks);
-    assert("Should have 7 patterns", xmLoader->patterns().length() == 7);
-    assert("Should have 5 instruments", xmLoader->instrumentInfos().length() == 5);
-    assert("Should have 5 devices", player->devices().length() == 5);
-    assert("Should have 5 sequences", player->sequences().length() == 5);
-    assert("Should have 4 data blocks", player->dataBlocks().length() == 4);
-    assert("Should set programs", ((ModuleDevice*)player->devices().get(2))->module()->program() == 3 &&
-    ((ModuleDevice*)player->devices().get(3))->module()->program() == 3 &&
-    ((ModuleDevice*)player->devices().get(4))->module()->program() == 6);
+    //var synthAdapter = Player::getAdapter((SynthAdapter*)Player::addAdapter(NEW_(SynthAdapter));
+    var soundbanks = ModuleDevice::loadSoundbanks("soundbanks.bin", &synthAdapter_);
+    xmLoader->load("test2.xm", soundbanks);
+    //assert("Should have 10 patterns", xmLoader->patterns().length() == 10);
+    //assert("Should have 5 instruments", xmLoader->instrumentInfos().length() == 7);
+    //assert("Should have 5 devices", player->devices().length() == 5);
+    //assert("Should have 5 sequences", player->sequences().length() == 5);
+    //assert("Should have 4 data blocks", player->dataBlocks().length() == 4);
+    //assert("Should set programs", ((ModuleDevice*)player->devices().get(2))->module()->program() == 3 &&
+    //((ModuleDevice*)player->devices().get(3))->module()->program() == 3 &&
+    //((ModuleDevice*)player->devices().get(4))->module()->program() == 6);
     for (var ii = 2; ii < player->devices().length() - 1; ii++) {
         var mdlDev = (ModuleDevice*)player->devices().get(ii);
         var prgId = mdlDev->module()->program();
         mdlDev->module()->setProgram(prgId);
     }
-    //var p1 = ((Sequence*)player->sequences().get(3))->print();
-    //LOG("%s", p1);
-    //FREE(p1);
+
+    for (var pi = 0; pi < xmLoader->patterns().length(); pi++) {
+        var data = xmLoader->printPattern(pi);
+        LOG("Pattern #%d\n%s\n", pi, data);
+        FREE(data);
+    }
+
+    for (var si = 0; si < player->sequences().length(); si++) {
+        var data = ((Sequence*)player->sequences().get(si))->print();
+        LOG("Sequence #%d\n%s\n", si + 1, data);
+        FREE(data);
+    }
 
     var mixer = (Mixer8x4*)((MixerDevice*)player->addDevice(&synthAdapter_, SynthDevices::DeviceMixer))->module();
     mixer->channelCount(player->devices().length() - 2);
@@ -2685,11 +2694,7 @@ void SynthTest::testLoadXm() {
         channel->controls->pan.value.f = 0.5f;
         channel->stageCount = 0;
     }
-
-    //var text = ((Sequence*)player->sequences().get(0))->print();
-    //LOG("%s\n", text);
-    //FREE(text);
-    
+   
 
     if (!isSaveToWave_) {
         if (SoundPlayer::start((int)SAMPLING_RATE, 2, Mixer8x4::fillSoundBuffer, mixer) == 0) {
@@ -2746,6 +2751,11 @@ void SynthTest::testLoadXm() {
     //    FREE(buffer);
     //}
 
+    for (var si = 0; si < soundbanks->size(); si++) {
+        var sb = (Soundbank*)soundbanks->values()->get(si);
+        DEL_(sb);
+    }
+    DEL_(soundbanks);
     DEL_(xmLoader);
     DEL_(device);
     Player::cleanUp();

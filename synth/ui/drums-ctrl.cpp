@@ -104,6 +104,7 @@ HANDLE GenericDrumCtrl::getBackgroundImage() {
 DrumsCtrl::DrumsCtrl(Module* module) : ModuleCtrl(module) {
 	var drums = (Drums*)module_;
 	drums->setSoundbank.add(this, &DrumsCtrl::soundbankSetter);
+	drums->setProgram.add(this, &ModuleCtrl::programSetter);
 	for (var i = 0; i < DrumsCount; i++) {
 		drumCtrls_[i] = NEW_(GenericDrumCtrl, &drums->drums[i]);
 	}
@@ -145,8 +146,8 @@ LRESULT DrumsCtrl::onPaint() {
 	return ModuleCtrl::onPaint();
 }
 
-int DrumsCtrl::soundbankSetter(void* obj, Soundbank* sb) {
-	var ctrl = (DrumsCtrl*)obj;
-	Drums::soundbankSetter(ctrl->module_, sb);
-	return 1;
-}
+//int DrumsCtrl::soundbankSetter(void* obj, Soundbank* sb) {
+//	var ctrl = (DrumsCtrl*)obj;
+//	Drums::soundbankSetter(ctrl->module_, sb);
+//	return 1;
+//}

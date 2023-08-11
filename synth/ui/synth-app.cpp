@@ -618,17 +618,21 @@ void SynthApp::loadSoundbanks() {
     // the missing soundbanks are copied from device's default
     for (var i = 0; i < player_->devices().length(); i++) {
         var dev = (ModuleDevice*)player_->devices().get(i);
+        var mdl = dev->module();
         if (dev->adapter()->getInfo()->id == synthAdapter_.getInfo()->id) {
             Key key(dev->type());
-            var defaultSoundbank = dev->module()->getDefaultSoundbank();
+            var defaultSoundbank = mdl->getDefaultSoundbank();
             var sb = (Soundbank*)soundbanks_->get(key);
             if (defaultSoundbank != NULL && sb == NULL) {
                 // duplicate the default soundbank
-                sb = dev->module()->createSoundbank();
+                sb = mdl->createSoundbank();
                 sb->copy(defaultSoundbank, 0, -1);
                 soundbanks_->put(key, sb);
             }
-            dev->module()->setSoundbank(sb);
+            if (sb != NULL) {
+                mdl->setSoundbank(sb);
+                //mdl->setProgram(mdl->program());
+            }
         }
     }
 }
@@ -671,8 +675,8 @@ LRESULT SynthApp::onCreate() {
 	LRESULT result = 0;
 	SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, 1208, 940, SWP_NOMOVE));
     Player::addAdapter(NEW_(SynthAdapter));
-    loadBinary();
-    //loadModule("1m.xm");
+    //loadBinary();
+    loadModule("D:\\Audio\\Dalok\\trip.xm");
 
     int left = 0, top = 0;
     int synthStackHeight = 0;
@@ -710,8 +714,9 @@ LRESULT SynthApp::onCreate() {
             }
             var sb = mdl->soundbank();
             if (sb) {
-                ModuleCtrl::soundbankSetter(ctrl, sb);
-                ModuleCtrl::programSetter(ctrl, mdl->program());
+                //ctrl->updateSoundbank();
+                //ModuleCtrl::soundbankSetter(ctrl, sb);
+                //ModuleCtrl::programSetter(ctrl, mdl->program());
             }
         }
         if (ctrl != NULL) {

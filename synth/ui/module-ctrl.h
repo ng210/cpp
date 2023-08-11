@@ -53,14 +53,13 @@ namespace SYNTH_UI {
 		LRESULT onSize(RECT& rect, WPARAM state);
 
 		void updateSoundbank();
-		//void updateProgram();
 
 		PotCtrl* getControl(int id);
 
 		static MOUSEEVENTPROC onAddProgram, onRemoveProgram;
 
-		static SetSoundbankFunc soundbankSetter;
-		static SetProgramFunc programSetter;
+		static int soundbankSetter(void*, Soundbank*);
+		static int programSetter(void*, int);
 
 
 		//static SETCONTROLPROC setControlProc;

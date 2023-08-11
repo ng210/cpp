@@ -102,5 +102,8 @@
     <None Include="..\test\1m.xm">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\test\test2.xm">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

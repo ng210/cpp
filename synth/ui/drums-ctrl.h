@@ -39,7 +39,7 @@ namespace SYNTH_UI {
 		void create(Window* parent, char* name);
 		LRESULT onPaint();
 
-		static SetSoundbankFunc soundbankSetter;
+		//static SetSoundbankFunc soundbankSetter;
 	};
 }
 #endif

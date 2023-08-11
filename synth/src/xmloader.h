@@ -38,16 +38,23 @@ namespace SYNTH {
 		byte packedData;
 	} XmFilePattern;
 
-	typedef struct XmEffect {
-		byte code;
-		byte parameter;
-	} XmEffect;
+	//typedef void (XmEffectHandler)(byte code, XmNote* xmNote);
+
+	class XmEffect {
+		PROP(byte, code);
+		PROP(int, parameter);
+		//PROP_R(char, sign);
+		//PROP_R(XmEffectHandler*, handler);
+	public:
+		XmEffect();
+		XmEffect(int code, int parameter);
+	};
 
 	typedef struct XmNote {
 		bool hasData;
 		byte note;
 		byte instrument;
-		byte volume;
+		int volume;
 		XmEffect effects[2];
 	} XmNote;
 
@@ -111,15 +118,70 @@ namespace SYNTH {
 		Sequence* sequence;
 	} InstrumentInfo;
 
-	typedef Device* (ADD_DEVICE_HANDLER)(SynthAdapter*, InstrumentInfo*);
+	typedef enum XmNoteBits {
+		XmNoteBitsCompressed	= 0x80,
+		XmNoteBitsFxParameter	= 0x10,
+		XmNoteBitsFxType		= 0x08,
+		XmNoteBitsVolume		= 0x04,
+		XmNoteBitsInstrument	= 0x02,
+		XmNoteBitsNote			= 0x01,
 
-	typedef Device* (ADD_EFFECT_HANDLER)(Player*/*, MixerChannel*/);
+		XmNoteBitsAll			= 0x1f,
+	} XmNoteBits;
+
+	typedef enum XmFxType {
+		XmFxTypeAppregio,				// 0 Appregio
+		XmFxTypePortaUp,				// 1 Porta up
+		XmFxTypePortaDown,				// 2 Porta down
+		XmFxTypeTonePorta,				// 3 Tone porta
+		XmFxTypeVibrato,				// 4 Vibrato
+		XmFxTypeTonePortaVolumeSlide,	// 5 Tone porta + Volume slide
+		XmFxTypeVibratoVolumeSlide,		// 6 Vibrato + Volume slide
+		XmFxTypeTremolo,				// 7 Tremolo
+		XmFxTypeSetPanning,				// 8 Set panning
+		XmFxTypeSampleOffset,			// 9 Sample offset
+		XmFxTypeVolumeSlide,			// A Volume slide
+		XmFxTypePositionJump,			// B Position jump
+		XmFxTypeSetVolume,				// C Set volume
+		XmFxTypePatternBreak,			// D Pattern break
+		XmFxTypeFinePortaUp,			// E1 Fine porta up
+		XmFxTypeFinePortaDown,			// E2 Fine porta down
+		XmFxTypeSetGlissControl,		// E3 Set gliss control
+		XmFxTypeSetVibratoControl,		// E4 Set vibrato control
+		XmFxTypeSetFinetune,			// E5 Set finetune
+		XmFxTypeSetLoop,				// E6 Set loop begin / loop
+		XmFxTypeSetTremoloControl,		// E7 Set tremolo control
+		XmFxTypeRetrigNote,				// E9 Retrig note
+		XmFxTypeFineVolumeSlideUp,		// EA Fine volume slide up
+		XmFxTypeFineVolumeSlideDown,	// EB Fine volume slide down
+		XmFxTypeNoteCut,				// EC Note cut
+		XmFxTypeNoteDelay,				// ED Note delay
+		XmFxTypePatternDelay,			// EE Pattern delay
+		XmFxTypeSetTempo,				// F Set tempo / BPM
+		XmFxTypeSetGlobalVolume,		// G  (010h) Set global volume
+		XmFxTypeGlobalVolumeSlide,		// H  (011h) Global volume slide
+										// I  (012h) Unused
+										// J  (013h) Unused
+										// K  (014h) Unused
+		XmFxTypeSetEnvelopePosition,	// L  (015h) Set envelope position
+										// M  (016h) Unused
+										// N  (017h) Unused
+										// O  (018h) Unused
+		XmFxTypePanningSlide,			// P  (019h) Panning slide
+										// Q  (01ah) Unused
+		XmFxTypeMultiRetrigNote,		// R  (01bh) Multi retrig note
+										// S  (01ch) Unused
+		XmFxTypeTremor,					// T  (01dh) Tremor
+										// U  (01eh) Unused
+										// V  (01fh) Unused
+										// W  (020h) Unused
+		XmFxTypeExtraFinePortaUp,		// X1 (021h) Extra fine porta up
+		XmFxTypeExtraFinePortaDown,		// X2 (021h) Extra fine porta down
+
+		XmFxTypeNone
+	} XmFxType;
 
 	class XmLoader {
-		static Map effects_;
-		//static ADD_DEVICE_HANDLER addDefaultDevice;
-		static ADD_EFFECT_HANDLER addNoEffect;
-
 		int bpm_;
 		int ticks_;
 		int channelCount_;
@@ -129,8 +191,8 @@ namespace SYNTH {
 		Player* player_;
 		PlayerDevice* playerDevice_;
 
-		void getVolumeEffect(byte code, byte*& ptr, XmNote* xmNote);
-		void getEffect(byte code, byte*& ptr, XmNote* xmNote);
+		void processVolumeEffect(byte code, byte*& ptr, XmNote* xmNote);
+		void processEffect(byte code, byte*& ptr, XmNote* xmNote);
 		XmNote* readNote(byte*& ptr, XmNote* xmNote);
 		XmPattern* readPattern(XmFilePattern* ptr);		
 		//Sequence* optimizeSequence(Sequence* sequence);
