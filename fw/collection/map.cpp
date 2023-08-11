@@ -109,8 +109,7 @@ Map::~Map() {
 }
 
 bool Map::containsKey(Key key) {
-	Key found = -1;
-	return keys_->binSearch(key, found, keys_->compare());	//Collection::compareInt
+	return getKeyValuePair(key) != NULL;
 }
 
 Array* Map::getBucket(Key key) {

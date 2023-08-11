@@ -148,7 +148,6 @@ void CollectionTest::testArray() {
 	for (int i = 0; i < 16; i++) {
 		dw = i + 200;
 		arr12->push(&dw);
-
 		arr22->push("");
 		str_format_s((char*)arr22->get(i), 4, "j%02d", i);
 
