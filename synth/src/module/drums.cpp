@@ -30,6 +30,9 @@ GenericDrum::GenericDrum() : Module((PotBase*)&controls, GenericDrumCtrlCount) {
         controls.amp[i].init(0, 255, 1, 80);
     }
     //controls.fre[3].init(3000.0f, 9000.0f, 1.0f, 7891.0f);
+
+    setProgram.clear();
+    setProgram.add(this, &GenericDrum::programSetter);
 }
 GenericDrum::~GenericDrum() {
 }
@@ -151,11 +154,11 @@ void GenericDrum::renderClap(float* buffer, int start, int end) {
     }
 }
 
-int GenericDrum::typeSetter(void* obj, S value) {
+int GenericDrum::typeSetter(void* obj, DrumTypes value) {
     var drum = (GenericDrum*)obj;
     drum->render = &GenericDrum::renderDefault;
     PotBase* ctrl;
-    switch (value.b) {
+    switch (value) {
         case HihatType:
             drum->render = &GenericDrum::renderHihat;
             //ctrl = drum->getControl(gdDahr2Amp); ctrl->min = 0.0f; ctrl->max = 880.0f;
@@ -178,6 +181,10 @@ int GenericDrum::typeSetter(void* obj, S value) {
             break;
     }
     return 1;
+}
+
+int GenericDrum::programSetter(void* obj, int ix) {
+    return Module::programSetter(obj, ix);
 }
 #pragma endregion
 

@@ -8,10 +8,11 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
-	CREATEHANDLER1(SetSoundbank, Soundbank*);
-	CREATEHANDLER1(SetProgram, int);	
+	//CREATEHANDLER1(SetSoundbank, Soundbank*);
+	//CREATEHANDLER1(SetProgram, int);
 
 	class Module {
+
 	protected: PotBase* controls_;
 	protected: PROP_R(int, controlCount);
 	protected: float* inputs_[8];
@@ -24,6 +25,11 @@ namespace SYNTH {
 		Module(PotBase* controls, int count);
 		virtual ~Module();
 
+		//SetSoundbankHandler setSoundbank;
+		//SetProgramHandler setProgram;
+		Handler<Soundbank*> setSoundbank;
+		Handler<int> setProgram;
+
 		virtual void connectInput(int id, float* buffer); 
 		PotBase* getControl(int id);
 		void setControl(int id, S value);
@@ -35,16 +41,15 @@ namespace SYNTH {
 		virtual bool isActive();
 		virtual void run(int start, int end);
 
-		SetSoundbankHandler setSoundbank;
-		SetProgramHandler setProgram;
-
 		virtual Soundbank* createSoundbank();
 		void createOutputBuffers(int count);
 
 		virtual Soundbank* getDefaultSoundbank();
 
-		static SetSoundbankFunc soundbankSetter;
-		static SetProgramFunc programSetter;
+		//static SetSoundbankFunc soundbankSetter;
+		//static SetProgramFunc programSetter;
+		static int soundbankSetter(void*, Soundbank*);
+		static int programSetter(void*, int);
 
 		static byte* loadSoundbanks(const char* soundbankPath);
 	};

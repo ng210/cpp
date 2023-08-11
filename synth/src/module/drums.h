@@ -70,7 +70,9 @@ namespace SYNTH {
         bool isActive();
         void setGate(byte velocity);
 
-        static SetterFunc typeSetter;
+        static int typeSetter(void*, DrumTypes);
+
+        static int programSetter(void* obj, int ix);
     };
 
     //class Hihat : public GenericDrum {
@@ -139,8 +141,8 @@ namespace SYNTH {
         static void prepare();
         static void cleanUp();
 
-        static SetSoundbankFunc soundbankSetter;
-        static SetProgramFunc programSetter;
+        static int soundbankSetter(void*, Soundbank*);
+        static int programSetter(void*, int);
     };
 }
 

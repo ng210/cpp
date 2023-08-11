@@ -24,7 +24,7 @@ namespace SYNTH {
         PotTypeF8
     } PotType;
 
-     CREATEHANDLER1(Setter, S);
+    //CREATEHANDLER1(Setter, S);
 
     class PotBase {
     public:
@@ -37,7 +37,8 @@ namespace SYNTH {
         PotBase();
         PotBase(S min, S max, S step, S value);
 
-        SetterHandler set;
+        Handler<S> set;
+        //SetterHandler set;
 
         virtual void init(S min, S max, S step, S value);
 
@@ -51,8 +52,8 @@ namespace SYNTH {
         virtual void setFromNormalized(float v) = 0;
         virtual void writeToStream(byte*& stream) = 0;
 
-        static SetterFunc setter;
-        static SetterFunc setterF8;
+        static int setter(void*, S);
+        static int setterF8(void*, S);
     };
 
     // derived classes of PotBase MUST NOT add new member variables

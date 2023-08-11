@@ -8,8 +8,8 @@ Module::Module(PotBase* controls, int count) : controls_(controls), controlCount
 	memset(inputs_, 0, 8 * sizeof(float*));
 	memset(outputs_, 0, 8 * sizeof(float*));
 	isMono_ = true;
-	setSoundbank.add(this, &Module::soundbankSetter);
-	setProgram.add(this, &Module::programSetter);
+	setSoundbank.add(this, Module::soundbankSetter);
+	setProgram.add(this, Module::programSetter);
 }
 
 Module::~Module() {
@@ -76,13 +76,6 @@ void Module::createOutputBuffers(int count) {
 		p += SAMPLE_BUFFER_SIZE;
 	}
 }
-
-//void Module::soundbank(byte* data) {
-//	if (soundbank_ == NULL) {
-//		soundbank_ = createSoundbank();
-//	}
-//	soundbank_->initialize(soundbank_->size(), data[0], data);
-//}
 
 Soundbank* Module::createSoundbank() {
 	int size = 0;

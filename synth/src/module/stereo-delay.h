@@ -62,7 +62,8 @@ namespace SYNTH {
 		static void prepare();
 		static void cleanUp();
 
-		static SetterFunc delayLeftSetter, delayRightSetter;
+		static int delayLeftSetter(void*, S);
+		static int delayRightSetter(void*, S);
 	};
 }
 

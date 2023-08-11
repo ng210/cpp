@@ -90,7 +90,7 @@ bool SynthBase::isActive() {
 }
 void SynthBase::run(int start, int end) {
     if (isActive()) {
-        memset(outputs_[0], 0, sizeof(float) * (end - start));
+        memset(outputs_[0], 0, sizeof(float) * (size_t)(end - start));
         for (int j = 0; j < voiceCount_; j++) {
             Voice& voice = voices_[j];
             if (voice.envelopes[0].isActive()) {
