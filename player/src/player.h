@@ -53,8 +53,9 @@ namespace PLAYER {
 		~Player();
 
 		void masterDevice(PlayerDevice* device);
+		Channel* addChannel(char* id);
 		void assignChannel(int channelId, Sequence* sequence, int deviceId, int loopCount);
-		void initialize(byte** pData);
+		void initialize(byte** pData = NULL);
 		void clear();
 		int run(int ticks);
 

@@ -12,10 +12,17 @@ namespace PLAYER {
 
 #pragma region Creation
 	PlayerDevice* PlayerDevice::create(byte** pData) {
-		var adapter = NEW_(PlayerAdapter);
-		Player::addAdapter(adapter);
+		var pa = NEW_(PlayerAdapter);
+		var adapter = Player::getAdapter(pa->getInfo()->id);
+		if (adapter == NULL) {
+			Player::addAdapter(pa);
+			adapter = pa;
+		} else {
+			DEL_(pa);
+		}
 		var device = (PlayerDevice*)adapter->createDevice(PlayerDevices::DevicePlayer);
 		device->initialize(pData);
+		device->player_ = (Player*)device->object_;
 		//device->player()->devices().push(device);
 		device->type(PlayerDevices::DevicePlayer);
 		return device;

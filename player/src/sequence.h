@@ -3,7 +3,6 @@
 
 #include "collection/parray.h"
 #include "base/stream.h"
-#include "player/src/frame.h"
 
 NS_FW_BASE_USE
 namespace PLAYER {
@@ -11,7 +10,6 @@ namespace PLAYER {
 
 	class Sequence : public Stream {
 	private: PROP_R(Device*, device);
-	private: PROP_R(PArray*, frames);
 	public:
 		Sequence();
 		Sequence(Device* device);
@@ -20,11 +18,7 @@ namespace PLAYER {
 
 		void init(int length);
 
-		//byte getByte(byte*& cursor);
-		//word getWord(byte*& cursor);
-		//dword getDword(byte*& cursor);
-		//float getFloat(byte*& cursor);
-		//char* getString(byte*& cursor);
+		void device(Device* dev);
 
 		Sequence* writeHeader();
 		Sequence* writeDelta(word delta);
@@ -39,9 +33,7 @@ namespace PLAYER {
 		Sequence* writeDword(dword value);
 		Sequence* writeFloat(float value);
 
-		PArray* toFrames(Device* device = NULL);
-		static Sequence* fromFrames(Collection* frames, Device* device);
-		char* print(Device* device = NULL);
+		//char* print(Device* device = NULL);
 	};
 }
 

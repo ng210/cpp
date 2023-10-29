@@ -1,7 +1,7 @@
-#include "device.h"
 #include <stdarg.h>
 #include "base/memory.h"
 #include "player/src/device.h"
+#include "player/src/player-adapter.h"
 
 NS_FW_BASE_USE
 
@@ -61,6 +61,14 @@ namespace PLAYER {
 	int Device::writeToStream(Stream* stream) {
 		stream->writeByte(type_);
 		return 1;
+	}
+
+	Sequence* Device::createDefaultSequence() {
+		var seq = NEW_(Sequence, this);
+		seq->writeHeader();
+		seq->writeDelta(0);
+		seq->writeCommand(PlayerCommands::CmdEOS);
+		return seq;
 	}
 #endif
 }

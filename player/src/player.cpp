@@ -7,7 +7,7 @@
 #include "player/src/sequence.h"
 #include "player/src/channel.h"
 
-#include "adapter.h"
+#include "player-adapter.h"
 
 //#include <libloaderapi.h>
 //#include "processthreadsapi.h"
@@ -32,8 +32,12 @@ namespace PLAYER {
         return adapter;
     }
     Adapter* Player::getAdapter(int type) {
-        var item = Player::adapters_->get(type);
-        return (Adapter*)(item != NULL ? *(Adapter**)item : item);
+        Adapter* ad = NULL;
+        if (Player::adapters_ != NULL && Player::adapters_->size() > 0) {
+            var pAd = (Adapter**)Player::adapters_->get(type);
+            if (pAd != NULL) ad = *pAd;
+        }
+        return ad;
     }
 
     void Player::cleanUp() {
@@ -125,6 +129,9 @@ namespace PLAYER {
     }
 
     void Player::start() {
+        if (hThread_ != NULL) {
+            useThread();
+        }
         isPlaying_ = true;
         if (masterChannel_->sequence() == NULL) {
             var masterSequence = (Sequence*)sequences_.get(0);
@@ -139,8 +146,10 @@ namespace PLAYER {
         isTerminating_ = true;
         // wait for thread to finish
         while (isPlaying_) {
-            Sleep(1);
+            Sleep(10);
         }
+        dword exitCode;
+        SYSPR(GetExitCodeThread(hThread_, &exitCode));
     }
 #pragma endregion
 
@@ -155,6 +164,11 @@ namespace PLAYER {
         return (DataBlockItem*)dataBlocks_.push(&dbi);
     }
     Sequence* Player::addSequence(Sequence* sequence) {
+        if (sequence->device() == NULL) {
+            var devId = *sequence->data();
+            var dev = (Device*)devices().get(devId);
+            sequence->device(dev);
+        }
         sequences_.push(sequence);
         return sequence;
     }
@@ -222,16 +236,20 @@ namespace PLAYER {
                 return value;
             }
         );
+        dataBlocks_.clear();
         sequences_.apply(
             [](COLLECTION_ARGUMENTS) {
                 DEL_((Sequence*)value);
                 return value;
             }
         );
+        sequences_.clear();
         // don't delete the master device yet
-        for (var i = 1; i < devices_.length(); i++) {
+        var i = devices_.length();
+        while (--i > 0) {
             var dev = (Device*)devices_.get(i);
             DEL_(dev);
+            devices_.remove(i);
         }
         channels_.apply(
             [](COLLECTION_ARGUMENTS) {
@@ -239,6 +257,7 @@ namespace PLAYER {
                 return value;
             }
         );
+        channels_.clear();
 
         if (initData_.dataBlock != NULL && (initData_.flag & DataBlockItemFlag::Allocated) != 0) {
             FREE(initData_.dataBlock);
@@ -341,6 +360,12 @@ namespace PLAYER {
     void Player::masterDevice(PlayerDevice* device) {
         masterDevice_ = device;
         devices_.insert(0, device);
+    }
+
+    Channel* Player::addChannel(char* id) {
+        var channel = NEW_(Channel, id);
+        channels_.push(channel);
+        return channel;
     }
     void Player::assignChannel(int channelId, Sequence* sequence, int deviceId, int loopCount) {
         var chn = (Channel*)channels_.get(channelId);

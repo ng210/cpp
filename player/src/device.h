@@ -6,6 +6,7 @@
 #include "base/str.h"
 #include "base/stream.h"
 #include "player/src/player-defs.h"
+#include "player/src/sequence.h"
 
 NS_FW_BASE_USE
 
@@ -44,6 +45,7 @@ namespace PLAYER {
 		virtual void makeCommandImpl(int command, Stream* stream, va_list args) = 0;
 		virtual int getCommandSize(byte cmd, byte* args) = 0;
 		virtual int writeToStream(Stream* stream);
+		virtual Sequence* createDefaultSequence();
 #endif
 	};
 }

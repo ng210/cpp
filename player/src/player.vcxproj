@@ -136,7 +136,7 @@
     <ClInclude Include="adapter.h" />
     <ClInclude Include="player-adapter.h" />
     <ClInclude Include="player-defs.h" />
-    <ClInclude Include="frame.h" />
+    <ClInclude Include="frames.h" />
     <ClInclude Include="sequence.h" />
     <ClInclude Include="channel.h" />
     <ClInclude Include="player.h" />
@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="adapter.cpp" />
+    <ClCompile Include="frames.cpp" />
     <ClCompile Include="player-adapter.cpp" />
     <ClCompile Include="sequence.cpp" />
     <ClCompile Include="channel.cpp" />
