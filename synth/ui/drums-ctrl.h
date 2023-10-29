@@ -2,15 +2,15 @@
 #define __DRUMS_CTRL_H
 
 #include "synth/ui/module-ctrl.h"
-#include "synth/src/module/drums.h"
+#include "synth/src/device/drums-device.h"
 
-namespace SYNTH_UI {
+namespace SYNTH_APP {
 
 	class GenericDrumCtrl : public ModuleCtrl {
 		static HANDLE hBackground_;
 	public:
 		GenericDrumCtrl(Module* module);
-		~GenericDrumCtrl();
+		virtual ~GenericDrumCtrl();
 
 		void create(Window* parent, char* name);
 		//LRESULT onPaint();
@@ -37,6 +37,7 @@ namespace SYNTH_UI {
 		GenericDrumCtrl** drumCtrl();
 
 		void create(Window* parent, char* name);
+
 		LRESULT onPaint();
 
 		//static SetSoundbankFunc soundbankSetter;

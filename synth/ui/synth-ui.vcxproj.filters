@@ -13,6 +13,30 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Util">
+      <UniqueIdentifier>{bcfad68e-70f8-4d4f-84e7-2111f2abcfac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Util">
+      <UniqueIdentifier>{1106f531-4df3-409c-98cc-4a57d4e64840}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Model">
+      <UniqueIdentifier>{83e56387-b075-45af-9ab4-771b03e33af6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Model">
+      <UniqueIdentifier>{a5a85d9a-34cd-41c8-a971-3b2c339c4bbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Ui">
+      <UniqueIdentifier>{83b85cbb-22c8-4b8a-8d95-be9e3955dcf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Ui\Control">
+      <UniqueIdentifier>{b6cbd120-31c5-4474-89b9-a5c5508399cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Ui">
+      <UniqueIdentifier>{689afe86-fc16-483e-a2b9-5b2241fb4e12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Ui\Control">
+      <UniqueIdentifier>{e16bec4b-3fc2-4218-bb1c-5c19d45b8352}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -21,58 +45,109 @@
     <ClInclude Include="synth-app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pot-ctrl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="module-ctrl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="bass-ctrl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="drums-ctrl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="synth-ctrl.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Ui\Control</Filter>
     </ClInclude>
     <ClInclude Include="distort-ctrl.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Ui\Control</Filter>
     </ClInclude>
-    <ClInclude Include="stereo-delay-ctrl.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="drums-ctrl.h">
+      <Filter>Header Files\Ui\Control</Filter>
     </ClInclude>
     <ClInclude Include="mixer-ctrl.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Ui\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="stereo-delay-ctrl.h">
+      <Filter>Header Files\Ui\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="synth2-ctrl.h">
+      <Filter>Header Files\Ui\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="synth-ctrl.h">
+      <Filter>Header Files\Ui\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="sequence-ctrl.h">
+      <Filter>Header Files\Ui</Filter>
+    </ClInclude>
+    <ClInclude Include="pot-ctrl.h">
+      <Filter>Header Files\Ui</Filter>
+    </ClInclude>
+    <ClInclude Include="file-manager.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="module-ctrl.h">
+      <Filter>Header Files\Ui</Filter>
+    </ClInclude>
+    <ClInclude Include="creator.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="ui-manager.h">
+      <Filter>Header Files\Ui</Filter>
+    </ClInclude>
+    <ClInclude Include="song.h">
+      <Filter>Header Files\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="component.h">
+      <Filter>Header Files\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="song-ctrl.h">
+      <Filter>Header Files\Ui\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="channel-ctrl.h">
+      <Filter>Header Files\Ui\Control</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="synth-app.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pot-ctrl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="module-ctrl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="bass-ctrl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="drums-ctrl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="synth-ctrl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="stereo-delay-ctrl.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Ui\Control</Filter>
     </ClCompile>
     <ClCompile Include="distort-ctrl.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Ui\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="drums-ctrl.cpp">
+      <Filter>Source Files\Ui\Control</Filter>
     </ClCompile>
     <ClCompile Include="mixer-ctrl.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Ui\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="stereo-delay-ctrl.cpp">
+      <Filter>Source Files\Ui\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="synth2-ctrl.cpp">
+      <Filter>Source Files\Ui\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="synth-ctrl.cpp">
+      <Filter>Source Files\Ui\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="pot-ctrl.cpp">
+      <Filter>Source Files\Ui</Filter>
+    </ClCompile>
+    <ClCompile Include="sequence-ctrl.cpp">
+      <Filter>Source Files\Ui</Filter>
+    </ClCompile>
+    <ClCompile Include="module-ctrl.cpp">
+      <Filter>Source Files\Ui</Filter>
+    </ClCompile>
+    <ClCompile Include="file-manager.cpp">
+      <Filter>Source Files\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="creator.cpp">
+      <Filter>Source Files\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="ui-manager.cpp">
+      <Filter>Source Files\Ui</Filter>
+    </ClCompile>
+    <ClCompile Include="song.cpp">
+      <Filter>Source Files\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="song-ctrl.cpp">
+      <Filter>Source Files\Ui\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="channel-ctrl.cpp">
+      <Filter>Source Files\Ui\Control</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -94,9 +169,12 @@
     <Image Include="stereo-delay-ctrl.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="synth2-ctrl.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="soundbanks.bin">
+    <None Include="soundbanks_.bin">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\test\1m.xm">

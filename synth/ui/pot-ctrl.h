@@ -10,7 +10,7 @@ NS_FW_BASE_USE
 NS_FW_WIN_USE
 using namespace SYNTH;
 
-namespace SYNTH_UI {
+namespace SYNTH_APP {
 
 	typedef enum PotCtrlType {
 		HPotmeter,
@@ -42,11 +42,13 @@ namespace SYNTH_UI {
 	protected: TCHAR valueText_[32];
 	protected: PROP(int, mouseSpeed1);
 	protected: PROP(int, mouseSpeed2);
+	protected: PROP(int, mouseSpeed3);
+	protected: PROP(int, mouseCounter);
 	protected:
 		void drawHPotmeter(HDC hdc, float value);
 		void drawVPotmeter(HDC hdc, float value);
 		void drawKnob(HDC hdc, int& x, int& y, float value);
-		void drawNumber(HDC hdc, float value);
+		void drawNumber(HDC hdc, int& x, int& y, float value);
 	public:
 		PotCtrl();
 		~PotCtrl();
@@ -70,8 +72,8 @@ namespace SYNTH_UI {
 		HPEN pen_;
 		COLORREF textColor_;
 
-		static int setter(void*, S);
-		static int setterF8(void*, S);
+		static int setter(void*, S, void* = NULL);
+		//static int setterF8(void*, S, void* = NULL);
 	};
 
 }

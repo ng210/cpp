@@ -1,6 +1,6 @@
 #include "synth/ui/distort-ctrl.h"
 
-using namespace SYNTH_UI;
+using namespace SYNTH_APP;
 
 byte distortUiLayout[] = {
 	// colors

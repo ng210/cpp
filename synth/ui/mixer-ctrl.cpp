@@ -1,6 +1,6 @@
 #include "synth/ui/mixer-ctrl.h"
 
-using namespace SYNTH_UI;
+using namespace SYNTH_APP;
 
 MixerCtrl::MixerCtrl(Module* module) : ModuleCtrl(module) {
 }

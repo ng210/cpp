@@ -1,16 +1,16 @@
-#ifndef __SYNTH_CTRL_H
-#define __SYNTH_CTRL_H
+#ifndef __SYNTH2_CTRL_H
+#define __SYNTH2_CTRL_H
 
 #include "synth/ui/module-ctrl.h"
-#include "synth/src/module/synth.h"
+#include "synth/src/module/synth2.h"
 
 namespace SYNTH_APP {
 
-	class SynthCtrl : public ModuleCtrl {
+	class Synth2Ctrl : public ModuleCtrl {
 		static HANDLE hBackground_;
 	public:
-		SynthCtrl(Module* module);
-		virtual ~SynthCtrl();
+		Synth2Ctrl(Module* module);
+		virtual ~Synth2Ctrl();
 
 		void create(Window* parent, char* name);
 

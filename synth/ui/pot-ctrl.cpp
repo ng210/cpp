@@ -5,7 +5,7 @@
 #include <base/string.h>
 #include "resource.h"
 
-using namespace SYNTH_UI;
+using namespace SYNTH_APP;
 
 #define GAP 2
 
@@ -16,7 +16,7 @@ WndClass PotCtrl::wndClass_;
 HBITMAP bitmapVPot1_ = NULL;
 HDC backBuffer_ = NULL;
 
-int PotCtrl::setter(void* obj, S value) {
+int PotCtrl::setter(void* obj, S value, void* unused) {
 	var potCtrl = (PotCtrl*)obj;
 	SYSPR(InvalidateRect(potCtrl->hWnd_, NULL, false));
 	//return PotBase::setter(potCtrl->pot_, value);
@@ -66,8 +66,10 @@ PotCtrl::PotCtrl() {
 	backBuffer_ = NULL;
 	bitmapVPot1_ = NULL;
 
-	mouseSpeed1_ = 4;
-	mouseSpeed2_ = 10;
+	mouseCounter_ = 0;
+	mouseSpeed1_ = 1;
+	mouseSpeed2_ = 5;
+	mouseSpeed3_ = 10;
 }
 
 PotCtrl::~PotCtrl() {
@@ -245,31 +247,28 @@ LRESULT PotCtrl::onRightUpProc(Window* wnd, POINT& pos, WPARAM state) {
 LRESULT PotCtrl::onMouseMoveProc(Window* wnd, POINT& pos, POINT& delta, WPARAM state) {
 	var potCtrl = (PotCtrl*)wnd;
 	if (potCtrl->isCapturing_ && (state & MK_LBUTTON)) {
-		int count = state & MK_CONTROL ? 1 : state & MK_SHIFT ? potCtrl->mouseSpeed2_ : potCtrl->mouseSpeed1_;
+		int count = potCtrl->mouseSpeed1_;
+		if (state & MK_CONTROL) count *= potCtrl->mouseSpeed2_;
+		if (state & MK_SHIFT) count *= potCtrl->mouseSpeed3_;
 		switch (potCtrl->type_) {
-		case PotCtrlType::Knob:
-			//if (delta.y < 0) pot_->dec(count);
-			//else if (delta.y > 0) pot_->inc(count);
-			//break;
-		case PotCtrlType::HPotmeter:
-			if (delta.x < -2) {
-				potCtrl->pot_->dec(count);
-			}
-			else if (delta.x > 2) {
-				potCtrl->pot_->inc(count);
-			}
-			break;
-		case PotCtrlType::VPotmeter:
-			if (delta.y > 2) {
-				potCtrl->pot_->dec(count);
-			}
-			else if (delta.y < -2) {
-				potCtrl->pot_->inc(count);
-			}
-			//if (pos.y < levelRect_.bottom) {
-			//	pot_->setFromNormalized(1.0f - (float)pos.y / levelRect_.bottom);
-			//}
-			break;
+			case PotCtrlType::Knob:
+				//var cx = potCtrl->rect().right / 2.0f, cy = potCtrl->rect().bottom / 2.0f;
+				//var angle = atan2(pos.x - cx, pos.y - cy);
+				//break;
+			case PotCtrlType::HPotmeter:
+				potCtrl->mouseCounter_ += delta.x;
+				break;
+			case PotCtrlType::VPotmeter:
+				potCtrl->mouseCounter_ += delta.y;
+				break;
+		}
+
+		if (potCtrl->mouseCounter_ < -10) {
+			potCtrl->mouseCounter_ = 0;
+			potCtrl->pot_->dec(count);
+		} else if (potCtrl->mouseCounter_ > 10) {
+			potCtrl->mouseCounter_ = 0;
+			potCtrl->pot_->inc(count);
 		}
 		//InvalidateRect(potCtrl->hWnd_, NULL, true);
 	}
@@ -329,7 +328,7 @@ void PotCtrl::drawVPotmeter(HDC hdc, float value) {
 
 void PotCtrl::drawKnob(HDC hdc, int& x, int& y, float value) {
 	// draw level
-	SelectObject(hdc, foregroundBrush_);
+	//SelectObject(hdc, foregroundBrush_);
 	SelectObject(hdc, frameBrush_);
 	Ellipse(hdc, GAP, y, GAP + levelSize_.cx, y + levelSize_.cy);
 	// 0.0 -> 240
@@ -347,23 +346,14 @@ void PotCtrl::drawKnob(HDC hdc, int& x, int& y, float value) {
 	y += levelSize_.cy + GAP;
 }
 
-void PotCtrl::drawNumber(HDC hdc, float value) {
-	var y = GAP, x = GAP;
-	// draw label
-	if (showLabel_) {
-		var cx = ((rect_.right - labelSize_.cx) >> 1);
-		TextOut(hdc, cx, GAP, label_, fmw::strlen(label_));
-		y += labelSize_.cy + GAP;
-	}
-
+void PotCtrl::drawNumber(HDC hdc, int& x, int& y, float value) {
 	// draw value
-	if (showValue_) {
-		RECT valueRect;
-		memset(&valueRect, 0, sizeof(RECT));
-		DrawText(hdc, (TCHAR*)&valueText_, -1, &valueRect, DT_SINGLELINE | DT_CALCRECT);
-		x = (rect_.right - valueRect.right) >> 1;
-		TextOut(hdc, x, y, valueText_, fmw::strlen(valueText_));
-	}
+	RECT valueRect;
+	memset(&valueRect, 0, sizeof(RECT));
+	DrawText(hdc, (TCHAR*)&valueText_, -1, &valueRect, DT_SINGLELINE | DT_CALCRECT);
+	var cx = (rect_.right - valueRect.right) >> 1;
+	TextOut(hdc, cx, y, valueText_, fmw::strlen(valueText_));
+	y += valueRect.bottom;
 }
 
 LRESULT PotCtrl::onPaint() {
@@ -388,7 +378,7 @@ LRESULT PotCtrl::onPaint() {
 	case PotCtrlType::HPotmeter: drawHPotmeter(hdc, value); break;
 	case PotCtrlType::VPotmeter: drawVPotmeter(hdc, value); break;
 	case PotCtrlType::Knob: drawKnob(hdc, x, y, value); break;
-	case PotCtrlType::Number: drawNumber(hdc, value); break;
+	case PotCtrlType::Number: drawNumber(hdc, x, y, value); break;
 	}
 
 	// draw value
@@ -402,14 +392,6 @@ LRESULT PotCtrl::onPaint() {
 		TextOut(hdc, x, y, valueText_, fmw::strlen(valueText_));
 	}
 
-	// get value rect
-	//memset(&valueRect_, 0, sizeof(RECT));
-	//DrawText(hdc_, (TCHAR*)&valueText_, -1, &valueRect_, DT_SINGLELINE | DT_CALCRECT);
-	//labelRect_.bottom = height;
-	//var x = (rect_.right - valueRect_.right) / 2;
-	//var y = labelRect_.bottom + (rect_.bottom - labelRect_.bottom - valueRect_.bottom) / 2;
-	//TextOut(hdc_, x, y, valueText_, fmw::strlen(valueText_));
-	//DrawText(hdc_, (TCHAR*)&valueText_, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	EndPaint(hWnd_, &ps);
 	//ValidateRect(hWnd_, NULL);
 	return 0;

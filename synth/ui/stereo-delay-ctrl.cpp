@@ -1,6 +1,6 @@
 #include "synth/ui/stereo-delay-ctrl.h"
 
-using namespace SYNTH_UI;
+using namespace SYNTH_APP;
 
 byte stereoDelayUiLayout[] = {
 	// colors

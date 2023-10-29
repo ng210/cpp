@@ -4,13 +4,13 @@
 #include "synth/ui/module-ctrl.h"
 #include "synth/src/module/bass.h"
 
-namespace SYNTH_UI {
+namespace SYNTH_APP {
 
 	class BassCtrl : public ModuleCtrl {
 		static HANDLE hBackground_;
 	public:
 		BassCtrl(Module* module);
-		~BassCtrl();
+		virtual ~BassCtrl();
 
 		void create(Window* parent, char* name);
 

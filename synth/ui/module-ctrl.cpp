@@ -1,6 +1,6 @@
 #include "synth/ui/module-ctrl.h"
 
-using namespace SYNTH_UI;
+using namespace SYNTH_APP;
 
 WndClass ModuleCtrl::wndClass_;
 
@@ -85,32 +85,47 @@ void ModuleCtrl::initFromStream(Stream* data, int size, unsigned long *colors) {
 	var SYSFN(pen, CreatePen(PS_SOLID, 2, color));
 	COLORREF textColor = data->readDword();
 
+	int columns[32];
+	columns[0] = x;
+	int columnIndex = 1;
 	while ((ctrlId = data->readByte()) != LayoutEnd) {
-		if (ctrlId == LayoutHorizontalGap) {
-			x += margin + borderWidth_ - gapWidth_;
-			continue;
-		} else if (ctrlId == LayoutVerticalGap) {
-			x = margin + 16 + borderWidth_;
-			y += rowHeight + borderWidth_ + borderWidth_;
-			rowHeight = 0;
-			continue;
+		switch (ctrlId) {
+			case LayoutHorizontalGap:
+				x += margin + borderWidth_ - gapWidth_;
+				break;
+			case LayoutVerticalGap:
+				x = margin + 16 + borderWidth_;
+				y += rowHeight + borderWidth_ + borderWidth_ + labelHeight;
+				rowHeight = 0;
+				columnIndex = 0;
+			case LayoutNewColumn:
+				columns[columnIndex++] = x;
+				break;
+			case LayoutNextColumn:
+				x = columns[columnIndex++];
+				break;
+			default:
+				char* label = data->readString();
+				var ctrl = module_->getControl(ctrlId);
+				*pCtrl = NEW_(PotCtrl);
+				potCtrlCount_++;
+				(*pCtrl)->create(this, label);
+				(*pCtrl)->pot(ctrl);
+				var scale = data->readByte();
+				var type = (PotCtrlType)(scale & 0x0f);
+				scale >>= 4;
+				if (scale == 0) scale = 4;
+				(*pCtrl)->type(type);
+				(*pCtrl)->setSize(size * scale / 4);
+				(*pCtrl)->setColors(backgroundBrush, foregroundBrush, frameBrush, pen, textColor);
+				SetWindowPos((*pCtrl)->hWnd(), NULL, x, y, 0, 0, SWP_NOSIZE);
+				x += (*pCtrl)->rect().right + gapWidth_;
+				var controlHeight = (*pCtrl)->rect().bottom;
+				if (rect_.right < x) rect_.right = x;
+				if (rowHeight < controlHeight) rowHeight = controlHeight;
+				pCtrl++;
+				break;
 		}
-
-		char* label = data->readString();
-		var ctrl = module_->getControl(ctrlId);
-		*pCtrl = NEW_(PotCtrl);
-		potCtrlCount_++;
-		(*pCtrl)->create(this, label);
-		(*pCtrl)->pot(ctrl);
-		(*pCtrl)->type((PotCtrlType)data->readByte());
-		(*pCtrl)->setSize(size);
-		(*pCtrl)->setColors(backgroundBrush, foregroundBrush, frameBrush, pen, textColor);
-		SetWindowPos((*pCtrl)->hWnd(), NULL, x, y, 0, 0, SWP_NOSIZE);
-		x += (*pCtrl)->rect().right + gapWidth_;
-		var controlHeight = (*pCtrl)->rect().bottom;
-		if (rect_.right < x) rect_.right = x;
-		if (rowHeight < controlHeight) rowHeight = controlHeight;
-		pCtrl++;
 	}
 
 	rect_.right += borderWidth_ + margin - gapWidth_;
@@ -211,14 +226,14 @@ PotCtrl* ModuleCtrl::getControl(int id) {
 	return id < potCtrlCount_ ? potCtrls_[id] : NULL;
 }
 
-int ModuleCtrl::soundbankSetter(void* obj, Soundbank* sb) {
+int ModuleCtrl::soundbankSetter(void* obj, Soundbank* sb, void* unused) {
 	var ctrl = (ModuleCtrl*)obj;
 	ctrl->module_->setSoundbank(sb);
 	//Module::soundbankSetter(ctrl->module_, sb);
 	ctrl->updateSoundbank();
 	return 1;
 }
-int ModuleCtrl::programSetter(void* obj, int ix) {
+int ModuleCtrl::programSetter(void* obj, int ix, void* unused) {
 	var ctrl = (ModuleCtrl*)obj;
 	LRESULT res = 0;
 	SYSPR2(SendMessage(ctrl->programCtrl_.hWnd(), CB_GETLBTEXT, res, ix), LB_ERR);

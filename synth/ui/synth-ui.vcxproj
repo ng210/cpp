@@ -24,6 +24,7 @@
     <ProjectGuid>{fef28d9c-fae5-4421-8b06-091ffb61858c}</ProjectGuid>
     <RootNamespace>ui2</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>synth-app</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -168,26 +169,43 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="bass-ctrl.h" />
+    <ClInclude Include="channel-ctrl.h" />
+    <ClInclude Include="component.h" />
+    <ClInclude Include="creator.h" />
     <ClInclude Include="distort-ctrl.h" />
     <ClInclude Include="drums-ctrl.h" />
+    <ClInclude Include="file-manager.h" />
     <ClInclude Include="mixer-ctrl.h" />
     <ClInclude Include="module-ctrl.h" />
     <ClInclude Include="pot-ctrl.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="sequence-ctrl.h" />
+    <ClInclude Include="song-ctrl.h" />
+    <ClInclude Include="song.h" />
     <ClInclude Include="stereo-delay-ctrl.h" />
     <ClInclude Include="synth-app.h" />
     <ClInclude Include="synth-ctrl.h" />
+    <ClInclude Include="synth2-ctrl.h" />
+    <ClInclude Include="ui-manager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bass-ctrl.cpp" />
+    <ClCompile Include="channel-ctrl.cpp" />
+    <ClCompile Include="creator.cpp" />
     <ClCompile Include="distort-ctrl.cpp" />
     <ClCompile Include="drums-ctrl.cpp" />
+    <ClCompile Include="file-manager.cpp" />
     <ClCompile Include="mixer-ctrl.cpp" />
     <ClCompile Include="module-ctrl.cpp" />
     <ClCompile Include="pot-ctrl.cpp" />
+    <ClCompile Include="sequence-ctrl.cpp" />
+    <ClCompile Include="song-ctrl.cpp" />
+    <ClCompile Include="song.cpp" />
     <ClCompile Include="stereo-delay-ctrl.cpp" />
     <ClCompile Include="synth-app.cpp" />
     <ClCompile Include="synth-ctrl.cpp" />
+    <ClCompile Include="synth2-ctrl.cpp" />
+    <ClCompile Include="ui-manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="bass-ctrl.bmp">
@@ -208,6 +226,9 @@
     <Image Include="synth-ctrl.bmp">
       <DeploymentContent>true</DeploymentContent>
     </Image>
+    <Image Include="synth2-ctrl.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\test\1m.xm">
@@ -216,7 +237,7 @@
     <None Include="..\test\test2.xm">
       <DeploymentContent>true</DeploymentContent>
     </None>
-    <None Include="soundbanks.bin">
+    <None Include="soundbanks_.bin">
       <DeploymentContent>true</DeploymentContent>
     </None>
   </ItemGroup>

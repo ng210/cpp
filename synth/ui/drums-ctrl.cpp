@@ -1,7 +1,7 @@
 #include "synth/ui/drums-ctrl.h"
 //#include "synth/ui/resource.h"
 
-using namespace SYNTH_UI;
+using namespace SYNTH_APP;
 
 byte genericDrumLayout[] = {
 	// colors
@@ -9,6 +9,7 @@ byte genericDrumLayout[] = {
 	DD(0x00404040), DD(0x00808080), DD(0x00c0c0c0), DD(0x00e0e0e0),
 	// controls
 	DB(gdType),		DB('t'), DB('y'), DB('p'), DB('e'), DB(0), DB(PotCtrlType::Knob),
+	LayoutHorizontalGap,
 	// Dahr1
 	DB(gdDahr1Amp), DB('a'), DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdDahr1Del), DB('d'), DB('e'), DB('l'), DB(0), DB(PotCtrlType::Knob),
@@ -18,7 +19,6 @@ byte genericDrumLayout[] = {
 	LayoutHorizontalGap,
 	// Dahr2
 	DB(gdDahr2Amp), DB('a'), DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
-	DB(gdDahr2Dc),  DB('d'), DB('c'),		   DB(0), DB(PotCtrlType::Knob),
 	DB(gdDahr2Del), DB('d'), DB('e'), DB('l'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdDahr2Atk), DB('a'), DB('t'), DB('k'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdDahr2Hld), DB('h'), DB('l'), DB('d'), DB(0), DB(PotCtrlType::Knob),
@@ -31,34 +31,41 @@ byte genericDrumLayout[] = {
 	DB(gdDahr3Hld), DB('h'), DB('l'), DB('d'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdDahr3Rel), DB('r'), DB('e'), DB('l'), DB(0), DB(PotCtrlType::Knob),
 	LayoutHorizontalGap,
-	// Filter
-	DB(gdFlt1Mode), DB('m'), DB('o'), DB('d'), DB('e'), DB(0), DB(PotCtrlType::Knob),
-	DB(gdFlt1Cut),	DB('c'), DB('u'), DB('t'), DB(0), DB(PotCtrlType::Knob),
-	DB(gdFlt1Res),  DB('r'), DB('e'), DB('s'), DB(0), DB(PotCtrlType::Knob),
-	DB(gdFlt2Mode), DB('m'), DB('o'), DB('d'), DB('e'), DB(0), DB(PotCtrlType::Knob),
-	DB(gdFlt2Cut),	DB('c'), DB('u'), DB('t'), DB(0), DB(PotCtrlType::Knob),
-	DB(gdFlt2Res),  DB('r'), DB('e'), DB('s'), DB(0), DB(PotCtrlType::Knob),
-	DB(gdDahr4Dc),	DB('m'), DB('o'), DB('d'), DB(0), DB(PotCtrlType::Knob),
+	// Dahr4
 	DB(gdDahr4Amp), DB('a'), DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdDahr4Del), DB('d'), DB('e'), DB('l'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdDahr4Atk), DB('a'), DB('t'), DB('k'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdDahr4Hld), DB('h'), DB('l'), DB('d'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdDahr4Rel), DB('r'), DB('e'), DB('l'), DB(0), DB(PotCtrlType::Knob),
 	LayoutHorizontalGap,
-	// Fre/Amp
+	// Filter1
+	DB(gdFlt1Mode), DB('m'), DB('o'), DB('d'), DB('e'), DB(0), DB(PotCtrlType::Knob),
+	DB(gdFlt1Cut),	DB('c'), DB('u'), DB('t'), DB(0), DB(PotCtrlType::Knob),
+	DB(gdFlt1Res),  DB('r'), DB('e'), DB('s'), DB(0), DB(PotCtrlType::Knob),
+	LayoutHorizontalGap,
+	// Filter2
+	DB(gdFlt2Mode), DB('m'), DB('o'), DB('d'), DB('e'), DB(0), DB(PotCtrlType::Knob),
+	DB(gdFlt2Cut),	DB('c'), DB('u'), DB('t'), DB(0), DB(PotCtrlType::Knob),
+	DB(gdFlt2Res),  DB('r'), DB('e'), DB('s'), DB(0), DB(PotCtrlType::Knob),
+	LayoutHorizontalGap,
+	// Osc1-6
 	DB(gdFreq1),	DB('f'), DB('r'), DB('e'), DB('1'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdAmp1),		DB('a'), DB('m'), DB('p'), DB('1'), DB(0), DB(PotCtrlType::Knob),
+	LayoutHorizontalGap,
 	DB(gdFreq2),	DB('f'), DB('r'), DB('e'), DB('2'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdAmp2),		DB('a'), DB('m'), DB('p'), DB('2'), DB(0), DB(PotCtrlType::Knob),
+	LayoutHorizontalGap,
 	DB(gdFreq3),	DB('f'), DB('r'), DB('e'), DB('3'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdAmp3),		DB('a'), DB('m'), DB('p'), DB('3'), DB(0), DB(PotCtrlType::Knob),
+	LayoutHorizontalGap,
 	DB(gdFreq4),	DB('f'), DB('r'), DB('e'), DB('4'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdAmp4),		DB('a'), DB('m'), DB('p'), DB('4'), DB(0), DB(PotCtrlType::Knob),
+	LayoutHorizontalGap,
 	DB(gdFreq5),	DB('f'), DB('r'), DB('e'), DB('5'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdAmp5),		DB('a'), DB('m'), DB('p'), DB('5'), DB(0), DB(PotCtrlType::Knob),
+	LayoutHorizontalGap,
 	DB(gdFreq6),	DB('f'), DB('r'), DB('e'), DB('6'), DB(0), DB(PotCtrlType::Knob),
 	DB(gdAmp6),		DB('a'), DB('m'), DB('p'), DB('6'), DB(0), DB(PotCtrlType::Knob),
-
 	LayoutEnd
 };
 
@@ -77,7 +84,7 @@ void GenericDrumCtrl::create(Window* parent, char* name) {
 
 	Stream stream(genericDrumLayout, arraysize(genericDrumLayout));
 	stream.reset();
-	initFromStream(&stream, 92);
+	initFromStream(&stream, 90);
 	var ctrl1 = module_->getControl(gdFlt1Mode);
 	var ctrl2 = module_->getControl(gdFlt2Mode);
 	for (var i = 0; i < potCtrlCount_; i++) {
@@ -128,6 +135,10 @@ void DrumsCtrl::create(Window* parent, char* name) {
 		SetWindowPos(drumCtrls_[i]->hWnd(), NULL, 0, height, 0, 0, SWP_NOSIZE);
 		if (width < drumCtrls_[i]->rect().right) width = drumCtrls_[i]->rect().right;
 		height += drumCtrls_[i]->rect().bottom;
+
+		//SetWindowPos(drumCtrls_[i]->hWnd(), NULL, width, 0, 0, 0, SWP_NOSIZE);
+		//if (height < drumCtrls_[i]->rect().bottom) height = drumCtrls_[i]->rect().bottom;
+		//width += drumCtrls_[i]->rect().right;
 	}
 
 	SetWindowPos(hWnd_, NULL, 0, 0, width, height, SWP_NOMOVE);

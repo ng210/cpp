@@ -6,14 +6,16 @@
 #include "win/comboboxctrl.h"
 #include "win/staticctrl.h"
 #include "synth/ui/pot-ctrl.h"
-#include "synth/src/module/module.h"
+#include "synth/src/device/module-device.h"
 #include "base/stream.h"
+#include "player/src/sequence.h"
 
 NS_FW_BASE_USE
 NS_FW_WIN_USE
 using namespace SYNTH;
+using namespace PLAYER;
 
-namespace SYNTH_UI {
+namespace SYNTH_APP {
 
 	typedef struct LayoutItem {
 		byte ctrlId;
@@ -24,7 +26,10 @@ namespace SYNTH_UI {
 	typedef enum LayoutControl {
 		LayoutEnd = 255,
 		LayoutHorizontalGap = 254,
-		LayoutVerticalGap = 253
+		LayoutVerticalGap = 253,
+		LayoutNextColumn = 252,
+		LayoutBlank = 251,
+		LayoutNewColumn = 250,
 	} LayoutControl;
 
 	class ModuleCtrl : public Ctrl {
@@ -58,9 +63,8 @@ namespace SYNTH_UI {
 
 		static MOUSEEVENTPROC onAddProgram, onRemoveProgram;
 
-		static int soundbankSetter(void*, Soundbank*);
-		static int programSetter(void*, int);
-
+		static int soundbankSetter(void*, Soundbank*, void* = NULL);
+		static int programSetter(void*, int, void* = NULL);
 
 		//static SETCONTROLPROC setControlProc;
 		//static SETSOUNDBANKPROC setSoundbankProc;

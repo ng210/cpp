@@ -2,7 +2,7 @@
 #include "synth/ui/bass-ctrl.h"
 //#include "synth/src/module/bass.h"
 
-using namespace SYNTH_UI;
+using namespace SYNTH_APP;
 
 byte bassUiLayout[] = {
 	// colors
@@ -10,42 +10,47 @@ byte bassUiLayout[] = {
 	DD(0x00285010), DD(0x0078ff30), DD(0x0050a020), DD(0x0040ff40),
 	// controls
 	// AM
-	DB(bAmAdsrAmp), DB('a'),DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
-	DB(bAmAdsrAtk), DB('a'),DB('t'), DB('k'), DB(0), DB(PotCtrlType::Knob),
-	DB(bAmAdsrDec), DB('d'),DB('e'), DB('c'), DB(0), DB(PotCtrlType::Knob),
-	DB(bAmAdsrSus), DB('s'),DB('u'), DB('s'), DB(0), DB(PotCtrlType::Knob),
-	DB(bAmAdsrRel), DB('r'),DB('e'), DB('l'), DB(0), DB(PotCtrlType::Knob),
-	LayoutHorizontalGap,
-	// PM
-	DB(bPmAdsrAmp), DB('a'),DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
-	DB(bPmAdsrAtk), DB('a'),DB('t'), DB('k'), DB(0), DB(PotCtrlType::Knob),
-	DB(bPmAdsrDec), DB('d'),DB('e'), DB('c'), DB(0), DB(PotCtrlType::Knob),
-	DB(bPmAdsrSus), DB('s'),DB('u'), DB('s'), DB(0), DB(PotCtrlType::Knob),
-	DB(bPmAdsrRel), DB('r'),DB('e'), DB('l'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::amAdsrAmp),	DB('a'),DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::amAdsrAtk),	DB('a'),DB('t'), DB('k'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::amAdsrDec),	DB('d'),DB('e'), DB('c'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::amAdsrSus),	DB('s'),DB('u'), DB('s'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::amAdsrRel),	DB('r'),DB('e'), DB('l'), DB(0), DB(PotCtrlType::Knob),
 	LayoutHorizontalGap,
 	// Filter
-	DB(bFlt1Mode),  DB('m'),DB('o'),DB('d'),DB('e'), DB(0), DB(PotCtrlType::Knob),
-	DB(bFtAdsrDc),  DB('c'),DB('u'),DB('t'),DB(0), DB(PotCtrlType::Knob),
-	DB(bFlt1Res),   DB('r'),DB('e'),DB('s'),DB(0), DB(PotCtrlType::Knob),
-	DB(bFtAdsrAmp), DB('m'),DB('o'),DB('d'),DB(0), DB(PotCtrlType::Knob),
-	DB(bFtAdsrAtk), DB('a'),DB('t'),DB('k'),DB(0), DB(PotCtrlType::Knob),
-	DB(bFtAdsrDec), DB('d'),DB('e'),DB('c'),DB(0), DB(PotCtrlType::Knob),
-	DB(bFtAdsrSus), DB('s'),DB('u'),DB('s'),DB(0), DB(PotCtrlType::Knob),
-	DB(bFtAdsrRel), DB('r'),DB('e'),DB('l'),DB(0), DB(PotCtrlType::Knob),
+	LayoutNewColumn,
+	DB(BassCtrlId::flt1Mode),	DB('m'),DB('o'),DB('d'),DB('e'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::flt1Cut),	DB('c'),DB('u'),DB('t'),DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::flt1Res),	DB('r'),DB('e'),DB('s'),DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::cmAdsrAmp),	DB('m'),DB('o'),DB('d'),DB(0), DB(PotCtrlType::Knob),
 	LayoutHorizontalGap,
 	// Osc1
-	DB(bOsc1Amp),	DB('a'),DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
-	DB(bOsc1Fre),	DB('f'),DB('r'), DB('e'), DB(0), DB(PotCtrlType::Knob),
-	DB(bOsc1Tune),	DB('t'),DB('u'), DB('n'), DB('e'), DB(0), DB(PotCtrlType::Knob),
-	DB(bOsc1Psw),	DB('p'),DB('s'), DB('w'), DB(0), DB(PotCtrlType::Knob),
-	DB(bOsc1Wave),	DB('w'),DB('a'), DB('v'), DB('e'), DB(0), DB(PotCtrlType::Knob),
-	LayoutHorizontalGap,
+	LayoutNewColumn,
+	DB(BassCtrlId::osc1Amp),	DB('a'),DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::osc1Fre),	DB('f'),DB('r'), DB('e'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::osc1Tune),	DB('t'),DB('u'), DB('n'), DB('e'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::osc1Psw),	DB('p'),DB('s'), DB('w'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::osc1Wave),	DB('w'),DB('a'), DB('v'), DB('e'), DB(0), DB(PotCtrlType::Knob),
+	LayoutVerticalGap,
+
+	// PM
+	DB(BassCtrlId::pmAdsrAmp),	DB('a'),DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::pmAdsrAtk),	DB('a'),DB('t'), DB('k'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::pmAdsrDec),	DB('d'),DB('e'), DB('c'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::pmAdsrSus),	DB('s'),DB('u'), DB('s'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::pmAdsrRel),	DB('r'),DB('e'), DB('l'), DB(0), DB(PotCtrlType::Knob),
+	// Filter
+	LayoutNextColumn,
+	DB(BassCtrlId::cmAdsrAtk),	DB('a'),DB('t'),DB('k'),DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::cmAdsrDec),	DB('d'),DB('e'),DB('c'),DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::cmAdsrSus),	DB('s'),DB('u'),DB('s'),DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::cmAdsrRel),	DB('r'),DB('e'),DB('l'),DB(0), DB(PotCtrlType::Knob),
 	// Osc2					  
-	DB(bOsc2Amp),	DB('a'),DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
-	DB(bOsc2Fre),	DB('f'),DB('r'), DB('e'), DB(0), DB(PotCtrlType::Knob),
-	DB(bOsc2Tune),	DB('t'),DB('u'), DB('n'), DB('e'), DB(0), DB(PotCtrlType::Knob),
-	DB(bOsc2Psw),	DB('p'),DB('s'), DB('w'), DB(0), DB(PotCtrlType::Knob),
-	DB(bOsc2Wave),	DB('w'),DB('a'), DB('v'), DB('e'), DB(0), DB(PotCtrlType::Knob),
+	LayoutNextColumn,
+	DB(BassCtrlId::osc2Amp),	DB('a'),DB('m'), DB('p'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::osc2Fre),	DB('f'),DB('r'), DB('e'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::osc2Tune),	DB('t'),DB('u'), DB('n'), DB('e'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::osc2Psw),	DB('p'),DB('s'), DB('w'), DB(0), DB(PotCtrlType::Knob),
+	DB(BassCtrlId::osc2Wave),	DB('w'),DB('a'), DB('v'), DB('e'), DB(0), DB(PotCtrlType::Knob),
 	LayoutEnd
 
 	//// Osc2
@@ -72,9 +77,9 @@ void BassCtrl::create(Window* parent, char* name) {
 	stream.reset();
 	unsigned long colors[] = { 0x00285010, 0x0078ff30, 0x0050a020, 0x0040ff40 };
 	initFromStream(&stream, 100, colors);
-	var ctrl1 = module_->getControl(bOsc1Tune);
-	var ctrl2 = module_->getControl(bOsc2Tune);
-	var ctrl3 = module_->getControl(bFlt1Mode);
+	var ctrl1 = module_->getControl((int)BassCtrlId::osc1Tune);
+	var ctrl2 = module_->getControl((int)BassCtrlId::osc2Tune);
+	var ctrl3 = module_->getControl((int)BassCtrlId::flt1Mode);
 	for (var i = 0; i < potCtrlCount_; i++) {
 		if (potCtrls_[i]->pot() == ctrl1 || potCtrls_[i]->pot() == ctrl2) potCtrls_[i]->mouseSpeed2(12);
 		else if (potCtrls_[i]->pot() == ctrl3) {

@@ -4,12 +4,12 @@
 #include "synth/ui/module-ctrl.h"
 #include "synth/src/module/stereo-delay.h"
 
-namespace SYNTH_UI {
+namespace SYNTH_APP {
 	class StereoDelayCtrl : public ModuleCtrl {
 		static HANDLE hBackground_;
 	public:
 		StereoDelayCtrl(Module* module);
-		~StereoDelayCtrl();
+		virtual ~StereoDelayCtrl();
 
 		void create(Window* parent, char* name);
 		HANDLE getBackgroundImage();

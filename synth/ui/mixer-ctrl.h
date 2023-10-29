@@ -4,14 +4,14 @@
 #include "synth/ui/module-ctrl.h"
 #include "synth/src/module/mixer.h"
 
-namespace SYNTH_UI {
+namespace SYNTH_APP {
 	class MixerCtrl : public ModuleCtrl {
 		Stream* createVerticalLayout();
 		Stream* createHorizontalLayout();
 		void updateLayout();
 	public:
 		MixerCtrl(Module* module);
-		~MixerCtrl();
+		virtual ~MixerCtrl();
 
 		void create(Window* parent, char* name);
 	};
