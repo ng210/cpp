@@ -12,26 +12,30 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
+    typedef struct GenericDrumCtrlsPots {
+        PotF gdFre[6];
+        PotF8 gdAmp[6];
+    } GenericDrumCtrlsPots;
+
     typedef struct GenericDrumCtrls {
         Pot type;
         DahrCtrls dahr[4];
         FltCtrls flt[2];
-        PotF fre[6];
-        PotF8 amp[6];
+        GenericDrumCtrlsPots pots;
     } GenericDrumCtrls;
 
     typedef enum GenericDrumCtrlIds {
         gdType,
-        gdDahr1Amp, gdDahr1Dc, gdDahr1Del, gdDahr1Atk, gdDahr1Hld, gdDahr1Rel,
-        gdDahr2Amp, gdDahr2Dc, gdDahr2Del, gdDahr2Atk, gdDahr2Hld, gdDahr2Rel,
-        gdDahr3Amp, gdDahr3Dc, gdDahr3Del, gdDahr3Atk, gdDahr3Hld, gdDahr3Rel,
-        gdDahr4Amp, gdDahr4Dc, gdDahr4Del, gdDahr4Atk, gdDahr4Hld, gdDahr4Rel,
+        gdDahr1Amp, gdDahr1Del, gdDahr1Atk, gdDahr1Hld, gdDahr1Rel,
+        gdDahr2Amp, gdDahr2Del, gdDahr2Atk, gdDahr2Hld, gdDahr2Rel,
+        gdDahr3Amp, gdDahr3Del, gdDahr3Atk, gdDahr3Hld, gdDahr3Rel,
+        gdDahr4Amp, gdDahr4Del, gdDahr4Atk, gdDahr4Hld, gdDahr4Rel,
 
-        gdFlt1Cut, gdFlt1Res, gdFlt1Mod, gdFlt1Mode,
-        gdFlt2Cut, gdFlt2Res, gdFlt2Mod, gdFlt2Mode,
+        gdFlt1Cut, gdFlt1Res, gdFlt1Mode,
+        gdFlt2Cut, gdFlt2Res, gdFlt2Mode,
 
         gdFreq1, gdFreq2, gdFreq3, gdFreq4, gdFreq5, gdFreq6,
-        gdAmp1, gdAmp2, gdAmp3, gdAmp4, gdAmp5, gdAmp6        
+        gdAmp1, gdAmp2, gdAmp3, gdAmp4, gdAmp5, gdAmp6
     } GenericDrumCtrlIds;
 
     typedef enum DrumTypes {
@@ -70,9 +74,9 @@ namespace SYNTH {
         bool isActive();
         void setGate(byte velocity);
 
-        static int typeSetter(void*, DrumTypes);
+        static int typeSetter(void*, DrumTypes, void* = NULL);
 
-        static int programSetter(void* obj, int ix);
+        static int programSetter(void* obj, int ix, void* = NULL);
     };
 
     //class Hihat : public GenericDrum {
@@ -141,8 +145,8 @@ namespace SYNTH {
         static void prepare();
         static void cleanUp();
 
-        static int soundbankSetter(void*, Soundbank*);
-        static int programSetter(void*, int);
+        static int soundbankSetter(void*, Soundbank*, void* = NULL);
+        static int programSetter(void*, int, void* = NULL);
     };
 }
 

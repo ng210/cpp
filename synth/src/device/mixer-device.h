@@ -3,9 +3,9 @@
 
 #include "player/src/device.h"
 #include "collection/parray.h"
-#include "synth-adapter.h"
-#include "module-device.h"
-#include "../module/mixer.h"
+#include "synth/src/device/synth-adapter.h"
+#include "synth/src/device/module-device.h"
+#include "synth/src/module/mixer.h"
 
 NS_FW_BASE_USE
 using namespace PLAYER;
@@ -14,7 +14,7 @@ namespace SYNTH {
 	typedef enum MixerCommands {
 	} MixerCommands;
 
-	class Mixer8x4;
+	//class Mixer8x4;
 	class MixerDevice : public ModuleDevice {
 	protected: PROP(int, frame);
 	protected: PROP(float, samplePerFrame);
@@ -22,6 +22,8 @@ namespace SYNTH {
 	public:
 		MixerDevice(SynthAdapter* adapter);
 		virtual ~MixerDevice();
+
+		Mixer8x4* mixer();
 
 #pragma region Device
 		void initialize(byte** pData = NULL);

@@ -14,7 +14,6 @@ namespace SYNTH {
 		PotF8 lvl;
 		Pot cut;	// tone
 		PotF8 res;	// contour
-		PotF8 mod;
 		Pot mode;	// mode
 	} DistortCtrls;
 
@@ -23,7 +22,6 @@ namespace SYNTH {
 		distLvl,
 		distCut,
 		distRes,
-		distMod,
 		distMode
 	} DistortCtrlId;
 
@@ -38,7 +36,7 @@ namespace SYNTH {
 	public:
 		DistortCtrls controls;
 
-		Distort(float* samplingRate);
+		Distort();
 		virtual ~Distort();
 		//void initializeFromStream(byte** pData);
 		inline float* getOutput(int id);

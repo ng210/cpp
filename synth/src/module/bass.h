@@ -11,23 +11,27 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
+    typedef struct BassCtrlsPots {
+    } BassCtrlsPots;
+
     typedef struct BassCtrls {
         AdsrCtrls amAdsr, pmAdsr, ftAdsr;
         OscCtrls osc1, osc2;
         FltCtrls flt1;
+        BassCtrlsPots pots;
     } BassCtrls;
 
-    typedef enum BassCtrlId {
+    enum class BassCtrlId {
         // envelopes
-        bAmAdsrAmp, bAmAdsrDc, bAmAdsrAtk, bAmAdsrDec, bAmAdsrSus, bAmAdsrRel,
-        bPmAdsrAmp, bPmAdsrDc, bPmAdsrAtk, bPmAdsrDec, bPmAdsrSus, bPmAdsrRel,
-        bFtAdsrAmp, bFtAdsrDc, bFtAdsrAtk, bFtAdsrDec, bFtAdsrSus, bFtAdsrRel,
+        amAdsrAmp, amAdsrAtk, amAdsrDec, amAdsrSus, amAdsrRel,
+        pmAdsrAmp, pmAdsrAtk, pmAdsrDec, pmAdsrSus, pmAdsrRel,
+        cmAdsrAmp, cmAdsrAtk, cmAdsrDec, cmAdsrSus, cmAdsrRel,
         // oscillators
-        bOsc1Amp, bOsc1Fre, bOsc1Note, bOsc1Tune, bOsc1Psw, bOsc1Wave,
-        bOsc2Amp, bOsc2Fre, bOsc2Note, bOsc2Tune, bOsc2Psw, bOsc2Wave,
-
-        bFlt1Cut,/*=fmAdsrDc*/ bFlt1Res, bFlt1Mod,/*=fmAdsrAmp*/ bFlt1Mode
-    } BassCtrlId;
+        osc1Amp, osc1Fre, osc1Note, osc1Tune, osc1Psw, osc1Wave,
+        osc2Amp, osc2Fre, osc2Note, osc2Tune, osc2Psw, osc2Wave,
+        // filter
+        flt1Cut, flt1Res, flt1Mode
+    };
 
 #define BassCtrlCount (sizeof(BassCtrls)/sizeof(PotBase))
 
@@ -39,11 +43,10 @@ namespace SYNTH {
         VOICEHANDLER freeVoiceHandler;
         VOICESETNOTEHANDLER setNoteVoiceHandler;
 
+    protected: BassCtrls controls;
     public:
-        Bass(float* samplingRate, int voiceCount = 1);
+        Bass(int voiceCount = 1);
         virtual ~Bass();
-
-        BassCtrls controls;
 
         // Module
         Soundbank* getDefaultSoundbank();

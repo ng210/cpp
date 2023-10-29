@@ -18,6 +18,8 @@ namespace SYNTH {
 		void processCommand(byte cmd, byte*& cursor);
 
 		Drums* drums() { return (Drums*)object_; };
+
+		Sequence* createDefaultSequence();
 	};
 }
 #endif

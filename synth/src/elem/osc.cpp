@@ -11,23 +11,23 @@ Osc::Osc() : Elem(OscCtrlCount) {
 
 void Osc::reset() {
     timer = 0.0;
-    smp_ = 0.0f;
+    smp = 0.0f;
 }
 
 // float params[] = { 0.0f, 1.0f, 0.0f };
 // run(&params);
 float Osc::run(Arg params) {
     var ctrls = (OscCtrls*)controls_;
-    var am = ((float*)params.p)[0];
-    var fm = ((float*)params.p)[1];
-    var pm = ((float*)params.p)[2];
+    var fm = ((float*)params.p)[0];
+    var pm = ((float*)params.p)[1];
     var pitch = note_->value.b + ctrls->tune.value.b;
-    var delta = (ctrls->fre.value.f + fm + Elem::p2f((float)pitch)) / *Elem::samplingRate;
+    var fre = (1.0f + fm) * (ctrls->fre.value.f + Elem::p2f((float)pitch));
+    var delta = fre / *Elem::samplingRate;
     if (delta >= 1.0) {
         delta = 0.99999999f;
     }
     var psw = pm + ctrls->psw.value.f + 0.0000001f;
-    var smp = 0.0;
+    smp = 0.0;
     var wf = ctrls->wave.value.b;
     var wfc = 0;
     if ((wf & WfSinus) != 0) {
@@ -49,7 +49,7 @@ float Osc::run(Arg params) {
         wfc++;
     }
     if ((wf & WfNoise) != 0) {
-        smp += (timer <= delta || timer >= 0.5 && timer < 0.5 + delta) ? smp_ = (float)Utils::randomSigned() : smp_;
+        smp += (timer <= delta || timer >= 0.5 && timer < 0.5 + delta) ? smp = (float)Utils::randomSigned() : smp;
         wfc++;
     }
     if (wfc > 1) {
@@ -59,13 +59,13 @@ float Osc::run(Arg params) {
     if (timer > 1.0) {
         timer -= 1.0;
     }
-    return (float)(ctrls->amp.value.f * am * smp);
+
+    return (float)(ctrls->amp.value.f * smp);
 }
 
 void Osc::assignControls(PotBase* controls) {
     controls_ = controls;
     var ctrls = (OscCtrls*)controls_;
-    ctrls->amp.init(0, 255, 1, 128);
     ctrls->fre.init(-10.0f, 10.0f, 0.1f, 0.0f);
     ctrls->note.init(0, 255, 1, 0);
     ctrls->tune.init(0, 255, 1, 0);
@@ -75,7 +75,6 @@ void Osc::assignControls(PotBase* controls) {
 
 void Osc::setFromStream(byte*& stream) {
     var ctrls = (OscCtrls*)controls_;
-    ctrls->amp.setFromStream(stream);
     ctrls->fre.setFromStream(stream);
     ctrls->note.setFromStream(stream);
     ctrls->tune.setFromStream(stream);

@@ -115,7 +115,7 @@ void Flt::assignControls(PotBase* controls) {
     var ctrls = (FltCtrls*)controls_;
     ctrls->cut.init(0, 255, 1, 0);
     ctrls->res.init(0, 255, 1, 0);
-    ctrls->mod.init(0.0f, 1.0f, 0.01f, 0.5f);
+    //ctrls->mod.init(0.0f, 1.0f, 0.01f, 0.5f);
     ctrls->mode.init(0, FmAllPass, 1, FmLowPass);
 }
 
@@ -145,7 +145,7 @@ void Flt::setFromStream(byte*& stream) {
     var ctrls = (FltCtrls*)controls_;
     ctrls->cut.setFromStream(stream);
     ctrls->res.setFromStream(stream);
-    ctrls->mod.setFromStream(stream);
+    //ctrls->mod.setFromStream(stream);
     ctrls->mode.setFromStream(stream);
 }
 

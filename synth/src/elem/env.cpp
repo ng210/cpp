@@ -1,5 +1,5 @@
-#include <math.h>
-#include "synth/src/elem/env.h"
+﻿#include "synth/src/elem/env.h"
+#include "math.h"
 
 using namespace SYNTH;
 
@@ -13,7 +13,34 @@ Env::Env(int count) : Elem(count) {
     timer_ = 0.0;
     rate_ = 0.0;
     ticks_ = 0;
+    // LPF
+    fc_ = M_PI * 0.001;
+    ai_[0] = ai_[1] = 0.0;
 }
+
+void Env::assignControls(PotBase* controls) {
+    controls_ = controls;
+    controls[0].init(0.0f, 1.0f, 0.01f, 0.0f);
+    controls[1].init(0, 255, 1, 0);
+    controls[2].init(0, 255, 1, 4);
+    controls[3].init(0, 255, 1, 16);
+    controls[4].init(0, 255, 1, 80);
+}
+
+void Env::setFromStream(byte*& stream) {
+    controls_[0].setFromStream(stream);
+    controls_[1].setFromStream(stream);
+    controls_[2].setFromStream(stream);
+    controls_[3].setFromStream(stream);
+    controls_[4].setFromStream(stream);
+}
+
+void Env::applyLPF() {
+    ai_[0] = ai_[0] + fc_ * (smp_ - ai_[0]);
+    ai_[1] = ai_[1] + fc_ * (ai_[0] - ai_[1]);
+    smp_ = (float)ai_[1];
+}
+
 
 void Env::initialize() {
     // calculate rates

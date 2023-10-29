@@ -8,9 +8,6 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
-	//CREATEHANDLER1(SetSoundbank, Soundbank*);
-	//CREATEHANDLER1(SetProgram, int);
-
 	class Module {
 
 	protected: PotBase* controls_;
@@ -25,13 +22,11 @@ namespace SYNTH {
 		Module(PotBase* controls, int count);
 		virtual ~Module();
 
-		//SetSoundbankHandler setSoundbank;
-		//SetProgramHandler setProgram;
 		Handler<Soundbank*> setSoundbank;
 		Handler<int> setProgram;
 
 		virtual void connectInput(int id, float* buffer); 
-		PotBase* getControl(int id);
+		virtual PotBase* getControl(int id);
 		void setControl(int id, S value);
 		virtual inline float* getInput(int id);
 		virtual inline float* getOutput(int id);
@@ -48,8 +43,8 @@ namespace SYNTH {
 
 		//static SetSoundbankFunc soundbankSetter;
 		//static SetProgramFunc programSetter;
-		static int soundbankSetter(void*, Soundbank*);
-		static int programSetter(void*, int);
+		static int soundbankSetter(void*, Soundbank*, void* = NULL);
+		static int programSetter(void*, int, void* = NULL);
 
 		static byte* loadSoundbanks(const char* soundbankPath);
 	};

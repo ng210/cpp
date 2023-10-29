@@ -125,14 +125,14 @@ void StereoDelay::cleanUp() {
 	StereoDelay::defaultSoundbank_ = NULL;
 }
 
-int StereoDelay::delayLeftSetter(void* obj, S value) {
+int StereoDelay::delayLeftSetter(void* obj, S value, void* unused) {
 	var that = (StereoDelay*)obj;
 	PotBase::setter(that->getControl(stdlDelayLeft), value);
 	that->setDelayLeft();
 	return 1;
 }
 
-int StereoDelay::delayRightSetter(void* obj, S value) {
+int StereoDelay::delayRightSetter(void* obj, S value, void* unused) {
 	var that = (StereoDelay*)obj;
 	PotBase::setter(that->getControl(stdlDelayRight), value);
 	that->setDelayRight();

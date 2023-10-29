@@ -3,12 +3,12 @@
 using namespace SYNTH;
 
 SynthBase::SynthBase(PotBase* controls, int count) : Module(controls, count) {
-    voiceCount_ = 1;
+    voiceCount_ = 0;
     setupVoice = NULL;
     renderVoice = NULL;
     freeVoice = NULL;
     setNoteVoice = NULL;
-    samplingRate_ = NULL;
+    //samplingRate_ = NULL;
 }
 
 SynthBase::~SynthBase() {
@@ -17,18 +17,17 @@ SynthBase::~SynthBase() {
     }
 }
 
-void SynthBase::initialize(float* pSmpRate, int count) {
-    samplingRate(pSmpRate);
+void SynthBase::initialize(int count) {
+    //samplingRate(pSmpRate);
     voiceCount(count);
 }
-void SynthBase::samplingRate(float* pSmpRate) {
-    samplingRate_ = pSmpRate;
-
-    for (var i = 0; i < voiceCount_; i++) {
-        Voice& v = voices_[i];
-        (this->*setupVoice)(v);
-    }
-}
+//void SynthBase::samplingRate(float* pSmpRate) {
+//    //samplingRate_ = pSmpRate;
+//    for (var i = 0; i < voiceCount_; i++) {
+//        Voice& v = voices_[i];
+//        (this->*setupVoice)(v);
+//    }
+//}
 void SynthBase::setNote(byte note, byte velocity) {
     if (velocity != 0) {
         //printf(" ** ON\n");

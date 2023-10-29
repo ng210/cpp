@@ -178,6 +178,7 @@
     <ClCompile Include="device\mixer-device.cpp" />
     <ClCompile Include="device\module-device.cpp" />
     <ClCompile Include="device\synth-device.cpp" />
+    <ClCompile Include="device\synth2-device.cpp" />
     <ClCompile Include="module\bass.cpp" />
     <ClCompile Include="module\distort.cpp" />
     <ClCompile Include="module\drums.cpp" />
@@ -187,6 +188,7 @@
     <ClCompile Include="module\module.cpp" />
     <ClCompile Include="module\synth-base.cpp" />
     <ClCompile Include="module\synth.cpp" />
+    <ClCompile Include="module\synth2.cpp" />
     <ClCompile Include="xmloader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -209,6 +211,7 @@
     <ClInclude Include="device\module-device.h" />
     <ClInclude Include="device\mixer-device.h" />
     <ClInclude Include="device\synth-device.h" />
+    <ClInclude Include="device\synth2-device.h" />
     <ClInclude Include="handler.h" />
     <ClInclude Include="module\bass.h" />
     <ClInclude Include="module\drums.h" />
@@ -220,6 +223,7 @@
     <ClInclude Include="module\synth-base.h" />
     <ClInclude Include="module\synth-def.h" />
     <ClInclude Include="module\synth.h" />
+    <ClInclude Include="module\synth2.h" />
     <ClInclude Include="xmloader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

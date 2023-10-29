@@ -14,7 +14,7 @@ namespace SYNTH {
 		//protected: PROP(int, voiceCount);
 	protected:
 	public:
-		SynthBaseDevice(SynthAdapter* adapter, void* object = NULL);
+		SynthBaseDevice(SynthAdapter* adapter, void* object);
 		~SynthBaseDevice();
 #pragma region Device
 		void initialize(byte** pData = NULL);

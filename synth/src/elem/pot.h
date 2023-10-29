@@ -11,11 +11,13 @@ namespace SYNTH {
 
     typedef union S {
         float f;
+        int i;
         byte b;
 
         S() : f(0) {}
         S(float v) : f(v) {}
-        S(int v) : b(v) {}
+        S(int v) : i(v) {}
+        S(byte v) : i(v) {}
     } S;
 
     typedef enum PotType {
@@ -52,8 +54,8 @@ namespace SYNTH {
         virtual void setFromNormalized(float v) = 0;
         virtual void writeToStream(byte*& stream) = 0;
 
-        static int setter(void*, S);
-        static int setterF8(void*, S);
+        static int setter(void*, S, void* = NULL);
+        //static int setterF8(void*, S, void*);
     };
 
     // derived classes of PotBase MUST NOT add new member variables

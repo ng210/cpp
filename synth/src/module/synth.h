@@ -8,28 +8,33 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
+	typedef struct SynthCtrlsPots {
+	} SynthCtrlsPots;
+
+
     typedef struct SynthCtrls_ {
         AdsrCtrls amAdsr, fmAdsr, pmAdsr, ftAdsr;
         LfoCtrls lfo1, lfo2;
         OscCtrls osc1, osc2;
         FltCtrls flt1;
+		SynthCtrlsPots pots;
     } SynthCtrls;
-
-	typedef enum SynthCtrlId {
+	
+	enum class SynthCtrlId {
 		// envelopes
-		amAdsrAmp, amAdsrDc, amAdsrAtk, amAdsrDec, amAdsrSus, amAdsrRel,
-		fmAdsrAmp, fmAdsrDc, fmAdsrAtk, fmAdsrDec, fmAdsrSus, fmAdsrRel,
-		pmAdsrAmp, pmAdsrDc, pmAdsrAtk, pmAdsrDec, pmAdsrSus, pmAdsrRel,
-		ftAdsrAmp, ftAdsrDc, ftAdsrAtk, ftAdsrDec, ftAdsrSus, ftAdsrRel,
+		amAdsrAmp, amAdsrAtk, amAdsrDec, amAdsrSus, amAdsrRel,
+		fmAdsrAmp, fmAdsrAtk, fmAdsrDec, fmAdsrSus, fmAdsrRel,
+		pmAdsrAmp, pmAdsrAtk, pmAdsrDec, pmAdsrSus, pmAdsrRel,
+		cmAdsrAmp, cmAdsrAtk, cmAdsrDec, cmAdsrSus, cmAdsrRel,
 		// LFOs
 		amLfoAmp, amLfoFre,
 		fmLfoAmp, fmLfoFre,
 		// oscillators
 		osc1Amp, osc1Fre, osc1Note, osc1Tune, osc1Psw, osc1Wave,
 		osc2Amp, osc2Fre, osc2Note, osc2Tune, osc2Psw, osc2Wave,
-
-		flt1Cut,/*=fmAdsrDc*/ flt1Res, flt1Mod,/*=fmAdsrAmp*/ flt1Mode
-	} SynthCtrlId;
+		// filter
+		flt1Cut, flt1Res, flt1Mode,
+	};
 
     #define SynthCtrlCount (sizeof(SynthCtrls)/sizeof(PotBase))
 
@@ -41,7 +46,7 @@ namespace SYNTH {
 		VOICEHANDLER freeVoiceHandler;
 		VOICESETNOTEHANDLER setNoteVoiceHandler;
     public:
-        Synth(float* samplingRate, int voiceCount = 1);
+        Synth(int voiceCount = 1);
         virtual ~Synth();
 
 		SynthCtrls controls;

@@ -7,8 +7,7 @@
 using namespace SYNTH;
 
 #pragma region Creation
-SynthBaseDevice::SynthBaseDevice(SynthAdapter* adapter, void* object) : ModuleDevice(NULL, (Adapter*)adapter) {
-
+SynthBaseDevice::SynthBaseDevice(SynthAdapter* adapter, void* object) : ModuleDevice(object, (Adapter*)adapter) {
 }
 
 void SynthBaseDevice::initialize(byte** pData) {

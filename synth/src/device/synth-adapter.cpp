@@ -4,6 +4,7 @@
 #include "soundlib/src/soundplayer.h"
 #include "synth/src/device/synth-adapter.h"
 #include "synth/src/device/synth-device.h"
+#include "synth/src/device/synth2-device.h"
 #include "synth/src/device/bass-device.h"
 #include "synth/src/device/drums-device.h"
 #include "synth/src/device/mixer-device.h"
@@ -37,6 +38,7 @@ void SynthAdapter::prepare() {
 	Flt::initialize();
 	Bass::prepare();
 	Synth::prepare();
+	Synth2::prepare();
 	Drums::prepare();
 	Distort::prepare();
 	StereoDelay::prepare();
@@ -45,6 +47,7 @@ void SynthAdapter::prepare() {
 void SynthAdapter::cleanUp() {
 	Bass::cleanUp();
 	Synth::cleanUp();
+	Synth2::cleanUp();
 	Drums::cleanUp();
 	Distort::cleanUp();
 	StereoDelay::cleanUp();
@@ -62,6 +65,9 @@ Device* SynthAdapter::createDevice(int deviceType) {
 	switch (deviceType) {
 	case SynthDevices::DeviceSynth:
 		device = NEW_(SynthDevice, this);
+		break;
+	case SynthDevices::DeviceSynth2:
+		device = NEW_(Synth2Device, this);
 		break;
 	case SynthDevices::DeviceBass:
 		device = NEW_(BassDevice, this);

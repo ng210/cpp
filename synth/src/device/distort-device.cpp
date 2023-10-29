@@ -5,7 +5,7 @@
 
 using namespace SYNTH;
 
-DistortDevice::DistortDevice(SynthAdapter* adapter) : ModuleDevice(NEW_(Distort, &adapter->samplingRate), adapter) {
+DistortDevice::DistortDevice(SynthAdapter* adapter) : ModuleDevice(NEW_(Distort), adapter) {
 	type(DeviceDistort);
 }
 

@@ -120,6 +120,12 @@
     <ClCompile Include="module\soundbank.cpp">
       <Filter>Source Files\module</Filter>
     </ClCompile>
+    <ClCompile Include="module\synth2.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="device\synth2-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="elem\elem.h">
@@ -214,6 +220,12 @@
     </ClInclude>
     <ClInclude Include="handler.h">
       <Filter>Header Files\elem</Filter>
+    </ClInclude>
+    <ClInclude Include="module\synth2.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="device\synth2-device.h">
+      <Filter>Header Files\device</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

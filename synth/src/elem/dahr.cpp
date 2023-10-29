@@ -13,26 +13,26 @@ Dahr::Dahr() : Env(DahrCtrlCount) {
     smp_ = 0.0;
 }
 
-void Dahr::assignControls(PotBase* controls) {
-    controls_ = controls;
-    var ctrls = (DahrCtrls*)controls_;
-    ctrls->amp.init(0.0f, 1.0f, 0.01f, 0.0f);
-    ctrls->dc.init(0.0f, 1.0f, 0.01f, 0.0f);
-    ctrls->del.init(0, 255, 1, 16);
-    ctrls->atk.init(0, 255, 1, 4);
-    ctrls->hld.init(0, 255, 1, 16);
-    ctrls->rel.init(0, 255, 1, 80);
-}
-
-void Dahr::setFromStream(byte*& stream) {
-    var ctrls = (DahrCtrls*)controls_;
-    ctrls->amp.setFromStream(stream);
-    ctrls->dc.setFromStream(stream);
-    ctrls->del.setFromStream(stream);
-    ctrls->atk.setFromStream(stream);
-    ctrls->hld.setFromStream(stream);
-    ctrls->rel.setFromStream(stream);
-}
+//void Dahr::assignControls(PotBase* controls) {
+//    controls_ = controls;
+//    var ctrls = (DahrCtrls*)controls_;
+//    ctrls->amp.init(0.0f, 1.0f, 0.01f, 0.0f);
+//    //ctrls->dc.init(0.0f, 1.0f, 0.01f, 0.0f);
+//    ctrls->del.init(0, 255, 1, 16);
+//    ctrls->atk.init(0, 255, 1, 4);
+//    ctrls->hld.init(0, 255, 1, 16);
+//    ctrls->rel.init(0, 255, 1, 80);
+//}
+//
+//void Dahr::setFromStream(byte*& stream) {
+//    var ctrls = (DahrCtrls*)controls_;
+//    ctrls->amp.setFromStream(stream);
+//    //ctrls->dc.setFromStream(stream);
+//    ctrls->del.setFromStream(stream);
+//    ctrls->atk.setFromStream(stream);
+//    ctrls->hld.setFromStream(stream);
+//    ctrls->rel.setFromStream(stream);
+//}
 
 void Dahr::setGate(byte v) {
     if (v > 0) {
@@ -50,7 +50,6 @@ void Dahr::setGate(byte v) {
 }
 
 float Dahr::run(Arg notUsed) {
-    //var am = *((float*)params);
     var ctrls = (DahrCtrls*)controls_;
     switch (phase_) {
         case EnvPhase::Up:
@@ -91,10 +90,12 @@ float Dahr::run(Arg notUsed) {
                 phase_ = EnvPhase::Idle;
                 rate_ = 0.0;
                 timer_ = 0.0;
+                ai_[0] = ai_[1] = 0.0;
             }
             smp_ *= rate2_;
             break;
     }
     ticks_++;
-    return (float)(ctrls->amp.value.f * smp_ * this->velocity_ + ctrls->dc.value.f);
+    //applyLPF();
+    return (float)(ctrls->amp.value.f * smp_ * this->velocity_);
 }

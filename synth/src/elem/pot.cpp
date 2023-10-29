@@ -7,15 +7,15 @@ using namespace SYNTH;
 
 #pragma region PotBase
 
-int PotBase::setter(void* pot, S value) {
+int PotBase::setter(void* pot, S value, void* unused) {
 	((PotBase*)pot)->value = value;
 	return 1;
 }
 
-int PotBase::setterF8(void* pot, S value) {
-	((PotBase*)pot)->value.f = value.b / 255.0f;
-	return 1;
-}
+//int PotBase::setterF8(void* pot, S value) {
+//	((PotBase*)pot)->value.f = value.b / 255.0f;
+//	return 1;
+//}
 
 PotBase::PotBase() {
 	set.add(this, &PotBase::setter);

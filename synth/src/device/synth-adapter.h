@@ -13,7 +13,8 @@ namespace SYNTH {
 		DeviceDrums,
 		DeviceMixer,
 		DeviceStereoDelay,
-		DeviceDistort
+		DeviceDistort,
+		DeviceSynth2
 	} SynthDevices;
 
 	class SynthAdapter : public Adapter {

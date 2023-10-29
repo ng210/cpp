@@ -10,7 +10,6 @@ namespace SYNTH {
 
     typedef struct AdsrCtrls {
         PotF amp;
-        PotF dc;
         Pot atk;
         Pot dec;
         PotF8 sus;
@@ -24,9 +23,7 @@ namespace SYNTH {
     public:
         Adsr();
         AdsrCtrls* controls() { return (AdsrCtrls*)controls_; }
-        void assignControls(PotBase* controls);
         void setGate(byte velocity);
-        void setFromStream(byte*& stream);
         float run(Arg params = (void*)NULL);
     };
 }

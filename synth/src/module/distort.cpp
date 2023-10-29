@@ -8,8 +8,7 @@ using namespace SYNTH;
 
 Soundbank* Distort::defaultSoundbank_ = NULL;
 
-Distort::Distort(float* samplingRate) : Module((PotBase*)&controls, DistortCtrlsCount) {
-    controls.mod.value.f = 0.0f;
+Distort::Distort() : Module((PotBase*)&controls, DistortCtrlsCount) {
     clp_.assignControls(&controls.amp);
     flt_.createStages(3);
     flt_.assignControls(&controls.cut);
@@ -22,18 +21,6 @@ Distort::Distort(float* samplingRate) : Module((PotBase*)&controls, DistortCtrls
 Distort::~Distort() {
 
 }
-
-//void Distort::initializeFromStream(byte** pData) {
-//    if (pData != NULL && *pData != NULL) {
-//        controls.amp.setFromStream(*pData);
-//        controls.lvl.setFromStream(*pData);
-//        controls.cut.setFromStream(*pData);	// tone
-//        controls.res.setFromStream(*pData);	// contour
-//        controls.mod.value.b = 255;
-//        controls.mode.setFromStream(*pData);	// mode
-//        updateFilter();
-//    }
-//}
 
 float* Distort::getOutput(int id) {
     return outputs_[0];
@@ -74,7 +61,7 @@ void Distort::prepare() {
         grunge->writeByte(100)->writeByte(180)->writeByte(0)->writeByte(FmBandPass);
     };
 
-    Distort distort(NULL);
+    Distort distort;
     Distort::defaultSoundbank_ = distort.createSoundbank();
     Distort::defaultSoundbank_->add("bass boost.....", bassBoost->data());
     Distort::defaultSoundbank_->add("grunge.........", grunge->data());

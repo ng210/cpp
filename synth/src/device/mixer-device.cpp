@@ -15,6 +15,10 @@ MixerDevice::~MixerDevice() {
 	DEL_((Mixer8x4*)object_);
 }
 
+Mixer8x4* MixerDevice::mixer() {
+	return (Mixer8x4*)object_;
+}
+
 #pragma region Device
 void MixerDevice::initialize(byte** pData) {
 	var mixer = (Mixer8x4*)object_;

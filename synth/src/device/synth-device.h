@@ -4,6 +4,7 @@
 #include "synth/src/device/synth-adapter.h"
 #include "synth/src/device/synth-base-device.h"
 #include "synth/src/module/synth.h"
+#include "synth/src/module/synth2.h"
 
 using namespace PLAYER;
 namespace SYNTH {
@@ -14,7 +15,7 @@ namespace SYNTH {
 	//protected: PROP(int, voiceCount);
 	protected:
 	public:
-		SynthDevice(SynthAdapter* adapter, void* object = NULL);
+		SynthDevice(SynthAdapter* adapter);
 		~SynthDevice();
 		void initialize(int voiceCount);
 #pragma region Device
@@ -26,7 +27,9 @@ namespace SYNTH {
 		//void setRefreshRate(float fps);
 		//void processCommand(byte cmd, byte*& cursor);
 
-		Synth* synth();
+		SynthBase* synth();
+
+		Sequence* createDefaultSequence();
 #pragma endregion
 
 //#ifdef PLAYER_EDIT_MODE

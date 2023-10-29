@@ -16,6 +16,8 @@ namespace SYNTH {
 	public:
 		BassDevice(SynthAdapter* adapter);
 		virtual ~BassDevice();
+
+		Sequence* createDefaultSequence();
 	};
 }
 #endif

@@ -7,7 +7,6 @@
 using namespace SYNTH;
 
 ModuleDevice::ModuleDevice(void* object, Adapter* adapter) : Device(object, adapter) {
-
 }
 
 void ModuleDevice::initialize(byte** pData) {

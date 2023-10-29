@@ -19,7 +19,6 @@ namespace SYNTH {
     typedef struct FltCtrls {
         Pot cut;
         PotF8 res;
-        PotF8 mod;
         Pot mode;
     } FltCtrls;
 
@@ -58,7 +57,6 @@ namespace SYNTH {
 
     class Flt : public Elem {
     protected: FltStage* stages_[5];   // 5x2 = max 10 poles
-    //private: PROP_R(float, theta);
     protected: PROP_R(int, stageCount);
     protected: PROP_R(int, poleCount);
         static float* samplingRate_;

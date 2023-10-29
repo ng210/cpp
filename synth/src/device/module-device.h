@@ -4,6 +4,7 @@
 #include "player/src/device.h"
 #include "synth/src/elem/pot.h"
 #include "synth/src/module/module.h"
+#include "synth/src/device/synth-adapter.h"
 
 NS_FW_BASE_USE
 using namespace PLAYER;
@@ -14,7 +15,7 @@ namespace SYNTH {
 		CmdSetUint8		= 2,	// ctrlId, value
 		CmdSetFloat8	= 3,	// ctrlId, value
 		CmdSetFloat 	= 4,	// ctrlId, value
-		CmdSetNote		= 10,	// ctrlId, note, velocity
+		CmdSetNote		= 10,	// note, velocity
 		CmdSetVelocity	= 11,	// velocity
 		CmdSetProgram	= 12	// programId
 	} ModuleCommands;

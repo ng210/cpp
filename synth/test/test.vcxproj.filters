@@ -18,6 +18,9 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="synth-test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="test-data.bin">
@@ -35,9 +38,6 @@
     <None Include="drums3.pat">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\ui\soundbanks.bin">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="1m.xm">
       <Filter>Resource Files</Filter>
     </None>
@@ -49,5 +49,10 @@
     <CopyFileToFolders Include="test.xm">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="synth-test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

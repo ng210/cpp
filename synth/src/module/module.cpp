@@ -85,7 +85,7 @@ Soundbank* Module::createSoundbank() {
 	return NEW_(Soundbank, size, 0, NULL);
 }
 
-int Module::soundbankSetter(void* obj, Soundbank* sb) {
+int Module::soundbankSetter(void* obj, Soundbank* sb, void* unused) {
 	var mdl = (Module*)obj;
 	mdl->soundbank_ = sb;
 	if (sb != NULL) {
@@ -96,7 +96,7 @@ int Module::soundbankSetter(void* obj, Soundbank* sb) {
 	}
 	return 1;
 }
-int Module::programSetter(void* obj, int ix) {
+int Module::programSetter(void* obj, int ix, void* unused) {
 	var mdl = (Module*)obj;
 	mdl->program_ = ix;
 	var prg = mdl->soundbank_->getProgram(ix);

@@ -29,7 +29,7 @@ namespace SYNTH {
     class Osc : public Elem {
     private: Pot* note_;
     private: double timer;
-    private: double smp_;
+    public: double smp;
     public:
         Osc();
         OscCtrls* controls() { return (OscCtrls*)controls_; }

@@ -17,7 +17,6 @@ namespace SYNTH {
 		PotF8 mixRight;
 		Pot cut;
 		PotF8 res;
-		PotF8 mod;
 		Pot mode;
 	} StereoDelayCtrls;
 
@@ -30,7 +29,6 @@ namespace SYNTH {
 		stdlMixRight,
 		stdlCut,
 		stdlRes,
-		stdlMod,
 		stdlMode
 	} StereoDelayCtrlId;
 
@@ -62,8 +60,8 @@ namespace SYNTH {
 		static void prepare();
 		static void cleanUp();
 
-		static int delayLeftSetter(void*, S);
-		static int delayRightSetter(void*, S);
+		static int delayLeftSetter(void*, S, void* = NULL);
+		static int delayRightSetter(void*, S, void* = NULL);
 	};
 }
 

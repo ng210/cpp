@@ -23,12 +23,18 @@ namespace SYNTH {
 	class Env : public Elem {
 	protected: float velocity_;
 	protected: PROP_R(int, ticks);
-	protected: double timer_;
-	protected: double rate_;
-	protected: PROP_R(EnvPhase, phase);
+	public: double timer_;
+	protected:
+		double rate_;
+		double ai_[2], fc_;
+		void applyLPF();
+	public: PROP_R(EnvPhase, phase);
+	public: PROP_R(double, smp);
 	public:
 		Env(int count);
 
+		void assignControls(PotBase* controls);
+		void setFromStream(byte*& stream);
 		virtual void setGate(byte velocity) = 0;
 		inline bool isActive() { return phase_ != EnvPhase::Idle; }
 

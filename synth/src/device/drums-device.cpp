@@ -44,3 +44,46 @@ void DrumsDevice::processCommand(byte cmd, byte*& cursor) {
 		break;
 	}
 }
+
+Sequence* DrumsDevice::createDefaultSequence() {
+	var seq = NEW_(Sequence, this);
+	seq->writeHeader();
+
+	seq->writeDelta(0);
+	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
+	seq->writeCommand(CmdSetNote)->writeByte(drBD)->writeByte(200);
+	seq->writeEOF();
+
+	seq->writeDelta(16);
+	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
+	seq->writeEOF();
+
+	seq->writeDelta(16);
+	seq->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte(208);
+	seq->writeEOF();
+
+	seq->writeDelta(16);
+	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
+	seq->writeEOF();
+
+	seq->writeDelta(16);
+	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
+	seq->writeCommand(CmdSetNote)->writeByte(drSD)->writeByte(120);
+	seq->writeEOF();
+
+	seq->writeDelta(16);
+	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
+	seq->writeEOF();
+
+	seq->writeDelta(16);
+	seq->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte(208);
+	seq->writeEOF();
+
+	seq->writeDelta(16);
+	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
+	seq->writeEOF();
+
+	seq->writeDelta(16);
+	seq->writeEOS();
+	return seq;
+}
