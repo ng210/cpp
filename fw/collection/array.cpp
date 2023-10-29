@@ -24,20 +24,21 @@ Array::Array(UINT32 itemSize, UINT32 capacity) {
 }
 //Array::~Array() {
 //}
-void Array::init(UINT32 itemSize, UINT32 capacity, void* items) {
-	if (items == NULL) {
-		if (data_ != NULL) {
-			FREE(data_);
-		}
-		itemSize_ = itemSize;
-		capacity_ = capacity;
-		extendSize_ = capacity;
-		data_ = (void**)MALLOC(char, (size_t)capacity_ * itemSize);
-		length_ = 0;
+void Array::init(UINT32 itemSize, UINT32 capacity) {
+	if (data_ == NULL) {
+		data_ = (void**)MALLOC(byte, itemSize * capacity);
 	}
+	else if (capacity > capacity_ || itemSize != itemSize_) {
+		FREE(data_);
+		data_ = (void**)MALLOC(byte, itemSize * capacity);
+	}
+	itemSize_ = itemSize;
+	capacity_ = capacity;
+	extendSize_ = capacity;
+	length_ = 0;
 }
 void Array::clear() {
-	length_ = 0;
+	init(itemSize_, extendSize_);
 }
 
 #pragma region Collection

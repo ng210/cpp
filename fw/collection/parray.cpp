@@ -18,19 +18,26 @@ PArray::PArray(UINT32 capacity) {
 	data_ = NULL;
 	init(capacity);
 }
+
 //PArray::~PArray() {
 //}
-void PArray::init(UINT32 capacity, void* items) {
-	if (items == NULL) {
-		if (data_ != NULL) {
-			FREE(data_);
-		}
-		capacity_ = capacity;
-		extendSize_ = capacity;
-		data_ = MALLOC(void*, capacity_);
-		length_ = 0;
-	}
+
+void PArray::init(UINT32 capacity) {
 	itemSize_ = sizeof(void*);
+	if (data_ == NULL) {
+		data_ = (void**)MALLOC(void*, capacity);
+	}
+	else if (capacity > capacity_) {
+		FREE(data_);
+		data_ = (void**)MALLOC(void*, capacity);
+	}
+	capacity_ = capacity;
+	extendSize_ = capacity;
+	length_ = 0;
+}
+
+void PArray::clear() {
+	init(extendSize_);
 }
 
 #pragma region Collection

@@ -33,6 +33,7 @@ NS_FW_BASE_END
 #define DEBUG(format, ...) if (Debug::tracer_ != NULL) Debug::tracer_->debug(format, __FILE__, __LINE__, __VA_ARGS__)
 #define LOG(format, ...) if (Debug::tracer_ != NULL) Debug::tracer_->log(format, __VA_ARGS__)
 #define INFO(format, ...) if (Debug::tracer_ != NULL) Debug::tracer_->log(format, __VA_ARGS__)
+#define DUMP(bytes, len, width) if (Debug::tracer_ != NULL) Debug::tracer_->dump(bytes, len, width)
 
 #else
 #define SYSPR(fn) fn
@@ -42,6 +43,8 @@ NS_FW_BASE_END
 #define DEBUG(format, ...) 
 #define INFO(format, ...)
 #define LOG(format, ...)
+#define DUMP(bytes, len, width)
+
 #endif
 
 #endif

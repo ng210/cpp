@@ -19,6 +19,8 @@ public:
 	Key findIndex(Key key, COLLECTION_COMPARE* compare = NULL);
 	void sort(COLLECTION_COMPARE* compare = NULL);
 
+	virtual void clear() = 0;
+
 	virtual int join(ArrayBase* array) = 0;
 	virtual char* str_join(const char* filler) = 0;
 

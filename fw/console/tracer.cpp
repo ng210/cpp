@@ -23,7 +23,27 @@ void TracerA::debug(const void* format, const void* file, int line, ...) {
 	vsprintf_s(buffer, (const char*)format, args);
 	log("1>%s(%d): %s", file, line, buffer);
 }
-
+void TracerA::dump(const byte* const data, int length, int width) {
+	var count = 0;
+	char line[1024];
+	int size = 1023;
+	var p = line;
+	for (var i = 0; i < length; i++) {
+		unsigned char db = data[i];
+		sprintf_s(p, size, "%02x ", db);
+		size -= 3;
+		p += 3;
+		if (count++ == width) {
+			log("%s\n", line);
+			p = line;
+			size = 1023;
+			count = 0;
+		}
+	}
+	if (p != line) {
+		log("%s\n", line);
+	}
+}
 
 // Wide char Tracer
 void TracerW::log(const void* format, ...) {
@@ -45,4 +65,25 @@ void TracerW::debug(const void* format, const void* file, int line, ...) {
 		vswprintf_s(buffer, (const wchar_t*)format, args);
 	}
 	log(L"1>%s(%d): %s", file, line, buffer);
+}
+void TracerW::dump(const byte* const data, int length, int width) {
+	var count = 0;
+	wchar_t line[1024];
+	int size = 1023;
+	var p = line;
+	for (var i = 0; i < length; i++) {
+		unsigned char db = data[i];
+		swprintf_s(p, size, L"%02x ", db);
+		size -= 3;
+		p += 3;
+		if (count++ == width) {
+			log("%s\n", line);
+			p = line;
+			size = 1023;
+			count = 0;
+		}
+	}
+	if (p != line) {
+		log("%s\n", line);
+	}
 }

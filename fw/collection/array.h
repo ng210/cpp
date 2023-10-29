@@ -22,7 +22,7 @@ public:
 	Array(UINT32 itemSize, UINT32 capacity = ARRAY_DEFAULT_CAPACITY);
 	//virtual ~Array();
 
-	void init(UINT32 itemSize, UINT32 capacity, void* items = NULL);
+	void init(UINT32 itemSize, UINT32 capacity);
 	void clear();
 
 	// Collection

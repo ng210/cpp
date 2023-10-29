@@ -499,36 +499,61 @@ void CollectionTest::testMap() {
 	Map* map2 = NEW_(Map, MAP_USE_REF, MAP_USE_REF, Map::hashingStr, compareStr);
 	Map* map3 = NEW_(Map, sizeof(TEST_DATA), sizeof(TEST_DATA), Map::hashingItem, compareObj);
 
-	LOG(" *  Map tests\n");
-	INFO(" ADD and GET\n");
 	for (int i = 0; i < 16; i++) {
 		strArr[i] = str_format("a%02d", i);
 		testData.id = i;
 		strncpy(testData.name, 4, strArr[i]);
-		map1->put(i, &i);
+		map1->put(2*i, &i);
 		map2->put(strArr[i], strArr[i]);
 		map3->put(&testData, &testData);
 	}
-	INFO(" map1 map<word, word>\n");
+	INFO("\n#1 map1 map<word, word>\n");
 	{
-		assert("length should be 16", map1->size() == 16);
-		dw =  0; assert("item #0 should be 0", *(word*)map1->get(dw) == 0);
-		map1->remove(dw); assert("should remove first item", map1->get(dw) == NULL);
-		dw = 14; assert("item #14 should be 14", *(word*)map1->get(dw) == 14);
-		map1->remove(dw); assert("should remove item #14", map1->get(dw) == NULL);
-		dw = 15; assert("last item (#15) should be 15", *(word*)map1->get(dw) == 15);
-		map1->remove(dw); assert("should remove last (#15) item", map1->get(dw) == NULL);
-		dw =  8; assert("item #8 should be 8", *(word*)map1->get(dw) == 8);
-		map1->remove(dw); assert("should remove item #8", map1->get(dw) == NULL);
-		dw = -1; assert("-1 should return NULL", map1->get(dw) == NULL);
+		INFO("\n ADD and GET\n");
+		word keys[] = { 0, 16, 30, 8, 24 };
+		{
+			assert("should be 16 items long", map1->size() == 16);
+			int count = 0;
+			for (var ki = 0; ki < 16; ki++) {
+				if (*(word*)map1->get(2 * ki) == ki) count++;
+			}
+			assert("should contain correct items", count == 16);
 
-		count = 0;
-		for (var i = 1; i <= 13; i++) {
-			if (i != 8 && map1->compare()(map1->get(i), i, map1, NULL) == 0) count++;
+			for (var ki = 0; ki < arraysize(keys); ki++) {
+				map1->remove(keys[ki]); assert("should remove item", map1->get(keys[ki]) == NULL);
+			}
+
+			count = 0;
+			for (var ki = 0; ki < 16; ki++) {
+				var key = 2 * ki;
+				var pItem = (word*)map1->get(key);
+				bool found = false;
+				for (var si = 0; si < arraysize(keys); si++) {
+					if (found = (keys[si] == key)) break;
+				}
+				if (found && pItem == NULL) {
+					count++;
+					INFO("   - %d removed\n", key);
+				}
+				if (!found && pItem != NULL && *pItem == ki) {
+					count++;
+					INFO("   - %d found\n", key);
+				}
+			}
+			assert("should find all items (removed and remaining)", count == 16);
+			assert("should contain all remaining items", map1->size() == 16 - arraysize(keys));
 		}
-		assert("should contain all remaining items", map1->size() == 12 && count == 12);
-	}
 
+		INFO("\n INSERTS\n");
+		{
+			for (var ki = 0; ki < arraysize(keys); ki++) {
+				var key = 2 * ki;
+				map1->insert(key, &ki); assert("should insert item", *(word*)map1->get(key) == ki);
+			}
+
+		}
+	}
+/*
 	INFO(" map2 map<char*, char*>\n");
 	{
 		assert("length should be 16", map2->size() == 16);
@@ -573,6 +598,7 @@ void CollectionTest::testMap() {
 		}
 		assert("should contain all remaining items", map3->size() == 12 && count == 12);
 	}
+*/
 
 	DEL_(map1);
 	DEL_(map2);

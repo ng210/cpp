@@ -19,7 +19,8 @@ protected:
 public:
 	PArray(UINT32 capacity = ARRAY_DEFAULT_CAPACITY);
 	//virtual ~PArray();
-	void init(UINT32 capacity, void* items = NULL);
+	void init(UINT32 capacity);
+	void clear();
 
 	// Collection
 	void* add(Key key, void* item = NULL);
