@@ -134,6 +134,7 @@
     <ClInclude Include="basedef.h" />
     <ClInclude Include="base\base-test.h" />
     <ClInclude Include="base\debug.h" />
+    <ClInclude Include="base\handler.h" />
     <ClInclude Include="base\memory.h" />
     <ClInclude Include="base\str.h" />
     <ClInclude Include="base\stream.h" />

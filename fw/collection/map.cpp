@@ -231,7 +231,7 @@ void Map::set(void** item, void* data) {
 	memcpy(item, data, values_->itemSize());
 }
 
-int Map::apply(COLLECTION_ACTION action, ...) {
+int Map::apply(COLLECTION_ACTION* action, ...) {
 	va_list args;
 	va_start(args, action);
 	dword ix = 0;
@@ -256,6 +256,26 @@ void Map::fill(void* value) {
 	}
 }
 
+Collection* Map::map(COLLECTION_ACTION* action, int valueSize) {
+	return map(action, false, valueSize);
+}
+
+Collection* Map::map(COLLECTION_ACTION* action, bool removeNull, ...) {
+	va_list args;
+	va_start(args, removeNull);
+	var valueSize = va_arg(args, int);
+	var map = NEW_(Map, keys_->itemSize(), valueSize, hashing_, compare_);
+	for (var ki = 0; ki < keys_->length(); ki++) {
+		var key = keys_->get(ki);
+		var value = get(key);
+		value = action(value, key, this, args);
+		if (value != NULL || !removeNull) {
+			map->add(key, value);
+		}
+	}
+	va_end(args);
+	return map;
+}
 void* Map::search(Key key, Key& found, COLLECTION_COMPARE* compare) {
 	void* res = NULL;
 	Key pos = -1;

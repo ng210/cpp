@@ -56,6 +56,7 @@ void CollectionTest::testArray() {
 	char* str = NULL;
 	TEST_DATA testData = {};
 
+	#pragma region Push/Get
 	LOG(" *  Array tests\n");
 	INFO(" PUSH and GET\n");
 	Array* arr1 = NEW_(Array, sizeof(WORD), 4);
@@ -88,7 +89,9 @@ void CollectionTest::testArray() {
 	assert("first item (#0) should be 'a00'", strncmp(((TEST_DATA*)arr3->get(0))->name, "a00") == 0);
 	assert("item #8 should be 'a09'", strncmp(((TEST_DATA*)arr3->get(8))->name, "a08") == 0);
 	assert("last item (#15) should be 'a15'", strncmp(((TEST_DATA*)arr3->get(-1))->name, "a15") == 0);
+	#pragma endregion
 
+	#pragma region Insert
 	INFO(" INSERT\n");
 	int dw = 100; arr1->insert(0, &dw);
 	dw = 108; arr1->insert(8, &dw);
@@ -119,7 +122,9 @@ void CollectionTest::testArray() {
 	assert("first item (#0) should be 'i00'", strncmp(((TEST_DATA*)arr3->get(0))->name, "i00") == 0);
 	assert("item #8 should be 'i08'", strncmp(((TEST_DATA*)arr3->get(8))->name, "i08") == 0);
 	assert("last item (#18) should be 'i18'", strncmp(((TEST_DATA*)arr3->get(-1))->name, "i18") == 0);
+	#pragma endregion
 
+	#pragma region Set
 	INFO(" SET\n");
 	INFO(" arr1 array<short int>\n");
 	dw = 508;  arr1->set(8, &dw);
@@ -140,7 +145,9 @@ void CollectionTest::testArray() {
 	assert("item 's08' should be #8", arr2->findIndex("s08", compareStr) == 8);
 	INFO(" arr3 array<TEST_DATA>\n");
 	assert("item 's08' should be #8", arr3->findIndex(&testData, compareObj) == 8);
+	#pragma endregion
 
+	#pragma region Join
 	INFO(" JOIN\n");
 	Array* arr12 = NEW_(Array, sizeof(WORD), 5);
 	Array* arr22 = NEW_(Array, 8*sizeof(char), 5);
@@ -180,7 +187,9 @@ void CollectionTest::testArray() {
 	assert("item #19 should be 'j00'", strncmp(((TEST_DATA*)arr3->get(19))->name, "j00") == 0);
 	assert("last item (#34) should be 'j15'", strncmp(((TEST_DATA*)arr3->get(-1))->name, "j15") == 0);
 	DEL_(arr32);
+	#pragma endregion
 
+	#pragma region Sort/Foreach
 	INFO(" SORT and FOREACH\n");
 	INFO(" arr1 array<short int>\n");
 	arr1->sort(compareWord);
@@ -191,9 +200,11 @@ void CollectionTest::testArray() {
 	INFO(" arr3 array<TEST_DATA>\n");
 	arr3->sort(compareObj);
 	assert("sort should work alphabetically", arr3->apply(checkSortObj) == -1);
+	#pragma endregion
 
 	arr2->compare(compareStr);
 
+	#pragma region Search/BinSearch
 	INFO(" SEARCH\n");
 	Key pos = 0;
 	INFO(" arr1 array<short int>\n");
@@ -216,13 +227,15 @@ void CollectionTest::testArray() {
 	INFO(" arr3 array<TEST_DATA>\n");
 	arr3->binSearch(arr3->get(8), pos, compareObj);
 	assert("item 's08' should be #8", pos == 8);
+	#pragma endregion
 
-	INFO(" REMOVE\n");
-	//assert("TODO", false);
+	//INFO(" REMOVE\n");
+	// TODO!!
 	DEL_(arr2);
 	DEL_(arr1);
 	DEL_(arr3);
 
+	#pragma region Misc
 	INFO(" MISC.\n");
 	arr1 = NEW_(Array, 8 * sizeof(char));
 	arr1->push("red");
@@ -235,7 +248,9 @@ void CollectionTest::testArray() {
 	FREE(str);
 	//ARRAY_FOREACH(arr1, FREE(*(char**)value));
 	DEL_(arr1);
+	#pragma endregion
 
+	#pragma region From
 	INFO(" FROM\n");
 	arr1 = NEW_(Array, 8 * sizeof(char));
 	arr1->push("red");
@@ -262,7 +277,9 @@ void CollectionTest::testArray() {
 	assert("arrays should match by content not by reference", isMatch);
 	DEL_(arr1);
 	DEL_(arr2);
+	#pragma endregion
 
+	#pragma region Map
 	INFO(" MAP\n");
 	arr1 = NEW_(Array, 8);
 	arr1->push("red");
@@ -270,12 +287,21 @@ void CollectionTest::testArray() {
 	arr1->push("green");
 	arr1->push("black");
 	arr1->push("white");
-	arr2 = arr1->map(
+	arr2 = (Array*)arr1->map(
 		[](COLLECTION_ARGUMENTS) {
 			var item = fmw::strdup((char*)value);
 			item[0] &= 255 - 32;
 			return (void*)item;
 		},
+		false,
+		arr1->itemSize()
+	);
+	arr3 = (Array*)arr2->map(
+		[](COLLECTION_ARGUMENTS) {
+			var str = (char*)value;
+			return (void*)(fmw::strlen(str) > 4 ? fmw::strdup((char*)value) : NULL);
+		},
+		true,
 		arr1->itemSize()
 	);
 
@@ -289,8 +315,20 @@ void CollectionTest::testArray() {
 	assert("array2 should contain items with initial capital", isMatch);
 	arr2->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
 	printf("\n");
+
+	isMatch =
+		arr3->length() == 3 &&
+		fmw::strncmp((char*)arr3->get(0), "Green", 5) == 0 &&
+		fmw::strncmp((char*)arr3->get(1), "Black", 5) == 0 &&
+		fmw::strncmp((char*)arr3->get(2), "White", 5) == 0;
+
+	assert("array3 should contain items longer than 4 characters", isMatch);
+	arr3->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
+	printf("\n");
+
 	DEL_(arr1);
 	DEL_(arr2);
+	DEL_(arr3);
 
 	INFO(" SPLICE\n");
 	arr1 = NEW_(Array, 8 * sizeof(char));
@@ -305,7 +343,6 @@ void CollectionTest::testArray() {
 		fmw::strncmp((char*)arr1->get(0), "red", 3) == 0 &&
 		fmw::strncmp((char*)arr1->get(1), "blue", 4) == 0 &&
 		fmw::strncmp((char*)arr1->get(2), "white", 5) == 0 &&
-
 		fmw::strncmp((char*)arr2->get(0), "green", 5) == 0 &&
 		fmw::strncmp((char*)arr2->get(1), "black", 5) == 0;
 
@@ -316,6 +353,7 @@ void CollectionTest::testArray() {
 	printf("\n");
 	DEL_(arr1);
 	DEL_(arr2);
+	#pragma endregion
 }
 void CollectionTest::testPArray() {
 	char* str = NULL;
@@ -441,13 +479,19 @@ void CollectionTest::testPArray() {
 	pArr1->push("green");
 	pArr1->push("black");
 	pArr1->push("white");
-	pArr2 = pArr1->map(
+	pArr2 = (PArray*)pArr1->map(
 		[](COLLECTION_ARGUMENTS) {
 			var item = fmw::strdup((char*)value);
-			item[0] &= 255-32;
+			item[0] &= 255 - 32;
 			return (void*)item;
-		}
-	);
+		},
+		pArr1->itemSize());
+	var pArr3 = (PArray*)pArr2->map(
+		[](COLLECTION_ARGUMENTS) {
+			var str = (char*)value;
+			return (void*)(fmw::strlen(str) > 4 ? fmw::strdup((char*)value) : NULL);
+		},
+		true);
 
 	isMatch =
 		fmw::strncmp((char*)pArr2->get(0), "Red", 3) == 0 &&
@@ -459,9 +503,22 @@ void CollectionTest::testPArray() {
 	assert("array2 should contain items with initial capital", isMatch);
 	pArr2->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
 	printf("\n");
+
+	isMatch =
+		pArr3->length() == 3 &&
+		fmw::strncmp((char*)pArr3->get(0), "Green", 5) == 0 &&
+		fmw::strncmp((char*)pArr3->get(1), "Black", 5) == 0 &&
+		fmw::strncmp((char*)pArr3->get(2), "White", 5) == 0;
+
+	assert("array3 should contain items longer than 4 characters", isMatch);
+	pArr3->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
+	printf("\n");
+
 	DEL_(pArr1);
 	ARRAY_FOREACH(pArr2, FREE(value));
 	DEL_(pArr2);
+	ARRAY_FOREACH(pArr3, FREE(value));
+	DEL_(pArr3);
 
 	INFO(" SPLICE\n");
 	pArr1 = NEW_(PArray, 8);
@@ -476,7 +533,6 @@ void CollectionTest::testPArray() {
 		fmw::strncmp((char*)pArr1->get(0), "red", 3) == 0 &&
 		fmw::strncmp((char*)pArr1->get(1), "blue", 4) == 0 &&
 		fmw::strncmp((char*)pArr1->get(2), "white", 5) == 0 &&
-
 		fmw::strncmp((char*)pArr2->get(0), "green", 5) == 0 &&
 		fmw::strncmp((char*)pArr2->get(1), "black", 5) == 0;
 
@@ -485,6 +541,7 @@ void CollectionTest::testPArray() {
 	printf("\n");
 	pArr2->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
 	printf("\n");
+
 	DEL_(pArr1);
 	DEL_(pArr2);
 }
@@ -665,8 +722,8 @@ void CollectionTest::testTree() {
 }
 
 void CollectionTest::runAll(int& totalPassed, int& totalFailed) {
-	//test("Array tests", (TestMethod)&CollectionTest::testArray);
-	//test("PArray tests", (TestMethod)&CollectionTest::testPArray);
+	test("Array tests", (TestMethod)&CollectionTest::testArray);
+	test("PArray tests", (TestMethod)&CollectionTest::testPArray);
 	test("Map tests", (TestMethod)&CollectionTest::testMap);
 	//test("Tree tests", (TestMethod)&CollectionTest::testTree);
 	totalPassed += totalPassed_;

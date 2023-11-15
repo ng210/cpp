@@ -121,6 +121,43 @@ void Array::fill(void* value) {
 		dst += itemSize_;
 	}
 }
+Collection* Array::map(COLLECTION_ACTION* action, int itemSize) {
+	return map(action, false, itemSize);
+}
+
+Collection* Array::map(COLLECTION_ACTION* action, bool removeNull, ...) {
+	va_list args;
+	va_start(args, removeNull);
+	var itemSize = va_arg(args, int);
+	var arr = NEW_(Array, itemSize, length_);
+	for (var i = 0; i < length_; i++) {
+		var value = action(&data_[i], i, this, args);
+		if (value != NULL) {
+			arr->push(value);
+			FREE(value);
+		}
+		else if (!removeNull) {
+			arr->push(value);
+		}
+	}
+	va_end(args);
+	return arr;
+}
+void* Array::search(Key key, Key& found, COLLECTION_COMPARE* compare) {
+	void* value = NULL;
+	if (compare == NULL) compare = compare_;
+	var item = (byte*)data_;
+	for (int i = 0; i < length_; i++) {
+		int res = compare(item, key, this, NULL);
+		if (res == 0) {
+			found.i = i;
+			value = item;
+			break;
+		}
+		item += itemSize_;
+	}
+	return value;
+}
 #pragma endregion
 
 int Array::join(ArrayBase* array) {
@@ -163,48 +200,7 @@ void Array::sort_(int min, int max, COLLECTION_COMPARE* compare) {
 		sort_(l, max, compare);
 	}
 }
-//void* Array::binSearch_(void* key, int& ix, COLLECTIONCALLBACK* compare) {
-//	UINT32 min = 0, max = length_;
-//	// the search range gets halved each iteration
-//	while (min < max) {
-//		// mid = min + (max - min)/2 = min/2 + max/2
-//		UINT32 mid = (min + max) >> 1;
-//		// compare item with middle item
-//		void* item = getAt(mid);
-//		int i = compare(item, mid, this, key);
-//		if (i == 0) {
-//			// on equation the middle item was the searched item
-//			ix = mid;
-//			return item;
-//		}
-//		if (i > 0) {
-//			// item was less, continue with the first half-range: [min, mid]
-//			max = mid;
-//		}
-//		else {
-//			// item was greater, continue with the second half-range: [mid+1, max]
-//			min = mid + 1;
-//		}
-//	}
-//	// item not found, index marks the place where the item should be.
-//	ix = max;
-//	return NULL;
-//}
-void* Array::search(Key key, Key& found, COLLECTION_COMPARE* compare) {
-	void* value = NULL;
-	if (compare == NULL) compare = compare_;
-	var item = (byte*)data_;
-	for (int i = 0; i < length_; i++) {
-		int res = compare(item, key, this, NULL);
-		if (res == 0) {
-			found.i = i;
-			value = item;
-			break;
-		}
-		item += itemSize_;
-	}
-	return value;
-}
+
 char* Array::str_join(const char* filler) {
 	char** parts = MALLOC(char*, (size_t)length_ + 1);
 	for (int i = 0; i < (int)length_; i++) {
@@ -232,16 +228,6 @@ Array* Array::splice(Key pos, int count) {
 		// decrease capacity
 		capacity_ -= extendSize_;
 		data_ = (void**)REALLOC(data_, char, (size_t)capacity_ * itemSize_);
-	}
-	return arr;
-}
-
-Array* Array::map(COLLECTION_ACTION* action, int itemSize) {
-	var arr = NEW_(Array, itemSize, length_);
-	for (var i = 0; i < length_; i++) {
-		var value = action(&data_[i], i, this, NULL);
-		arr->push(value);
-		FREE(value);
 	}
 	return arr;
 }

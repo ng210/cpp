@@ -50,6 +50,7 @@ public:
 
 	virtual int apply(COLLECTION_ACTION, ...) = 0;
 	virtual void fill(void* value);
+	virtual Collection* map(COLLECTION_ACTION* action, bool removeNull = false, ...) = 0;
 	virtual void* search(Key key, Key& found, COLLECTION_COMPARE* compare = NULL);
 
 	virtual void from(Collection* collection);

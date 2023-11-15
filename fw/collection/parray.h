@@ -32,14 +32,16 @@ public:
 
 	int apply(COLLECTION_ACTION*, ...);
 	void fill(void* value);
+	Collection* map(COLLECTION_ACTION action, bool removeNull, ...);
+	Collection* map(COLLECTION_ACTION* action);
+	void* search(Key key, Key& ix, COLLECTION_COMPARE* compare = NULL);
 
 	// ArrayBase
 	int join(ArrayBase* array);
-	void* search(Key key, Key& ix, COLLECTION_COMPARE* compare = NULL);
+	
 	char* str_join(const char* filler);
 	PArray* splice(Key pos, int count);
-	PArray* map(COLLECTION_ACTION* action);
-
+	
 	static PArray* str_split(const char* src, const char* str);
 };
 

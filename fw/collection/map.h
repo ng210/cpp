@@ -49,6 +49,8 @@ public:
 
 	int apply(COLLECTION_ACTION* action, ...);
 	void fill(void* value);
+	Collection* map(COLLECTION_ACTION* action, bool removeNull, ...);
+	Collection* map(COLLECTION_ACTION* action, int valueSize);
 	void* search(Key key, Key& found, COLLECTION_COMPARE* compare = NULL);
 
 	static HashingFunction hashingInt;

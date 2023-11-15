@@ -186,12 +186,21 @@ PArray* PArray::splice(Key pos, int count) {
 	return arr;
 }
 
-PArray* PArray::map(COLLECTION_ACTION* action) {
+Collection* PArray::map(COLLECTION_ACTION* action) {
+	return map(action, false);
+}
+
+Collection* PArray::map(COLLECTION_ACTION* action, bool removeNull, ...) {
+	va_list args;
+	va_start(args, removeNull);
 	var arr = NEW_(PArray, length_);
 	for (var i = 0; i < length_; i++) {
-		var value = action(data_[i], i, this, NULL);
-		arr->push(value);
+		var value = action(data_[i], i, this, args);
+		if (value != NULL || !removeNull) {
+			arr->push(value);
+		}
 	}
+	va_end(args);
 	return arr;
 }
 

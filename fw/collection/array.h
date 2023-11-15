@@ -34,13 +34,14 @@ public:
 
 	int apply(COLLECTION_ACTION*, ...);
 	void fill(void* value);
+	Collection* map(COLLECTION_ACTION* action, bool removeNull, ...);
+	Collection* map(COLLECTION_ACTION* action, int itemSize);
 	void* search(Key key, Key& found, COLLECTION_COMPARE* compare = NULL);
 
 	// ArrayBase
 	int join(ArrayBase* array);
 	char* str_join(const char* filler);
 	Array* splice(Key pos, int count);
-	Array* map(COLLECTION_ACTION* action, int itemSize);
 };
 
 NS_FW_BASE_END

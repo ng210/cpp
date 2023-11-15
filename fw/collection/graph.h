@@ -47,6 +47,7 @@ public:
 
 	int apply(COLLECTION_ACTION, ...);
 	void fill(void* value);
+	Collection* map(COLLECTION_ACTION action, bool removeNull, ...);
 	void* search(Key key, Key& found, COLLECTION_COMPARE* compare = NULL);
 
 	Vertex* addVertex(Vertex* parent, void* vertexData, void* edgeData);

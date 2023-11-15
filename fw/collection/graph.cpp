@@ -4,6 +4,7 @@
 #include "base/string.h"
 #include "collection/array.h"
 #include "collection/graph.h"
+#include "collection/map.h"
 
 NS_FW_BASE_USE
 
@@ -100,7 +101,7 @@ void Graph::set(void** oldItem, void* newItem) {
 	vertex->setData(newItem);
 }
 
-int Graph::apply(COLLECTION_ACTION action, ...) {
+int Graph::apply(COLLECTION_ACTION* action, ...) {
 	va_list args;
 	va_start(args, action);
 	var res = -1;
@@ -117,6 +118,30 @@ void Graph::fill(void* value) {
 	for (var i = 0; i < vertices_.length(); i++) {
 		vertices_.set(i, value);
 	}
+}
+Collection* Graph::map(COLLECTION_ACTION* action, bool removeNull, ...) {
+	va_list args;
+	va_start(args, removeNull);
+	var graph = NEW_(Graph);
+	Map vertexMap(sizeof(int), sizeof(Vertex*), Map::hashingInt, Collection::compareInt);
+	Key ix = -1;
+	for (var vi = 0; vi < vertices_.length(); vi++) {
+		var vertex = (Vertex*)vertices_.data()[vi];
+		var value = action(vertex, ix, this, args);
+		if (value != NULL || !removeNull) {
+			var copy = graph->createVertex(vertex->data(), vertex->parent());
+			vertexMap.add(vertex->id(), copy);
+			var edge = (Edge*)vertex->edges().search(vertex->parent(), ix, [](COLLECTION_ARGUMENTS) { return (int)((size_t)((Edge*)value)->from() - (size_t)key.p); });
+			if (edge) {
+				var from = (Vertex*)vertexMap.get(edge->from()->id());
+				if (from != NULL) {
+					graph->addEdge(from, copy, edge->data());
+				}
+			}
+		}
+	}
+	va_end(args);
+	return graph;
 }
 void* Graph::search(Key key, Key& found, COLLECTION_COMPARE* compare) {
 	if (compare == NULL) compare = compare_;
@@ -137,6 +162,7 @@ Vertex* Graph::addVertex(Vertex* parent, void* vertexData, void* edgeData) {
 
 void Graph::removeVertex(Vertex* vertex) {
 	var id = vertex->id();
+	// todo: fix this, findIndex(vertex) instead of id!
 	if (vertices_.get(id) == vertex && !deleteVertexHandler(this, vertex)) {
 		vertices_.remove(id);
 	}
@@ -159,7 +185,7 @@ void Graph::removeEdge(Edge* edge) {
 	}
 }
 
-void Graph::DFS(Vertex* start, VVERTEXHANDLER preHandler, VVERTEXHANDLER postHandler, VEDGEHANDLER edgeHandler, ...) {
+void Graph::DFS(Vertex* start, VVERTEXHANDLER* preHandler, VVERTEXHANDLER* postHandler, VEDGEHANDLER* edgeHandler, ...) {
 	va_list args;
 	va_start(args, edgeHandler);
 	// reset flags
@@ -209,7 +235,7 @@ void Graph::DFS(Vertex* start, VVERTEXHANDLER preHandler, VVERTEXHANDLER postHan
 	va_end(args);
 }
 
-void Graph::BFS(Vertex* start, VVERTEXHANDLER preHandler, VVERTEXHANDLER postHandler, VEDGEHANDLER edgeHandler, ...) {
+void Graph::BFS(Vertex* start, VVERTEXHANDLER* preHandler, VVERTEXHANDLER* postHandler, VEDGEHANDLER* edgeHandler, ...) {
 	va_list args;
 	va_start(args, edgeHandler);
 	// reset flags
@@ -255,7 +281,7 @@ void Graph::BFS(Vertex* start, VVERTEXHANDLER preHandler, VVERTEXHANDLER postHan
 	va_end(args);
 }
 
-PArray* Graph::findPath(Vertex* start, Vertex* end, EDGEHANDLER checkEdge) {
+PArray* Graph::findPath(Vertex* start, Vertex* end, EDGEHANDLER* checkEdge) {
 	// distance(start, v)
 	var links = NEW_(Array, vertices_.length());
 	links->fill(NULL);
@@ -325,7 +351,7 @@ int Graph::defEdgeCompare(COLLECTION_ARGUMENTS) {
 	return (int)((size_t)edge->data() - (size_t)key.p);
 }
 
-Graph* Graph::createComplete(int vertexCount, bool isDirected, VERTEXHANDLER vertexHandler, EDGEHANDLER edgeHandler) {
+Graph* Graph::createComplete(int vertexCount, bool isDirected, VERTEXHANDLER* vertexHandler, EDGEHANDLER* edgeHandler) {
 	var graph = NEW_(Graph);
 	// add vertices
 	var digits = (int)ceil(log10(vertexCount));
