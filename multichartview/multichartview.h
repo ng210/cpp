@@ -72,6 +72,7 @@ protected:
 public:
 	MultiChartView(Window* parent, size_t ctrlId);
 	virtual ~MultiChartView();
+	void create(Window* parent, char* name);
 
 	void setDataSource(DataSeries* source, int channelCount, CHARTCHANNELINFO* channels);
 	void select();

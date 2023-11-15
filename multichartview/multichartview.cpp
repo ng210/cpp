@@ -41,7 +41,13 @@ static DWORD mixColors(DWORD color1, DWORD color2, float mix) {
 	return col;
 }
 
-MultiChartView::MultiChartView(Window* parent, size_t ctrlId) : Ctrl(parent, ctrlId), selection_(sizeof(int)) {
+MultiChartView::MultiChartView(Window* parent, size_t ctrlId) : selection_(sizeof(int)) {
+	if (MultiChartView::wndClass_.atom == 0) {
+		MultiChartView::wndClass_.atom = registerClass("MultiChartViewCtrl", NULL);
+	}
+
+	selection_.init(sizeof(int), 4);
+
 	dataSeries_ = NULL;
 	offsetX_ = 0;
 	offsetY_ = 0;
@@ -57,25 +63,23 @@ MultiChartView::MultiChartView(Window* parent, size_t ctrlId) : Ctrl(parent, ctr
 		false			// canDrawWithoutSelection
 	};
 
-	// register class
-	WNDCLASSEX* wndClassEx = MultiChartView::class_ == 0 ? &MultiChartView::wndClassEx_ : NULL;
-	int style = WS_CHILD | WS_VISIBLE | WS_HSCROLL;
-	CREATESTRUCT createStruct = {
-		NULL,							// LPVOID      lpCreateParams;
-		parent->hInstance(),			// HINSTANCE   hInstance;
-		(HMENU)ctrlId,					// HMENU       hMenu;
-		parent->hWnd(),					// HWND        hwndParent;
-		CW_USEDEFAULT,					// int         cy;
-		CW_USEDEFAULT,					// int         cx;
-		CW_USEDEFAULT,					// int         y;
-		CW_USEDEFAULT,					// int         x;
-		style,							// LONG        style;
-		"MultiChartView",				// LPCSTR      lpszName;
-		"MultiChartViewClass",			// LPCSTR      lpszClass;
-		0								// DWORD       dwExStyle;
-	};
-	// create control
-	hWnd_ = create(&createStruct, parent, wndClassEx);
+	//// register class
+	//WNDCLASSEX* wndClassEx = MultiChartView::class_ == 0 ? &MultiChartView::wndClassEx_ : NULL;
+	//int style = WS_CHILD | WS_VISIBLE | WS_HSCROLL;
+	//CREATESTRUCT createStruct = {
+	//	NULL,							// LPVOID      lpCreateParams;
+	//	parent->hInstance(),			// HINSTANCE   hInstance;
+	//	(HMENU)ctrlId,					// HMENU       hMenu;
+	//	parent->hWnd(),					// HWND        hwndParent;
+	//	CW_USEDEFAULT,					// int         cy;
+	//	CW_USEDEFAULT,					// int         cx;
+	//	CW_USEDEFAULT,					// int         y;
+	//	CW_USEDEFAULT,					// int         x;
+	//	style,							// LONG        style;
+	//	"MultiChartView",				// LPCSTR      lpszName;
+	//	"MultiChartViewClass",			// LPCSTR      lpszClass;
+	//	0								// DWORD       dwExStyle;
+	//};
 
 	isSelecting_ = 0;
 	hSelectionBitmap_ = NULL;
@@ -84,8 +88,6 @@ MultiChartView::MultiChartView(Window* parent, size_t ctrlId) : Ctrl(parent, ctr
 
 	hdc_ = NULL;
 	hBitmap_ = NULL;
-
-	update();
 }
 
 MultiChartView::~MultiChartView() {
@@ -107,6 +109,11 @@ MultiChartView::~MultiChartView() {
 	DeleteObject(hBackgroundBrush_);
 	DeleteObject(hGridBrush_);
 	DEL_(toolbar_);
+}
+
+void MultiChartView::create(Window* parent, char* name) {
+	Ctrl::create(MultiChartView::wndClass_, parent, name);
+	update();
 }
 
 void MultiChartView::setDataSource(DataSeries* source, int channelCount, CHARTCHANNELINFO* channels) {
