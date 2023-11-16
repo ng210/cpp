@@ -106,9 +106,9 @@ void ModuleDevice::makeCommandImpl(int command, Stream* stream, va_list args) {
 		break;
 	}
 }
-int ModuleDevice::getCommandSize(byte cmd, byte* args) {
+int ModuleDevice::getCommandSize(byte* cmd) {
 	var length = 1;
-	switch (cmd) {
+	switch (*cmd) {
 	case ModuleCommands::CmdSetUint8:
 	case ModuleCommands::CmdSetFloat8:
 		length += sizeof(byte);

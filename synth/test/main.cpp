@@ -2550,30 +2550,8 @@ using namespace PLAYER;
 
 int _main(NS_FW_BASE::Map* args) {
 #ifdef _DEBUG
-    Debug::initialize(DEBUG_UNICODE | DEBUG_MEMORY);
+    Debug::initialize(/*DEBUG_MEMORY*/);
 #endif
-/*
-    var j = 10;
-    for (var i = 199; i < 600;)
-    {
-        var isPrime = true;
-        //printf("%d ", i);
-        for (var k = 2; k < sqrt(i); k++) {
-            if ((isPrime = i % k) == 0) {
-                //printf("%d", k);
-                break;
-            }
-        }
-        if (isPrime) {
-            printf("%d\n", i);
-            i += j;
-            j += 20;
-        }
-        else {
-            i++;
-        }
-    }
-*/
 
     int totalPassed = 0, totalFailed = 0;
 

@@ -212,7 +212,6 @@
     <ClInclude Include="device\mixer-device.h" />
     <ClInclude Include="device\synth-device.h" />
     <ClInclude Include="device\synth2-device.h" />
-    <ClInclude Include="handler.h" />
     <ClInclude Include="module\bass.h" />
     <ClInclude Include="module\drums.h" />
     <ClInclude Include="module\module.h" />

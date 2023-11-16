@@ -43,7 +43,7 @@ namespace SYNTH {
 
 #ifdef PLAYER_EDIT_MODE
 		void makeCommandImpl(int command, Stream* stream, va_list args);
-		int getCommandSize(byte cmd, byte* args);
+		int getCommandSize(byte* cmd);
 		int writeToStream(Stream* stream);
 #endif
 		static COLLECTION_COMPARE compareToModule;

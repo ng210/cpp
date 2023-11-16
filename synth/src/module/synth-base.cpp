@@ -70,6 +70,11 @@ void SynthBase::voiceCount(int count) {
             (this->*setupVoice)(voices_[i]);
         }
     }
+    else {
+        for (var i = count; i < oldCount; i++) {
+            (this->*freeVoice)(voices_[i]);
+        }
+    }
     voiceCount_ = count;
 }
 

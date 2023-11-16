@@ -554,7 +554,7 @@ void SynthTest::testSynth2Device() {
     player_->initialize();
     // create device
     var synth2Device = (SynthDevice*)player_->addDevice(synthAdapter_, DeviceSynth2, NULL);
-    synth2Device->synth()->voiceCount(1);
+    synth2Device->synth()->voiceCount(4);
     assert("Should create a device", synth2Device != NULL);
     synth2Device->setProgram(0);
     // create sequences
@@ -923,12 +923,12 @@ void SynthTest::runAll(int& totalPassed, int& totalFailed) {
     totalFailed_ = 0;
     
     //testEnvelopes();
-    //testBass();
-    //testBassDevice();
-    //testSynth1();
-    //testSynth1Device();
-    //testSynth2();
-    //testSynth2Device();
+    testBass();
+    testBassDevice();
+    testSynth1();
+    testSynth1Device();
+    testSynth2();
+    testSynth2Device();
     testDrums();
     testDrumsDevice();
     testMixer();

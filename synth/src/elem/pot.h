@@ -2,7 +2,7 @@
 #define __POT_H
 
 #include "basedef.h"
-#include "synth/src/handler.h"
+#include "base/handler.h"
 
 NS_FW_BASE_USE
 namespace SYNTH {
