@@ -43,7 +43,7 @@ namespace PLAYER {
 		//virtual byte* makeCommand(byte command, ...);
 		virtual Stream* makeCommand(byte command, ...);
 		virtual void makeCommandImpl(int command, Stream* stream, va_list args) = 0;
-		virtual int getCommandSize(byte cmd, byte* args) = 0;
+		virtual int getCommandSize(byte* cmd) = 0;
 		virtual int writeToStream(Stream* stream);
 		virtual Sequence* createDefaultSequence();
 #endif

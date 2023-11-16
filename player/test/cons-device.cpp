@@ -68,11 +68,11 @@ void ConsDevice::makeCommandImpl(int command, Stream* stream, va_list args) {
         break;
     }
 }
-int ConsDevice::getCommandSize(byte cmd, byte* args) {
+int ConsDevice::getCommandSize(byte* cmd) {
     var length = 1;
-    switch (cmd) {
+    switch (*cmd) {
     case CmdSetText:
-        length += fmw::strlen((char*)args) + 1;
+        length += fmw::strlen((char*)++cmd) + 1;
         break;
     case CmdSetInk:
         length++;

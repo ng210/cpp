@@ -27,7 +27,7 @@
     <ClInclude Include="player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="frames.h">
+    <ClInclude Include="frame-list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="player-device.h">
@@ -68,7 +68,7 @@
     <ClCompile Include="player-adapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="frames.cpp">
+    <ClCompile Include="frame-list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

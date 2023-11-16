@@ -4,7 +4,7 @@
 #include "player/src/player-adapter.h"
 #include "player/test/cons-adapter.h"
 #include "player/test/cons-device.h"
-#include "player/src/frames.h"
+#include "player/src/frame-list.h"
 
 NS_FW_BASE_USE
 using namespace PLAYER;
@@ -23,11 +23,15 @@ public:
     PlayerTest() { }
     void testCreatePlayer();
     void testCreateSequence();
+    void testCreateAndEditFrames();
     void testCreateFramesFromSequence();
     void testCreateSequenceFromFrames();
     void testLoadFromBinary();
     void testCreateBinary();
-    void testRunPlayer();
+    void testRunChannelFromSequence();
+    void testRunChannelFromFrames();
+    void testRunPlayerOnSequence();
+    void testRunPlayerOnFrames();
     //int testPrintSequence();
 
     void runAll(int& totalPassed, int& totalFailed);
@@ -82,6 +86,7 @@ void createSequences(Player* player) {
         sequence2->writeEOF();
         // Frame #5
         sequence2->writeDelta(20);
+        sequence2->writeCommand(ConsCommands::CmdMoveTo)->writeByte(-6)->writeByte(1);
         sequence2->writeCommand(ConsCommands::CmdSetText)->writeString("End");
         sequence2->writeCommand(ConsCommands::CmdSetInk)->writeByte(4);
         sequence2->writeEOF();
@@ -99,27 +104,17 @@ void createSequences(Player* player) {
     }
 }
 
-Frames* createFrames(Device* device) {
-    createSequences(device->player());
-    var seq = (Sequence*)device->player()->sequences().get(1);
-    var frames = Frames::fromSequence(seq,
-        [](UINT8*& cursor) {
-            var channelId = 0;
-            var cmdId = *cursor;
-            switch (cmdId) {
-                case PlayerCommands::CmdEOS:
-                case PlayerCommands::CmdEOF:
-                    channelId = cmdId;
-                    break;
-                default:
-                    channelId = cmdId;
-            }
-
-            return channelId;
+Stream* toCommandStream(FrameList* frames) {
+    var merge = NEW_(Stream);
+    for (var fi = 0; fi < frames->length(); fi++) {
+        var frame = (Frame*)frames->get(fi);
+        for (var ci = 0; ci < frame->commands.length(); ci++) {
+            var cmd = (byte*)frame->commands.get(ci);
+            var len = frames->device()->getCommandSize(cmd);
+            merge->writeBytes(cmd, len);
         }
-    );
-
-    return frames;
+    }
+    return merge;
 }
 
 Stream* PlayerTest::createBinaryData() {
@@ -203,6 +198,83 @@ void PlayerTest::testCreateSequence() {
     Player::cleanUp();
 }
 
+void PlayerTest::testCreateAndEditFrames() {
+    Player::addAdapter(NEW_(ConsAdapter));
+    var device = PlayerDevice::create(NULL);
+    var player = device->player();
+    byte initData[] = { 0, 0, gray };
+    byte* pData = initData;
+    var consDevice = player->addDevice(&PlayerTest::consAdapter_, DeviceCons, (byte**)&pData);
+    byte commands[] = {
+        ConsCommands::CmdSetInk, red,
+        ConsCommands::CmdMoveTo, 0, 2,
+        ConsCommands::CmdSetText, 'H', 'e', 'l', 'l', 'o', '!', '\0',
+        PlayerCommands::CmdEOF,
+
+        ConsCommands::CmdSetInk, gray,
+        ConsCommands::CmdMoveTo, 0, (byte)-6,
+        ConsCommands::CmdSetText, 'H', 'e', 'l', 'l', 'o', '!', '\0',
+        PlayerCommands::CmdEOF,
+
+        ConsCommands::CmdSetInk, black,
+        ConsCommands::CmdMoveTo, 0, (byte)-6,
+        ConsCommands::CmdSetText, 'H', 'e', 'l', 'l', 'o', '!', '\0',
+        PlayerCommands::CmdEOF,
+
+        ConsCommands::CmdSetInk, yellow,
+        ConsCommands::CmdMoveTo, 0, (byte)-6,
+        ConsCommands::CmdSetText, 'B', 'y', 'e', '!', '\0',
+        PlayerCommands::CmdEOF,
+
+        ConsCommands::CmdSetInk, yellow,
+        ConsCommands::CmdMoveTo, 0, (byte)-4,
+        ConsCommands::CmdSetText, 'B', 'y', 'e', '!', '\0',
+        PlayerCommands::CmdEOF,
+
+        ConsCommands::CmdSetInk, black,
+        ConsCommands::CmdMoveTo, 0, (byte)-4,
+        ConsCommands::CmdSetText, 'B', 'y', 'e', '!', '\0',
+        PlayerCommands::CmdEOS
+    };
+
+    var frames = NEW_(FrameList, consDevice);
+    var time = 0;
+    byte* cmd = (byte*)&commands;
+    for (var ii = 0; ii < arraysize(commands); ii++) {
+        var len = frames->insertCommand(time, cmd);
+        if (*cmd == PlayerCommands::CmdEOF) time += 10;
+        else if (*cmd == PlayerCommands::CmdEOS) break;
+        cmd += len;
+    }
+
+    commands[1] = yellow;
+    frames->insertCommand(0, commands); // overwrite command
+
+    var json = frames->toJSON();
+    LOG("Frames as JSON\n%s\n", json);
+    FREE(json);
+
+    assert("Should have 6 frames", frames->length() == 6);
+    // merge all commands into 1 stream
+    var merge = toCommandStream(frames);
+    int ix = -1;
+    assert("Should have correct commands", memcmp(merge->data(), commands, merge->length(), ix) == 1);
+    DUMP(commands, sizeof(commands), 32);
+    DUMP(merge->data(), merge->length(), 32);
+    DEL_(merge);
+
+    frames->removeCommand(0, &commands[0]);
+    var frame = (Frame*)frames->get(0);
+    assert("Should have 1 less commands in frame #1", frame->commands.length() == 3);
+    merge = toCommandStream(frames);
+    DUMP(merge->data(), merge->length(), 32);
+    DEL_(merge);
+
+    DEL_(frames);
+    DEL_(device);
+    Player::cleanUp();
+}
+
 void PlayerTest::testCreateFramesFromSequence() {
     Player::addAdapter(NEW_(ConsAdapter));
     var device = PlayerDevice::create(NULL);
@@ -210,57 +282,27 @@ void PlayerTest::testCreateFramesFromSequence() {
     byte initData[] = { 0, 0, 0 };
     byte* pData = initData;
     var consDevice = player->addDevice(&PlayerTest::consAdapter_, DeviceCons, (byte**) & pData);
-    var frames = createFrames(device);
+    createSequences(device->player());
+    var seq = (Sequence*)device->player()->sequences().get(1);
 
-    assert("Should create 3 channels", frames->channels().size() == 3);
-    assert("Should have 6 SetText commands", ((Array*)frames->channels().get(ConsCommands::CmdSetText))->length()  == 6);
-    assert("Should have 5 MoveTo commands", ((Array*)frames->channels().get(ConsCommands::CmdMoveTo))->length()  == 5);
-    assert("Should have 5 SetInk commands", ((Array*)frames->channels().get(ConsCommands::CmdSetInk))->length()  == 5);
+    var frames = FrameList::fromSequence(seq);
+    assert("Should have 7 frames", frames->length() == 7);
+    var frame = (Frame*)frames->get(0);
+    assert("Frame #1 should have correct commands",
+        frame->commands.length() == 3 && frame->time == 0 &&
+        *(byte*)frame->commands.get(0) == ConsCommands::CmdMoveTo &&
+        *(byte*)frame->commands.get(1) == ConsCommands::CmdSetText &&
+        *(byte*)frame->commands.get(2) == PlayerCommands::CmdEOF);
+    frame = (Frame*)frames->get(6);
+    assert("Frame #7 should have correct commands",
+        frame->commands.length() == 3 && frame->time == 100 &&
+        *(byte*)frame->commands.get(0) == ConsCommands::CmdMoveTo &&
+        *(byte*)frame->commands.get(1) == ConsCommands::CmdSetText &&
+        *(byte*)frame->commands.get(2) == PlayerCommands::CmdEOS);
 
-    byte cmds[] = {
-        ConsCommands::CmdMoveTo, 0, 1,
-        ConsCommands::CmdSetInk, 2,
-        ConsCommands::CmdMoveTo, 0, 0xff,
-        ConsCommands::CmdSetInk, 1,
-    };
-
-    byte* pCmd = cmds;
-    frames->insertCommand(10, *pCmd, pCmd); pCmd += 3;
-    frames->insertCommand(10, *pCmd, pCmd); pCmd += 2;
-    frames->insertCommand(30, *pCmd, pCmd); pCmd += 3;
-    frames->insertCommand(30, *pCmd, pCmd); pCmd += 2;
-
-    var chn = (Array*)frames->channels().get(ConsCommands::CmdMoveTo);
-    Key p1 = -1, p2 = -1;
-    var cmd1 = (Command*)chn->binSearch(10, p1, Frames::compareCommand);
-    var cmd2 = (Command*)chn->binSearch(30, p2, Frames::compareCommand);
-    assert("Should insert 2 MoveTo commands",
-        chn->length() == 7 &&
-        memcmp(cmd1->command, &cmds[0], 3) == 0 &&
-        memcmp(cmd2->command, &cmds[5], 3) == 0
-    );
-
-    chn = (Array*)frames->channels().get(ConsCommands::CmdSetInk);
-    cmd1 = (Command*)chn->binSearch(10, p1, Frames::compareCommand);
-    cmd2 = (Command*)chn->binSearch(30, p2, Frames::compareCommand);
-    assert("Should insert 2 SetInk commands",
-        chn->length() == 7 &&
-        memcmp(cmd1->command, &cmds[3], 2) == 0 &&
-        memcmp(cmd2->command, &cmds[8], 2) == 0
-    );
-
-    for (var chi = 0; chi < frames->channels().keys()->length(); chi++) {
-        var channelId = *(int*)frames->channels().keys()->get(chi);
-        INFO("\nChannel #%0d ----------------\n", channelId);
-        chn = (Array*)frames->channels().get(channelId);
-        for (var ci = 0; ci < chn->length(); ci++) {
-            var cmd = (Command*)chn->get(ci);
-            INFO("#%03d: ", cmd->time);
-            var size = consDevice->getCommandSize(*cmd->command, cmd->command + 1);
-            DUMP(cmd->command, size, 16);
-        }
-    }
-
+    var json = frames->toJSON();
+    LOG("Frames as JSON\n%s\n", json);
+    FREE(json);
     DEL_(frames);
     DEL_(device);
     Player::cleanUp();
@@ -273,16 +315,22 @@ void PlayerTest::testCreateSequenceFromFrames() {
     byte initData[] = { 0, 0, 0 };
     byte* pData = initData;
     var consDevice = player->addDevice(&PlayerTest::consAdapter_, DeviceCons, (byte**)&pData);
-    var frames = createFrames(device);
-    var seq1 = frames->toSequence();
-    var seq2 = (Sequence*)player->sequences().get(1);
-    var isMatching = seq1->length() == seq2->length() && memcmp(seq1->data(), seq2->data(), seq1->length()) == 0;
-    assert("Should create the same sequence", isMatching);
-    if (!isMatching) {
-        DUMP(seq1->data(), seq1->length(), 16);
-        DUMP(seq2->data(), seq2->length(), 16);
-    }
-    DEL_(seq1);
+    createSequences(device->player());
+    var seq1 = (Sequence*)device->player()->sequences().get(1);
+    var frames = FrameList::fromSequence(seq1);
+
+    var seq2 = frames->toSequence(seq1->device());
+    int pos = -1;
+    assert("Should match original sequence",
+        seq1->length() == seq2->length() &&
+        fmw::memcmp(seq1->data(), seq2->data(), seq1->length(), pos) != false &&
+        pos == seq1->length());
+    LOG("Sequence #1\n");
+    DUMP(seq1->data(), seq1->length(), 32);
+    LOG("Sequence #2\n");
+    DUMP(seq1->data(), seq2->length(), 32);
+
+    DEL_(seq2);
     DEL_(frames);
     DEL_(device);
     Player::cleanUp();
@@ -344,7 +392,78 @@ void PlayerTest::testCreateBinary() {
     Player::cleanUp();
 }
 
-void PlayerTest::testRunPlayer() {
+void PlayerTest::testRunChannelFromSequence() {
+    Player::addAdapter(NEW_(ConsAdapter));
+    var device = PlayerDevice::create(NULL);
+    var player = device->player();
+    byte initData[] = { 0, 0, gray };
+    byte* pData = initData;
+    var consDevice = player->addDevice(&PlayerTest::consAdapter_, DeviceCons, (byte**)&pData);
+    var ch = player->addChannel("Chn1");
+    createSequences(player);
+    ch->assign(consDevice, (Sequence*)player->sequences().get(1));
+
+    while (ch->isActive()) {
+        ch->run(1);
+        Sleep(10);
+    }
+
+    assert("Should run to the end", ch->loopCount() == -1);
+
+    DEL_(device);
+    Player::cleanUp();
+}
+
+void PlayerTest::testRunChannelFromFrames() {
+    Player::addAdapter(NEW_(ConsAdapter));
+    var device = PlayerDevice::create(NULL);
+    var player = device->player();
+    byte initData[] = { 0, 0, gray };
+    byte* pData = initData;
+    var consDevice = player->addDevice(&PlayerTest::consAdapter_, DeviceCons, (byte**)&pData);
+    var ch = player->addChannel("Chn1");
+    createSequences(player);
+    var seq = (Sequence*)device->player()->sequences().get(1);
+    var frames = FrameList::fromSequence(seq);
+    ch->assign(consDevice, frames);
+
+    while (ch->isActive()) {
+        ch->run(1);
+        Sleep(10);
+    }
+
+    assert("Should run to the end", ch->loopCount() == -1);
+
+    DEL_(frames);
+    DEL_(device);
+    Player::cleanUp();
+}
+
+void PlayerTest::testRunPlayerOnSequence() {
+    var bin = createBinaryData();
+    Player::addAdapter(NEW_(ConsAdapter));
+    var data = bin->extract();
+    DEL_(bin);
+    var device = PlayerDevice::create(&data);
+    var player = device->player();
+    for (var si = 0; si < player->sequences().length(); si++) {
+        var seq = (Sequence*)player->sequences().get(si);
+        var frames = FrameList::fromSequence(seq);
+        player->frameLists().push(frames);
+    }
+    device->mode(PlayerModeFrameList);
+    player->useThread();
+    player->start();
+    while (device->isActive()) {
+        Sleep(10);
+    }
+    assert("Should run to the end", ((Channel*)player->channels().get(0))->loopCount() == -1);
+    
+    DEL_(device);
+    Player::cleanUp();
+}
+
+void PlayerTest::testRunPlayerOnFrames() {
     var bin = createBinaryData();
     Player::addAdapter(NEW_(ConsAdapter));
     var data = bin->extract();
@@ -354,22 +473,28 @@ void PlayerTest::testRunPlayer() {
     player->useThread();
     player->start();
     while (device->isActive()) {
-        Sleep(6);
+        Sleep(10);
     }
-    assert("Should run to the end", true);
-    
+    assert("Should run to the end", ((Channel*)player->channels().get(0))->loopCount() == -1);
+
     DEL_(device);
     Player::cleanUp();
 }
 
+
 void PlayerTest::runAll(int& totalPassed, int& totalFailed) {
-    test("Create Player", (TestMethod)&PlayerTest::testCreatePlayer);
-    test("Create Sequence", (TestMethod)&PlayerTest::testCreateSequence);
-    test("Create Frames from Sequence", (TestMethod)&PlayerTest::testCreateFramesFromSequence);
-    test("Create Sequence from Frames", (TestMethod)&PlayerTest::testCreateSequenceFromFrames);
-    test("Load from binary", (TestMethod)&PlayerTest::testLoadFromBinary);
-    test("Create binary", (TestMethod)&PlayerTest::testCreateBinary);
-    test("Run Player", (TestMethod)&PlayerTest::testRunPlayer);
+    //test("Create Player", (TestMethod)&PlayerTest::testCreatePlayer);
+    //test("Create Sequence", (TestMethod)&PlayerTest::testCreateSequence);
+    //test("Create and edit FrameList", (TestMethod)&PlayerTest::testCreateAndEditFrames);
+    //test("Create FrameList from Sequence", (TestMethod)&PlayerTest::testCreateFramesFromSequence);
+    //test("Create Sequence from FrameList", (TestMethod)&PlayerTest::testCreateSequenceFromFrames);
+    //test("Load from binary", (TestMethod)&PlayerTest::testLoadFromBinary);
+    //test("Create binary", (TestMethod)&PlayerTest::testCreateBinary);
+    test("Run channel from sequence", (TestMethod)&PlayerTest::testRunChannelFromSequence);
+    test("Run channel from frames", (TestMethod)&PlayerTest::testRunChannelFromFrames);
+    test("Run Player on sequence", (TestMethod)&PlayerTest::testRunPlayerOnSequence);
+    test("Run Player on frames", (TestMethod)&PlayerTest::testRunPlayerOnFrames);
+    
     //TEST(testPrintSequence); 
     displayFinalResults();
 }

@@ -51,7 +51,7 @@ namespace PLAYER {
 	Stream* Device::makeCommand(byte command, ...) {
 		va_list args;
 		va_start(args, command);
-		var stream = NEW_(Stream, getCommandSize(command, (byte*)args));
+		var stream = NEW_(Stream, getCommandSize(&command));
 		stream->writeByte(command);
 		makeCommandImpl(command, stream, args);
 		va_end(args);

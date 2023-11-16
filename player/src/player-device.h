@@ -16,12 +16,19 @@ namespace PLAYER {
 		CmdTempo = 3
 	} PlayerCommands;
 
+	typedef enum PlayerMode {
+		PlayerModeSequence,
+		PlayerModeFrameList
+	} PlayerMode;
+
 	class Player;
 	class Sequence;
 	class Channel;
 	class PlayerDevice : public Device {
 	public:
 		static PlayerDevice* create(byte** pData = NULL);
+
+		PROP(PlayerMode, mode);
 
 		PlayerDevice(void* object, Adapter* adapter);
 		virtual ~PlayerDevice();
@@ -38,7 +45,7 @@ namespace PLAYER {
 
 #ifdef PLAYER_EDIT_MODE
 		void makeCommandImpl(int command, Stream* stream, va_list args);
-		int getCommandSize(byte cmd, byte* args);
+		int getCommandSize(byte* cmd);
 		int writeToStream(Stream* stream);
 #endif
 	};

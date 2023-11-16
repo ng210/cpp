@@ -63,6 +63,7 @@ namespace PLAYER {
         devices_.compare([](COLLECTION_ARGUMENTS) { return ((Device*)value)->type() - key.i; });
         sequences_.init(16);
         sequences_.compare(Collection::compareByRef);
+        frameLists_.init(16);
         dataBlocks_.init(sizeof(DataBlockItem), 16);
         dataBlocks_.compare(Collection::compareByRef);
         masterChannel_ = NULL;
@@ -241,8 +242,7 @@ namespace PLAYER {
             [](COLLECTION_ARGUMENTS) {
                 DEL_((Sequence*)value);
                 return value;
-            }
-        );
+            });
         sequences_.clear();
         // don't delete the master device yet
         var i = devices_.length();
@@ -251,12 +251,17 @@ namespace PLAYER {
             DEL_(dev);
             devices_.remove(i);
         }
+        frameLists_.apply(
+            [](COLLECTION_ARGUMENTS) {
+                DEL_((FrameList*)value)
+                    return value;
+            });
+        frameLists_.clear();
         channels_.apply(
             [](COLLECTION_ARGUMENTS) {
                 DEL_((Channel*)value);
                 return value;
-            }
-        );
+            });
         channels_.clear();
 
         if (initData_.dataBlock != NULL && (initData_.flag & DataBlockItemFlag::Allocated) != 0) {
@@ -367,16 +372,17 @@ namespace PLAYER {
         channels_.push(channel);
         return channel;
     }
-    void Player::assignChannel(int channelId, Sequence* sequence, int deviceId, int loopCount) {
-        var chn = (Channel*)channels_.get(channelId);
-        var dev = (Device*)devices_.get(deviceId);
-        chn->assign(dev, sequence, loopCount);
-    }
+    //void Player::assignChannel(int channelId, Sequence* sequence, int deviceId, int loopCount) {
+    //    var chn = (Channel*)channels_.get(channelId);
+    //    var dev = (Device*)devices_.get(deviceId);
+    //    chn->assign(dev, sequence, loopCount);
+    //}
     int Player::run(int ticks) {
         if (masterChannel_->isActive()) {
             counter_ += ticks;
             for (var i = 0; i < channels_.length(); i++) {
-                ((Channel*)channels_.get(i))->run(ticks);
+                var ch = (Channel*)channels_.get(i);
+                ch->run(ticks);
             }
         }
         return masterChannel_->isActive();

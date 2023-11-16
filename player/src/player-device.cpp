@@ -33,6 +33,7 @@ namespace PLAYER {
 		//devices_.push(this);
 		//masterChannel_ = NEW_(Channel, "master");
 		//channels_.push(masterChannel_);
+		mode_ = PlayerModeSequence;
 		type_ = PlayerDevices::DevicePlayer;
 	}
 	PlayerDevice::~PlayerDevice() {
@@ -66,13 +67,19 @@ namespace PLAYER {
 		switch (cmd) {
 			case PlayerCommands::CmdAssign:
 				int channelId = READ(cursor, byte);
-				int sequenceId = READ(cursor, byte);
+				int sourceId = READ(cursor, byte);
 				int deviceId = READ(cursor, byte);
 				int loopCount = READ(cursor, byte);
 				var targetChannel = (Channel*)player->channels().get(channelId);
 				var device = (Device*)player->devices().get(deviceId);
-				var sequence = (Sequence*)player->sequences().get(sequenceId);
-				targetChannel->assign(device, sequence, loopCount);
+				if (mode_ == PlayerModeSequence) {
+					var sequence = (Sequence*)player->sequences().get(sourceId);
+					targetChannel->assign(device, sequence, loopCount);
+				}
+				else {
+					var frames = (FrameList*)player->frameLists().get(sourceId);
+					targetChannel->assign(device, frames, loopCount);
+				}
 				break;
 		}
 
@@ -101,9 +108,9 @@ namespace PLAYER {
 		}
 	}
 
-	int PlayerDevice::getCommandSize(byte cmd, byte* args) {
+	int PlayerDevice::getCommandSize(byte* cmd) {
 		var length = 1;
-		switch (cmd) {
+		switch (*cmd) {
 			case CmdAssign:
 				// byte chnId, byte seqId, byte devId, byte loopCount
 				length += 4;

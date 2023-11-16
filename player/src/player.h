@@ -20,6 +20,7 @@ namespace PLAYER {
 	protected:	PROP_R(PArray, channels);
 	protected:	PROP_R(PArray, devices);
 	protected:	PROP_R(PArray, sequences);
+	protected:	PROP_R(PArray, frameLists);
 	protected:	PROP_R(Array, dataBlocks);
 	protected:	PROP_R(Channel*, masterChannel);
 	protected:	PROP(float, refreshRate);
@@ -54,7 +55,7 @@ namespace PLAYER {
 
 		void masterDevice(PlayerDevice* device);
 		Channel* addChannel(char* id);
-		void assignChannel(int channelId, Sequence* sequence, int deviceId, int loopCount);
+		//void assignChannel(int channelId, Sequence* sequence, int deviceId, int loopCount);
 		void initialize(byte** pData = NULL);
 		void clear();
 		int run(int ticks);
