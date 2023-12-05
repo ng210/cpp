@@ -13,7 +13,7 @@ protected:
 	virtual void* binSearch_(Key key, Key& found, COLLECTION_COMPARE* compare);
 public:
 	ArrayBase();
-	virtual ~ArrayBase();
+	~ArrayBase();
 
 	void* binSearch(Key key, Key& found, COLLECTION_COMPARE* compare = NULL);
 	Key findIndex(Key key, COLLECTION_COMPARE* compare = NULL);

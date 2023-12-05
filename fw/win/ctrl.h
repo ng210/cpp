@@ -10,9 +10,11 @@ class Ctrl : public Window {
 protected: PROP(size_t, ctrlId);
 protected: PROP(POINT, offset);
 protected:
-	void create(WndClass wndClass, Window* parent, char* name, LONG style = 0, DWORD exStyle = 0);
+	virtual WndClass getWindowClass() = 0;
 public:
 	Ctrl();
+
+	void createWindow(Window* parent, char* name, LONG style = 0, DWORD exStyle = 0);
 
 	void move(int x, int y);
 };

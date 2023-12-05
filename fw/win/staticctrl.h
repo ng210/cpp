@@ -8,7 +8,7 @@ NS_FW_WIN_BEGIN
 class StaticCtrl : public Ctrl {
 	static WndClass WndClass_;
 public:
-	void create(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
+	WndClass getWindowClass();
 };
 
 NS_FW_WIN_END

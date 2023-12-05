@@ -8,13 +8,17 @@ WndClass EditCtrl::WndClass_("EDIT");
 EditCtrl::EditCtrl() {
 }
 
-void EditCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
+WndClass EditCtrl::getWindowClass() {
+	return EditCtrl::WndClass_;
+}
+
+void EditCtrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyle) {
 	if (style == 0) {
 		style = WS_BORDER | ES_LEFT;
 	}
 	//style |= WS_CHILD | WS_VISIBLE;
 
-	Ctrl::create(EditCtrl::WndClass_, parent, name, style, exStyle);
+	Ctrl::createWindow(parent, name, style, exStyle);
 }
 
 EditCtrl::~EditCtrl() {

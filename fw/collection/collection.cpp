@@ -8,6 +8,9 @@ Collection::Collection() {
 	compare_ = compareByRef;
 }
 
+Collection::~Collection() {
+}
+
 void Collection::fill(void* fillValue) {
 	apply(
 		[](COLLECTION_ARGUMENTS) {

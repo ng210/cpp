@@ -17,6 +17,10 @@ WNDPROC ComboboxCtrl::defEditWndProc_ = NULL;
 ComboboxCtrl::~ComboboxCtrl() {
 }
 
+WndClass ComboboxCtrl::getWindowClass() {
+	return ComboboxCtrl::WndClass_;
+}
+
 LRESULT ComboboxCtrl::editWndProc_(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	LRESULT res = 0;
 	char item[32];
@@ -47,7 +51,7 @@ void ComboboxCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle)
 	if (!(style & CBS_SIMPLE) && !(style & CBS_DROPDOWN) && !(style & CBS_DROPDOWNLIST)) {
 		style |= CBS_DROPDOWNLIST;
 	}
-	Ctrl::create(ComboboxCtrl::WndClass_, parent, name, style, exStyle);
+	Ctrl::createWindow(parent, name, style, exStyle);
 	Array children(sizeof(HWND));
 	SYSPR(EnumChildWindows(hWnd_, enumChildren, (LPARAM)&children));
 	

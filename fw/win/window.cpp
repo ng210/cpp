@@ -1,3 +1,4 @@
+#include <windowsx.h>
 #include "win/window.h"
 #include "base/debug.h"
 
@@ -23,6 +24,12 @@ Window::Window() {
 	defWindowProc_ = DefWindowProc;
 	mousePos_ = { 0, 0 };
 	rect_ = { 0, 0, 0, 0 };
+	virtualRect_ = { 0, 0, 0, 0 };
+	fmw::memset(&scrollInfoX_, 0, 2 * sizeof(SCROLLINFO));
+	scrollInfoX_.lineSize = 1;
+	scrollInfoY_.lineSize = 1;
+	scrollInfoX_.pageSize = 10;
+	scrollInfoY_.pageSize = 10;
 }
 
 void Window::create(WndClass wndClass, Window* parent, char* name, LONG style, DWORD exStyle) {
@@ -55,11 +62,11 @@ void Window::create(WndClass wndClass, Window* parent, char* name, LONG style, D
 
 		// set default event handlers
 		MOUSEEVENTPROC** p = &onLeftUp_;
-		while (p <= &onMiddleDblClick_) *p++ = &defOnMouseEventProc_;
+		while (p <= &onWheel_) *p++ = &defOnMouseEventProc_;
 		onMouseMove_ = &defOnMouseMoveProc_;
-
-		this->onCreate();
 	}
+
+	this->onCreated();
 }
 
 Window::~Window() {
@@ -102,16 +109,16 @@ LRESULT CALLBACK Window::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 	LRESULT ret = 1;
 	BOOL callDefault = true;
 	POINT point;
-	if (message >= WM_MOUSEMOVE && message <= WM_MBUTTONDBLCLK) {
-		point.x = LOWORD(lParam);
-		point.y = HIWORD(lParam);
+	if (message >= WM_MOUSEMOVE && message <= WM_MOUSEWHEEL) {
+		point.x = GET_X_LPARAM(lParam);
+		point.y = GET_Y_LPARAM(lParam);
 		ret = onMouse(hWnd, message, point, wParam);
 	}
 	else {
 		switch (message) {
-		//case WM_CREATE:
-		//	ret = ret / 0;
-		//	break;
+		case WM_CREATE:
+			ret = onCreate();
+			break;
 		case WM_DESTROY:
 			ret = onDestroy();
 			PostQuitMessage((int)ret);
@@ -127,9 +134,12 @@ LRESULT CALLBACK Window::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			callDefault = ret != 0;
 			break;
 		case WM_SIZE:
-			rect_.right = LOWORD(lParam);
-			rect_.bottom = HIWORD(lParam);
-			ret = onSize(rect_, wParam);
+			RECT rect;
+			rect.right = LOWORD(lParam), rect.bottom = HIWORD(lParam);
+			ret = onSize(rect, wParam);
+			rect_.right = rect.right;
+			rect_.bottom = rect.bottom;
+			updateScrolling();
 			callDefault = ret != 0;
 			break;
 		case WM_SIZING:
@@ -147,6 +157,13 @@ LRESULT CALLBACK Window::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		case WM_COMMAND:
 			ret = onCommand(wParam, lParam);
 			callDefault = ret != 0;
+			break;
+
+		case WM_HSCROLL:
+			ret = onHScroll(wParam, lParam);
+			break;
+		case WM_VSCROLL:
+			ret = onVScroll(wParam, lParam);
 			break;
 		}
 	}
@@ -173,6 +190,83 @@ Map* Window::createChildWindowMap() {
 	var map = NEW_(Map, sizeof(int), sizeof(HWND), Map::hashingInt, Collection::compareInt);
 	SYSPR(EnumChildWindows(hWnd_, enumChildWindowsCallback, (LPARAM)map));
 	return map;
+}
+
+void Window::setVirtualSize(int width, int height) {
+	virtualRect_.right = width;
+	virtualRect_.bottom = height;
+	updateScrolling();
+	InvalidateRect(hWnd_, NULL, false);
+}
+
+void Window::updateScrolling() {
+	SCROLLINFO scrollInfo;
+	
+	scrollInfoX_.max = max(virtualRect_.right - rect_.right, 0);
+	if (scrollInfoX_.max > 0) {
+		scrollInfo.cbSize = sizeof(SCROLLINFO);
+		scrollInfo.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+		scrollInfo.nMin = 0;
+		scrollInfo.nMax = virtualRect_.right;
+		scrollInfo.nPage = rect_.right;
+		scrollInfo.nPos = scrollInfoX_.pos;
+		SYSPR(SetScrollInfo(hWnd_, SB_HORZ, &scrollInfo, true));
+	}
+
+	scrollInfoY_.max = max(virtualRect_.bottom - rect_.bottom, 0);
+	if (scrollInfoY_.max > 0) {
+		scrollInfo.cbSize = sizeof(SCROLLINFO);
+		scrollInfo.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+		scrollInfo.nMin = 0;
+		scrollInfo.nMax = virtualRect_.bottom;
+		scrollInfo.nPage = rect_.bottom;
+		scrollInfo.nPos = scrollInfoY_.pos;
+		SYSPR(SetScrollInfo(hWnd_, SB_VERT, &scrollInfo, true));
+	}
+}
+
+int Window::scrollWindow(ScrollInfo& si, int mode, int pos, int nBar, bool update) {
+	int newPos = 0;
+	int oldPos = si.pos;
+	switch (mode)
+	{
+	case SB_PAGEUP:
+		newPos = oldPos - si.pageSize;
+		break;
+	case SB_PAGEDOWN:
+		newPos = oldPos + si.pageSize;
+		break;
+	case SB_LINEUP:
+		newPos = oldPos - si.lineSize;
+		break;
+	case SB_LINEDOWN:
+		newPos = oldPos + si.lineSize;
+		break;
+	case SB_THUMBPOSITION:
+	case SB_THUMBTRACK:
+		newPos = pos;
+		break;
+	case SB_DELTA:
+		newPos = oldPos + pos;
+		break;
+	default:
+		newPos = si.pos;
+	}
+
+	if (newPos < 0) newPos = 0;
+	else if (newPos > si.max) newPos = si.max;
+
+	if (si.pos != newPos) {
+		si.pos = newPos;
+		SCROLLINFO scrollInfo;
+		scrollInfo.cbSize = sizeof(SCROLLINFO);
+		scrollInfo.fMask = SIF_POS;
+		scrollInfo.nPos = newPos;
+		SYSPR(SetScrollInfo(hWnd_, nBar, &scrollInfo, TRUE));
+		SYSPR(InvalidateRect(hWnd_, NULL, false));
+	}
+
+	return oldPos - newPos;
 }
 
 #pragma region EventHandling
@@ -224,6 +318,9 @@ LRESULT Window::onMouse(HWND hWnd, UINT message, POINT& point, WPARAM wParam) {
 	case WM_MBUTTONDBLCLK:
 		ret = onMiddleDblClick_(this, point, wParam);
 		break;
+	case WM_MOUSEWHEEL:
+		ret = onWheel_(this, point, wParam);
+		break;
 	}
 	return ret;
 }
@@ -237,6 +334,9 @@ LRESULT Window::defOnMouseMoveProc_(Window*, POINT&, POINT&, WPARAM) {
 
 #pragma region SystemEvents
 LRESULT Window::onCreate() {
+	return 0;
+}
+LRESULT Window::onCreated() {
 	return 0;
 }
 LRESULT Window::onDestroy() {
@@ -254,13 +354,21 @@ LRESULT Window::onMove(POINT& point) {
 LRESULT Window::onMoving(RECT& rect) { 
 	return 1;
 }
-LRESULT Window::onSize(RECT& rect, WPARAM state) { 
+LRESULT Window::onSize(RECT& rect, WPARAM state) {
+	updateScrolling();
 	return 1;
 }
 LRESULT Window::onSizing(RECT& rect, WPARAM state) {
 	return 1;
 }
-
+LRESULT Window::onHScroll(WPARAM wParam, LPARAM lParam) {
+	scrollWindow(scrollInfoX_, LOWORD(wParam), HIWORD(wParam), SB_HORZ);
+	return 1;
+}
+LRESULT Window::onVScroll(WPARAM wParam, LPARAM lParam) {
+	scrollWindow(scrollInfoY_, LOWORD(wParam), HIWORD(wParam), SB_VERT);
+	return 1;
+}
 LRESULT Window::onCommand(WPARAM wParam, LPARAM lParam) {
 	return 1;
 }
@@ -273,15 +381,16 @@ LRESULT CALLBACK Window::wndProcWrapper(HWND hWnd, UINT message, WPARAM wParam, 
 	LRESULT ret = 0;
 	LONG_PTR lPtr = NULL;
 	Window* window = NULL;
-	//if (message == WM_NCCREATE || message == WM_CREATE) {
-	//	window = *(Window**)lParam;
-	//	SYSPR(SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)window));
-	//	window->hWnd_ = hWnd;
-	//}
-	//else {
+
+	if (message == WM_CREATE) {
+		var cs = (CREATESTRUCT*)lParam;
+		window = (Window*)cs->lpCreateParams;
+		ret = 1;
+	} else {
 		LONG_PTR SYSFN(lptr, GetWindowLongPtr(hWnd, GWLP_USERDATA));
 		window = (Window*)lptr;
-	//}
+	}
+
 	if (window != NULL) {
 		ret = (window->wndProc)(hWnd, message, wParam, lParam);
 	}

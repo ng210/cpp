@@ -41,6 +41,7 @@ protected: PROP(COLLECTION_COMPARE*, compare);
 protected:
 public:
 	Collection();
+	virtual ~Collection();
 	virtual void* add(Key key, void* item = NULL) = 0;
 	virtual void* get(Key key) = 0;
 	virtual void* insert(Key key, void* item = NULL) = 0;

@@ -8,7 +8,8 @@ Ctrl::Ctrl() {
 	offset_.y = 0;
 }
 
-void Ctrl::create(WndClass wndClass, Window* parent, char* name, LONG style, DWORD exStyle) {
+void Ctrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyle) {
+	var wndClass = getWindowClass();
 	style |= WS_CHILD | WS_VISIBLE;
 	this->Window::create(wndClass, parent, name, style, exStyle);
 }

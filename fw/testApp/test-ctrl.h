@@ -13,7 +13,8 @@ public:
 	TestCtrl();
 	~TestCtrl();
 
-	void create(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
+	WndClass getWindowClass();
+	void createWindow(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
 
 	void setText(char* text);
 

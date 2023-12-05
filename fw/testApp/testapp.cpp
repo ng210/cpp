@@ -1,9 +1,16 @@
+#include <math.h>
 #include "testapp.h"
 #include "resource.h"
 #include "win/editctrl.h"
+#include "win/chartctrl.h"
 
 NS_FW_BASE_USE
 NS_FW_WIN_USE
+
+#define MAX_WIDTH 1280
+#define MIN_WIDTH 640
+#define MAX_HEIGHT 1080
+#define MIN_HEIGHT 400
 
 char* TestApp::eos_ = "\n\0";
 
@@ -20,14 +27,14 @@ void TestApp::create(WndClass wndClass, LONG style, DWORD exStyle) {
 	Window::create(wndClass, NULL, "TestApp", style, exStyle);
 }
 
-LRESULT TestApp::onCreate() {
+LRESULT TestApp::onCreated() {
 #pragma region EventHandlers
 	onLeftUp(TestApp::onLeftUpProc);
 #pragma endregion
 
 	RECT rect;
 	LRESULT result = 0;
-	SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, 800, 600, SWP_NOMOVE));
+	SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, 1280, 768, SWP_NOMOVE));
 	HFONT SYSFN(hFont, (HFONT)GetStockObject(SYSTEM_FIXED_FONT));
 
 	// create controls in the upper lane
@@ -36,7 +43,7 @@ LRESULT TestApp::onCreate() {
 
 	var SYSFN(hBitmap, LoadImage(NULL, "plus.bmp", IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT | LR_LOADFROMFILE));
 
-#pragma region Combobox
+	#pragma region Combobox
 	PArray items;
 	items.push("Alma1");
 	items.push("Alma2");
@@ -86,42 +93,42 @@ LRESULT TestApp::onCreate() {
 	//SYSFN(result, SetWindowPos(cbSimple_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	//rect.left += rect.right + 4;
 	//if (laneHeight < rect.bottom) laneHeight = rect.bottom;
-#pragma endregion
+	#pragma endregion
 
-#pragma region Static
-	staticText_.create(this, "StaticText", SS_CENTER);
+	#pragma region Static
+	staticText_.createWindow(this, "StaticText", SS_CENTER);
 	rect.right = 96; rect.bottom = 24;
 	SendMessage(staticText_.hWnd(), WM_SETTEXT, NULL, (LPARAM)"Hello");
 	SYSFN(result, SetWindowPos(staticText_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	//SYSPR(SetWindowText(staticText_.hWnd(), "Hello"));
 	rect.left += rect.right + 4;
 	
-	staticIcon_.create(this, "StaticIcon", SS_ICON);
+	staticIcon_.createWindow(this, "StaticIcon", SS_ICON);
 	rect.right = 24;
 	var SYSFN(icon, LoadIcon(NULL, (LPSTR)IDI_WARNING));
 	SendMessage(staticIcon_.hWnd(), STM_SETICON, (WPARAM)icon, NULL);
 	SYSFN(result, SetWindowPos(staticIcon_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 
-	staticBitmap_.create(this, "StaticBitmap", SS_BITMAP | SS_SUNKEN);
+	staticBitmap_.createWindow(this, "StaticBitmap", SS_BITMAP | SS_SUNKEN);
 	rect.right = 32;
 	SendMessage(staticBitmap_.hWnd(), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap);
 	SYSFN(result, SetWindowPos(staticBitmap_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 	if (laneHeight < rect.bottom) laneHeight = rect.bottom;
-#pragma endregion
+	#pragma endregion
 
 	SYSFN(hBitmap, LoadImage(hInstance_, MAKEINTRESOURCE(IDB_PLUS), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT));
-#pragma region Button
+	#pragma region Button
 	rect.right = 48;
 	rect.bottom = 24;
-	textButton_.create(this, "Button", BS_CENTER | BS_TEXT);
+	textButton_.createWindow(this, "Button", BS_CENTER | BS_TEXT);
 	SYSPR(SetWindowText(textButton_.hWnd(), "Ok"));
 	SYSFN(result, SetWindowPos(textButton_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 
 	//var bitmap = LoadImage(hInstance_, MAKEINTRESOURCE(IDB_PLUS), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
-	imageButton_.create(this, "Button", BS_BITMAP);
+	imageButton_.createWindow(this, "Button", BS_BITMAP);
 	SYSPR(SendMessage(imageButton_.hWnd(), BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap));
 	SYSFN(result, SetWindowPos(imageButton_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
@@ -140,20 +147,75 @@ LRESULT TestApp::onCreate() {
 	textButton_.onRightUp(rightButtonProc);
 	imageButton_.onLeftUp(leftButtonProc);
 	imageButton_.onRightUp(rightButtonProc);
-#pragma endregion
+	#pragma endregion
 
-#pragma region Edit
+	#pragma region Edit
 	SYSPR(GetClientRect(hWnd_, &rect));
 	rect.left += 4; rect.right -= 8;
 	rect.top += laneHeight + 4; rect.bottom -= 12;
-	logCtrl_.create(this, "", WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL);
-	testCtrl_.create(this, "");
-	var height = rect.bottom >> 1;
+	logCtrl_.createWindow(this, "", WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL);
+	var height = 2*(rect.bottom >> 3);
 	SYSFN(result, SetWindowPos(logCtrl_.hWnd(), NULL, rect.left, rect.top, rect.right, height, SWP_SHOWWINDOW));
 	rect.top += height + 2;
+	SYSPR(SendMessage(logCtrl_.hWnd(), WM_SETFONT, (WPARAM)hFont, false));
+	#pragma endregion
+
+	#pragma region Chart
+	var unitX = 20, unitY = 12;
+	ChartSettings settings = {
+		{ unitX, unitY },		// unit1
+		{  5,  5 },				// unit2
+		true,					// showGrid
+		0x005c3329,				// backgroundColor
+		0x00a4cdd7,				// foregroundColor
+		0x00b86652,				// grid1Color
+		//0x00dc7a62,			// grid2Color
+		0x004799ad,				// lineColor
+		0x0080a020,				// textColor
+		ChartInsertModeFree,	// insertMode
+		ChartDragModeFree,		// dragMode
+		ChartDrawModeLine,		// drawMode
+		unitX >> 1,				// lineSizeX
+		unitY >> 1,				// lineSizeY
+		2*5*unitX,				// pageSizeX
+		2*5*unitY,				// pageSizeY
+		10,						// dragSpeed
+		0.1f					// scaleSpeed
+	};
+	chartCtrl_.initialize(&settings);
+	chartCtrl_.createWindow(this, "");
+	var cols = settings.unit2.x * 18;
+	var rows = settings.unit2.y * 8;
+	var list = NEW_(Array, sizeof(POINT), cols);
+	POINT p;
+	for (var pi = 0; pi < cols; pi++) {
+		p.x = pi;
+		p.y = (int)(0.5 * rows * (1.0 + 0.8 * sin(2.0 * pi * 3.14159265359 / cols)));
+		list->push(&p);
+	}
+	chartCtrl_.dataBind(list, [](int x, int y1, int y2, POINT* p, Collection* dataSource) {
+		var ret = false;
+		var src = (Array*)dataSource;
+		Key ix = -1;
+		var point = (POINT*)src->binSearch(x, ix, Collection::compareInt);
+		if (point != NULL && point->y >= y1 && point->y <= y2) {
+			p->x = point->x;
+			p->y = point->y;
+			ret = true;
+		}
+		return ret;
+	});
+	unitX *= settings.unit2.x;
+	unitY *= settings.unit2.y;
+	var cw = (rect_.right / unitX)* unitX;
+	var ch = (2 * height / unitY)* unitY;
+	SYSFN(result, SetWindowPos(chartCtrl_.hWnd(), NULL, rect.left, rect.top,  cw, ch, SWP_SHOWWINDOW));
+	chartCtrl_.setVirtualSize(cols * settings.unit1.x, rows * settings.unit1.y);
+	rect.top += ch + 2;
+	#pragma endregion
+
+	testCtrl_.createWindow(this, "");
 	SYSPR(SetWindowPos(testCtrl_.hWnd(), NULL, rect.left, rect.top, rect.right, height, SWP_SHOWWINDOW));
-	SendMessage(logCtrl_.hWnd(), WM_SETFONT, (WPARAM)hFont, false);
-#pragma endregion
 
 	//char eos = '\0';
 	//log_.append(&eos, 1);
@@ -161,6 +223,7 @@ LRESULT TestApp::onCreate() {
 }
 
 LRESULT TestApp::onDestroy() {
+	DEL_(chartCtrl_.dataSource());
 	return 0;
 }
 
@@ -174,10 +237,10 @@ LRESULT CALLBACK TestApp::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		case WM_GETMINMAXINFO:
 			MINMAXINFO* mmi;
 			mmi = (MINMAXINFO*)lParam;
-			mmi->ptMaxSize.x = 800; mmi->ptMaxSize.y = 600;
+			mmi->ptMaxSize.x = MAX_WIDTH; mmi->ptMaxSize.y = MAX_HEIGHT;
 			//mmi->ptMaxPosition.x = 20; mmi->ptMaxPosition.y = 20;
-			mmi->ptMaxTrackSize.x = 800; mmi->ptMaxTrackSize.y = 600;
-			mmi->ptMinTrackSize.x = 640; mmi->ptMinTrackSize.y = 400;
+			mmi->ptMaxTrackSize.x = MAX_WIDTH; mmi->ptMaxTrackSize.y = MAX_HEIGHT;
+			mmi->ptMinTrackSize.x = MIN_WIDTH; mmi->ptMinTrackSize.y = MIN_HEIGHT;
 			break;
 		//case WM_SIZE:
 		//	break;
@@ -248,7 +311,6 @@ void TestApp::update() {
 	}
 	Sleep(1);
 }
-
 
 WinApp* createApplication(HINSTANCE hInstance, Map* args) {
 	// Load menu

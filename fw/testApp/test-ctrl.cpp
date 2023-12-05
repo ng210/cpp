@@ -3,10 +3,6 @@
 WndClass TestCtrl::WndClass_;
 
 TestCtrl::TestCtrl() {
-	if (TestCtrl::WndClass_.atom == 0) {
-		TestCtrl::WndClass_.atom = Window::registerClass("TestCtrl", NULL, 0);
-	}
-
 	text_ = MALLOC(char, 1024);
 	text_[0] = '\0';
 }
@@ -15,8 +11,15 @@ TestCtrl::~TestCtrl() {
 	FREE(text_);
 }
 
-void TestCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
-	Ctrl::create(TestCtrl::WndClass_, parent, name, style, exStyle);
+WndClass TestCtrl::getWindowClass() {
+	if (TestCtrl::WndClass_.atom == 0) {
+		TestCtrl::WndClass_.atom = Window::registerClass("TestCtrl", NULL, 0);
+	}
+	return TestCtrl::WndClass_;
+}
+
+void TestCtrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyle) {
+	Ctrl::createWindow(parent, name, style, exStyle);
 	hBrush_ = CreateSolidBrush(0x00000000);
 }
 

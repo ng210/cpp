@@ -29,6 +29,7 @@ public:
 	ComboboxCtrl();
 	virtual ~ComboboxCtrl();
 
+	WndClass getWindowClass();
 	void create(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
 	LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	virtual LRESULT handleNotification(int notification, LPARAM lParam);

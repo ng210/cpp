@@ -1,12 +1,10 @@
 #include "win/staticctrl.h"
 
 NS_FW_BASE_USE
-NS_FW_WIN_BEGIN
+NS_FW_WIN_USE
 
 WndClass StaticCtrl::WndClass_("STATIC");
 
-void StaticCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
-	Ctrl::create(StaticCtrl::WndClass_, parent, name, style, exStyle);
+WndClass StaticCtrl::getWindowClass() {
+	return StaticCtrl::WndClass_;
 }
-
-NS_FW_WIN_END

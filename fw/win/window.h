@@ -21,6 +21,8 @@ NS_FW_WIN_BEGIN
 #define SIZING_TOP		4
 #define SIZING_BOTTOM	8
 
+#define SB_DELTA 16
+
 typedef union WndClass_ {
 	ATOM atom;
 	char* className;
@@ -29,16 +31,51 @@ typedef union WndClass_ {
 	WndClass_() { className = NULL; }
 } WndClass;
 
+typedef struct ScrollInfo {
+	int pos;
+	int max;
+	int lineSize;
+	int pageSize;
+} ScrollInfo;
+
 class Window;
 typedef LRESULT(MOUSEEVENTPROC)(Window*, POINT&, WPARAM);
 typedef LRESULT(MOUSEMOVEEVENTPROC)(Window*, POINT&, POINT&, WPARAM);
 
 class Window {
-#pragma region DefMouseEventProc
 	static MOUSEMOVEEVENTPROC defOnMouseMoveProc_;
 	static MOUSEEVENTPROC defOnMouseEventProc_;
 
-protected: PROP(MOUSEMOVEEVENTPROC*, onMouseMove);
+	protected: WNDPROC defWindowProc_;
+	protected: PROP_R(HINSTANCE, hInstance);
+	protected: PROP_R(HWND, hWnd);
+	protected: PROP_R(RECT, rect);
+	protected: PROP_R(RECT, virtualRect);
+	protected: PROP_R(POINT, mousePos);
+	protected: PROP_R(WndClass, wndClass);
+	protected: PROP_R(Window*, parent);
+
+	protected: PROP_R(ScrollInfo, scrollInfoX);
+	protected: PROP_R(ScrollInfo, scrollInfoY);
+
+	protected: virtual int scrollWindow(ScrollInfo& scrollInfo, int mode, int pos, int nBar, bool update = true);
+	protected: void updateScrolling();
+
+	public:
+		Window();
+		virtual ~Window();
+	
+		void create(WndClass wndClass, Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
+		LONG setWindowStyle(LONG style, DWORD exStyle = 0);
+		virtual LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		Map* Window::createChildWindowMap();
+		virtual void Window::setVirtualSize(int width, int height);
+
+	#pragma region EventHandling
+		LRESULT onMouse(HWND, UINT, POINT&, WPARAM);
+
+	#pragma region DefMouseEventProc
+	protected: PROP(MOUSEMOVEEVENTPROC*, onMouseMove);
 	protected: PROP(MOUSEEVENTPROC*, onLeftUp);
 	protected: PROP(MOUSEEVENTPROC*, onLeftDown);
 	protected: PROP(MOUSEEVENTPROC*, onLeftClick);
@@ -51,48 +88,34 @@ protected: PROP(MOUSEMOVEEVENTPROC*, onMouseMove);
 	protected: PROP(MOUSEEVENTPROC*, onMiddleDown);
 	protected: PROP(MOUSEEVENTPROC*, onMiddleClick);
 	protected: PROP(MOUSEEVENTPROC*, onMiddleDblClick);
-#pragma endregion
+	protected: PROP(MOUSEEVENTPROC*, onWheel);			 
+	#pragma endregion
 
-	protected: WNDPROC defWindowProc_;
-	protected: PROP_R(HINSTANCE, hInstance);
-	protected: PROP_R(HWND, hWnd);
-	protected: PROP_R(RECT, rect);
-	protected: PROP_R(POINT, mousePos);
-	protected: PROP_R(WndClass, wndClass);
-	protected: PROP_R(Window*, parent);
+	#pragma region SystemEvents
+		virtual LRESULT onCreate();
+		virtual LRESULT onCreated();
+		virtual LRESULT onDestroy();
+		virtual LRESULT onPaint();
+		virtual LRESULT onEraseBkgnd(HDC hDC);
+		virtual LRESULT onMove(POINT& point);
+		virtual LRESULT onMoving(RECT& rect);
+		virtual LRESULT onSize(RECT& rect, WPARAM state);
+		virtual LRESULT onSizing(RECT& rect, WPARAM state);
+		virtual LRESULT onCommand(WPARAM wParam, LPARAM lParam);
+		virtual LRESULT onHScroll(WPARAM wParam, LPARAM lParam);
+		virtual LRESULT onVScroll(WPARAM wParam, LPARAM lParam);
+	#pragma endregion
+	
+	#pragma endregion
 
-public:
-	Window();
-	virtual ~Window();
-
-	virtual void create(WndClass wndClass, Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
-	LONG setWindowStyle(LONG style, DWORD exStyle = 0);
-	virtual LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	Map* Window::createChildWindowMap();
-#pragma region EventHandling
-	LRESULT onMouse(HWND, UINT, POINT&, WPARAM);
-#pragma region SystemEvents
-	virtual LRESULT onCreate();
-	virtual LRESULT onDestroy();
-	virtual LRESULT onPaint();
-	virtual LRESULT onEraseBkgnd(HDC hDC);
-	virtual LRESULT onMove(POINT& point);
-	virtual LRESULT onMoving(RECT& rect);
-	virtual LRESULT onSize(RECT& rect, WPARAM state);
-	virtual LRESULT onSizing(RECT& rect, WPARAM state);
-	virtual LRESULT onCommand(WPARAM wParam, LPARAM lParam);
-#pragma endregion
-
-#pragma endregion
-
-#pragma region Statics
-protected:
-	static LRESULT CALLBACK wndProcWrapper(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-public:
-	static LONG defaultStyle;
-	static ATOM registerClass(WNDCLASSEX& wndClassEx);
-	static ATOM registerClass(char* name, HINSTANCE hInstance, UINT style = 0);
-#pragma endregion
+	#pragma region Statics
+	protected:
+		static LRESULT CALLBACK wndProcWrapper(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	public:
+		static LONG defaultStyle;
+		static ATOM registerClass(WNDCLASSEX& wndClassEx);
+		static ATOM registerClass(char* name, HINSTANCE hInstance, UINT style = 0);
+	#pragma endregion
 
 	//static void getCreateStructures(CREATESTRUCT& createStruct, WNDCLASSEX& wndClassEx, HINSTANCE hInstance, const char* appName, const char* wClassName);
 };

@@ -3,6 +3,7 @@
 #include "win/editctrl.h"
 #include "win/comboboxctrl.h"
 #include "win/buttonctrl.h"
+#include "win/chartctrl.h"
 #include "utils/buffer.h"
 #include "test-ctrl.h"
 
@@ -22,6 +23,7 @@ class TestApp : public WinApp {
 	ComboboxCtrl cbSimple_, cbDropDown_, cbDropDownList_;
 	StaticCtrl staticText_, staticIcon_, staticBitmap_;
 	ButtonCtrl textButton_, imageButton_;
+	ChartCtrl chartCtrl_;
 
 	void log(const char* text, ...);
 protected:
@@ -34,7 +36,7 @@ public:
 	void create(WndClass wndClass, LONG style = 0, DWORD exStyle = 0);
 	void update();
 
-	LRESULT onCreate();
+	LRESULT onCreated();
 	LRESULT onDestroy();
 
 	static MOUSEEVENTPROC onLeftUpProc;
