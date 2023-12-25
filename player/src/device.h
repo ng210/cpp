@@ -38,15 +38,6 @@ namespace PLAYER {
 
 		void* object() { return object_; }
 		void object(void* obj) { object_ = obj; }
-
-#ifdef PLAYER_EDIT_MODE
-		//virtual byte* makeCommand(byte command, ...);
-		virtual Stream* makeCommand(byte command, ...);
-		virtual void makeCommandImpl(int command, Stream* stream, va_list args) = 0;
-		virtual int getCommandSize(byte* cmd) = 0;
-		virtual int writeToStream(Stream* stream);
-		virtual Sequence* createDefaultSequence();
-#endif
 	};
 }
 #endif

@@ -35,40 +35,4 @@ namespace PLAYER {
 	void Device::setRefreshRate(float fps) {
 		refreshRate_ = fps;
 	}
-
-#ifdef PLAYER_EDIT_MODE
-	//byte* Device::makeCommand(byte command, ...) {
-	//	va_list args;
-	//	va_start(args, command);
-	//	byte* bytes = (byte*)MALLOC(byte, getCommandSize(command, (byte*)args));
-	//	var p = bytes;
-	//	*p++ = command;
-	//	makeCommandImpl(command, p, args);
-	//	va_end(args);
-	//	return bytes;
-	//}
-
-	Stream* Device::makeCommand(byte command, ...) {
-		va_list args;
-		va_start(args, command);
-		var stream = NEW_(Stream, getCommandSize(&command));
-		stream->writeByte(command);
-		makeCommandImpl(command, stream, args);
-		va_end(args);
-		return stream;
-	}
-
-	int Device::writeToStream(Stream* stream) {
-		stream->writeByte(type_);
-		return 1;
-	}
-
-	Sequence* Device::createDefaultSequence() {
-		var seq = NEW_(Sequence, this);
-		seq->writeHeader();
-		seq->writeDelta(0);
-		seq->writeCommand(PlayerCommands::CmdEOS);
-		return seq;
-	}
-#endif
 }

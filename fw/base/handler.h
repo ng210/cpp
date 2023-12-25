@@ -5,11 +5,11 @@
 
 	NS_FW_BASE_BEGIN
 
-		template <typename T> int HandlerFunc(void*, T, void* args = NULL);
+		template <typename T> int HandlerFunc(void* context, T value, void* args = NULL);
 
 		template <typename T> struct HandlerItem {
-			void* obj;
-			int(*handler)(void*, T, void*);
+			void* context;
+			int(*handler)(void* context, T value, void* args);	// = HandlerFunc<T>
 			void* args;
 		};
 
@@ -26,13 +26,13 @@
 			void operator()(T t) {
 				for (var i = 0; i < items_.length(); i++) {
 					var item = (HandlerItem<T>*)items_.get(i);
-					item->handler(item->obj, t, item->args);
+					item->handler(item->context, t, item->args);
 				}
 			}
 
-			template<typename T> void add(void* obj, int(fn)(void*, T, void*), void* args = NULL) {
+			void add(void* context, int(*fn)(void* context, T value, void* args), void* args = NULL) {
 				HandlerItem<T> item;
-				item.obj = obj;
+				item.context = context;
 				item.handler = fn;
 				item.args = args;
 				items_.push(&item);
