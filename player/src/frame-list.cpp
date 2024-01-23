@@ -7,12 +7,8 @@ NS_FW_BASE_USE
 
 using namespace PLAYER;
 
-FrameList::FrameList() {
-	device_ = NULL;
-}
-
-FrameList::FrameList(Device* device) {
-	device_ = device;
+FrameList::FrameList(DeviceExt* deviceExt) {
+	deviceExt_ = deviceExt;
 }
 
 FrameList::~FrameList() {
@@ -35,7 +31,7 @@ int FrameList::insertCommand(int time, byte* command) {
 		add(pos, frame);
 	}
 	var cmd = frame->commands.search(*command, pos, FrameList::compareCommands);
-	var length = device_->getCommandSize(command);
+	var length = deviceExt_->getCommandSize(command);
 	var newCmd = MALLOC(byte, length);
 	fmw::memcpy(newCmd, command, length);
 	// frame contains command?
@@ -66,8 +62,8 @@ void FrameList::removeCommand(int time, byte* command) {
 	}
 }
 
-Sequence* FrameList::toSequence(Device* device) {
-	var seq = NEW_(Sequence, device);
+Sequence* FrameList::toSequence(DeviceExt* deviceExt) {
+	var seq = NEW_(Sequence);
 	seq->writeHeader();
 	var time = 0;
 	for (var fi = 0; fi < length_; fi++) {
@@ -76,14 +72,14 @@ Sequence* FrameList::toSequence(Device* device) {
 		time = frame->time;
 		for (var ci = 0; ci < frame->commands.length(); ci++) {
 			var cmd = (byte*)frame->commands.get(ci);
-			var length = device->getCommandSize(cmd);
+			var length = deviceExt->getCommandSize(cmd);
 			seq->writeBytes(cmd, length);
 		}
 	}
 	return seq;
 }
 
-char* FrameList::toJSON() {
+char* FrameList::toJSON(DeviceExt* deviceExt) {
 	Stream str;
 	str.writeString("[\n", false);
 	for (var fi = 0; fi < length_; fi++) {
@@ -94,7 +90,7 @@ char* FrameList::toJSON() {
 		var cmdLength = frame->commands.length();
 		for (var ci = 0; ci < cmdLength; ci++) {
 			var cmd = (byte*)frame->commands.get(ci);
-			var length = device_->getCommandSize(cmd);
+			var length = deviceExt->getCommandSize(cmd);
 			str.writeString("      [ ", false);
 			for (var bi = 0; bi < length; bi++) {
 				token = str_format("\"%02X\"", cmd[bi]);
@@ -110,10 +106,9 @@ char* FrameList::toJSON() {
 	return (char*)str.extract();
 }
 
-FrameList* FrameList::fromSequence(Sequence* seq) {
-	var frames = NEW_(FrameList);
-	frames->device_ = seq->device();
-	seq->reset();
+FrameList* FrameList::fromSequence(Sequence* seq, DeviceExt* deviceExt) {
+	var frames = NEW_(FrameList, deviceExt);
+	seq->rewind();
 	seq->readByte();	// skip device id
 	bool isEOS = false;
 	int time = 0;
@@ -125,7 +120,7 @@ FrameList* FrameList::fromSequence(Sequence* seq) {
 		var isEOF = false;
 		do {
 			cmdId = *seq->cursor();
-			var length = frames->device_->getCommandSize(seq->cursor());
+			var length = deviceExt->getCommandSize(seq->cursor());
 			var cmd = MALLOC(byte, length);
 			fmw::memcpy(cmd, seq->cursor(), length);
 			frame->commands.push(cmd);
@@ -137,7 +132,7 @@ FrameList* FrameList::fromSequence(Sequence* seq) {
 }
 
 // Map<key, FrameList*>
-Map* FrameList::splitSequence(Sequence* seq, FRAME_FILTER* filter, ...) {
+Map* FrameList::splitSequence(Sequence* seq, DeviceExt* deviceExt, FRAME_FILTER* filter, ...) {
 	// split a sequence into multiple list of frames using a filter function
 	va_list args;
 	va_start(args, filter);
@@ -156,7 +151,7 @@ Map* FrameList::splitSequence(Sequence* seq, FRAME_FILTER* filter, ...) {
 				var frameList = (FrameList*)map->get(keyValue->key());
 				if (!frameList) {
 					frameList = NEW_(FrameList);
-					frameList->device_ = seq->device();
+					frameList->deviceExt_ = deviceExt;
 					map->put(keyValue->key(), frameList);
 				}
 				frameList->insertCommand(time, seq->cursor());
@@ -168,9 +163,9 @@ Map* FrameList::splitSequence(Sequence* seq, FRAME_FILTER* filter, ...) {
 	return map;
 }
 
-Sequence* FrameList::merge(Map* frameListMap, Device* device) {
+Sequence* FrameList::merge(Map* frameListMap, DeviceExt* deviceExt) {
 	// merge multiple lists of frames into one sequence
-	var seq = NEW_(Sequence, device);
+	var seq = NEW_(Sequence);
 	var count = frameListMap->size();
 	// array of indices to current frame
 	var cursors = MALLOC(int, count);
@@ -202,7 +197,7 @@ Sequence* FrameList::merge(Map* frameListMap, Device* device) {
 					// write every command at frame into the sequence
 					for (var ci = 0; ci < frame->commands.length(); ci++) {
 						var cmd = (byte*)frame->commands.get(ci);
-						var length = device->getCommandSize(cmd);
+						var length = deviceExt->getCommandSize(cmd);
 						seq->writeBytes(cmd, length);
 						hasEOF = *cmd == PlayerCommands::CmdEOF;
 						hasEOS = *cmd == PlayerCommands::CmdEOS;

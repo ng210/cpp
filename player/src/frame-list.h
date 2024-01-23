@@ -4,6 +4,7 @@
 #include "collection/map.h"
 #include "collection/parray.h"
 #include "player/src/sequence.h"
+#include "player/src/device-ext.h"
 
 NS_FW_BASE_USE
 
@@ -20,21 +21,20 @@ namespace PLAYER {
     typedef KeyValuePair* (FRAME_FILTER)(int time, byte* command, va_list args);
 
     class FrameList : public PArray {
-        PROP(Device*, device);
+        PROP(DeviceExt*, deviceExt);
         int insertCommand(int time, byte* command);
         void removeCommand(int time, byte* command);
     public:
-        FrameList();
-        FrameList(Device*);
+        FrameList(DeviceExt* deviceExt = NULL);
         virtual ~FrameList();
 
-        Sequence* toSequence(Device* device);
-        char* toJSON();
+        Sequence* toSequence(DeviceExt* deviceExt);
+        char* toJSON(DeviceExt* deviceExt);
 
-        static FrameList* fromSequence(Sequence* seq);
+        static FrameList* fromSequence(Sequence* seq, DeviceExt* deviceExt);
         // Map<key, FrameList*>
-        static Map* splitSequence(Sequence* seq, FRAME_FILTER* filter, ...);
-        static Sequence* merge(Map* frameListMap, Device* device);
+        static Map* splitSequence(Sequence* seq, DeviceExt* deviceExt, FRAME_FILTER* filter, ...);
+        static Sequence* merge(Map* frameListMap, DeviceExt* deviceExt);
     
     private:
         static COLLECTION_COMPARE compareFrames;

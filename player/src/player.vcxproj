@@ -137,10 +137,13 @@
     <ClInclude Include="device-ctrl.h" />
     <ClInclude Include="device-ext.h" />
     <ClInclude Include="input-ctrl.h" />
+    <ClInclude Include="input-ext.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="player-adapter.h" />
     <ClInclude Include="player-defs.h" />
     <ClInclude Include="frame-list.h" />
+    <ClInclude Include="player-device-ext.h" />
+    <ClInclude Include="player-ext.h" />
     <ClInclude Include="preset-bank.h" />
     <ClInclude Include="sequence.h" />
     <ClInclude Include="channel.h" />
@@ -148,6 +151,7 @@
     <ClInclude Include="device.h" />
     <ClInclude Include="player-device.h" />
     <ClInclude Include="player-lib.h" />
+    <ClInclude Include="value.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="adapter.cpp" />
@@ -155,8 +159,11 @@
     <ClCompile Include="device-ext.cpp" />
     <ClCompile Include="frame-list.cpp" />
     <ClCompile Include="input-ctrl.cpp" />
+    <ClCompile Include="input-ext.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="player-adapter.cpp" />
+    <ClCompile Include="player-device-ext.cpp" />
+    <ClCompile Include="player-ext.cpp" />
     <ClCompile Include="preset-bank.cpp" />
     <ClCompile Include="sequence.cpp" />
     <ClCompile Include="channel.cpp" />

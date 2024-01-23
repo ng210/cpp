@@ -4,31 +4,47 @@
 
 using namespace PLAYER;
 
-
-ConsDevice::ConsDevice(Adapter* adapter) : Device(NULL, adapter) {
+ConsDevice::ConsDevice(Adapter* adapter) : Device(adapter, NULL) {
     type(ConsDevices::DeviceCons);
-    initData_ = NULL;
-}
-ConsDevice::~ConsDevice() {
-    //FREE(initData_);
+    inputCount_ = 3;
 }
 
+ConsDevice::~ConsDevice() {
+}
 
 void ConsDevice::initialize(byte** pData) {
-    initData_ = *pData;
-    var x = READ(*pData, byte);
-    var y = READ(*pData, byte);
-    var col = READ(*pData, byte);
-    move(x, y);
-    setInk(col);
+    if (pData != NULL) {
+        preset_ = READ(*pData, byte);
+        var x = READ(*pData, byte);
+        var y = READ(*pData, byte);
+        var col = READ(*pData, byte);
+        move(x, y);
+        setInk(col);
+    }
+}
+
+void ConsDevice::setValue(int id, Value value) {
+    switch (id) {
+        case ConsInputX: x_ = value.i; break;
+        case ConsInputY: y_ = value.i; break;
+        case ConsInputColor: ink_ = value.i; break;
+    }
+}
+
+Value* ConsDevice::getValue(int id) {
+    Value* v = NULL;
+    switch (id) {
+        case ConsInputX: v = (Value*)&x_; break;
+        case ConsInputY: v = (Value*)&y_; break;
+        case ConsInputColor: v = (Value*)&ink_; break;
+    }
+    return v;
 }
 
 int ConsDevice::run(int ticks) {
     return 1;
 }
-void ConsDevice::setRefreshRate(float fps) {
 
-}
 void ConsDevice::processCommand(byte cmd, byte*& cursor) {
     switch (cmd) {
     case CmdMoveTo:
@@ -50,56 +66,17 @@ void ConsDevice::processCommand(byte cmd, byte*& cursor) {
     }
 }
 
-#ifdef PLAYER_EDIT_MODE
-void ConsDevice::makeCommandImpl(int command, Stream* stream, va_list args) {
-    switch ((ConsCommands)command) {
-    case CmdSetText:
-        char* str; str = va_arg(args, char*);
-        int len; len = fmw::strlen(str);
-        strncpy((char*)stream, len, str);
-        stream += len;
-        break;
-    case CmdSetInk:
-        *stream++ = va_arg(args, byte);
-        break;
-    case CmdMoveTo:
-        *stream++ = va_arg(args, byte);
-        *stream++ = va_arg(args, byte);
-        break;
-    }
-}
-int ConsDevice::getCommandSize(byte* cmd) {
-    var length = 1;
-    switch (*cmd) {
-    case CmdSetText:
-        length += fmw::strlen((char*)++cmd) + 1;
-        break;
-    case CmdSetInk:
-        length++;
-        break;
-    case CmdMoveTo:
-        length += 2;
-        break;
-    }
-    return length;
-}
-int ConsDevice::writeToStream(Stream* stream) {
-    var len = Device::writeToStream(stream);
-    stream->writeBytes(initData_, 3);
-    len++;
-    return len;
-}
-#endif
-
 void ConsDevice::putText(char* text) {
     var cons = getConsole();
     cons->printf("%s", text);
 }
 void ConsDevice::setInk(int c) {
+    ink_ = c;
     var cons = getConsole();
     cons->setcolor(c);
 }
 void ConsDevice::move(int x, int y) {
+    x_ = x; y_ = y;
     var cons = getConsole();
     cons->movexy(x, y);
 }

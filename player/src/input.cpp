@@ -5,133 +5,189 @@
 
 using namespace PLAYER;
 
-#pragma region InputBase
-
-int InputBase::setter(void* input, Value value, void* unused) {
-	((InputBase*)input)->value = value;
-	return 1;
-}
-
-InputBase::InputBase() {
-	set.add(this, &InputBase::setter);
-	init(Value(0.0f), Value(1.0f), Value(0.01f), Value(0.0f));
-}
-void InputBase::init(Value min, Value max, Value step, Value value) {
-	this->min = min;
-	this->max = max;
-	this->step = step;
-	set(value);
-}
-
-#pragma endregion
-
 #pragma region Input
-Input::Input() {
+Input::Input() {}
+
+Input::Input(Value* pValue) {
 	type = InputTypeB;
+	size = sizeof(Value::b);
+	value = pValue;
+	set.add(this, &Input::setter);
+}
+
+Input::~Input() {
 }
 
 void Input::inc(int count) {
-	var v = value.b + count * step.b;
+	var v = value->b + count * step.b;
 	if (v > max.b) v = max.b;
 	set(v);
 }
+
 void Input::dec(int count) {
-	var v = value.b - count * step.b;
+	var v = value->b - count * step.b;
 	if (v < min.b) v = min.b;
 	set(v);
 }
-int Input::size() {
-	return sizeof(Value::b);
+
+void Input::initialize(Value inMin, Value inMax, Value inStep) {
+	min = inMin;
+	max = inMax;
+	step = inStep;
+	check();
+}
+
+void Input::readFromStream(byte* stream) {
+	if (stream != NULL) {
+		var min = READ(stream, byte);
+		var max = READ(stream, byte);
+		var step = READ(stream, byte);
+		var value = READ(stream, byte);
+		initialize(min, max, step);
+		set(value);
+	}
+}
+
+void Input::check() {
+	// min and step are considered correct
+	// max = min + n*step
+	max.b = ((max.b - min.b) / step.b) * step.b + min.b;
+}
+
+void Input::setFromNormalized(float v) {
+	int range = max.b - min.b;
+	set((int)(trunc(v * range + min.b)));
 }
 
 float Input::getNormalized() {
-	return (float)(value.b - min.b) / (max.b - min.b);
+	return ((float)(value->b - min.b)) / (max.b - min.b);
 }
+
 void Input::getValueAsString(char* str, int len) {
-	str_format_s(str, len, "%d", value.b);
+	str_format_s(str, len, "%d", value->b);
 }
 
-void Input::setFromNormalized(float f) {
-	var v = (int)floor(f * (max.b - min.b)) + min.b;
-	if (v > max.b) v = max.b;
-	else if (v < min.b) v = min.b;
-	set(v);
-}
-void Input::setFromStream(byte*& stream) {
-	set(*stream++);
+void Input::writeValueToStream(Stream* stream) {
+	stream->writeByte(value->b);
 }
 
-void Input::writeToStream(byte*& stream) {
-	WRITE(stream, value.b, byte);
+void Input::writeToStream(Stream* stream) {
+	stream->writeByte(min.b);
+	stream->writeByte(max.b);
+	stream->writeByte(step.b);
+	stream->writeByte(value->b);
+}
+
+int Input::setter(void* obj, Value value, void* unused) {
+	var input = (Input*)obj;
+	var v = (byte)((value.b - input->min.b) / input->step.b) * input->step.b + input->min.b;
+	if (v > input->min.b) {
+		if (v < input->max.b) {
+			input->value->b = v;
+		} else {
+			input->value->b = input->max.b;
+		}
+	} else {
+		input->value->b = input->min.b;
+	}
+	return 1;
 }
 #pragma endregion
 
 #pragma region InputF
-InputF::InputF() {
+InputF::InputF() {}
+
+InputF::InputF(Value* pValue) {
 	type = InputTypeF;
+	size = sizeof(Value::f);
+	value = pValue;
+	set.add(this, &InputF::setter);
+}
+
+void InputF::readFromStream(byte* stream) {
+	if (stream != NULL) {
+		var min = READ(stream, float);
+		var max = READ(stream, float);
+		var step = READ(stream, float);
+		var value = READ(stream, float);
+		Input::initialize(min, max, step);
+		set(value);
+	}
+}
+
+void InputF::check() {
+	// min and step are considered correct
+	// max = min + n*step
+	max.f = (float)trunc((max.f - min.f) / step.f) * step.f + min.f;
+}
+
+void InputF::setFromNormalized(float v) {
+	float range = max.f - min.f;
+	set(v * range + min.f);
 }
 
 void InputF::inc(int count) {
-	var v = value.f + count * step.f;
+	var v = value->f + count * step.f;
 	if (v > max.f) v = max.f;
 	set(v);
 }
+
 void InputF::dec(int count) {
-	var v = value.f - count * step.f;
+	var v = value->f - count * step.f;
 	if (v < min.f) v = min.f;
 	set(v);
 }
-int InputF::size() {
-	return sizeof(Value::f);
-}
 
 float InputF::getNormalized() {
-	return (value.f - min.f) / (max.f - min.f);
+	return (value->f - min.f) / (max.f - min.f);
 }
+
 void InputF::getValueAsString(char* str, int len) {
-	str_format_s(str, len, "%.2f", value.f);
+	str_format_s(str, len, "%.4f", value->f);
 }
-void InputF::setFromNormalized(float f) {
-	var v = f * (max.f - min.f) + min.f;
-	if (f > max.f) v = max.f;
-	else if (f < min.f) v = min.f;
-	set(v);
+
+void InputF::writeToStream(Stream* stream) {
+	stream->writeFloat(min.f);
+	stream->writeFloat(max.f);
+	stream->writeFloat(step.f);
+	stream->writeFloat(value->f);
 }
-void InputF::setFromStream(byte*& stream) {
-	set(*(float*)stream);
-	stream += sizeof(float);
+
+void InputF::writeValueToStream(Stream* stream) {
+	stream->writeFloat(value->f);
 }
-void InputF::writeToStream(byte*& stream) {
-	WRITE(stream, value.f, float);
+
+int InputF::setter(void* obj, Value value, void* unused) {
+	var input = (InputF*)obj;
+	var v = (float)trunc((value.f - input->min.f) / input->step.f) * input->step.f + input->min.f;
+	if (v > input->min.f) {
+		if (v < input->max.f) {
+			input->value->f = v;
+		}
+		else {
+			input->value->f = input->max.f;
+		}
+	}
+	else {
+		input->value->f = input->min.f;
+	}
+	return 1;
 }
 #pragma endregion
 
 #pragma region InputF8
-InputF8::InputF8() {
+InputF8::InputF8(Value* pV) : Input(pValue) {
 	type = InputTypeF8;
-	//set.fn = &InputBase::setterF8;
+	size = sizeof(Value::b);
+	pValue = pV;
+	value = &bValue_;
+	set.add(this, &InputF8::setter);
 }
 
-int InputF8::size() {
-	return sizeof(Value::b);
+int InputF8::setter(void* obj, Value value, void* unused) {
+	var input = (InputF8*)obj;
+	Input::setter(input, value, unused);
+	input->pValue->f = input->bValue_.b / 255.0f;
+	return 1;
 }
-
-void InputF8::init(Value min, Value max, Value step, Value value) {
-	this->min = min.b / 255.0f;
-	this->max = max.b / 255.0f;
-	this->step = step.b / 255.0f;
-	set(value.b / 255.0f);
-}
-
-void InputF8::getValueAsString(char* str, int len) {
-	str_format_s(str, len, "%d", (byte)trunc(value.f * 255.0f));
-}
-void InputF8::setFromStream(byte*& stream) {
-	set(*stream / 255.0f);
-	stream++;
-}
-void InputF8::writeToStream(byte*& stream) {
-	WRITE(stream, (byte)trunc(value.f * 255.0f), byte);
-}
-
 #pragma endregion

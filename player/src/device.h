@@ -2,11 +2,10 @@
 #define __PLAYER_DEVICE_H
 
 #include <stdarg.h>
-#include "basedef.h"
-#include "base/str.h"
 #include "base/stream.h"
-#include "player/src/player-defs.h"
-#include "player/src/sequence.h"
+#include "player/src/adapter.h"
+#include "player/src/value.h"
+#include "player/src/preset-bank.h"
 
 NS_FW_BASE_USE
 
@@ -16,28 +15,40 @@ namespace PLAYER {
 	class Player;
 
 	class Device {
-	protected: PROP_R(float, refreshRate);
-	protected: void* object_;
+	protected: PROP(void*, object);
 	protected: PROP(int, type);
-	protected: PROP(Adapter*, adapter);
-	protected: PROP(Player*, player);
-	protected: PROP(byte*, initData);
 	protected: bool isActive_;
-	public:
-		Device(void* object, Adapter* adapter);
-		virtual ~Device() {};
+	protected: PROP(int, inputCount);
+	protected: PROP_R(PresetBank*, presetBank);
+	protected: PROP_R(int, preset);
 
-		virtual void initialize(byte** pData = NULL) = 0;
+	//protected: PROP_R(float, refreshRate);
+
+	protected: PROP(Adapter*, adapter);
+	//protected: PROP(Player*, player);
+	//protected: PROP(byte*, initData);
+	
+	protected:
+		Device();
+	public:		
+		Device(Adapter* adapter, void* object = NULL);
+		virtual ~Device() {}
+
+		virtual void initialize(byte** stream = NULL) = 0;
 
 		virtual bool isActive();
 		virtual void isActive(bool b);
 
-		virtual int run(int ticks);
-		virtual void setRefreshRate(float fps);
+		PresetBank* setPresetBank(PresetBank* pb);
+		int setPreset(int ix);
+
+		virtual void setValue(int id, Value value) = 0;
+		virtual Value* getValue(int id) = 0;
+
+		virtual int run(int ticks) = 0;
 		virtual void processCommand(byte cmd, byte*& cursor) = 0;
 
-		void* object() { return object_; }
-		void object(void* obj) { object_ = obj; }
+		//virtual void setRefreshRate(float fps);
 	};
 }
 #endif

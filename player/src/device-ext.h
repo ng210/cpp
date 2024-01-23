@@ -1,29 +1,27 @@
 #ifndef __PLAYER_DEVICE_EXT_H
 #define __PLAYER_DEVICE_EXT_H
 
-#include "base/handler.h"
+#include "player/src/input.h"
 #include "player/src/device.h"
+#include "player/src/sequence.h"
 #include "player/src/preset-bank.h"
 
 NS_FW_BASE_USE
 
 namespace PLAYER {
-	class DeviceExt : public Device {
-	protected: PROP_R(InputBase*, inputs);
-	protected: PROP_R(int, inputCount);
-	protected: PROP_R(PresetBank*, presetBank);
-	protected: PROP_R(int, preset);
-	
+	class DeviceExt {
+	protected: PROP_R(Device*, device);
+		Input* inputs_;
 	public:
-		DeviceExt(void* object, Adapter* adapter);
-		~DeviceExt();
+		DeviceExt(Device* device);
+		virtual ~DeviceExt();
+		void initialize(Stream* stream);
 
-		Handler<PresetBank*> setPresetBank;
-		Handler<int> setPreset;
+		virtual void createInputs();
+		virtual Input* getInput(int id);
 
-		virtual void initializeFromStream(byte** pData);
-		virtual int writeToStream(Stream* stream);
-		virtual int writePreset(byte* pData);
+		virtual void writeToStream(Stream* stream);
+		virtual void writePresetToStream(Stream* stream);
 
 		virtual Stream* makeCommand(byte command, ...);
 		virtual void makeCommandImpl(int command, Stream* stream, va_list args) = 0;
@@ -31,9 +29,7 @@ namespace PLAYER {
 
 		virtual Sequence* createDefaultSequence();
 
-		static int presetBankSetter(void*, PresetBank*, void* = NULL);
-		static int presetSetter(void*, int, void* = NULL);
-		static byte* loadPresetBanks(const char* presetBankPath);
+		static PresetBank* loadPresetBank(const char* presetBankPath);
 	};
 }
 

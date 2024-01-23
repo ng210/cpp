@@ -13,7 +13,7 @@ void Adapter::prepare() {}
 void Adapter::cleanUp() {}
 
 int Adapter::compare(COLLECTION_ARGUMENTS) {
-	return (*(Adapter**)value)->getInfo()->id - (*(Adapter**)key.p)->getInfo()->id;
+	return ((Adapter*)value)->getInfo()->id - ((Adapter*)key.p)->getInfo()->id;
 }
 #ifdef PLAYER_EDIT_MODE
 void Adapter::writeToStream(Stream* data) {

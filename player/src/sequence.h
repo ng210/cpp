@@ -9,16 +9,13 @@ namespace PLAYER {
 	class Device;
 
 	class Sequence : public Stream {
-	private: PROP_R(Device*, device);
+	//private: PROP_R(Device*, device);
 	public:
 		Sequence();
-		Sequence(Device* device);
-		Sequence(Device* device, byte* stream, int offset = 0, int length = 0);
+		Sequence(byte* stream, int offset = 0, int length = 0);
 		virtual ~Sequence();
 
 		void init(int length);
-
-		void device(Device* dev);
 
 		Sequence* writeHeader();
 		Sequence* writeDelta(word delta);

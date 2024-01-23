@@ -3,6 +3,8 @@
 
 #include "collection/map.h"
 #include "base/stream.h"
+#include "player/src/player-defs.h"
+#include "player/src/channel.h"
 #include "player/src/player-device.h"
 
 NS_FW_BASE_USE
@@ -16,7 +18,7 @@ namespace PLAYER {
 		static Adapter* getAdapter(int type);
 		static void cleanUp();			
 
-#pragma region Resources
+	#pragma region Resources
 	protected:	PROP_R(PArray, channels);
 	protected:	PROP_R(PArray, devices);
 	protected:	PROP_R(PArray, sequences);
@@ -30,9 +32,9 @@ namespace PLAYER {
 	Sequence* addSequence(Sequence* sequence);
 	Sequence* addSequence(byte* stream, int length);
 	Device* addDevice(Adapter* adapter, int deviceType, byte** pData = NULL);
-#pragma endregion
+	#pragma endregion
 
-#pragma region Threading
+	#pragma region Threading
 	private:
 		DWORD threadId_;
 		HANDLE hThread_;
@@ -43,9 +45,9 @@ namespace PLAYER {
 		void useThread();
 		void start();
 		void stop();
-#pragma endregion
+	#pragma endregion
 
-#pragma region Player
+	#pragma region Player
 	private:
 		PROP_R(PlayerDevice*, masterDevice);
 		PROP_R(int, counter);
@@ -59,12 +61,7 @@ namespace PLAYER {
 		void initialize(byte** pData = NULL);
 		void clear();
 		int run(int ticks);
-
-		void load(byte** pData);
-		Stream* save();
-
-#pragma endregion
-
+	#pragma endregion
 	};
 }
 

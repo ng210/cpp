@@ -23,61 +23,60 @@ void DeviceCtrl::createWindow(Window* parent, char* name, LONG style, DWORD exSt
 
 void DeviceCtrl::onSelectProgram(ComboboxCtrl* cb, int ix, void* item) {
 	var ctrl = (DeviceCtrl*)cb->parent();
-	DeviceExt::presetSetter(ctrl->deviceExt_, ix);
+	//TODO: DeviceExt::presetBankSetter(ctrl->deviceExt_, ix, NULL);
 }
 
 LRESULT DeviceCtrl::onAddProgram(Window* button, POINT& pos, WPARAM state) {
 	var devCtrl = (DeviceCtrl*)button->parent();
+	var device = (Device*)devCtrl->deviceExt_;
 	char name[16];
 	devCtrl->presetCtrl_.getText(name, 16);
-	var pb = devCtrl->deviceExt_->presetBank();
+	var pb = device->presetBank();
 	var ix = pb->indexOf(name);
 	if (ix == -1) {
-		// add new program
-		var prg = MALLOC(byte, pb->bankSize());
-		devCtrl->deviceExt_->writePreset(prg);
-		sb->add(name, prg);
-		FREE(prg);
-		mdlCtrl->updateSoundbank();
+		// add new preset
+		var prg = NEW_(Stream, pb->bankSize());
+		devCtrl->deviceExt_->writePresetToStream(prg);
+		pb->add(name, prg->data());
+		DEL_(prg);
+		//devCtrl->updateSoundbank();
+	} else {
+		var prg = NEW_(Stream, (byte*)pb->get(&name[0]), pb->bankSize());
+		devCtrl->deviceExt_->writePresetToStream(prg);
 	}
-	else {
-		var prg = (byte*)sb->get(&name[0]);
-		mdlCtrl->module()->writeProgram(prg);
-	}
-	SYSFN2(ix, (int)SendMessage(mdlCtrl->programCtrl_.hWnd(), CB_FINDSTRINGEXACT, 0, (LPARAM)name), CB_ERR);
-	mdlCtrl->module()->setProgram(ix);
+	SYSFN2(ix, (int)SendMessage(devCtrl->presetCtrl_.hWnd(), CB_FINDSTRINGEXACT, 0, (LPARAM)name), CB_ERR);
+	device->setPreset(ix);
 	return 1;
 }
 
 LRESULT DeviceCtrl::onRemoveProgram(Window* button, POINT& pos, WPARAM state) {
-	var mdlCtrl = (ModuleCtrl*)button->parent();
-	var mdl = mdlCtrl->module_;
+	var devCtrl = (DeviceCtrl*)button->parent();
+	var dev = (Device*)devCtrl->deviceExt_;
 	char name[16];
-	mdlCtrl->programCtrl_.getText(name, 16);
-	var sb = mdl->soundbank();
+	devCtrl->presetCtrl_.getText(name, 16);
+	var sb = dev->presetBank();
 	if (sb->size() > 1) {
 		var ix = sb->indexOf(name);
 		if (ix != -1) {
-			if (mdl->program() == ix) {
-				Module::programSetter(mdl, ix > 0 ? 0 : 1);
+			if (dev->preset() == ix) {
+				//TODO: DeviceExt::presetSetter(dev, ix > 0 ? 0 : 1, NULL);
 			}
-			// remove program
+			// remove preset
 			Key key(&name);
 			sb->remove(key);
-			mdlCtrl->updateSoundbank();
+			//devCtrl->updateSoundbank();
 		}
 	}
 	return 1;
 }
 
-
-
 int DeviceCtrl::presetBankSetter(void* obj, PresetBank* pb, void* unused) {
 	var ctrl = (DeviceCtrl*)obj;
-	ctrl->deviceExt_->setPresetBank(pb);
+	((Device*)ctrl->deviceExt_)->setPresetBank(pb);
 	//ctrl->updateSoundbank();
 	return 1;
 }
+
 int DeviceCtrl::presetSetter(void* obj, int ix, void* unused) {
 	var ctrl = (DeviceCtrl*)obj;
 	LRESULT res = 0;

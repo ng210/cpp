@@ -18,7 +18,7 @@ namespace PLAYER {
         Device* device = NULL;
         switch (deviceType) {
         case PlayerDevices::DevicePlayer:
-            device = NEW_(PlayerDevice, NEW_(Player), this);
+            device = NEW_(PlayerDevice, this, NEW_(Player));
             break;
         }
         return device;

@@ -164,11 +164,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cons-adapter.cpp" />
+    <ClCompile Include="cons-device-ext.cpp" />
     <ClCompile Include="cons-device.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cons-adapter.h" />
+    <ClInclude Include="cons-device-ext.h" />
     <ClInclude Include="cons-device.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

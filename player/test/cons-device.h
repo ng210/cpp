@@ -11,6 +11,12 @@ typedef enum ConsCommands {
 	CmdMoveTo
 } ConsCommands;
 
+typedef enum ConsInputs {
+	ConsInputX,
+	ConsInputY,
+	ConsInputColor
+} ConsInputs;
+
 class ConsDevice : public Device {
 public:
 	ConsDevice(Adapter* adapter);
@@ -18,15 +24,17 @@ public:
 
 	void initialize(byte** pData = NULL);
 
+	void setValue(int id, Value value);
+	Value* getValue(int id);
+
 	int run(int ticks);
-	void setRefreshRate(float fps);
+	//void setRefreshRate(float fps);
 	void processCommand(byte cmd, byte*& cursor);
 
-#ifdef PLAYER_EDIT_MODE
-	void makeCommandImpl(int command, Stream* stream, va_list args);
-	int getCommandSize(byte* cmd);
-	int writeToStream(Stream* stream);
-#endif
+	// console object
+private:
+	int x_, y_, ink_;
+public:
 	void putText(char* text);
 	void move(int x, int y);
 	void setInk(int c);

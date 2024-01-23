@@ -26,28 +26,26 @@ namespace PLAYER {
 	class Channel;
 	class PlayerDevice : public Device {
 	public:
-		static PlayerDevice* create(byte** pData = NULL);
-
 		PROP(PlayerMode, mode);
 
-		PlayerDevice(void* object, Adapter* adapter);
+		PlayerDevice(Adapter* adapter, void* object);
 		virtual ~PlayerDevice();
 
 		void initialize(byte** pData = NULL);
 
 		bool isActive();
 		void isActive(bool b);
+
+		void setValue(int id, Value value);
+		Value* getValue(int id);
+
+		int run(int ticks);
+
 		Player* player() { return (Player*)object_; };
 
-		//int run(int ticks);
-		void setRefreshRate(float fps);
 		void processCommand(byte cmd, byte*& cursor);
 
-#ifdef PLAYER_EDIT_MODE
-		void makeCommandImpl(int command, Stream* stream, va_list args);
-		int getCommandSize(byte* cmd);
-		int writeToStream(Stream* stream);
-#endif
+		static PlayerDevice* create(byte** pData = NULL);
 	};
 }
 

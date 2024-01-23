@@ -1,34 +1,49 @@
 #include "base/memory.h"
 #include "player/src/device-ext.h"
+#include "player/src/input-ext.h"
 #include "player/src/player-device.h"
 
 using namespace PLAYER;
 
-DeviceExt::DeviceExt(void* object, Adapter* adapter) : Device(object, adapter) {
+DeviceExt::DeviceExt(Device* device) {
 	inputs_ = NULL;
-	inputCount_ = 0;
+	device_ = device;
 }
 
-void DeviceExt::initializeFromStream(byte** pData) {
+DeviceExt::~DeviceExt() {
+}
+
+
+void DeviceExt::initialize(Stream* stream) {
+	var cursor = stream->cursor();
+	device_->initialize(&cursor);
+	stream->cursor(cursor);
 	int prId = 0;
-	if (pData != NULL && *pData != NULL) {
-		prId = READ(*pData, byte);
+	if (stream != NULL && stream->length() > 0) {
+		prId = stream->readByte();
 	}
-	setPreset(prId);
+	device_->setPreset(prId);
 }
 
-int DeviceExt::writeToStream(Stream* stream) {
-	stream->writeByte(type_);
-	stream->writeByte(preset_);
-	return 1;
+void DeviceExt::createInputs() {
+
 }
 
-int DeviceExt::writePreset(byte* pData) {
-	var start = pData;
-	for (var i = 0; i < inputCount_; i++) {
-		inputs_[i].writeToStream(pData);
+Input* DeviceExt::getInput(int id) {
+	return NULL;
+}
+
+void DeviceExt::writeToStream(Stream* stream) {
+	stream->writeByte(device_->type());
+	stream->writeByte(device_->preset());
+	writePresetToStream(stream);
+}
+
+void DeviceExt::writePresetToStream(Stream* stream) {
+	var start = stream;
+	for (var i = 0; i < device_->inputCount(); i++) {
+		getInput(i)->writeValueToStream(stream);
 	}
-	return (int)(pData - start);
 }
 
 Stream* DeviceExt::makeCommand(byte command, ...) {
@@ -42,9 +57,15 @@ Stream* DeviceExt::makeCommand(byte command, ...) {
 }
 
 Sequence* DeviceExt::createDefaultSequence() {
-	var seq = NEW_(Sequence, this);
+	var seq = NEW_(Sequence);
 	seq->writeHeader();
 	seq->writeDelta(0);
 	seq->writeCommand(PlayerCommands::CmdEOS);
 	return seq;
+}
+
+PresetBank* DeviceExt::loadPresetBank(const char* presetBankPath) {
+	var pb = NEW_(PresetBank);
+
+	return pb;
 }

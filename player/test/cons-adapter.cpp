@@ -1,6 +1,7 @@
 #include "base/memory.h"
-#include "cons-adapter.h"
-#include "cons-device.h"
+#include "player/test/cons-adapter.h"
+#include "player/test/cons-device.h"
+#include "player/test/cons-device-ext.h"
 
 using namespace PLAYER;
 

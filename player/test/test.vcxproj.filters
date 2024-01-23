@@ -24,12 +24,18 @@
     <ClCompile Include="cons-adapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cons-device-ext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cons-device.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cons-adapter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cons-device-ext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

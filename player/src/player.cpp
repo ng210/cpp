@@ -21,12 +21,12 @@ namespace PLAYER {
     Map* Player::adapters_ = NULL;
     Adapter* Player::addAdapter(Adapter* adapter) {
         if (Player::adapters_ == NULL) {
-            Player::adapters_ = NEW_(Map, sizeof(int), sizeof(Adapter*), Map::hashingInt, Collection::compareInt);
-            Player::adapters_->hasRefKey(false);
+            Player::adapters_ = NEW_(Map, sizeof(int), MAP_USE_REF, Map::hashingInt, Collection::compareInt);
+            //Player::adapters_->hasRefKey(false);
         }
         if (!Player::adapters_->containsKey(adapter->getInfo()->id)) {
             adapter->prepare();
-            Player::adapters_->put(adapter->getInfo()->id, &adapter);
+            Player::adapters_->put(adapter->getInfo()->id, adapter);
         }
         
         return adapter;
@@ -34,15 +34,14 @@ namespace PLAYER {
     Adapter* Player::getAdapter(int type) {
         Adapter* ad = NULL;
         if (Player::adapters_ != NULL && Player::adapters_->size() > 0) {
-            var pAd = (Adapter**)Player::adapters_->get(type);
-            if (pAd != NULL) ad = *pAd;
+            ad = (Adapter*)Player::adapters_->get(type);
         }
         return ad;
     }
 
     void Player::cleanUp() {
         for (var i = 0; i < Player::adapters_->values()->length(); i++) {
-            var adapter = *(Adapter**)Player::adapters_->values()->get(i);
+            var adapter = (Adapter*)Player::adapters_->values()->get(i);
             adapter->cleanUp();
             DEL_(adapter);
         }
@@ -92,7 +91,7 @@ namespace PLAYER {
     //    return sequence;
     //}
     
-#pragma region Threading
+    #pragma region Threading
     void Player::useThread() {
         hThread_ = CreateThread(0, 0x1000, &Player::threadProc, this, CREATE_SUSPENDED, &threadId_);
         isPlaying_ = false;
@@ -152,9 +151,9 @@ namespace PLAYER {
         dword exitCode;
         SYSPR(GetExitCodeThread(hThread_, &exitCode));
     }
-#pragma endregion
+    #pragma endregion
 
-#pragma region Utility
+    #pragma region Utility
     DataBlockItem* Player::addDataBlock(byte* stream, int length, DataBlockItemFlag flag) {
         if (dataBlocks_.length() == 0) {
             // ensure the first datablock is reserved
@@ -165,26 +164,12 @@ namespace PLAYER {
         return (DataBlockItem*)dataBlocks_.push(&dbi);
     }
     Sequence* Player::addSequence(Sequence* sequence) {
-        if (sequence->device() == NULL) {
-            var devId = *sequence->data();
-            var dev = (Device*)devices().get(devId);
-            sequence->device(dev);
-        }
         sequences_.push(sequence);
         return sequence;
     }
     Sequence* Player::addSequence(byte* stream, int length) {
-        Sequence* sequence = NULL;
-        int deviceId = *stream;
-        int ix = -1;
-        var device = (Device*)devices_.get(deviceId);
-        if (device != NULL) {
-            sequence = NEW_(Sequence, device, stream, 0, length);
-            sequences_.push(sequence);
-        }
-        else {
-            // error: illegal device id!
-        }
+        var sequence = NEW_(Sequence, stream, 0, length);
+        addSequence(sequence);
         return sequence;
     }
     Device* Player::addDevice(Adapter* adapter, int deviceType, byte** pData) {
@@ -195,7 +180,6 @@ namespace PLAYER {
         }
         device = adapter->createDevice(deviceType);
         if (device) {
-            device->player(this);
             device->initialize(pData);
             devices_.push(device);
             //device->dataBlockItem(dataBlock);
@@ -206,7 +190,7 @@ namespace PLAYER {
     //	int ix = -1;
     //	return (Device*)devices_.search(&type, ix);
     //}
-#pragma endregion
+    #pragma endregion
 
 
     //int Player::load(const char* path) {
@@ -323,7 +307,7 @@ namespace PLAYER {
             for (var ai = 0; ai < adapterCount; ai++) {
                 // get adapter
                 int adapterId = READ(p, byte);
-                var adapter = *(Adapter**)Player::adapters_->get(adapterId);
+                var adapter = (Adapter*)Player::adapters_->get(adapterId);
                 if (adapter) {
                     // initialize
                     adapter->initialize(&p);
@@ -333,7 +317,6 @@ namespace PLAYER {
                         // create and initialize device
                         var device = adapter->createDevice(*p++);
                         if (device != NULL) {
-                            device->player(this);
                             device->initialize(&p);
                             devices_.push(device);
                         }
@@ -386,90 +369,5 @@ namespace PLAYER {
             }
         }
         return masterChannel_->isActive();
-    }
-    void Player::load(byte** pData) {
-        initialize(pData);
-    }
-    Stream* Player::save() {
-        var stream = NEW_(Stream, 1024);
-        var start = stream->cursor();
-
-        // create map of adapter to device list
-        Map adapterMap(sizeof(Adapter*), sizeof(PArray*), Map::hashingStr, Adapter::compare);
-        var list = NEW_(PArray, 16);
-        var adapter = masterDevice_->adapter();
-        adapterMap.put(&adapter, &list);
-        for (var i = 1; i < devices_.length(); i++) {
-            var device = (Device*)devices_.get(i);
-            adapter = device->adapter();
-            if (!adapterMap.containsKey(&adapter)) {
-                list = NEW_(PArray, 16);
-                adapterMap.put(&adapter, &list);
-            }
-            else {
-                list = *(PArray**)adapterMap.get(&adapter);
-            }
-            list->push(device);
-        }
-
-        Stream initData(1024);
-        initData.writeFloat(refreshRate_);
-        // master channel is implicit
-        initData.writeByte(channels_.length() - 1);
-
-        // write adapter count
-        Stream adapterList(4096);
-        adapterList.writeByte((byte)adapterMap.size());
-        for (var i = 0; i < adapterMap.size(); i++) {
-            var adapter = *(Adapter**)adapterMap.keys()->get(i);
-            // write adapter data
-            adapter->writeToStream(&adapterList);
-            var list = *(PArray**)adapterMap.values()->get(i);
-            adapterList.writeByte(list->length());
-            for (var j = 0; j < list->length(); j++) {
-                var device = (Device*)list->get(j);
-                device->writeToStream(&adapterList);
-            }
-            DEL_(list);
-        }
-
-        // create sequence list
-        var seqCount = sequences_.length();
-        Stream seqList(4096);
-        seqList.writeByte(seqCount);
-        for (var i = 0; i < seqCount; i++) {
-            var seq = (Sequence*)sequences_.get(i);
-            seqList.writeWord((word)seq->length());
-        }
-        for (var i = 0; i < seqCount; i++) {
-            var seq = (Sequence*)sequences_.get(i);
-            seqList.writeStream(seq);
-        }
-
-        // write header block
-        word count = dataBlocks_.length() + 3;
-        stream->writeWord(count);
-        //int offset = sizeof(count) + count * sizeof(dword);
-        stream->writeDword(initData.length());
-        //offset += initData.length();
-        stream->writeDword(adapterList.length());
-        //offset += adapterList.length();
-        stream->writeDword(seqList.length());
-        //offset += seqList.length();
-        for (var i = 0; i < dataBlocks_.length(); i++) {
-            var dbi = (DataBlockItem*)dataBlocks_.get(i);
-            stream->writeDword(dbi->length);
-            //offset += dbi->length;
-        }
-
-        // write data
-        stream->writeStream(&initData);
-        stream->writeStream(&adapterList);
-        stream->writeStream(&seqList);
-        for (var i = 0; i < dataBlocks_.length(); i++) {
-            var dbi = (DataBlockItem*)dataBlocks_.get(i);
-            stream->writeBytes(dbi->dataBlock, dbi->length);
-        }
-        return stream;
     }
 }

@@ -3,21 +3,12 @@
 
 #include "basedef.h"
 #include "base/handler.h"
+#include "base/stream.h"
+#include "player/src/value.h"
 
 NS_FW_BASE_USE
 
 namespace PLAYER {
-
-    typedef union Value {
-        float f;
-        int i;
-        byte b;
-
-        Value() : f(0) {}
-        Value(float v) : f(v) {}
-        Value(int v) : i(v) {}
-        Value(byte v) : i(v) {}
-    } Value;
 
     typedef enum InputType {
         InputTypeB,
@@ -25,76 +16,71 @@ namespace PLAYER {
         InputTypeF8
     } InputType;
 
-    class InputBase {
+    class Input {
     public:
+        Input();
         Value min;
         Value max;
         Value step;
-        Value value;
+        Value* value;
         InputType type;
-
-        InputBase();
-        InputBase(Value min, Value max, Value step, Value value);
-
         Handler<Value> set;
+        int size;
 
-        virtual void init(Value min, Value max, Value step, Value value);
+        Input(Value*);
+        virtual ~Input();
 
-        virtual void inc(int count) = 0;
-        virtual void dec(int count) = 0;
-        virtual int size() = 0;
+        virtual void initialize(Value inMin, Value inMax, Value inStep);
+        virtual void readFromStream(byte* stream);
+        virtual void check();
 
-        virtual float getNormalized() = 0;
-        virtual void getValueAsString(char* str, int len) = 0;
-        virtual void setFromStream(byte*& stream) = 0;
-        virtual void setFromNormalized(float v) = 0;
-        virtual void writeToStream(byte*& stream) = 0;
+        virtual void setFromNormalized(float v);
+
+        virtual void inc(int count);
+        virtual void dec(int count);
+
+        virtual float getNormalized();
+        virtual void getValueAsString(char* str, int len);
+
+        virtual void writeToStream(Stream* stream);
+        virtual void writeValueToStream(Stream* stream);
 
         static int setter(void*, Value, void* = NULL);
-        //static int setterF8(void*, Value, void*);
     };
 
-    // derived classes of InputBase MUValueT NOT add new member variables
+    // derived classes of Input MUST NOT add new member variables
     // only member methods and overrides are allowed!
 
-    class Input : public InputBase {
-    public:
-        Input();
-
-        void inc(int count);
-        void dec(int count);
-        int size();
-
-        float getNormalized();
-        void getValueAsString(char* str, int len);
-        void setFromNormalized(float v);
-        void setFromStream(byte*& stream);
-        void writeToStream(byte*& stream);
-    };
-
-    class InputF : public InputBase {
-    public:
+    class InputF : public Input {
+    protected:
         InputF();
+    public:
+        InputF(Value*);
+
+        void readFromStream(byte* stream);
+
+        void check();
+
+        void setFromNormalized(float v);
+
         void inc(int count);
         void dec(int count);
-        int size();
 
         float getNormalized();
         void getValueAsString(char* str, int len);
-        void setFromNormalized(float v);
-        void setFromStream(byte*& stream);
-        void writeToStream(byte*& stream);
+
+        void writeToStream(Stream* stream);
+        void writeValueToStream(Stream* stream);
+
+        static int setter(void*, Value, void* = NULL);
     };
 
-    class InputF8 : public InputF {
+    class InputF8 : public Input {
+        Value bValue_;
     public:
-        InputF8();
-        void init(Value min, Value max, Value step, Value value);
-        int size();
-
-        void getValueAsString(char* str, int len);
-        void setFromStream(byte*& stream);
-        void writeToStream(byte*& stream);
+        InputF8(Value*);
+        Value* pValue;
+        static int setter(void*, Value, void* = NULL);
     };
 }
 
