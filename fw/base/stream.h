@@ -35,7 +35,8 @@ public:
 	char* readString();
 	char* readRow();
 
-	inline void reset() { cursor_ = data_; }
+	inline void reset() { cursor_ = data_; length_ = 0; }
+	inline void rewind() { cursor_ = data_; }
 	Stream* writeByte(byte b);
 	Stream* writeWord(word w);
 	Stream* writeDword(dword dw);

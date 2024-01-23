@@ -16,11 +16,6 @@ NS_FW_BASE_USE
 //const size_t Map::seedExt_ = 0x80000000000003ULL;
 //const size_t Map::seedInt_ = 2;
 
-
-Map::Map() : keys_(NULL), values_(NULL), size_(0), bucketList_(NULL), hashing_(NULL) {
-	hasRefKey_ = false;
-}
-
 //void Map::initialize() {
 //	// add type entry
 //	classType_ = ADD_TYPE(Map);
@@ -59,6 +54,10 @@ int Map::compareWrapper_(COLLECTION_ARGUMENTS) {
 	return bucket->compare()(keyValue->key(), key, bucket, args);
 }
 
+Map::Map() : keys_(NULL), values_(NULL), size_(0), bucketList_(NULL), hashing_(NULL) {
+	hasRefKey_ = false;
+}
+
 Map::Map(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTION_COMPARE* compare) {
 	initialize(keySize, valueSize, hashing, compare);
 }
@@ -78,14 +77,15 @@ Map::Map(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTION_
 //}
 
 void Map::initialize(UINT32 keySize, UINT32 valueSize, HashingFunction* hashing, COLLECTION_COMPARE* compare) {
-	if (keySize == MAP_USE_REF) keys_ = NEW_(PArray, MAP_ITEM_COUNT);
-	else keys_= NEW_(Array, keySize, MAP_ITEM_COUNT);
+	if (keySize == MAP_USE_REF) {
+		keys_ = NEW_(PArray, MAP_ITEM_COUNT);
+		hasRefKey_ = true;
+	} else keys_= NEW_(Array, keySize, MAP_ITEM_COUNT);
 	compare_ = compare;
 	keys_->compare(compare);
 	if (valueSize == MAP_USE_REF) values_ = NEW_(PArray, MAP_ITEM_COUNT);
 	else values_ = NEW_(Array, valueSize, MAP_ITEM_COUNT);
 	size_ = 0;
-	hasRefKey_ = true;
 	bucketList_ = NEW_(Array, sizeof(Array), MAP_BUCKETLIST_SIZE);
 	Array* ptr = (Array*)bucketList_->data();
 	for (size_t i = 0; i < MAP_BUCKETLIST_SIZE; i++) {
