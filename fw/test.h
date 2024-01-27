@@ -1,8 +1,8 @@
 #ifndef __TEST_H
 #define __TEST_H
 
-#include "console/consoleapp.h"
 #include "basedef.h"
+#include "utils/iconsole.h"
 
 NS_FW_BASE_BEGIN
 
@@ -32,7 +32,7 @@ public:
     virtual void runAll(int& totalPassed, int& totalFailed) = 0;
 
     static void setColor(float ratio);
-    static Console* cons;
+    static IConsole* cons;
 };
 
 NS_FW_BASE_END

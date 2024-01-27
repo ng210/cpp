@@ -3,17 +3,13 @@
 
 NS_FW_BASE_USE
 
-Console* Test::cons = NULL;
+IConsole* Test::cons = NULL;
 
 Test::Test() {
     passed_ = 0;
     failed_ = 0;
     totalPassed_ = 0;
     totalFailed_ = 0;
-
-    if (Test::cons == NULL) {
-        Test::cons = getConsole();
-    }
 }
 
 Test::~Test() {}

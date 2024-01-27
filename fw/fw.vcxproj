@@ -96,6 +96,7 @@
       <StructMemberAlignment>Default</StructMemberAlignment>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Lib>
       <AdditionalDependencies>Msimg32.lib</AdditionalDependencies>
@@ -155,6 +156,7 @@
     <ClInclude Include="syntax\syntax-test.h" />
     <ClInclude Include="syntax\syntax.h" />
     <ClInclude Include="test.h" />
+    <ClInclude Include="utils\iconsole.h" />
     <ClInclude Include="utils\directory.h" />
     <ClInclude Include="win\buttonctrl.h" />
     <ClInclude Include="win\chartctrl.h" />
@@ -202,6 +204,7 @@
     <ClCompile Include="syntax\syntax.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="utils\directory.cpp" />
+    <ClCompile Include="utils\iconsole.cpp" />
     <ClCompile Include="win\buttonctrl.cpp" />
     <ClCompile Include="win\chartctrl.cpp" />
     <ClCompile Include="win\comboboxctrl.cpp" />
