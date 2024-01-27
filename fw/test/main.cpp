@@ -25,6 +25,8 @@ int _main(NS_FW_BASE::Map* args) {
 	#endif
 	LOG("Framework tests\n");
 
+	Test::cons = getConsole();
+
 	//for (UINT32 i = 0; i < args->keys()->length(); i++) {
 	//	char* key = *(char**)args->keys()->get(i);
 	//	LOG(" - %s : %s\n", key, *(char**)args->get(key));
@@ -34,13 +36,13 @@ int _main(NS_FW_BASE::Map* args) {
 	int totalPassed = 0;
 	int totalFailed = 0;
 
-	//var baseTest = NEW_(BaseTest);
-	//baseTest->test("Str tests", (TestMethod)&BaseTest::strTests);
-	//baseTest->test("String tests", (TestMethod)&BaseTest::stringTests);
-	//totalPassed += baseTest->totalPassed_;
-	//totalFailed += baseTest->totalFailed_;
-	//baseTest->displayFinalResults("Base Test Results ");
-	//DEL_(baseTest);
+	var baseTest = NEW_(BaseTest);
+	baseTest->test("Str tests", (TestMethod)&BaseTest::strTests);
+	baseTest->test("String tests", (TestMethod)&BaseTest::stringTests);
+	totalPassed += baseTest->totalPassed_;
+	totalFailed += baseTest->totalFailed_;
+	baseTest->displayFinalResults("Base Test Results ");
+	DEL_(baseTest);
 
 	var collectionTest = NEW_(CollectionTest);
 	collectionTest->runAll(totalPassed, totalFailed);

@@ -98,3 +98,10 @@ void BaseTest::stringTests() {
 	assert("trim should return 'Hello \\t world!", strncmp(str, "Hello \t world!") == 0);
 	FREE(str);
 }
+
+void BaseTest::runAll(int& totalPassed, int& totalFailed) {
+	test("Str tests", (TestMethod)&BaseTest::strTests);
+	test("String tests", (TestMethod)&BaseTest::stringTests);
+	totalPassed += totalPassed_;
+	totalFailed += totalFailed_;
+}

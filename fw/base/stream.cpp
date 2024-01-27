@@ -50,6 +50,13 @@ byte Stream::readByte() {
 	cursor_++;
 	return b;
 }
+long Stream::readBytes(void* buffer, long length) {
+	var rest = (long)(data_ + length_ - cursor_);
+	if (rest < length) length = rest;
+	memcpy(buffer, cursor_, length);
+	cursor_ += length;
+	return length;
+}
 word Stream::readWord() {
 	var w = *(word*)cursor_;
 	cursor_ += sizeof(word);

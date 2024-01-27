@@ -313,8 +313,8 @@ void CollectionTest::testArray() {
 		fmw::strncmp((char*)arr2->get(4), "White", 5) == 0;
 
 	assert("array2 should contain items with initial capital", isMatch);
-	arr2->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
-	printf("\n");
+	arr2->apply([](COLLECTION_ARGUMENTS) { Test::cons->printf("%s ", (char*)value); return value; });
+	Test::cons->printf("\n");
 
 	isMatch =
 		arr3->length() == 3 &&
@@ -323,8 +323,8 @@ void CollectionTest::testArray() {
 		fmw::strncmp((char*)arr3->get(2), "White", 5) == 0;
 
 	assert("array3 should contain items longer than 4 characters", isMatch);
-	arr3->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
-	printf("\n");
+	arr3->apply([](COLLECTION_ARGUMENTS) { Test::cons->printf("%s ", (char*)value); return value; });
+	Test::cons->printf("\n");
 
 	DEL_(arr1);
 	DEL_(arr2);
@@ -347,10 +347,10 @@ void CollectionTest::testArray() {
 		fmw::strncmp((char*)arr2->get(1), "black", 5) == 0;
 
 	assert("array1 should contain 3, array2 2 items", isMatch);
-	arr1->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
-	printf("\n");
-	arr2->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
-	printf("\n");
+	arr1->apply([](COLLECTION_ARGUMENTS) { Test::cons->printf("%s ", (char*)value); return value; });
+	Test::cons->printf("\n");
+	arr2->apply([](COLLECTION_ARGUMENTS) { Test::cons->printf("%s ", (char*)value); return value; });
+	Test::cons->printf("\n");
 	DEL_(arr1);
 	DEL_(arr2);
 	#pragma endregion
@@ -501,8 +501,8 @@ void CollectionTest::testPArray() {
 		fmw::strncmp((char*)pArr2->get(4), "White", 5) == 0;
 
 	assert("array2 should contain items with initial capital", isMatch);
-	pArr2->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
-	printf("\n");
+	pArr2->apply([](COLLECTION_ARGUMENTS) { Test::cons->printf("%s ", (char*)value); return value; });
+	Test::cons->printf("\n");
 
 	isMatch =
 		pArr3->length() == 3 &&
@@ -511,8 +511,8 @@ void CollectionTest::testPArray() {
 		fmw::strncmp((char*)pArr3->get(2), "White", 5) == 0;
 
 	assert("array3 should contain items longer than 4 characters", isMatch);
-	pArr3->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
-	printf("\n");
+	pArr3->apply([](COLLECTION_ARGUMENTS) { Test::cons->printf("%s ", (char*)value); return value; });
+	Test::cons->printf("\n");
 
 	DEL_(pArr1);
 	ARRAY_FOREACH(pArr2, FREE(value));
@@ -537,10 +537,10 @@ void CollectionTest::testPArray() {
 		fmw::strncmp((char*)pArr2->get(1), "black", 5) == 0;
 
 	assert("array1 should contain 3, array2 2 items", isMatch);
-	pArr1->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
-	printf("\n");
-	pArr2->apply([](COLLECTION_ARGUMENTS) { printf("%s ", (char*)value); return value; });
-	printf("\n");
+	pArr1->apply([](COLLECTION_ARGUMENTS) { Test::cons->printf("%s ", (char*)value); return value; });
+	Test::cons->printf("\n");
+	pArr2->apply([](COLLECTION_ARGUMENTS) { Test::cons->printf("%s ", (char*)value); return value; });
+	Test::cons->printf("\n");
 
 	DEL_(pArr1);
 	DEL_(pArr2);

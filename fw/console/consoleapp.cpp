@@ -1,4 +1,3 @@
-#include <windows.h>
 #include <stdio.h>
 #include "console/consoleapp.h"
 
@@ -10,7 +9,7 @@ Console* console_;
 const char*& getWorkingDir() {
 	return workingDir_;
 }
-Console* const getConsole() { return console_; }
+IConsole* const getConsole() { return console_; }
 int main(int argc, char** argv) {
 	int error = 0;
 #ifdef _DEBUG
@@ -65,6 +64,7 @@ Console::Console() {
 	consoleCursorInfo_ = {};
 	consoleBuffer_ = MALLOC(char, CONSOLE_BUFFER_LENGTH);
 	GetConsoleScreenBufferInfo(hOutput_, &consoleScreenBufferInfo_);
+	position_ = { 0, 0 };
 }
 Console::~Console() {
 	FREE(consoleBuffer_);
@@ -76,31 +76,30 @@ void Console::showCursor(bool status) {
 	consoleCursorInfo_.bVisible = status;
 	SYSPR(SetConsoleCursorInfo(hOutput_, &consoleCursorInfo_));
 }
-void Console::printf(const char* const format, ...) {
-	va_list args;
-	va_start(args, format);
-	vprintf(format, args);
-	va_end(args);
-}
+
 void Console::vprintf(const char* const format, va_list args) {
 	vsprintf_s(consoleBuffer_, CONSOLE_BUFFER_LENGTH, format, args);
 	DWORD dwBytesWritten = 0;
 	DWORD reserved = 0;
 	SYSPR(WriteConsole(hOutput_, consoleBuffer_, NS_FW_BASE::strlen(consoleBuffer_), (LPDWORD)&dwBytesWritten, &reserved));
 }
-COORD* Console::gotoxy(int x, int y) {
+NS_FW_BASE::POINT* const Console::gotoxy(int x, int y) {
 	SYSPR(GetConsoleScreenBufferInfo(hOutput_, &consoleScreenBufferInfo_));
 	consoleScreenBufferInfo_.dwCursorPosition.X = x;
 	consoleScreenBufferInfo_.dwCursorPosition.Y = y;
 	SYSPR(SetConsoleCursorPosition(hOutput_, consoleScreenBufferInfo_.dwCursorPosition));
-	return &consoleScreenBufferInfo_.dwCursorPosition;
+	position_.x = (int)consoleScreenBufferInfo_.dwCursorPosition.X;
+	position_.y = (int)consoleScreenBufferInfo_.dwCursorPosition.Y;
+	return &position_;
 }
-COORD* Console::movexy(int x, int y) {
+NS_FW_BASE::POINT* const Console::movexy(int x, int y) {
 	SYSPR(GetConsoleScreenBufferInfo(hOutput_, &consoleScreenBufferInfo_));
 	consoleScreenBufferInfo_.dwCursorPosition.X += x;
 	consoleScreenBufferInfo_.dwCursorPosition.Y += y;
 	SYSPR(SetConsoleCursorPosition(hOutput_, consoleScreenBufferInfo_.dwCursorPosition));
-	return &consoleScreenBufferInfo_.dwCursorPosition;
+	position_.x = (int)consoleScreenBufferInfo_.dwCursorPosition.X;
+	position_.y = (int)consoleScreenBufferInfo_.dwCursorPosition.Y;
+	return &position_;
 }
 
 void Console::setcolor(int col) {

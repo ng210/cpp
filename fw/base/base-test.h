@@ -9,6 +9,8 @@ class BaseTest : public Test {
 public:
 	void strTests();
 	void stringTests();
+
+	void runAll(int& totalPassed, int& totalFailed);
 };
 
 NS_FW_BASE_END

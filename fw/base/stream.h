@@ -27,6 +27,7 @@ public:
 	inline byte* const data() { return data_; }
 
 	byte readByte();
+	long readBytes(void*, long);
 	word readWord();
 	dword readDword();
 	qword readQWord();
@@ -37,6 +38,7 @@ public:
 
 	inline void reset() { cursor_ = data_; length_ = 0; }
 	inline void rewind() { cursor_ = data_; }
+	inline long eos() { return (long)((data_ + length_) - cursor_); }
 	Stream* writeByte(byte b);
 	Stream* writeWord(word w);
 	Stream* writeDword(dword dw);

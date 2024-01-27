@@ -1,5 +1,6 @@
 #include "syntax/syntax-test.h"
 #include <math.h>
+#include "base/memory.h"
 
 NS_FW_BASE_USE
 using namespace NS_FW_SYNTAX;
@@ -93,37 +94,37 @@ void SyntaxTest::buildBasicCalculusGrammar() {
 
 	grammar_->updateTables();
 
-	printf("\n\nSymbols ############\n");
+	Test::cons->printf("\n\nSymbols ############\n");
 	grammar_->symbols().apply(
 		[](COLLECTION_ARGUMENTS) {
-			printf("%2d: '%s'\n", key.i, (char*)value);
+			Test::cons->printf("%2d: '%s'\n", key.i, (char*)value);
 			return value;
 		}
 	);
 
-	printf("\nTypes ############\n");
+	Test::cons->printf("\nTypes ############\n");
 	grammar_->types().apply(
 		[](COLLECTION_ARGUMENTS) {
 			var type = (GrammarType*)value;
-			printf("%2d: '%s'...'%s'(%d)\n", key.i, type->term, type->symbol, type->code);
+			Test::cons->printf("%2d: '%s'...'%s'(%d)\n", key.i, type->term, type->symbol, type->code);
 			return value;
 		}
 	);
 
-	printf("\nRules ############\n");
+	Test::cons->printf("\nRules ############\n");
 	for (var ri = 0; ri < grammar_->rules().length(); ri++) {
 		var rule = (GrammarRule*)grammar_->rules().get(ri);
-		printf("%3d: ", rule->priority);
+		Test::cons->printf("%3d: ", rule->priority);
 		for (var ci = 0; ci < rule->inNodes.length; ci++) {
 			var inCode = rule->inNodes.codes[ci];
-			printf("%s(%d)", (char*)grammar_->symbols().get(inCode), inCode);
+			Test::cons->printf("%s(%d)", (char*)grammar_->symbols().get(inCode), inCode);
 		}
-		printf(" => ");
+		Test::cons->printf(" => ");
 		for (var ci = 0; ci < rule->outNodes.length; ci++) {
 			var outCode = rule->outNodes.codes[ci];
-			printf("%s(%d)", (char*)grammar_->symbols().get(outCode), outCode);
+			Test::cons->printf("%s(%d)", (char*)grammar_->symbols().get(outCode), outCode);
 		}
-		printf("\n");
+		Test::cons->printf("\n");
 	}
 
 
