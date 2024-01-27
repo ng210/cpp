@@ -17,6 +17,8 @@ static int wm_sizing_wparam[] = {
 	SIZING_RIGHT | SIZING_BOTTOM
 };
 
+char* Window::windowClassName_ = "Window";
+
 Window::Window() {
 	hWnd_ = NULL;
 	parent_ = NULL;
@@ -32,8 +34,7 @@ Window::Window() {
 	scrollInfoY_.pageSize = 10;
 }
 
-void Window::create(WndClass wndClass, Window* parent, char* name, LONG style, DWORD exStyle) {
-	wndClass_ = wndClass;
+void Window::create(Window* parent, char* name, LONG style, DWORD exStyle) {
 	HWND hWndParent = NULL;
 	if (parent) {
 		parent_ = parent;
@@ -45,13 +46,14 @@ void Window::create(WndClass wndClass, Window* parent, char* name, LONG style, D
 	}
 
 	// create window
+	var className = registerWindowClass();
 	if (style == 0) style = Window::defaultStyle;
-	SYSFN(hWnd_, CreateWindowEx(exStyle, wndClass.className, name, style, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hWndParent, NULL, hInstance_, this));
+	SYSFN(hWnd_, CreateWindowEx(exStyle, className, name, style, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hWndParent, NULL, hInstance_, this));
 
 	if (hWnd_ != NULL) {
 		// check wrapper function
 		WNDCLASSEX wndClassEx;
-		SYSPR(GetClassInfoEx(hInstance_, wndClass.className, &wndClassEx));
+		SYSPR(GetClassInfoEx(hInstance_, className, &wndClassEx));
 		if (wndClassEx.lpfnWndProc != Window::wndProcWrapper) {
 			defWindowProc_ = wndClassEx.lpfnWndProc;
 			SetLastError(0);
@@ -79,6 +81,10 @@ LONG Window::setWindowStyle(LONG style, DWORD exStyle) {
 		SYSFN(result, SetWindowLong(hWnd_, GWL_EXSTYLE, exStyle));
 	}
 	return result;
+}
+
+char* const Window::registerWindowClass() {
+	return Window::windowClassName_;
 }
 
 //void Window::sizing(int sizingEdge, LPRECT sizingRect, LPRECT confineRect, int width, int height) {

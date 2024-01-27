@@ -3,13 +3,13 @@
 NS_FW_BASE_USE
 NS_FW_WIN_BEGIN
 
-WndClass EditCtrl::WndClass_("EDIT");
+char* EditCtrl::windowClassName_ = "EDIT";
 
 EditCtrl::EditCtrl() {
 }
 
-WndClass EditCtrl::getWindowClass() {
-	return EditCtrl::WndClass_;
+char* const EditCtrl::registerWindowClass() {
+	return EditCtrl::windowClassName_;
 }
 
 void EditCtrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyle) {
@@ -22,6 +22,10 @@ void EditCtrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyl
 }
 
 EditCtrl::~EditCtrl() {
+}
+
+void EditCtrl::setText(TCHAR* text) {
+	SYSPR(SetWindowText(hWnd_, text));
 }
 
 NS_FW_WIN_END

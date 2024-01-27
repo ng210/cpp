@@ -23,13 +23,13 @@ NS_FW_WIN_BEGIN
 
 #define SB_DELTA 16
 
-typedef union WndClass_ {
-	ATOM atom;
-	char* className;
-	WndClass_(char* s) { className = s; }
-	WndClass_(ATOM a) { className = (char*)a; }
-	WndClass_() { className = NULL; }
-} WndClass;
+//typedef union WndClass_ {
+//	ATOM atom;
+//	char* className;
+//	WndClass_(char* s) { className = s; }
+//	WndClass_(ATOM a) { className = (char*)a; }
+//	WndClass_() { className = NULL; }
+//} WndClass;
 
 typedef struct ScrollInfo {
 	int pos;
@@ -43,6 +43,8 @@ typedef LRESULT(MOUSEEVENTPROC)(Window*, POINT&, WPARAM);
 typedef LRESULT(MOUSEMOVEEVENTPROC)(Window*, POINT&, POINT&, WPARAM);
 
 class Window {
+	static char* windowClassName_;
+
 	static MOUSEMOVEEVENTPROC defOnMouseMoveProc_;
 	static MOUSEEVENTPROC defOnMouseEventProc_;
 
@@ -52,12 +54,13 @@ class Window {
 	protected: PROP_R(RECT, rect);
 	protected: PROP_R(RECT, virtualRect);
 	protected: PROP_R(POINT, mousePos);
-	protected: PROP_R(WndClass, wndClass);
+	//protected: PROP_R(WndClass, wndClass);
 	protected: PROP_R(Window*, parent);
 
 	protected: PROP_R(ScrollInfo, scrollInfoX);
 	protected: PROP_R(ScrollInfo, scrollInfoY);
 
+	protected: virtual char* const registerWindowClass();
 	protected: virtual int scrollWindow(ScrollInfo& scrollInfo, int mode, int pos, int nBar, bool update = true);
 	protected: void updateScrolling();
 
@@ -65,7 +68,7 @@ class Window {
 		Window();
 		virtual ~Window();
 	
-		void create(WndClass wndClass, Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
+		void create(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
 		LONG setWindowStyle(LONG style, DWORD exStyle = 0);
 		virtual LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		Map* Window::createChildWindowMap();

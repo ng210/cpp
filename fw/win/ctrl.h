@@ -10,7 +10,6 @@ class Ctrl : public Window {
 protected: PROP(size_t, ctrlId);
 protected: PROP(POINT, offset);
 protected:
-	virtual WndClass getWindowClass() = 0;
 public:
 	Ctrl();
 

@@ -6,9 +6,9 @@
 NS_FW_WIN_BEGIN
 
 class StaticCtrl : public Ctrl {
-	static WndClass WndClass_;
+	static char* windowClassName_;
 public:
-	WndClass getWindowClass();
+	char* const registerWindowClass();
 };
 
 NS_FW_WIN_END

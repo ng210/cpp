@@ -9,9 +9,8 @@ Ctrl::Ctrl() {
 }
 
 void Ctrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyle) {
-	var wndClass = getWindowClass();
 	style |= WS_CHILD | WS_VISIBLE;
-	this->Window::create(wndClass, parent, name, style, exStyle);
+	this->Window::create(parent, name, style, exStyle);
 }
 
 void Ctrl::move(int x, int y) {

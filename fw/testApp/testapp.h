@@ -29,11 +29,12 @@ class TestApp : public WinApp {
 protected:
 	EditCtrl logCtrl_;
 	LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	char* const registerWindowClass();
 public:
 	TestApp();
 	~TestApp();
 
-	void create(WndClass wndClass, LONG style = 0, DWORD exStyle = 0);
+	void create();
 	void update();
 
 	LRESULT onCreated();

@@ -15,7 +15,7 @@ typedef void (CBADDITEMPROC)(ComboboxCtrl*, void*);
 typedef void (CBSELECTITEMPROC)(ComboboxCtrl*, int, void*);
 
 class ComboboxCtrl : public Ctrl {
-	static WndClass WndClass_;
+	static char* windowClassName_;
 	static LRESULT editWndProc_(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	static WNDPROC defEditWndProc_;
 	static CBADDITEMPROC defAddItemProc_;
@@ -29,7 +29,7 @@ public:
 	ComboboxCtrl();
 	virtual ~ComboboxCtrl();
 
-	WndClass getWindowClass();
+	char* const registerWindowClass();
 	void create(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
 	LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	virtual LRESULT handleNotification(int notification, LPARAM lParam);

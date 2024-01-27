@@ -3,7 +3,7 @@
 
 NS_FW_WIN_BEGIN
 
-WndClass ComboboxCtrl::WndClass_("COMBOBOX");
+char* ComboboxCtrl::windowClassName_ = "COMBOBOX";
 
 ComboboxCtrl::ComboboxCtrl() {
 	edit_ = NULL;
@@ -17,8 +17,8 @@ WNDPROC ComboboxCtrl::defEditWndProc_ = NULL;
 ComboboxCtrl::~ComboboxCtrl() {
 }
 
-WndClass ComboboxCtrl::getWindowClass() {
-	return ComboboxCtrl::WndClass_;
+char* const ComboboxCtrl::registerWindowClass() {
+	return ComboboxCtrl::windowClassName_;
 }
 
 LRESULT ComboboxCtrl::editWndProc_(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {

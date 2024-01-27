@@ -4,7 +4,8 @@
 NS_FW_BASE_USE
 NS_FW_WIN_USE
 
-WndClass ChartCtrl::WndClass_;
+char* ChartCtrl::windowClassName_ = "ChartCtrl";
+ATOM ChartCtrl::windowClass_ = 0;
 
 dword scaleColor(dword color, float f) {
 	float r = ((byte*)&color)[0] * f;
@@ -61,8 +62,11 @@ ChartCtrl::~ChartCtrl() {
 	//SYSPR(DeleteObject(highlightBrush_));
 }
 
-WndClass ChartCtrl::getWindowClass() {
-	return ChartCtrl::WndClass_;
+char* const ChartCtrl::registerWindowClass() {
+	if (ChartCtrl::windowClass_ == 0) {
+		ChartCtrl::windowClass_ = Window::registerClass(ChartCtrl::windowClassName_, NULL, 0);
+	}
+	return ChartCtrl::windowClassName_;
 }
 
 void ChartCtrl::initialize(ChartSettings* settings) {
@@ -99,10 +103,6 @@ void ChartCtrl::initialize(ChartSettings* settings) {
 	backgroundBrush_ = NULL;
 	grid1Pen_ = NULL;
 	grid2Pen_ = NULL;
-
-	if (ChartCtrl::WndClass_.atom == 0) {
-		ChartCtrl::WndClass_.atom = Window::registerClass("ChartCtrl", NULL, 0);
-	}
 
 	scrollInfoX_.lineSize = settings->lineSizeX;
 	scrollInfoY_.lineSize = settings->lineSizeY;

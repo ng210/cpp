@@ -3,10 +3,10 @@
 NS_FW_BASE_USE
 NS_FW_WIN_BEGIN
 
-WndClass ButtonCtrl::WndClass_("BUTTON");
+char* ButtonCtrl::windowClassName_ = "BUTTON";
 
-WndClass ButtonCtrl::getWindowClass() {
-	return ButtonCtrl::WndClass_;
+char* const ButtonCtrl::registerWindowClass() {
+	return ButtonCtrl::windowClassName_;
 }
 
 //void ButtonCtrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyle) {

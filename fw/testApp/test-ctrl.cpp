@@ -1,6 +1,7 @@
 #include "test-ctrl.h"
 
-WndClass TestCtrl::WndClass_;
+char* TestCtrl::windowClassName_ = "TestCtrl";
+ATOM TestCtrl::windowClass_ = 0;
 
 TestCtrl::TestCtrl() {
 	text_ = MALLOC(char, 1024);
@@ -11,11 +12,11 @@ TestCtrl::~TestCtrl() {
 	FREE(text_);
 }
 
-WndClass TestCtrl::getWindowClass() {
-	if (TestCtrl::WndClass_.atom == 0) {
-		TestCtrl::WndClass_.atom = Window::registerClass("TestCtrl", NULL, 0);
+char* const TestCtrl::registerWindowClass() {
+	if (TestCtrl::windowClass_ == 0) {
+		TestCtrl::windowClass_ = Window::registerClass(TestCtrl::windowClassName_, NULL, 0);
 	}
-	return TestCtrl::WndClass_;
+	return TestCtrl::windowClassName_;
 }
 
 void TestCtrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyle) {

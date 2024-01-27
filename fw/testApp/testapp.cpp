@@ -14,6 +14,8 @@ NS_FW_WIN_USE
 
 char* TestApp::eos_ = "\n\0";
 
+char* windowClassName = "TestApp";
+
 TestApp::TestApp() {
 	state_ = 0;
 }
@@ -21,16 +23,22 @@ TestApp::TestApp() {
 TestApp::~TestApp() {
 	// put cleanup code here
 	// log buffer?
+	log_.clear();
 }
 
-void TestApp::create(WndClass wndClass, LONG style, DWORD exStyle) {
-	Window::create(wndClass, NULL, "TestApp", style, exStyle);
+char* const TestApp::registerWindowClass() {
+	Window::registerClass(windowClassName, hInstance_);
+	return windowClassName;
+}
+
+void TestApp::create() {
+	Window::create(NULL, windowClassName);
 }
 
 LRESULT TestApp::onCreated() {
-#pragma region EventHandlers
+	#pragma region EventHandlers
 	onLeftUp(TestApp::onLeftUpProc);
-#pragma endregion
+	#pragma endregion
 
 	RECT rect;
 	LRESULT result = 0;
@@ -315,8 +323,7 @@ void TestApp::update() {
 WinApp* createApplication(HINSTANCE hInstance, Map* args) {
 	// Load menu
 	HMENU hMenu = NULL;
-	var wndClass = Window::registerClass((char*)"TestApp", hInstance);
 	var app = NEW_(TestApp);
-	app->create(wndClass);
+	app->create();
 	return app;
 }

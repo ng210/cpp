@@ -7,13 +7,14 @@ NS_FW_WIN_USE
 
 class TestCtrl : public Ctrl {
 	char* text_;
-	static WndClass WndClass_;
+	static char* windowClassName_;
+	static ATOM windowClass_;
 	HBRUSH hBrush_;
 public:
 	TestCtrl();
 	~TestCtrl();
 
-	WndClass getWindowClass();
+	char* const registerWindowClass();
 	void createWindow(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
 
 	void setText(char* text);

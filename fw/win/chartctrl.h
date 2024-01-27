@@ -50,7 +50,8 @@ typedef struct ChartSettings {
 } ChartSettings;
 
 class ChartCtrl : public Ctrl {
-	static WndClass WndClass_;
+	static char* windowClassName_;
+	static ATOM windowClass_;
 	static ChartSettings defaultSettings_;
 
 protected: PROP_R(Collection*, dataSource);
@@ -121,7 +122,7 @@ public:
 	virtual ~ChartCtrl();
 	void initialize(ChartSettings* settings);
 
-	WndClass getWindowClass();
+	char* const registerWindowClass();
 	void createWindow(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
 
 	void createBackBuffer(RECT& rect);

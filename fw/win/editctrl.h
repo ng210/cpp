@@ -6,13 +6,15 @@
 NS_FW_WIN_BEGIN
 
 class EditCtrl : public Ctrl {
-	static WndClass WndClass_;
+	static char* windowClassName_;
 public:
 	EditCtrl();
 	~EditCtrl();
 
-	WndClass getWindowClass();
+	char* const registerWindowClass();
 	void createWindow(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
+
+	void setText(TCHAR* text);
 };
 
 NS_FW_WIN_END
