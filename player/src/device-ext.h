@@ -11,14 +11,15 @@ NS_FW_BASE_USE
 namespace PLAYER {
 	class DeviceExt {
 	protected: PROP_R(Device*, device);
-		Input* inputs_;
 	public:
+		Handler<Stream*> addPreset;
+		Handler<int> removePreset;
+
 		DeviceExt(Device* device);
 		virtual ~DeviceExt();
 		void initialize(Stream* stream);
 
-		virtual void createInputs();
-		virtual Input* getInput(int id);
+		virtual void setupInputs();
 
 		virtual void writeToStream(Stream* stream);
 		virtual void writePresetToStream(Stream* stream);
@@ -28,6 +29,9 @@ namespace PLAYER {
 		virtual int getCommandSize(byte* cmd) = 0;
 
 		virtual Sequence* createDefaultSequence();
+
+		static void presetAdder(void*, Stream* stream, void* = NULL);
+		static void presetRemover(void*, int id, void* = NULL);
 
 		static PresetBank* loadPresetBank(const char* presetBankPath);
 	};

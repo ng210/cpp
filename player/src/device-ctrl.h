@@ -1,6 +1,7 @@
 #ifndef __PLAYER_DEVICE_CTRL_H
 #define __PLAYER_DEVICE_CTRL_H
 
+#include "win/staticctrl.h"
 #include "win/buttonctrl.h"
 #include "win/comboboxctrl.h"
 #include "player/src/device-ext.h"
@@ -13,23 +14,23 @@ namespace PLAYER {
 
 	typedef struct LayoutItem {
 		byte ctrlId;
+		POINT position;
 		char label[16];
 		InputCtrlType type;
 	} LayoutItem;
 
-	typedef enum LayoutControl {
-		LayoutEnd = 255,
-		LayoutHorizontalGap = 254,
-		LayoutVerticalGap = 253,
-		LayoutNextColumn = 252,
-		LayoutBlank = 251,
-		LayoutNewColumn = 250,
-	} LayoutControl;
-
 	class DeviceCtrl : public Ctrl {
-	private: static WndClass WndClass_;
+	private:
+			static char* windowClassName_;
+			static ATOM windowClass_;
+			StaticCtrl toolbarCtrl_;
+			StaticCtrl background_;
+
 	protected: PROP_R(DeviceExt*, deviceExt);
 
+	protected: PROP_R(int, borderWidth);
+	protected: PROP(HANDLE, hBackgroundImage);
+	protected: PROP_R(InputCtrl*, inputControls);
 	protected: PROP_R(ComboboxCtrl, presetCtrl);
 	protected: PROP_R(ButtonCtrl, addPresetButton);
 	protected: PROP_R(ButtonCtrl, removePresetButton);
@@ -38,16 +39,25 @@ namespace PLAYER {
 		DeviceCtrl(DeviceExt* deviceExt);
 		virtual ~DeviceCtrl();
 
-		WndClass getWindowClass();
-		void createWindow(Window* parent, char* name, LONG style = 0, DWORD exStyle = 0);
+		char* const registerWindowClass();
+		void create(Window* parent, char* name, LONG style = 0, DWORD exStyle = 0);
 
-		virtual void initFromStream(Stream* data, int size = 100, unsigned long* colors = NULL);
+		virtual void createControls();
+
+		virtual void initFromStream(Stream* data);
+		virtual void loadBackgroundImage() = 0;
+
+		int inputCount();
+		InputCtrl* getInput(int id);
 
 		LRESULT onSize(RECT& rect, WPARAM state);
 
-		static CBSELECTITEMPROC onSelectProgram;
-		static MOUSEEVENTPROC onAddProgram, onRemoveProgram;
+		static CBSELECTITEMPROC onSelectPreset;
+		static MOUSEEVENTPROC onAddPreset, onRemovePreset;
+
 		static int presetBankSetter(void*, PresetBank*, void* = NULL);
+		static int presetAdder(void*, Stream*, void* = NULL);
+		static int presetRemover(void*, int, void* = NULL);
 		static int presetSetter(void*, int, void* = NULL);
 	};
 

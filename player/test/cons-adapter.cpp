@@ -1,9 +1,12 @@
+#include <windows.h>
 #include "base/memory.h"
 #include "player/test/cons-adapter.h"
 #include "player/test/cons-device.h"
 #include "player/test/cons-device-ext.h"
 
 using namespace PLAYER;
+
+GetConsole* ConsAdapter::getConsole = NULL;
 
 AdapterInfo ConsAdapter::adapterInfo_ = { "Cons", 124 };
 
@@ -26,7 +29,7 @@ Device* ConsAdapter::createDevice(int deviceType) {
 	Device* device = NULL;
 	switch (deviceType) {
 	case ConsDevices::DeviceCons:
-		device = NEW_(ConsDevice, this);
+		device = NEW_(ConsDevice, this, ConsAdapter::getConsole());
 		break;
 	}
 	return device;

@@ -3,7 +3,7 @@
 
 #include "base/stream.h"
 #include "collection/map.h"
-#include "player/src/input.h"
+//#include "player/src/input.h"
 
 
 NS_FW_BASE_USE
@@ -16,7 +16,7 @@ namespace PLAYER {
 	private: PROP_R(int, bankSize);
 	public:
 		PresetBank();
-		PresetBank(int bankSize, int count, byte* data = NULL);
+		PresetBank(int bankSize, byte* data = NULL);
 		~PresetBank();
 		void initialize(int bankSize, byte* data = NULL);
 		void data(byte* data);

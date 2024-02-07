@@ -16,34 +16,59 @@ namespace PLAYER {
         InputTypeF8
     } InputType;
 
-    class Input {
+    class InputBase {
     public:
-        Input();
         Value min;
         Value max;
         Value step;
         Value* value;
         InputType type;
-        Handler<Value> set;
         int size;
+        Handler<Value> set;
+
+        InputBase();
+        InputBase(Value*);
+        virtual ~InputBase();
+
+        virtual void setup(Value inMin, Value inMax, Value inStep);
+        virtual void readValueFromStream(byte* stream) = 0;
+        virtual void readFromStream(byte* stream) = 0;
+        virtual void check() = 0;
+
+        virtual void setFromNormalized(float v) = 0;
+
+        virtual void inc(int count) = 0;
+        virtual void dec(int count) = 0;
+
+        virtual float getNormalized() = 0;
+        virtual void getValueAsString(char* str, int len) = 0;
+
+        virtual void writeToStream(Stream* stream) = 0;
+        virtual void writeValueToStream(Stream* stream) = 0;
+    };
+
+    class Input : public InputBase {
+        void initialize();
+    public:
+        Input();
 
         Input(Value*);
-        virtual ~Input();
+        ~Input();
 
-        virtual void initialize(Value inMin, Value inMax, Value inStep);
-        virtual void readFromStream(byte* stream);
-        virtual void check();
+        void readValueFromStream(byte* stream);
+        void readFromStream(byte* stream);
+        void check();
 
-        virtual void setFromNormalized(float v);
+        void setFromNormalized(float v);
 
-        virtual void inc(int count);
-        virtual void dec(int count);
+        void inc(int count);
+        void dec(int count);
 
-        virtual float getNormalized();
-        virtual void getValueAsString(char* str, int len);
+        float getNormalized();
+        void getValueAsString(char* str, int len);
 
-        virtual void writeToStream(Stream* stream);
-        virtual void writeValueToStream(Stream* stream);
+        void writeToStream(Stream* stream);
+        void writeValueToStream(Stream* stream);
 
         static int setter(void*, Value, void* = NULL);
     };
@@ -51,12 +76,14 @@ namespace PLAYER {
     // derived classes of Input MUST NOT add new member variables
     // only member methods and overrides are allowed!
 
-    class InputF : public Input {
+    class InputF : public InputBase {
+        void initialize();
     protected:
         InputF();
     public:
         InputF(Value*);
 
+        void readValueFromStream(byte* stream);
         void readFromStream(byte* stream);
 
         void check();
@@ -77,9 +104,11 @@ namespace PLAYER {
 
     class InputF8 : public Input {
         Value bValue_;
+        void initialize();
     public:
         InputF8(Value*);
         Value* pValue;
+
         static int setter(void*, Value, void* = NULL);
     };
 }

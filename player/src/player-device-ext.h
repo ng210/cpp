@@ -14,6 +14,8 @@ namespace PLAYER {
 		static DEVICEEXTENSIONCREATOR playerDeviceExtCreator_;
 	public:
 		PlayerDeviceExt(Device* device);
+
+		void writeToStream(Stream* stream);
 		Player* player();
 		void makeCommandImpl(int command, Stream* stream, va_list args);
 		int getCommandSize(byte* cmd);

@@ -9,11 +9,6 @@
 
 #include "player-adapter.h"
 
-//#include <libloaderapi.h>
-//#include "processthreadsapi.h"
-//#include <synchapi.h>
-//#include <profileapi.h>
-
 
 NS_FW_BASE_USE
 namespace PLAYER {
@@ -72,6 +67,7 @@ namespace PLAYER {
     }
     Player::~Player() {
         clear();
+        CloseHandle(hThread_);
     }
 
     //Sequence* Player::createSequence(byte* stream, int length) {

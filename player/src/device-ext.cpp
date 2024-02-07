@@ -6,7 +6,6 @@
 using namespace PLAYER;
 
 DeviceExt::DeviceExt(Device* device) {
-	inputs_ = NULL;
 	device_ = device;
 }
 
@@ -25,24 +24,17 @@ void DeviceExt::initialize(Stream* stream) {
 	device_->setPreset(prId);
 }
 
-void DeviceExt::createInputs() {
-
-}
-
-Input* DeviceExt::getInput(int id) {
-	return NULL;
-}
+void DeviceExt::setupInputs() {}
 
 void DeviceExt::writeToStream(Stream* stream) {
 	stream->writeByte(device_->type());
-	stream->writeByte(device_->preset());
-	writePresetToStream(stream);
+	//stream->writeByte(device_->preset());
+	//writePresetsToStream(stream);
 }
 
-void DeviceExt::writePresetToStream(Stream* stream) {
-	var start = stream;
+void DeviceExt::writePresetToStream(Stream * stream) {
 	for (var i = 0; i < device_->inputCount(); i++) {
-		getInput(i)->writeValueToStream(stream);
+		device_->getInput(i)->writeValueToStream(stream);
 	}
 }
 
@@ -62,6 +54,30 @@ Sequence* DeviceExt::createDefaultSequence() {
 	seq->writeDelta(0);
 	seq->writeCommand(PlayerCommands::CmdEOS);
 	return seq;
+}
+
+void DeviceExt::presetAdder(void* obj, Stream* preset, void* args) {
+	var that = (DeviceExt*)obj;
+	var dev = that->device_;
+	var name = preset->readString();
+	var prg = preset->cursor();
+	dev->presetBank()->add(name, prg);
+	var ix = dev->presetBank()->indexOf(name);
+	dev->setPreset(ix);
+}
+
+void DeviceExt::presetRemover(void* obj, int ix, void* args) {
+	var that = (DeviceExt*)obj;
+	var dev = that->device_;
+	var pb = dev->presetBank();
+	var name = pb->keys()->get(ix);
+	if (name != NULL) {
+		pb->remove(name);
+		if (pb->length() > 0) {
+			if (ix == pb->length() - 1) ix--;
+			dev->setPreset(ix);
+		}
+	}	
 }
 
 PresetBank* DeviceExt::loadPresetBank(const char* presetBankPath) {

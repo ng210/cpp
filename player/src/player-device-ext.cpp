@@ -20,6 +20,13 @@ Player* PlayerDeviceExt::player() {
 	return ((PlayerDevice*)device_)->player();
 }
 
+void PlayerDeviceExt::writeToStream(Stream* stream) {
+	//var pe = NEW_(PlayerExt, player());
+	//var output = pe->save();
+	//stream->writeStream(output);
+	//DEL_(pe);
+}
+
 void PlayerDeviceExt::makeCommandImpl(int command, Stream* stream, va_list args) {
 	switch (command) {
 	case PlayerCommands::CmdAssign:

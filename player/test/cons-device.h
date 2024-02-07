@@ -1,8 +1,11 @@
 #ifndef __CONS_DEVICE_H
 #define __CONS_DEVICE_H
 
+#include "utils/iconsole.h"
 #include "player/src/device.h"
+#include "player/test/cons-adapter.h"
 
+NS_FW_BASE_USE
 using namespace PLAYER;
 
 typedef enum ConsCommands {
@@ -11,15 +14,21 @@ typedef enum ConsCommands {
 	CmdMoveTo
 } ConsCommands;
 
-typedef enum ConsInputs {
+typedef enum ConsInputId_ {
 	ConsInputX,
 	ConsInputY,
 	ConsInputColor
+} ConsInputsId;
+
+typedef struct ConsInputs_ {
+	Input x;
+	Input y;
+	Input ink;
 } ConsInputs;
 
 class ConsDevice : public Device {
 public:
-	ConsDevice(Adapter* adapter);
+	ConsDevice(Adapter* adapter, void* cons = NULL);
 	~ConsDevice();
 
 	void initialize(byte** pData = NULL);
@@ -33,10 +42,11 @@ public:
 
 	// console object
 private:
-	int x_, y_, ink_;
+	Value x_, y_, ink_;
 public:
 	void putText(char* text);
-	void move(int x, int y);
+	void moveTo(int x, int y);
+	void goTo(int x, int y);
 	void setInk(int c);
 };
 #endif

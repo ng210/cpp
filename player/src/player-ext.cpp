@@ -5,7 +5,7 @@
 
 using namespace PLAYER;
 
-Map PlayerExt::deviceExtensions_(sizeof(int), MAP_USE_REF, Map::hashingInt, Collection::compareInt);
+Map* PlayerExt::deviceExtensions_ = NULL;
 
 //void PlayerExt::load(Player* player, byte** pData) {
 //
@@ -102,11 +102,23 @@ Stream* PlayerExt::save() {
 }
 
 DeviceExt* PlayerExt::getDeviceExtension(Device* device) {
-    var key = (device->adapter()->getInfo()->id << 8) + device->type();
-    var creator = (DEVICEEXTENSIONCREATOR*)PlayerExt::deviceExtensions_.get(key);
-    return (*creator)(device);
+    DeviceExt* deviceExt = NULL;
+    if (PlayerExt::deviceExtensions_ != NULL) {
+        var key = (device->adapter()->getInfo()->id << 8) + device->type();
+        var creator = (DEVICEEXTENSIONCREATOR*)PlayerExt::deviceExtensions_->get(key);
+        deviceExt = (*creator)(device);
+        deviceExt->setupInputs();
+    }
+    return deviceExt;
 }
 
 void PlayerExt::addDeviceExtension(int key, DEVICEEXTENSIONCREATOR* deviceExtCreator) {
-    PlayerExt::deviceExtensions_.add(key, deviceExtCreator);
+    if (PlayerExt::deviceExtensions_ == NULL) {
+        PlayerExt::deviceExtensions_ = NEW_(Map, sizeof(int), MAP_USE_REF, Map::hashingInt, Collection::compareInt);
+    }
+    PlayerExt::deviceExtensions_->add(key, deviceExtCreator);
+}
+
+void PlayerExt::cleanUp() {
+    DEL_(PlayerExt::deviceExtensions_);
 }

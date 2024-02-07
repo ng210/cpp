@@ -10,22 +10,17 @@ NS_FW_BASE_USE
 
 namespace PLAYER {
 
-	typedef struct ConsDeviceInputs {
-		Input x, y, ink;
-	} ConsDeviceInputs;
-
     class ConsDeviceExt : public DeviceExt {
 		static DEVICEEXTENSIONCREATOR consDeviceExtCreator_;
-		ConsDeviceInputs consDeviceInputs_;
 	public:
 		ConsDeviceExt(Device* device);
 		~ConsDeviceExt();
-
+		void setupInputs();
 		Input* getInput(int id);
 		void makeCommandImpl(int command, Stream* stream, va_list args);
 		int getCommandSize(byte* cmd);
 		Sequence* createDefaultSequence();
-
+		void writeToStream(Stream* stream);
 		static void registerExtensionCreator();
     };
 }

@@ -16,19 +16,21 @@ DeviceExt* ConsDeviceExt::consDeviceExtCreator_(Device* device) {
 }
 
 ConsDeviceExt::ConsDeviceExt(Device* device) : DeviceExt(device) {
-    inputs_ = (Input*)&consDeviceInputs_;
-    consDeviceInputs_.x.value = device->getValue(0); consDeviceInputs_.x.initialize(0, 20, 1);
-    consDeviceInputs_.y.value = device->getValue(1); consDeviceInputs_.y.initialize(0, 20, 1);
-    consDeviceInputs_.ink.value = device->getValue(2); consDeviceInputs_.ink.initialize(ConsoleColors::black, ConsoleColors::gray, 1);
 }
 
 ConsDeviceExt::~ConsDeviceExt() {
 }
 
+void ConsDeviceExt::setupInputs() {
+    device_->getInput(ConsInputsId::ConsInputX)->setup(0, 20, 1);
+    device_->getInput(ConsInputsId::ConsInputY)->setup(0, 20, 1);
+    device_->getInput(ConsInputsId::ConsInputColor)->setup(ConsoleColors::black, ConsoleColors::gray, 1);
+}
+
 Input* ConsDeviceExt::getInput(int id) {
     Input* input = NULL;
     if (id >= 0 && id < device_->inputCount()) {
-        input = &inputs_[id];
+        input = device_->getInput(id);
     }
     return input;
 }
@@ -86,6 +88,11 @@ Sequence* ConsDeviceExt::createDefaultSequence() {
     seq->writeDelta(40);
     seq->writeCommand(PlayerCommands::CmdEOS);
     return seq;
+}
+
+void ConsDeviceExt::writeToStream(Stream* stream) {
+    DeviceExt::writeToStream(stream);
+    writePresetToStream(stream);
 }
 
 void ConsDeviceExt::registerExtensionCreator() {

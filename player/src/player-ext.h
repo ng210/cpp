@@ -12,7 +12,7 @@ namespace PLAYER {
 	typedef DeviceExt* (DEVICEEXTENSIONCREATOR)(Device*);
 
 	class PlayerExt {
-		static Map deviceExtensions_;
+		static Map* deviceExtensions_;
 	protected: PROP_R(Player*, player);
 	public:
 		PlayerExt(Player*);
@@ -22,6 +22,7 @@ namespace PLAYER {
 		DeviceExt* getDeviceExtension(Device* device);
 
 		static void addDeviceExtension(int key, DEVICEEXTENSIONCREATOR* deviceExtCreator);
+		static void cleanUp();
 	};
 }
 

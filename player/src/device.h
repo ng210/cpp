@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include "base/stream.h"
 #include "player/src/adapter.h"
-#include "player/src/value.h"
+#include "player/src/input.h"
 #include "player/src/preset-bank.h"
 
 NS_FW_BASE_USE
@@ -18,6 +18,7 @@ namespace PLAYER {
 	protected: PROP(void*, object);
 	protected: PROP(int, type);
 	protected: bool isActive_;
+	protected: PROP_R(Input*, inputs);
 	protected: PROP(int, inputCount);
 	protected: PROP_R(PresetBank*, presetBank);
 	protected: PROP_R(int, preset);
@@ -30,7 +31,10 @@ namespace PLAYER {
 	
 	protected:
 		Device();
-	public:		
+	public:
+		Handler<int> setPreset;
+		Handler<PresetBank*> setPresetBank;
+
 		Device(Adapter* adapter, void* object = NULL);
 		virtual ~Device() {}
 
@@ -39,16 +43,18 @@ namespace PLAYER {
 		virtual bool isActive();
 		virtual void isActive(bool b);
 
-		PresetBank* setPresetBank(PresetBank* pb);
-		int setPreset(int ix);
-
-		virtual void setValue(int id, Value value) = 0;
-		virtual Value* getValue(int id) = 0;
+		virtual void createInputs();
+		virtual Input* getInput(int id);
+		Value* getValue(int id);
 
 		virtual int run(int ticks) = 0;
 		virtual void processCommand(byte cmd, byte*& cursor) = 0;
 
 		//virtual void setRefreshRate(float fps);
+
+		static int presetBankSetter(void*, PresetBank*, void*);
+		static int presetSetter(void*, int, void*);
+
 	};
 }
 #endif

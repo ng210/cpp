@@ -16,7 +16,8 @@ namespace PLAYER {
 	} InputCtrlType;
 
 	class InputCtrl : public Ctrl {
-		static WndClass wndClass_;
+		static char* windowClassName_;
+		static ATOM windowClass_;
 
 		static HFONT smallFont_;
 		static HFONT mediumFont_;
@@ -37,7 +38,7 @@ namespace PLAYER {
 		COLORREF textColor_;
 
 	protected: PROP_R(InputCtrlType, type);
-	protected: PROP_R(Input*, pot);
+	protected: PROP_R(Input*, input);
 	protected: PROP(bool, showLabel);
 	protected: PROP(bool, showValue);
 	protected: TCHAR label_[32];
@@ -54,19 +55,19 @@ namespace PLAYER {
 	public:
 		InputCtrl();
 		~InputCtrl();
-
 		
-		WndClass getWindowClass();
-		void createWindow(Window* parent, char* name, LONG style = 0, DWORD exStyle = 0);
+		static void cleanup();
 
-		void setColors(DWORD background, DWORD foreground, DWORD frame, DWORD text);
+		char* const registerWindowClass();
+		void create(Window* parent, char* name/*, LONG style = 0, DWORD exStyle = 0 */ );
+
 		void setColors(DWORD* colors);
-		void setColors(HBRUSH background, HBRUSH foreground, HBRUSH frame, HPEN pen, COLORREF text);
 		void label(TCHAR* lbl);
 		void setSize(int size);
 		void type(InputCtrlType t);
 		void input(Input* input);
 
+		LRESULT onCreated();
 		LRESULT onPaint();
 		LRESULT onEraseBkgnd(HDC hDC);
 

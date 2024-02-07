@@ -7,7 +7,7 @@ using namespace PLAYER;
 PresetBank::PresetBank() {
 	initialize(0, NULL);
 }
-PresetBank::PresetBank(int bankSize, int count, byte* bytes) {
+PresetBank::PresetBank(int bankSize, byte* bytes) {
 	Map::initialize(16 * sizeof(char), bankSize * sizeof(byte), Map::hashingStr, Collection::compareStr);
 	initialize(bankSize, bytes);
 }
@@ -20,6 +20,9 @@ void PresetBank::initialize(int bankSize, byte* bytes) {
 }
 
 void PresetBank::data(byte* bytes) {
+	// count
+	// names
+	// data
 	if (bytes) {
 		var count = READ(bytes, byte);
 		var name = bytes;

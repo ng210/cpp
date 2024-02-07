@@ -5,13 +5,35 @@
 
 using namespace PLAYER;
 
-#pragma region Input
-Input::Input() {}
+#pragma region Input base
+InputBase::InputBase() {}
 
-Input::Input(Value* pValue) {
-	type = InputTypeB;
-	size = sizeof(Value::b);
+InputBase::InputBase(Value* pValue) {
 	value = pValue;
+}
+
+void InputBase::setup(Value inMin, Value inMax, Value inStep) {
+	min = inMin;
+	max = inMax;
+	step = inStep;
+	check();
+}
+#pragma endregion
+
+#pragma region Input
+Input::Input() {
+	initialize();
+}
+
+Input::Input(Value* pValue) : InputBase(pValue) {
+	initialize();
+}
+
+InputBase::~InputBase() {}
+
+void Input::initialize() {
+	size = sizeof(Value::b);
+	type = InputTypeB;
 	set.add(this, &Input::setter);
 }
 
@@ -30,11 +52,9 @@ void Input::dec(int count) {
 	set(v);
 }
 
-void Input::initialize(Value inMin, Value inMax, Value inStep) {
-	min = inMin;
-	max = inMax;
-	step = inStep;
-	check();
+void Input::readValueFromStream(byte* stream) {
+	var value = READ(stream, byte);
+	set(value);
 }
 
 void Input::readFromStream(byte* stream) {
@@ -43,7 +63,7 @@ void Input::readFromStream(byte* stream) {
 		var max = READ(stream, byte);
 		var step = READ(stream, byte);
 		var value = READ(stream, byte);
-		initialize(min, max, step);
+		setup(min, max, step);
 		set(value);
 	}
 }
@@ -95,13 +115,23 @@ int Input::setter(void* obj, Value value, void* unused) {
 #pragma endregion
 
 #pragma region InputF
-InputF::InputF() {}
+InputF::InputF() {
+	initialize();
+}
 
-InputF::InputF(Value* pValue) {
+InputF::InputF(Value* pValue) : InputBase(pValue) {
+	initialize();
+}
+
+void InputF::initialize() {
 	type = InputTypeF;
 	size = sizeof(Value::f);
-	value = pValue;
 	set.add(this, &InputF::setter);
+}
+
+void InputF::readValueFromStream(byte* stream) {
+	var value = READ(stream, float);
+	set(value);
 }
 
 void InputF::readFromStream(byte* stream) {
@@ -110,7 +140,7 @@ void InputF::readFromStream(byte* stream) {
 		var max = READ(stream, float);
 		var step = READ(stream, float);
 		var value = READ(stream, float);
-		Input::initialize(min, max, step);
+		InputBase::setup(min, max, step);
 		set(value);
 	}
 }
@@ -176,10 +206,14 @@ int InputF::setter(void* obj, Value value, void* unused) {
 #pragma endregion
 
 #pragma region InputF8
-InputF8::InputF8(Value* pV) : Input(pValue) {
+InputF8::InputF8(Value* pV) : Input(pV) {
+	initialize();
+	pValue = pV;
+}
+
+void InputF8::initialize() {
 	type = InputTypeF8;
 	size = sizeof(Value::b);
-	pValue = pV;
 	value = &bValue_;
 	set.add(this, &InputF8::setter);
 }

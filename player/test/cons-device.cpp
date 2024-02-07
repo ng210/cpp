@@ -1,24 +1,31 @@
 #include "console/consoleapp.h"
-#include "cons-adapter.h"
 #include "cons-device.h"
 
 using namespace PLAYER;
 
-ConsDevice::ConsDevice(Adapter* adapter) : Device(adapter, NULL) {
+ConsDevice::ConsDevice(Adapter* adapter, void* cons) : Device(adapter, cons) {
     type(ConsDevices::DeviceCons);
     inputCount_ = 3;
+    x_ = 0;
+    y_ = 0;
+    ink_ = ConsoleColors::gray;
+    var inputs = NEW_(ConsInputs);
+    inputs_ = (Input*)inputs;
+    inputs->x.value = &x_; inputs->x.setup(0, 20, 1);
+    inputs->y.value = &y_; inputs->y.setup(0, 20, 1);
+    inputs->ink.value = &ink_; inputs->ink.setup(ConsoleColors::black, ConsoleColors::gray, 1);
 }
 
 ConsDevice::~ConsDevice() {
+    DEL_((ConsInputs*)inputs_);
 }
 
 void ConsDevice::initialize(byte** pData) {
     if (pData != NULL) {
-        preset_ = READ(*pData, byte);
         var x = READ(*pData, byte);
         var y = READ(*pData, byte);
         var col = READ(*pData, byte);
-        move(x, y);
+        goTo(x, y);
         setInk(col);
     }
 }
@@ -53,7 +60,7 @@ void ConsDevice::processCommand(byte cmd, byte*& cursor) {
         if (x > 127) x -= 256;
         y = READ(cursor, byte);
         if (y > 127) y -= 256;
-        move(x, y);
+        moveTo(x, y);
         break;
     case CmdSetText:
         putText((char*)cursor);
@@ -67,17 +74,18 @@ void ConsDevice::processCommand(byte cmd, byte*& cursor) {
 }
 
 void ConsDevice::putText(char* text) {
-    var cons = getConsole();
-    cons->printf("%s", text);
+    ((IConsole*)object_)->printf("%s", text);
 }
 void ConsDevice::setInk(int c) {
     ink_ = c;
-    var cons = getConsole();
-    cons->setcolor(c);
+    ((IConsole*)object_)->setcolor(c);
 }
-void ConsDevice::move(int x, int y) {
-    x_ = x; y_ = y;
-    var cons = getConsole();
-    cons->movexy(x, y);
+void ConsDevice::moveTo(int x, int y) {
+    x_.b += x; y_.b += y;
+    ((IConsole*)object_)->movexy(x, y);
 }
 
+void ConsDevice::goTo(int x, int y) {
+    x_ = x; y_ = y;
+    ((IConsole*)object_)->movexy(x, y);
+}
