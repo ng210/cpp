@@ -124,8 +124,8 @@ void ChartCtrl::initialize(ChartSettings* settings) {
 	selectionPos2_ = { 0, 0 };
 }
 
-void ChartCtrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyle) {
-	Ctrl::createWindow(parent, name, style, exStyle);
+void ChartCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
+	Ctrl::create(parent, name, style, exStyle);
 
 	onLeftUp(ChartCtrl::onLeftUpProc);
 	onLeftDown(ChartCtrl::onLeftDownProc);

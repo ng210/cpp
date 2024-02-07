@@ -3,6 +3,7 @@
 #include "base/debug.h"
 #include "base/str.h"
 #include "base/string.h"
+#include "base/stream.h"
 
 NS_FW_BASE_USE
 
@@ -99,9 +100,27 @@ void BaseTest::stringTests() {
 	FREE(str);
 }
 
+void BaseTest::streamTests() {
+	Stream stream;
+	assert("Should create default stream", stream.data() != NULL && stream.data() == stream.cursor() && stream.size() == STREAM_DEFAULT_SIZE);
+	var str = "Hello world!";
+	stream.writeString((char*)str);
+	int ix = 0;
+	assert("Should write string into stream", memcmp((byte*)str, stream.data(), 12, ix) && stream.length() == 13 && stream.cursor() == &stream.data()[13]);
+	stream.seek(0, SEEK_SET);
+	assert("Should seek to the start", stream.cursor() == stream.data());
+	stream.seek(-10, SEEK_CUR);
+	assert("Should not seek bellow the start", stream.cursor() == stream.data());
+	stream.seek(0, SEEK_END);
+	assert("Should seek to the end", stream.cursor() == stream.data() + stream.length());
+	stream.seek(10, SEEK_CUR);
+	assert("Should not seek beyond the end", stream.cursor() == stream.data() + stream.length());
+}
+
 void BaseTest::runAll(int& totalPassed, int& totalFailed) {
 	test("Str tests", (TestMethod)&BaseTest::strTests);
 	test("String tests", (TestMethod)&BaseTest::stringTests);
+	test("Stream tests", (TestMethod)&BaseTest::streamTests);
 	totalPassed += totalPassed_;
 	totalFailed += totalFailed_;
 }

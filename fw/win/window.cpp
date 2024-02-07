@@ -34,6 +34,18 @@ Window::Window() {
 	scrollInfoY_.pageSize = 10;
 }
 
+Window::~Window() {
+	if (hWnd_) {
+		if (!parent_) {
+			SYSPR(SendMessage(hWnd_, WM_CLOSE, NULL, NULL));
+		}
+		else {
+			onClose();
+			SYSPR(DestroyWindow(hWnd_));
+		}
+	}
+}
+
 void Window::create(Window* parent, char* name, LONG style, DWORD exStyle) {
 	HWND hWndParent = NULL;
 	if (parent) {
@@ -48,8 +60,9 @@ void Window::create(Window* parent, char* name, LONG style, DWORD exStyle) {
 	// create window
 	var className = registerWindowClass();
 	if (style == 0) style = Window::defaultStyle;
-	SYSFN(hWnd_, CreateWindowEx(exStyle, className, name, style, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hWndParent, NULL, hInstance_, this));
-
+	if (hWnd_ == NULL) {
+		SYSFN(hWnd_, CreateWindowEx(exStyle, className, name, style, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hWndParent, NULL, hInstance_, this));
+	}
 	if (hWnd_ != NULL) {
 		// check wrapper function
 		WNDCLASSEX wndClassEx;
@@ -69,9 +82,6 @@ void Window::create(Window* parent, char* name, LONG style, DWORD exStyle) {
 	}
 
 	this->onCreated();
-}
-
-Window::~Window() {
 }
 
 LONG Window::setWindowStyle(LONG style, DWORD exStyle) {
@@ -125,9 +135,16 @@ LRESULT CALLBACK Window::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		case WM_CREATE:
 			ret = onCreate();
 			break;
+		case WM_CLOSE:
+			ret = onClose();
+			DestroyWindow(hWnd_);
+			break;
 		case WM_DESTROY:
 			ret = onDestroy();
-			PostQuitMessage((int)ret);
+			if (parent_ == NULL) {
+				PostQuitMessage((int)ret);
+			}
+			hWnd_ = NULL;
 			callDefault = ret != 0;
 			break;
 		case WM_MOVE:
@@ -196,6 +213,37 @@ Map* Window::createChildWindowMap() {
 	var map = NEW_(Map, sizeof(int), sizeof(HWND), Map::hashingInt, Collection::compareInt);
 	SYSPR(EnumChildWindows(hWnd_, enumChildWindowsCallback, (LPARAM)map));
 	return map;
+}
+
+LRESULT Window::show(int cmdShow) {
+	return ShowWindow(hWnd_, cmdShow);
+}
+
+LRESULT Window::set(int x, int y, int width, int height, Window* insertAfter) {
+	LRESULT result = 0;
+	var hWnd = insertAfter ? insertAfter->hWnd_ : NULL;
+	int flags = 0;
+	if (x == -1) flags |= SWP_NOMOVE;
+	if (width == 0) flags |= SWP_NOSIZE;
+	if (insertAfter == NULL) flags |= SWP_NOZORDER;
+	SYSFN(result, SetWindowPos(hWnd_, hWnd, x, y, width, height, flags));
+	return result;
+}
+
+LRESULT Window::set(RECT& rect, Window* insertAfter) {
+	return set(rect.left, rect.top, rect.right, rect.bottom, insertAfter);
+}
+
+LRESULT Window::setPosition(int x, int y) {
+	LRESULT result = 0;
+	SYSFN(result, SetWindowPos(hWnd_, NULL, x, y, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE));
+	return result;
+}
+
+LRESULT Window::setSize(int width, int height) {
+	LRESULT result = 0;
+	SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, width, height, SWP_SHOWWINDOW | SWP_NOMOVE));
+	return result;
 }
 
 void Window::setVirtualSize(int width, int height) {
@@ -343,6 +391,9 @@ LRESULT Window::onCreate() {
 	return 0;
 }
 LRESULT Window::onCreated() {
+	return 0;
+}
+LRESULT Window::onClose() {
 	return 0;
 }
 LRESULT Window::onDestroy() {

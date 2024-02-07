@@ -28,6 +28,23 @@ Stream::~Stream() {
 	FREE(data_);
 }
 
+byte* Stream::seek(long long bytes, int origin) {
+	var end = data_ + length_;
+	switch (origin) {
+		case SEEK_SET: cursor_ = data_;
+		case SEEK_CUR:
+			cursor_ += bytes;
+			if (cursor_ > end) cursor_ = end;
+			break;
+		case SEEK_END: 
+			cursor_ = data_ + length_ - bytes;
+			break;
+	}
+	if (cursor_ < data_) cursor_ = data_;
+	
+	return cursor_;
+}
+
 void Stream::cursor(byte* p) {
 	if (p < data_) cursor_ = data_;
 	else if (p < data_ + length_) cursor_ = p;

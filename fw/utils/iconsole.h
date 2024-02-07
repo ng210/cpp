@@ -1,6 +1,7 @@
 #ifndef __ICONSOLE_H
 #define __ICONSOLE_H
 
+#include <windows.h>
 #include "basedef.h"
 
 NS_FW_BASE_BEGIN
@@ -16,21 +17,14 @@ typedef enum ConsoleColors {
 	gray = 7
 } ConsoleColors;
 
-#ifndef POINT
-typedef struct tagPOINT {
-	long x;
-	long y;
-} POINT;
-#endif
-
 class IConsole {
 public:
 	virtual void showCursor(bool status) = 0;
 	void printf(const char* const format, ...);
 	virtual void vprintf(const char* const format, va_list args) = 0;
-	virtual void dump(const byte* const data, int length, int width = 8) = 0;
-	virtual NS_FW_BASE::POINT* const gotoxy(int x, int y) = 0;
-	virtual NS_FW_BASE::POINT* const movexy(int x, int y) = 0;
+	virtual void dump(const byte* const data, int length, int width = 8);
+	virtual POINT* const gotoxy(int x, int y) = 0;
+	virtual POINT* const movexy(int x, int y) = 0;
 	virtual void setcolor(int col) = 0;
 	virtual void clearscreen() = 0;
 };

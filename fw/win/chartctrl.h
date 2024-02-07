@@ -123,7 +123,7 @@ public:
 	void initialize(ChartSettings* settings);
 
 	char* const registerWindowClass();
-	void createWindow(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
+	void create(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
 
 	void createBackBuffer(RECT& rect);
 	void setVirtualSize(int width, int height);

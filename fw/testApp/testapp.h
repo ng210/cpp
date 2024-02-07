@@ -1,9 +1,11 @@
 #include "win/winapp.h"
+#include "utils/task.h"
 #include "win/staticctrl.h"
 #include "win/editctrl.h"
 #include "win/comboboxctrl.h"
 #include "win/buttonctrl.h"
 #include "win/chartctrl.h"
+#include "win/logctrl.h"
 #include "utils/buffer.h"
 #include "test-ctrl.h"
 
@@ -19,15 +21,18 @@ class TestApp : public WinApp {
 	int state_;
 	static char* eos_;
 	TestCtrl testCtrl_;
-	EditCtrl editCtrl_;
 	ComboboxCtrl cbSimple_, cbDropDown_, cbDropDownList_;
 	StaticCtrl staticText_, staticIcon_, staticBitmap_;
 	ButtonCtrl textButton_, imageButton_;
 	ChartCtrl chartCtrl_;
 
+	Task* task1_;
+
+	HBRUSH logBgBrush_;
+
 	void log(const char* text, ...);
 protected:
-	EditCtrl logCtrl_;
+	LogCtrl logCtrl_;
 	LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	char* const registerWindowClass();
 public:
@@ -38,7 +43,8 @@ public:
 	void update();
 
 	LRESULT onCreated();
-	LRESULT onDestroy();
+	LRESULT onClose();
+	//LRESULT onDestroy();
 
 	static MOUSEEVENTPROC onLeftUpProc;
 };

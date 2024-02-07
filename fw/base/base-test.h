@@ -9,6 +9,7 @@ class BaseTest : public Test {
 public:
 	void strTests();
 	void stringTests();
+	void streamTests();
 
 	void runAll(int& totalPassed, int& totalFailed);
 };

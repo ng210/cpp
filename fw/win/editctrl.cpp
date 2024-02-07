@@ -12,13 +12,13 @@ char* const EditCtrl::registerWindowClass() {
 	return EditCtrl::windowClassName_;
 }
 
-void EditCtrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyle) {
+void EditCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
 	if (style == 0) {
 		style = WS_BORDER | ES_LEFT;
 	}
 	//style |= WS_CHILD | WS_VISIBLE;
 
-	Ctrl::createWindow(parent, name, style, exStyle);
+	Ctrl::create(parent, name, style, exStyle);
 }
 
 EditCtrl::~EditCtrl() {

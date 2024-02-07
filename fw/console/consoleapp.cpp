@@ -83,7 +83,7 @@ void Console::vprintf(const char* const format, va_list args) {
 	DWORD reserved = 0;
 	SYSPR(WriteConsole(hOutput_, consoleBuffer_, NS_FW_BASE::strlen(consoleBuffer_), (LPDWORD)&dwBytesWritten, &reserved));
 }
-NS_FW_BASE::POINT* const Console::gotoxy(int x, int y) {
+POINT* const Console::gotoxy(int x, int y) {
 	SYSPR(GetConsoleScreenBufferInfo(hOutput_, &consoleScreenBufferInfo_));
 	consoleScreenBufferInfo_.dwCursorPosition.X = x;
 	consoleScreenBufferInfo_.dwCursorPosition.Y = y;
@@ -92,7 +92,7 @@ NS_FW_BASE::POINT* const Console::gotoxy(int x, int y) {
 	position_.y = (int)consoleScreenBufferInfo_.dwCursorPosition.Y;
 	return &position_;
 }
-NS_FW_BASE::POINT* const Console::movexy(int x, int y) {
+POINT* const Console::movexy(int x, int y) {
 	SYSPR(GetConsoleScreenBufferInfo(hOutput_, &consoleScreenBufferInfo_));
 	consoleScreenBufferInfo_.dwCursorPosition.X += x;
 	consoleScreenBufferInfo_.dwCursorPosition.Y += y;
@@ -124,28 +124,6 @@ void Console::clearscreen() {
 				}
 			}
 		}
-	}
-}
-
-void Console::dump(const byte* const data, int length, int width) {
-	var count = 0;
-	char line[1024];
-	int size = 1023;
-	var p = line;
-	for (var i = 0; i < length; i++) {
-		unsigned char db = data[i];
-		sprintf_s(p, size, "%02x ", db);
-		size -= 3;
-		p += 3;
-		if (count++ == width) {
-			printf("%s\n", line);
-			p = line;
-			size = 1023;
-			count = 0;
-		}
-	}
-	if (p != line) {
-		printf("%s\n", line);
 	}
 }
 

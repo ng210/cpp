@@ -51,7 +51,7 @@ void ComboboxCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle)
 	if (!(style & CBS_SIMPLE) && !(style & CBS_DROPDOWN) && !(style & CBS_DROPDOWNLIST)) {
 		style |= CBS_DROPDOWNLIST;
 	}
-	Ctrl::createWindow(parent, name, style, exStyle);
+	Ctrl::create(parent, name, style, exStyle);
 	Array children(sizeof(HWND));
 	SYSPR(EnumChildWindows(hWnd_, enumChildren, (LPARAM)&children));
 	
@@ -81,7 +81,7 @@ LRESULT CALLBACK ComboboxCtrl::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		word noteId, ctrlId;
 		noteId = HIWORD(wParam);
 		ctrlId = LOWORD(wParam);
-		LOG("%x %x\n", ctrlId, noteId);
+		//LOG("%x %x\n", ctrlId, noteId);
 		switch (noteId) {
 		case LBN_SELCHANGE:
 			SYSFN2(res, SendMessage(hWnd_, CB_GETCURSEL, NULL, NULL), LB_ERR);
@@ -104,7 +104,7 @@ LRESULT CALLBACK ComboboxCtrl::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			}
 			break;
 		}
-		res = defWindowProc_(hWnd, uMsg, wParam, lParam);
+		res = Ctrl::wndProc(hWnd, uMsg, wParam, lParam);
 		//if (ctrlId == editId_ && noteId == EN_CHANGE) {
 		//	int len;
 		//	len = fmw::strlen(item);
@@ -134,7 +134,7 @@ LRESULT CALLBACK ComboboxCtrl::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		//}
 		break;
 	default:
-		res = defWindowProc_(hWnd, uMsg, wParam, lParam);
+		res = Ctrl::wndProc(hWnd, uMsg, wParam, lParam);
 	}
 	return res;
 }

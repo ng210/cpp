@@ -185,6 +185,15 @@
     <ClInclude Include="utils\iconsole.h">
       <Filter>utils\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="win\logctrl.h">
+      <Filter>win\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\task.h">
+      <Filter>utils\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\task-test.h">
+      <Filter>utils\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base\memory.cpp">
@@ -303,6 +312,15 @@
       <Filter>win\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="utils\iconsole.cpp">
+      <Filter>utils\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\logctrl.cpp">
+      <Filter>win\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\task.cpp">
+      <Filter>utils\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\task-test.cpp">
       <Filter>utils\Source Files</Filter>
     </ClCompile>
   </ItemGroup>

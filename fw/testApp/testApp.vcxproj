@@ -162,11 +162,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="test-ctrl.cpp" />
+    <ClCompile Include="test-task.cpp" />
     <ClCompile Include="testapp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="test-ctrl.h" />
+    <ClInclude Include="test-task.h" />
     <ClInclude Include="testapp.h" />
   </ItemGroup>
   <ItemGroup>

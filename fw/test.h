@@ -1,8 +1,8 @@
 #ifndef __TEST_H
 #define __TEST_H
 
-#include "basedef.h"
 #include "utils/iconsole.h"
+#include "basedef.h"
 
 NS_FW_BASE_BEGIN
 

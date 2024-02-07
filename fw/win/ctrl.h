@@ -13,7 +13,7 @@ protected:
 public:
 	Ctrl();
 
-	void createWindow(Window* parent, char* name, LONG style = 0, DWORD exStyle = 0);
+	void create(Window* parent, char* name, LONG style = 0, DWORD exStyle = 0);
 
 	void move(int x, int y);
 };

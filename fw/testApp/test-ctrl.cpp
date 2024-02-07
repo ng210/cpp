@@ -3,8 +3,10 @@
 char* TestCtrl::windowClassName_ = "TestCtrl";
 ATOM TestCtrl::windowClass_ = 0;
 
+#define TESTCTRL_BUFFERSIZE 1048576
+
 TestCtrl::TestCtrl() {
-	text_ = MALLOC(char, 1024);
+	text_ = MALLOC(char, TESTCTRL_BUFFERSIZE);
 	text_[0] = '\0';
 }
 
@@ -19,13 +21,13 @@ char* const TestCtrl::registerWindowClass() {
 	return TestCtrl::windowClassName_;
 }
 
-void TestCtrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyle) {
-	Ctrl::createWindow(parent, name, style, exStyle);
+void TestCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
+	Ctrl::create(parent, name, style, exStyle);
 	hBrush_ = CreateSolidBrush(0x00000000);
 }
 
 void TestCtrl::setText(char* text) {
-	strncpy_s(text_, 1024, text, 1024);
+	strncpy_s(text_, TESTCTRL_BUFFERSIZE, text, TESTCTRL_BUFFERSIZE);
 	InvalidateRect(hWnd_, NULL, true);
 }
 

@@ -13,7 +13,7 @@ NS_FW_BASE_USE
 #define CONSOLE_BUFFER_LENGTH 1024*1024
 
 class Console : public IConsole {
-private: NS_FW_BASE::POINT position_;
+private: POINT position_;
 protected: PROP_R(HANDLE, hOutput);
 protected: PROP_R(HANDLE, hInput);
 protected: PROP_R(CONSOLE_SCREEN_BUFFER_INFO, consoleScreenBufferInfo);
@@ -26,9 +26,8 @@ public:
 
 	void showCursor(bool status);
 	void vprintf(const char* const format, va_list args);
-	void dump(const byte* const data, int length, int width = 8);
-	NS_FW_BASE::POINT* const gotoxy(int x, int y);
-	NS_FW_BASE::POINT* const movexy(int x, int y);
+	POINT* const gotoxy(int x, int y);
+	POINT* const movexy(int x, int y);
 	void setcolor(int col);
 	void clearscreen();
 

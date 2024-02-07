@@ -8,13 +8,13 @@ Ctrl::Ctrl() {
 	offset_.y = 0;
 }
 
-void Ctrl::createWindow(Window* parent, char* name, LONG style, DWORD exStyle) {
+void Ctrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
 	style |= WS_CHILD | WS_VISIBLE;
 	this->Window::create(parent, name, style, exStyle);
 }
 
 void Ctrl::move(int x, int y) {
-	SYSPR(SetWindowPos(hWnd_, NULL, x, y, 0, 0, SWP_NOSIZE));
+	SYSPR(SetWindowPos(hWnd_, NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_ASYNCWINDOWPOS));
 	offset_.x = x;
 	offset_.y = y;
 }

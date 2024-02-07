@@ -72,6 +72,12 @@ class Window {
 		LONG setWindowStyle(LONG style, DWORD exStyle = 0);
 		virtual LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		Map* Window::createChildWindowMap();
+		
+		LRESULT show(int cmdShow);
+		LRESULT set(int x, int y, int width, int height, Window* insertAfter = NULL);
+		LRESULT set(RECT& rect, Window* insertAfter = NULL);
+		LRESULT setPosition(int x, int y);
+		LRESULT setSize(int width, int height);
 		virtual void Window::setVirtualSize(int width, int height);
 
 	#pragma region EventHandling
@@ -97,6 +103,7 @@ class Window {
 	#pragma region SystemEvents
 		virtual LRESULT onCreate();
 		virtual LRESULT onCreated();
+		virtual LRESULT onClose();
 		virtual LRESULT onDestroy();
 		virtual LRESULT onPaint();
 		virtual LRESULT onEraseBkgnd(HDC hDC);

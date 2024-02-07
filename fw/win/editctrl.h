@@ -12,7 +12,7 @@ public:
 	~EditCtrl();
 
 	char* const registerWindowClass();
-	void createWindow(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
+	void create(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);
 
 	void setText(TCHAR* text);
 };

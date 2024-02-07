@@ -1,8 +1,9 @@
 #include <math.h>
-#include "testapp.h"
+#include "testApp/testapp.h"
 #include "resource.h"
 #include "win/editctrl.h"
 #include "win/chartctrl.h"
+#include "testApp/test-task.h"
 
 NS_FW_BASE_USE
 NS_FW_WIN_USE
@@ -11,6 +12,9 @@ NS_FW_WIN_USE
 #define MIN_WIDTH 640
 #define MAX_HEIGHT 1080
 #define MIN_HEIGHT 400
+
+#define LOGBGCOLOR 0x00402010
+#define LOGTEXTCOLOR 0x0080C0E0
 
 char* TestApp::eos_ = "\n\0";
 
@@ -24,6 +28,7 @@ TestApp::~TestApp() {
 	// put cleanup code here
 	// log buffer?
 	log_.clear();
+	SYSPR(DeleteObject(logBgBrush_));
 }
 
 char* const TestApp::registerWindowClass() {
@@ -42,7 +47,8 @@ LRESULT TestApp::onCreated() {
 
 	RECT rect;
 	LRESULT result = 0;
-	SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, 1280, 768, SWP_NOMOVE));
+	setSize(1280, 768);
+	//SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, 1280, 768, SWP_NOMOVE));
 	HFONT SYSFN(hFont, (HFONT)GetStockObject(SYSTEM_FIXED_FONT));
 
 	// create controls in the upper lane
@@ -64,7 +70,7 @@ LRESULT TestApp::onCreated() {
 
 	var onSelect = [](ComboboxCtrl* cb, int ix, void* item) {
 		var testApp = (TestApp*)cb->parent();
-		testApp->log("Select: %d='%s'", ix, item);
+		testApp->log("Select: %d='%s'\r\n", ix, item);
 	};
 
 	// create simple combobox
@@ -73,14 +79,15 @@ LRESULT TestApp::onCreated() {
 	cbSimple_.addItem("Füge");
 	cbSimple_.select(0);
 	rect.right = 96; rect.bottom = 96;
-	SYSFN(result, SetWindowPos(cbSimple_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
+	cbSimple_.set(rect);
+	//SYSFN(result, SetWindowPos(cbSimple_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 	if (laneHeight < rect.bottom) laneHeight = rect.bottom;
 	cbSimple_.onSelectItem(onSelect);
 	cbSimple_.onAddItem([](ComboboxCtrl* cb, void* item) {
 		cb->addItem(item);
 		var testApp = (TestApp*)cb->parent();
-		testApp->log("Add: '%s'", item);
+		testApp->log("Add: '%s'\r\n", item);
 	});
 
 	// create drop down
@@ -89,7 +96,8 @@ LRESULT TestApp::onCreated() {
 	cbDropDown_.addItem("Füge");
 	cbDropDown_.select(0);
 	rect.right = 96; rect.bottom = 96;
-	SYSFN(result, SetWindowPos(cbDropDown_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
+	cbDropDown_.set(rect);
+	//SYSFN(result, SetWindowPos(cbDropDown_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 	if (laneHeight < rect.bottom) laneHeight = rect.bottom;
 	cbDropDown_.onSelectItem(onSelect);
@@ -104,24 +112,27 @@ LRESULT TestApp::onCreated() {
 	#pragma endregion
 
 	#pragma region Static
-	staticText_.createWindow(this, "StaticText", SS_CENTER);
+	staticText_.create(this, "StaticText", SS_CENTER);
 	rect.right = 96; rect.bottom = 24;
 	SendMessage(staticText_.hWnd(), WM_SETTEXT, NULL, (LPARAM)"Hello");
-	SYSFN(result, SetWindowPos(staticText_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
+	staticText_.set(rect);
+	//SYSFN(result, SetWindowPos(staticText_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	//SYSPR(SetWindowText(staticText_.hWnd(), "Hello"));
 	rect.left += rect.right + 4;
 	
-	staticIcon_.createWindow(this, "StaticIcon", SS_ICON);
+	staticIcon_.create(this, "StaticIcon", SS_ICON);
 	rect.right = 24;
 	var SYSFN(icon, LoadIcon(NULL, (LPSTR)IDI_WARNING));
 	SendMessage(staticIcon_.hWnd(), STM_SETICON, (WPARAM)icon, NULL);
-	SYSFN(result, SetWindowPos(staticIcon_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
+	staticIcon_.set(rect);
+	//SYSFN(result, SetWindowPos(staticIcon_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 
-	staticBitmap_.createWindow(this, "StaticBitmap", SS_BITMAP | SS_SUNKEN);
+	staticBitmap_.create(this, "StaticBitmap", SS_BITMAP | SS_SUNKEN);
 	rect.right = 32;
 	SendMessage(staticBitmap_.hWnd(), STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap);
-	SYSFN(result, SetWindowPos(staticBitmap_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
+	staticBitmap_.set(rect);
+	//SYSFN(result, SetWindowPos(staticBitmap_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 	if (laneHeight < rect.bottom) laneHeight = rect.bottom;
 	#pragma endregion
@@ -130,25 +141,27 @@ LRESULT TestApp::onCreated() {
 	#pragma region Button
 	rect.right = 48;
 	rect.bottom = 24;
-	textButton_.createWindow(this, "Button", BS_CENTER | BS_TEXT);
+	textButton_.create(this, "Button", BS_CENTER | BS_TEXT);
 	SYSPR(SetWindowText(textButton_.hWnd(), "Ok"));
-	SYSFN(result, SetWindowPos(textButton_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
+	textButton_.set(rect);
+	//SYSFN(result, SetWindowPos(textButton_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 
 	//var bitmap = LoadImage(hInstance_, MAKEINTRESOURCE(IDB_PLUS), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
-	imageButton_.createWindow(this, "Button", BS_BITMAP);
+	imageButton_.create(this, "Button", BS_BITMAP);
 	SYSPR(SendMessage(imageButton_.hWnd(), BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap));
-	SYSFN(result, SetWindowPos(imageButton_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
+	imageButton_.set(rect);
+	//SYSFN(result, SetWindowPos(imageButton_.hWnd(), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_SHOWWINDOW));
 	rect.left += rect.right + 4;
 
 	var leftButtonProc = [](Window* wnd, POINT& pos, WPARAM state) {
 		var testApp = (TestApp*)wnd->parent();
-		testApp->log("Left Button");
+		testApp->log("Left Button\r\n");
 		return testApp->onLeftUp()(testApp, pos, state);
 	};
 	var rightButtonProc = [](Window* wnd, POINT& pos, WPARAM state) {
 		var testApp = (TestApp*)wnd->parent();
-		testApp->log("Right Button");
+		testApp->log("Right Button\r\n");
 		return testApp->onLeftUp()(testApp, pos, state);
 	};
 	textButton_.onLeftUp(leftButtonProc);
@@ -157,13 +170,15 @@ LRESULT TestApp::onCreated() {
 	imageButton_.onRightUp(rightButtonProc);
 	#pragma endregion
 
-	#pragma region Edit
+	#pragma region Log
 	SYSPR(GetClientRect(hWnd_, &rect));
 	rect.left += 4; rect.right -= 8;
 	rect.top += laneHeight + 4; rect.bottom -= 12;
-	logCtrl_.createWindow(this, "", WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL);
-	var height = 2*(rect.bottom >> 3);
-	SYSFN(result, SetWindowPos(logCtrl_.hWnd(), NULL, rect.left, rect.top, rect.right, height, SWP_SHOWWINDOW));
+	logCtrl_.create(this, "");
+	var height = rect.bottom >> 2;
+	logCtrl_.set(rect.left, rect.top, rect.right, height);
+	SYSFN(logBgBrush_, CreateSolidBrush(LOGBGCOLOR));
+	//SYSFN(result, SetWindowPos(logCtrl_.hWnd(), NULL, rect.left, rect.top, rect.right, height, SWP_SHOWWINDOW));
 	rect.top += height + 2;
 	SYSPR(SendMessage(logCtrl_.hWnd(), WM_SETFONT, (WPARAM)hFont, false));
 	#pragma endregion
@@ -191,7 +206,7 @@ LRESULT TestApp::onCreated() {
 		0.1f					// scaleSpeed
 	};
 	chartCtrl_.initialize(&settings);
-	chartCtrl_.createWindow(this, "");
+	chartCtrl_.create(this, "");
 	var cols = settings.unit2.x * 18;
 	var rows = settings.unit2.y * 8;
 	var list = NEW_(Array, sizeof(POINT), cols);
@@ -215,22 +230,28 @@ LRESULT TestApp::onCreated() {
 	});
 	unitX *= settings.unit2.x;
 	unitY *= settings.unit2.y;
-	var cw = (rect_.right / unitX)* unitX;
+	var cw = rect.right;	// (rect_.right / unitX)* unitX;
 	var ch = (2 * height / unitY)* unitY;
-	SYSFN(result, SetWindowPos(chartCtrl_.hWnd(), NULL, rect.left, rect.top,  cw, ch, SWP_SHOWWINDOW));
+	chartCtrl_.set(rect.left, rect.top, cw, ch);
+	//SYSFN(result, SetWindowPos(chartCtrl_.hWnd(), NULL, rect.left, rect.top,  cw, ch, SWP_SHOWWINDOW));
 	chartCtrl_.setVirtualSize(cols * settings.unit1.x, rows * settings.unit1.y);
 	rect.top += ch + 2;
 	#pragma endregion
 
-	testCtrl_.createWindow(this, "");
-	SYSPR(SetWindowPos(testCtrl_.hWnd(), NULL, rect.left, rect.top, rect.right, height, SWP_SHOWWINDOW));
+	testCtrl_.create(this, "");
+	testCtrl_.set(rect.left, rect.top, rect.right, height);
+
+	task1_ = NEW_(TestTask, this);
+	task1_->run();
+	//SYSPR(SetWindowPos(testCtrl_.hWnd(), NULL, rect.left, rect.top, rect.right, height, SWP_SHOWWINDOW));
 
 	//char eos = '\0';
 	//log_.append(&eos, 1);
 	return result;
 }
 
-LRESULT TestApp::onDestroy() {
+LRESULT TestApp::onClose() {
+	if (task1_) DEL_(task1_);
 	DEL_(chartCtrl_.dataSource());
 	return 0;
 }
@@ -266,6 +287,14 @@ LRESULT CALLBACK TestApp::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		//		break;
 		//	}
 		//	break;
+		case WM_CTLCOLORSTATIC:
+			if ((HWND)lParam == logCtrl_.hWnd()) {
+				// set color for log
+				var hDC = (HDC)wParam;
+				SetTextColor(hDC, LOGTEXTCOLOR);
+				SetBkColor(hDC, LOGBGCOLOR);
+				return (INT_PTR)logBgBrush_;
+			}
 		default:
 			ret = Window::wndProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -283,39 +312,38 @@ LRESULT TestApp::onLeftUpProc(Window* wnd, POINT& pos, WPARAM state) {
 void TestApp::log(const char* format, ...) {
 	va_list args;
 	va_start(args, format);
-	char text[1024];
-	wvsprintf(text, format, args);
-	// log text
-	log_.write(text, NS_FW_BASE::strlen(text), 0, log_.length()-1);
-	char* eol = "\r\n---\r\n\0";
-	log_.append(eol, 8);
-	char* buffer = log_.getBufferAsType<char>();
-	SetWindowText(logCtrl_.hWnd(), buffer);
+	logCtrl_.vprintf(format, args);
+	va_end(args);
+
+	var buffer = logCtrl_.getBuffer();
 	testCtrl_.setText(buffer);
 	FREE(buffer);
-	//ScrollWindow(logControl_->hWnd(), 0, 0, NULL, &rect);
 }
 
 void TestApp::update() {
 	switch (state_) {
 		case 0:
-			log("State 0: Click to advance state!");
+			log("State 0: Click to advance state!\r\n");
 			state_++;
 			break;
 		case 2:
-			log("State 1: Hello world!");
+			log("State 1: Hello world!\r\n");
 			state_++;
 			break;
 		case 4:
-			log("State 2: TestApp works!");
+			log("State 2: TestApp works!\r\n");
 			state_++;
 			break;
 		case 6:
-			log("State 3: Final state reached, restarting!");
+			log("State 3: Final state reached, restarting!\r\n");
 			state_ = -1;
 			break;
 		default:
 			break;
+	}
+	if (task1_ && task1_->state() == TASK_STATE::TaskCompleted) {
+		DEL_(task1_);
+		task1_ = NULL;
 	}
 	Sleep(1);
 }

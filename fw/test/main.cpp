@@ -2,21 +2,10 @@
 #include "base/base-test.h"
 #include "collection/collection-test.h"
 #include "syntax/syntax-test.h"
+#include "utils/task.h"
+#include "utils/task-test.h"
 
 NS_FW_BASE_USE
-
-//int testUtils();
-//int testBuffer();
-//int testFile();
-//int testDirectory();
-//int testPathInfo();
-//int testArray();
-//int testPArray();
-//int testMap();
-//int testTree();
-//int testRatio();
-
-//#define TEST(t) t() ? failed++ : passed++;
 
 int _main(NS_FW_BASE::Map* args) {
 //int main(int argc, char* args[]) {
@@ -37,10 +26,7 @@ int _main(NS_FW_BASE::Map* args) {
 	int totalFailed = 0;
 
 	var baseTest = NEW_(BaseTest);
-	baseTest->test("Str tests", (TestMethod)&BaseTest::strTests);
-	baseTest->test("String tests", (TestMethod)&BaseTest::stringTests);
-	totalPassed += baseTest->totalPassed_;
-	totalFailed += baseTest->totalFailed_;
+	baseTest->runAll(totalPassed, totalFailed);
 	baseTest->displayFinalResults("Base Test Results ");
 	DEL_(baseTest);
 
@@ -54,18 +40,11 @@ int _main(NS_FW_BASE::Map* args) {
 	//syntaxTest->displayFinalResults("Syntax Test Results ");
 	//DEL_(syntaxTest);
 
-
-	//testRatio();
-
-	//WORD buffer[48000];
-	//for (int i = 0; i < 48000; i++) {
-	//	buffer[i] = (WORD)Utils::random(65536);
-	//}
-	//File::write("random.smp", (BYTE*)&buffer, sizeof(WORD) * 48000);
-
-	//for (int i = 0; i < 16; i++) {
-	//	printf("%d. %s\n", i, (char*)arr.get(i));
-	//}
+	// task tests
+	var taskTests = NEW_(TaskTest);
+	taskTests->runAll(totalPassed, totalFailed);
+	taskTests->displayFinalResults("Task Test Results ");
+	DEL_(taskTests);
 
 	var sum = totalPassed + totalFailed;
 	var ratio = (100.0f * totalPassed) / sum;

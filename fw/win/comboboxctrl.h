@@ -27,7 +27,7 @@ protected: PROP(CBADDITEMPROC*, onAddItem);
 protected: PROP(CBSELECTITEMPROC*, onSelectItem);
 public:
 	ComboboxCtrl();
-	virtual ~ComboboxCtrl();
+	~ComboboxCtrl();
 
 	char* const registerWindowClass();
 	void create(Window* parent, char* name, LONG style = NULL, DWORD exStyle = NULL);

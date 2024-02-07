@@ -25,11 +25,11 @@ void Test::assert(const char* label, bool condition) {
     Test::cons->printf(" - %s: ", label);
     if (condition) {
         Test::cons->setcolor(ConsoleColors::green);
-        Test::cons->printf(" passed\n");
+        Test::cons->printf(" passed\r\n");
     }
     else {
         Test::cons->setcolor(ConsoleColors::red);
-        Test::cons->printf(" failed\n");
+        Test::cons->printf(" failed\r\n");
     }
     Test::cons->setcolor(ConsoleColors::gray);
 
@@ -45,14 +45,14 @@ void Test::assert(const char* label, bool condition) {
 
 void Test::test(const char* label, TestMethod testMethod) {
     Test::cons->setcolor(ConsoleColors::gray);
-    Test::cons->printf("\n *** %s\n", label);
+    Test::cons->printf("\r\n *** %s\r\n", label);
     passed_ = 0; failed_ = 0;
     (this->*testMethod)();
     var sum = passed_ + failed_;
     var ratio = (100.0f * passed_) / sum;
     Test::cons->printf(" *** %s Results: ", label);
     Test::setColor(ratio);
-    Test::cons->printf(" %d/%d = %.02f%%\n", passed_, sum, ratio);
+    Test::cons->printf(" %d/%d = %.02f%%\r\n", passed_, sum, ratio);
     Test::cons->setcolor(ConsoleColors::gray);
 }
 
@@ -63,7 +63,7 @@ void Test::displayFinalResults(const char* label) {
     var sum = totalPassed_ + totalFailed_;
     var ratio = (100.0f * totalPassed_) / sum;
     Test::setColor(ratio);
-    Test::cons->printf("%d/%d=%.02f%%\n\n", totalPassed_, sum, ratio);
+    Test::cons->printf("%d/%d=%.02f%%\r\n\r\n", totalPassed_, sum, ratio);
     Test::cons->setcolor(ConsoleColors::gray);
 }
 
