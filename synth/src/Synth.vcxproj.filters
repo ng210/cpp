@@ -48,41 +48,11 @@
     <ClCompile Include="elem\osc.cpp">
       <Filter>Source Files\elem</Filter>
     </ClCompile>
-    <ClCompile Include="module\distort.cpp">
-      <Filter>Source Files\module</Filter>
-    </ClCompile>
-    <ClCompile Include="module\mixer.cpp">
-      <Filter>Source Files\module</Filter>
-    </ClCompile>
-    <ClCompile Include="elem\pot.cpp">
-      <Filter>Source Files\elem</Filter>
-    </ClCompile>
-    <ClCompile Include="module\synth.cpp">
-      <Filter>Source Files\module</Filter>
-    </ClCompile>
-    <ClCompile Include="device\synth-adapter.cpp">
-      <Filter>Source Files\device</Filter>
-    </ClCompile>
     <ClCompile Include="device\module-device.cpp">
-      <Filter>Source Files\device</Filter>
-    </ClCompile>
-    <ClCompile Include="device\synth-device.cpp">
       <Filter>Source Files\device</Filter>
     </ClCompile>
     <ClCompile Include="module\module.cpp">
       <Filter>Source Files\module</Filter>
-    </ClCompile>
-    <ClCompile Include="device\mixer-device.cpp">
-      <Filter>Source Files\device</Filter>
-    </ClCompile>
-    <ClCompile Include="device\distort-device.cpp">
-      <Filter>Source Files\device</Filter>
-    </ClCompile>
-    <ClCompile Include="module\stereo-delay.cpp">
-      <Filter>Source Files\module</Filter>
-    </ClCompile>
-    <ClCompile Include="device\stereo-delay-device.cpp">
-      <Filter>Source Files\device</Filter>
     </ClCompile>
     <ClCompile Include="elem\dly.cpp">
       <Filter>Source Files\elem</Filter>
@@ -96,34 +66,28 @@
     <ClCompile Include="module\synth-base.cpp">
       <Filter>Source Files\module</Filter>
     </ClCompile>
-    <ClCompile Include="device\bass-device.cpp">
-      <Filter>Source Files\device</Filter>
-    </ClCompile>
-    <ClCompile Include="device\synth-base-device.cpp">
-      <Filter>Source Files\device</Filter>
-    </ClCompile>
-    <ClCompile Include="module\drums.cpp">
-      <Filter>Source Files\module</Filter>
-    </ClCompile>
     <ClCompile Include="elem\dahr.cpp">
       <Filter>Source Files\elem</Filter>
     </ClCompile>
     <ClCompile Include="elem\env.cpp">
       <Filter>Source Files\elem</Filter>
     </ClCompile>
-    <ClCompile Include="device\drums-device.cpp">
+    <ClCompile Include="device\module-device-ext.cpp">
       <Filter>Source Files\device</Filter>
     </ClCompile>
-    <ClCompile Include="xmloader.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="device\synth-adapter.cpp">
+      <Filter>Source Files\device</Filter>
     </ClCompile>
-    <ClCompile Include="module\soundbank.cpp">
-      <Filter>Source Files\module</Filter>
+    <ClCompile Include="device\synth-base-device-ext.cpp">
+      <Filter>Source Files\device</Filter>
     </ClCompile>
-    <ClCompile Include="module\synth2.cpp">
-      <Filter>Source Files\module</Filter>
+    <ClCompile Include="device\synth-base-device.cpp">
+      <Filter>Source Files\device</Filter>
     </ClCompile>
-    <ClCompile Include="device\synth2-device.cpp">
+    <ClCompile Include="device\bass-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="device\bass-device-ext.cpp">
       <Filter>Source Files\device</Filter>
     </ClCompile>
   </ItemGroup>
@@ -143,31 +107,7 @@
     <ClInclude Include="elem\osc.h">
       <Filter>Header Files\elem</Filter>
     </ClInclude>
-    <ClInclude Include="module\distort.h">
-      <Filter>Header Files\module</Filter>
-    </ClInclude>
-    <ClInclude Include="module\stereo-delay.h">
-      <Filter>Header Files\module</Filter>
-    </ClInclude>
-    <ClInclude Include="module\mixer.h">
-      <Filter>Header Files\module</Filter>
-    </ClInclude>
-    <ClInclude Include="device\mixer-device.h">
-      <Filter>Header Files\device</Filter>
-    </ClInclude>
-    <ClInclude Include="elem\pot.h">
-      <Filter>Header Files\elem</Filter>
-    </ClInclude>
-    <ClInclude Include="module\synth.h">
-      <Filter>Header Files\module</Filter>
-    </ClInclude>
-    <ClInclude Include="device\synth-adapter.h">
-      <Filter>Header Files\device</Filter>
-    </ClInclude>
     <ClInclude Include="device\module-device.h">
-      <Filter>Header Files\device</Filter>
-    </ClInclude>
-    <ClInclude Include="device\synth-device.h">
       <Filter>Header Files\device</Filter>
     </ClInclude>
     <ClInclude Include="module\synth-def.h">
@@ -175,12 +115,6 @@
     </ClInclude>
     <ClInclude Include="module\module.h">
       <Filter>Header Files\module</Filter>
-    </ClInclude>
-    <ClInclude Include="device\distort-device.h">
-      <Filter>Header Files\device</Filter>
-    </ClInclude>
-    <ClInclude Include="device\stereo-delay-device.h">
-      <Filter>Header Files\device</Filter>
     </ClInclude>
     <ClInclude Include="elem\dly.h">
       <Filter>Header Files\elem</Filter>
@@ -194,34 +128,28 @@
     <ClInclude Include="module\synth-base.h">
       <Filter>Header Files\module</Filter>
     </ClInclude>
-    <ClInclude Include="device\bass-device.h">
-      <Filter>Header Files\device</Filter>
-    </ClInclude>
-    <ClInclude Include="device\synth-base-device.h">
-      <Filter>Header Files\device</Filter>
-    </ClInclude>
-    <ClInclude Include="module\drums.h">
-      <Filter>Header Files\module</Filter>
-    </ClInclude>
     <ClInclude Include="elem\dahr.h">
       <Filter>Header Files\elem</Filter>
     </ClInclude>
     <ClInclude Include="elem\env.h">
       <Filter>Header Files\elem</Filter>
     </ClInclude>
-    <ClInclude Include="device\drums-device.h">
+    <ClInclude Include="device\module-device-ext.h">
       <Filter>Header Files\device</Filter>
     </ClInclude>
-    <ClInclude Include="xmloader.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="device\synth-adapter.h">
+      <Filter>Header Files\device</Filter>
     </ClInclude>
-    <ClInclude Include="module\soundbank.h">
-      <Filter>Header Files\module</Filter>
+    <ClInclude Include="device\synth-base-device.h">
+      <Filter>Header Files\device</Filter>
     </ClInclude>
-    <ClInclude Include="module\synth2.h">
-      <Filter>Header Files\module</Filter>
+    <ClInclude Include="device\synth-base-device-ext.h">
+      <Filter>Header Files\device</Filter>
     </ClInclude>
-    <ClInclude Include="device\synth2-device.h">
+    <ClInclude Include="device\bass-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\bass-device-ext.h">
       <Filter>Header Files\device</Filter>
     </ClInclude>
   </ItemGroup>

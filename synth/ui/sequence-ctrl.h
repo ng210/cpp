@@ -5,7 +5,7 @@
 //#include "win/buttonctrl.h"
 //#include "win/comboboxctrl.h"
 //#include "win/staticctrl.h"
-#include "player/src/frames.h"
+#include "player/src/frame-list.h"
 
 NS_FW_BASE_USE
 NS_FW_WIN_USE
@@ -33,7 +33,7 @@ namespace SYNTH_APP {
         static WndClass WndClass_;
         static SequenceCtrlConfig DefaultConfig_;
 
-        PROP(Frames*, frames);
+        PROP(FrameList*, frames);
         PROP(FRAMES_GET_CHANNEL_ID*, getChannelId);
 
         PROP(HBRUSH, backgroundBrush);

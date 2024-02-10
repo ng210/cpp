@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "base/memory.h"
+#include "basedef.h"
 #include "math.h"
 #include "synth/src/elem/adsr.h"
 
@@ -7,16 +7,15 @@ NS_FW_BASE_USE
 
 using namespace SYNTH;
 
-Adsr::Adsr() : Env(AdsrCtrlCount) {
-    controls_ = NULL;
+Adsr::Adsr() : Env() {
     gate_ = 0;
+    values_ = NULL;
 }
-
 
 void Adsr::setGate(byte v) {
     if (gate_ <= 0) {
         if (v > 0) {
-            // slope up: retrigger adsrelope
+            // slope up: retrigger envelope
             phase_ = EnvPhase::Up;
             timer_ = 0;
             ticks_ = 0;
@@ -35,17 +34,17 @@ void Adsr::setGate(byte v) {
 
 float Adsr::run(Arg notUsed) {
     //var am = *((float*)params);
-    var ctrls = (AdsrCtrls*)controls_;
-    var sus = ctrls->sus.value.f + 0.0000;
+    //var ctrls = (AdsrCtrls*)controls_;
+    var sus = values_->sus.f + 0.0000;
     switch (phase_) {
         case EnvPhase::Up: // atk precalc
             // 0.0 : 0.005s -> 1/(0*3.995 + 0.005)/smpRate = 200/smpRate
             // 1.0 : 4.0s -> 1/(1*3.995 + 0.005)/smpRate = 4/smpRate
             //   X : Xs -> 1/(3.995*X + 0.005)/smpRate
-            rate_ = Env::attackRates[ctrls->atk.value.b];
+            rate_ = Env::attackRates[values_->atk.b];
             phase_ = EnvPhase::Atk;
-            smp_ = timer_;
-            break;
+            //smp_ = timer_;
+            //break;
         case EnvPhase::Atk: // atk
             //smp_ = SMOOTH(timer_);
             timer_ += rate_;
@@ -59,7 +58,7 @@ float Adsr::run(Arg notUsed) {
             // 0.0 : 0.005s -> 1/(0*3.995 + 0.005)/smpRate = 200/smpRate
             // 1.0 : 4.0s -> 1/(1*3.995 + 0.005)/smpRate
             //   X : Xs -> 1/(3.995*X + 0.005)/smpRate
-            rate_ = Env::attackRates[ctrls->dec.value.b] * (1.0f - sus);
+            rate_ = Env::attackRates[values_->dec.b] * (1.0f - sus);
             phase_ = EnvPhase::Sus;
         case EnvPhase::Sus: // dec/sustain
             timer_ -= rate_;
@@ -76,11 +75,11 @@ float Adsr::run(Arg notUsed) {
             // 0.0 :  0.005s -> 1/(0*9.995 + 0.005)/smpRate = 200/smpRate
             // 1.0 : 10.0s -> 1/(1*9.995 + 0.005)/smpRate
             //   X :  Xs -> 1/(9.995*X + 0.005)/smpRate
-            rate_ = Env::releaseRates[ctrls->rel.value.b];
+            rate_ = Env::releaseRates[values_->rel.b];
             phase_ = EnvPhase::Rel;
-            break;
+            //break;
         case EnvPhase::Rel: // rel
-            //smp_ = ctrls->sus.value.f * SMOOTH(timer_ / sus);
+            //smp_ = values_->sus.f * SMOOTH(timer_ / sus);
             timer_ -= rate_;
             if (timer_ <= 0.0) {
                 timer_ = 0.0;
@@ -92,5 +91,5 @@ float Adsr::run(Arg notUsed) {
     }
     ticks_++;
     applyLPF();
-    return (float)(ctrls->amp.value.f * smp_ * this->velocity_);
+    return (float)(values_->amp.f * smp_ * this->velocity_);
 }

@@ -30,7 +30,7 @@ namespace SYNTH {
 		void prepare();
 		void cleanUp();
 		PArray* getDevices();
-		Device* createDevice(int deviceType);
+		Device* createDevice(int deviceType, Player* player);
 #ifdef PLAYER_EDIT_MODE
 		void writeToStream(Stream* data);
 #endif

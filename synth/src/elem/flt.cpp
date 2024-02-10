@@ -1,4 +1,6 @@
-﻿#include "flt.h"
+﻿#define _USE_MATH_DEFINES
+
+#include "flt.h"
 #include "math.h"
 #include "base/memory.h"
 
@@ -98,25 +100,16 @@ double pole10Factors[] = { 0.312869, 0.907981, M_SQRT2, 1.782013, 1.975377 };
 
 double* Flt::linearFactors[] = { NULL, (double*)&pole2Factors, (double*)&pole3Factors, (double*)&pole4Factors, (double*)&pole5Factors, (double*)&pole6Factors, (double*)&pole7Factors, (double*)&pole8Factors, (double*)&pole9Factors, (double*)&pole10Factors};
 
-Flt::Flt(int poleCount) : Elem(FltCtrlCount) {
-    controls_ = NULL;
+Flt::Flt(int poleCount) {
     poleCount_ = poleCount;
     stageCount_ = 0;
     createStages(poleCount);
 }
+
 Flt::~Flt() {
     for (var i = 0; i < stageCount_; i++) {
         DEL_(stages_[i]);
     }
-}
-
-void Flt::assignControls(PotBase* controls) {
-    controls_ = controls;
-    var ctrls = (FltCtrls*)controls_;
-    ctrls->cut.init(0, 255, 1, 0);
-    ctrls->res.init(0, 255, 1, 0);
-    //ctrls->mod.init(0.0f, 1.0f, 0.01f, 0.5f);
-    ctrls->mode.init(0, FmAllPass, 1, FmLowPass);
 }
 
 void Flt::createStages(int poleCount) {
@@ -141,14 +134,6 @@ void Flt::createStages(int poleCount) {
     stageCount_ = si;
 }
 
-void Flt::setFromStream(byte*& stream) {
-    var ctrls = (FltCtrls*)controls_;
-    ctrls->cut.setFromStream(stream);
-    ctrls->res.setFromStream(stream);
-    //ctrls->mod.setFromStream(stream);
-    ctrls->mode.setFromStream(stream);
-}
-
 float Flt::run(Arg params) {
     var input = params.f;
     var lp = (double)input;
@@ -165,8 +150,7 @@ float Flt::run(Arg params) {
     //hp = input - lp;
 
     var output = 0.0;
-    var ctrls = (FltCtrls*)controls_;
-    var mode = ctrls->mode.value.b;
+    var mode = values_->mode.b;
     if ((mode & FmLowPass) != 0) output += lp;
     if ((mode & FmHighPass) != 0) output += hp;
     if ((mode & FmBandPass) != 0) {
@@ -176,9 +160,8 @@ float Flt::run(Arg params) {
 }
 
 void Flt::update(float cut) {
-    var ctrls = (FltCtrls*)controls_;
-    var res = (ctrls->res.value.f < 0.000001f) ? 1.0f : 1.0f - ctrls->res.value.f;
-    var e = 0.5f * (Flt::cutoffTable[ctrls->cut.value.b] + cut);
+    var res = (values_->res.f < 0.000001f) ? 1.0f : 1.0f - values_->res.f;
+    var e = 0.5f * (Flt::cutoffTable[values_->cut.b] + cut);
     if (e <= 0) e = 0.001f;
     var g = -res * e;   // (float)-pow(res, 0.5f / poleCount_) * e;
 

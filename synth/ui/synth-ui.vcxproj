@@ -169,7 +169,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="bass-ctrl.h" />
-    <ClInclude Include="channel-ctrl.h" />
+    <ClInclude Include="device-ctrl.h" />
+    <ClInclude Include="track-ctrl.h" />
     <ClInclude Include="component.h" />
     <ClInclude Include="creator.h" />
     <ClInclude Include="distort-ctrl.h" />
@@ -186,11 +187,13 @@
     <ClInclude Include="synth-app.h" />
     <ClInclude Include="synth-ctrl.h" />
     <ClInclude Include="synth2-ctrl.h" />
+    <ClInclude Include="track.h" />
     <ClInclude Include="ui-manager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bass-ctrl.cpp" />
-    <ClCompile Include="channel-ctrl.cpp" />
+    <ClCompile Include="device-ctrl.cpp" />
+    <ClCompile Include="track-ctrl.cpp" />
     <ClCompile Include="creator.cpp" />
     <ClCompile Include="distort-ctrl.cpp" />
     <ClCompile Include="drums-ctrl.cpp" />

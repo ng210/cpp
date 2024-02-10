@@ -31,10 +31,8 @@ namespace SYNTH {
 	public: PROP_R(EnvPhase, phase);
 	public: PROP_R(double, smp);
 	public:
-		Env(int count);
+		Env();
 
-		void assignControls(PotBase* controls);
-		void setFromStream(byte*& stream);
 		virtual void setGate(byte velocity) = 0;
 		inline bool isActive() { return phase_ != EnvPhase::Idle; }
 

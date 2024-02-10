@@ -2,7 +2,7 @@
 
 using namespace SYNTH;
 
-SynthBase::SynthBase(PotBase* controls, int count) : Module(controls, count) {
+SynthBase::SynthBase() : Module() {
     voiceCount_ = 0;
     setupVoice = NULL;
     renderVoice = NULL;
@@ -21,13 +21,7 @@ void SynthBase::initialize(int count) {
     //samplingRate(pSmpRate);
     voiceCount(count);
 }
-//void SynthBase::samplingRate(float* pSmpRate) {
-//    //samplingRate_ = pSmpRate;
-//    for (var i = 0; i < voiceCount_; i++) {
-//        Voice& v = voices_[i];
-//        (this->*setupVoice)(v);
-//    }
-//}
+
 void SynthBase::setNote(byte note, byte velocity) {
     if (velocity != 0) {
         //printf(" ** ON\n");
@@ -55,7 +49,7 @@ void SynthBase::setNote(byte note, byte velocity) {
         for (int i = 0; i < voiceCount_; i++) {
             Voice* voice = &voices_[i];
             //printf("   - %d,%d,%d,%d\n", i, voice->envelopes[0].phase(), note, velocity);
-            if (voice->envelopes[0].phase() < EnvPhase::Down && voice->note.value.b == note) {
+            if (voice->envelopes[0].phase() < EnvPhase::Down && voice->note.b == note) {
                 (this->*setNoteVoice)(*voice, note, 0);
                 //printf(" - %d,%d,%d,%d\n", i, voice->envelopes[0].phase(), note, velocity);
                 break;

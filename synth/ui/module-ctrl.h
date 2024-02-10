@@ -1,11 +1,11 @@
 #ifndef __MODULE_CTRL_H
 #define __MODULE_CTRL_H
 
-#include "win/ctrl.h"
 #include "win/buttonctrl.h"
 #include "win/comboboxctrl.h"
 #include "win/staticctrl.h"
 #include "synth/ui/pot-ctrl.h"
+#include "synth/ui/device-ctrl.h"
 #include "synth/src/device/module-device.h"
 #include "base/stream.h"
 #include "player/src/sequence.h"
@@ -32,7 +32,7 @@ namespace SYNTH_APP {
 		LayoutNewColumn = 250,
 	} LayoutControl;
 
-	class ModuleCtrl : public Ctrl {
+	class ModuleCtrl : public DeviceCtrl {
 		static WndClass wndClass_;
 		static CBSELECTITEMPROC onSelectProgram;
 		static HANDLE hBackground_;

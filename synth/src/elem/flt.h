@@ -15,12 +15,9 @@ namespace SYNTH {
         FmAllPass = 7
     } FltMode;
 
-
-    typedef struct FltCtrls {
-        Pot cut;
-        PotF8 res;
-        Pot mode;
-    } FltCtrls;
+    typedef struct FltValues_ {
+        Value cut, res, mode;
+    } FltValues;
 
     class Flt;
     class FltStage {
@@ -53,23 +50,18 @@ namespace SYNTH {
         void update(double, double);
     };
 
-    #define FltCtrlCount (sizeof(FltCtrls)/sizeof(PotBase))
-
     class Flt : public Elem {
     protected: FltStage* stages_[5];   // 5x2 = max 10 poles
     protected: PROP_R(int, stageCount);
     protected: PROP_R(int, poleCount);
         static float* samplingRate_;
+    protected: PROP(FltValues*, values);
     public:
         Flt(int poleCount = 2);
         ~Flt();
 
-        FltCtrls* controls() { return (FltCtrls*)controls_; }
-
         void update(float cut);
-        void assignControls(PotBase* controls);
         void createStages(int poleCount);
-        void setFromStream(byte*& stream);
         float run(Arg params = (void*)NULL);
 
         FltStage* stage(int si) { return stages_[si]; }

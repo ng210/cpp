@@ -22,16 +22,10 @@ namespace SYNTH {
 		bool isActive();
 		//void isActive(bool b);
 
-		int run(int ticks);
-		void setRefreshRate(float fps);
 		void processCommand(byte cmd, byte*& cursor);
 #pragma endregion
 
 		inline SynthBase* synthBase() { return (SynthBase*)object_; };
-
-#ifdef PLAYER_EDIT_MODE
-		int writeToStream(Stream* stream);
-#endif
 
 #pragma region Synth
 		void setNote(byte note, byte velocity);

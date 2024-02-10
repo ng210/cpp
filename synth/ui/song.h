@@ -12,14 +12,18 @@ using namespace PLAYER;
 namespace SYNTH_APP {
 	class Song {
 		PROP_R(char*, name);
+		PROP_R(Array, tracks);
+		Map dev2frames_;
+		PROP(Map, soundbanks);
+
 		PROP_R(PlayerDevice*, playerDevice);
 		PROP_R(Player*, player);
 		PROP_R(MixerDevice*, mixerDevice);
+
 		PROP_R(SongCtrl*, control);
-		PROP(Map, soundbanks);
 
 	public:
-		Song(PlayerDevice* playerDevice, Window* parent);
+		Song(PlayerDevice* playerDevice = NULL);
 		virtual ~Song();
 	};
 }

@@ -1,52 +1,33 @@
 #ifndef __MODULE_H
 #define __MODULE_H
 
-#include "synth/src/elem/pot.h"
-#include "player/src/device.h"
-#include "synth/src/module/soundbank.h"
+#include "basedef.h"
+#include "player/src/value.h"
 
-NS_FW_BASE_USE
+using namespace PLAYER;
 namespace SYNTH {
 
 	class Module {
-
-	protected: PotBase* controls_;
-	protected: PROP_R(int, controlCount);
 	protected: float* inputs_[8];
 	protected: float* outputs_[8];
 	protected: PROP_R(bool, isMono);
 	protected: bool isActive_;
-	protected: PROP_R(Soundbank*, soundbank);
-	protected: PROP_R(int, program);
 	public:
-		Module(PotBase* controls, int count);
+		Module();
 		virtual ~Module();
 
-		Handler<Soundbank*> setSoundbank;
-		Handler<int> setProgram;
+		virtual void initializeFromStream(byte** pData);
+		
+		virtual Value* getValues() = 0;
 
-		virtual void connectInput(int id, float* buffer); 
-		virtual PotBase* getControl(int id);
-		void setControl(int id, S value);
+		// routing
+		virtual void connectInput(int id, float* buffer);
 		virtual inline float* getInput(int id);
 		virtual inline float* getOutput(int id);
-		virtual void initializeFromStream(byte** pData);
-		virtual int writeToStream(Stream* stream);
-		virtual int writeProgram(byte* pData);
+		void createOutputBuffers(int count);
+		
 		virtual bool isActive();
 		virtual void run(int start, int end);
-
-		virtual Soundbank* createSoundbank();
-		void createOutputBuffers(int count);
-
-		virtual Soundbank* getDefaultSoundbank();
-
-		//static SetSoundbankFunc soundbankSetter;
-		//static SetProgramFunc programSetter;
-		static int soundbankSetter(void*, Soundbank*, void* = NULL);
-		static int programSetter(void*, int, void* = NULL);
-
-		static byte* loadSoundbanks(const char* soundbankPath);
 	};
 }
 #endif

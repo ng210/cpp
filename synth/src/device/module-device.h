@@ -2,14 +2,65 @@
 #define __MODULE_DEVICE_H
 
 #include "player/src/device.h"
-#include "synth/src/elem/pot.h"
-#include "synth/src/module/module.h"
 #include "synth/src/device/synth-adapter.h"
+#include "synth/src/module/module.h"
 
 NS_FW_BASE_USE
 using namespace PLAYER;
 namespace SYNTH {
 
+	typedef struct AdsrInputs_ {
+		InputF amp;
+		Input atk;
+		Input dec;
+		InputF8 sus;
+		Input rel;
+	} AdsrInputs;
+#define AdsrInputsSize 8	// 4 + 4*1 
+
+	typedef struct DahrInputs_ {
+		InputF amp;
+		Input del;
+		Input atk;
+		Input hld;
+		Input rel;
+	} DahrInputs;
+#define DahrInputsSize 8	// 4 + 4*1 
+
+	typedef struct OscInputs_ {
+		InputF8 amp;
+		InputF fre;
+		Input note;
+		Input tune;
+		InputF8 psw;
+		Input wave;
+	} OscInputs;
+#define OscInputsSize 9	// 4 + 5*1 
+
+	typedef struct LfoInputs_ {
+		InputF amp;
+		InputF fre;
+	} LfoInputs;
+#define LfoInputsSize 8	// 2*4
+
+	typedef struct FltInputs_ {
+		Input cut;
+		InputF8 res;
+		Input mode;
+	} FltInputs;
+#define FltInputsSize 3
+
+	typedef struct DlyInputs_ {
+		InputF8 feedback;
+		InputF delay;
+	} DlyInputs;
+#define DlyInputsSize 5	// 4 + 1 
+
+	typedef struct ClpInputs_ {
+		InputF amp;
+		InputF8 lvl;
+	} ClpInputs;
+#define ClpInputsSize 5	// 4 + 1 
 
 	typedef enum ModuleCommands {
 		CmdSetUint8		= 2,	// ctrlId, value
@@ -23,31 +74,38 @@ namespace SYNTH {
 	class ModuleDevice : public Device {
 	protected: PROP(int, datablockId);
 	public:
-		ModuleDevice(void* object, Adapter* adapter);
+		ModuleDevice(Adapter* adapter, void* object);
 
-		void initialize(byte** pData = NULL);
+		inline Module* module() { return (Module*)object_; }
+
+		void initialize(byte** stream = NULL);
+
 		bool isActive();
 		//void isActive(bool b);
+
 		int run(int ticks);
-		void setRefreshRate(float fps);
+		//void setRefreshRate(float fps);
+
 		void processCommand(byte cmd, byte*& cursor);
 
-		PotBase* getControl(byte ctrlId);
-		void setControl(byte ctrlId, S value);
-		byte program();
-		void setProgram(int prgId);
-		Soundbank* soundbank();
-		void setSoundbank(Soundbank* data);
+		//virtual PresetBank* createSoundbank();
+		virtual int getPresetBankSize() = 0;
+		virtual PresetBank* getDefaultPresetBank() = 0;
 
-		Module* module() { return (Module*)object_; }
+		void assignInputs();
+		
+		//static byte* loadSoundbanks(const char* soundbankPath);
 
-#ifdef PLAYER_EDIT_MODE
-		void makeCommandImpl(int command, Stream* stream, va_list args);
-		int getCommandSize(byte* cmd);
-		int writeToStream(Stream* stream);
-#endif
 		static COLLECTION_COMPARE compareToModule;
-		static Map* loadSoundbanks(const char* soundbankPath, SynthAdapter* synthAdapter);
+		static Map* loadPresetBanks(const char* presetBankPath, SynthAdapter* synthAdapter);
+
+		static void setupAdsr(AdsrInputs*);
+		static void setupDahr(DahrInputs*);
+		static void setupOsc(OscInputs*);
+		static void setupLfo(LfoInputs*);
+		static void setupFlt(FltInputs*);
+		static void setupClp(ClpInputs*);
+		static void setupDly(DlyInputs*);
 
 	};
 }

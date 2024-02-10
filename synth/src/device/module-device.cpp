@@ -6,22 +6,18 @@
 
 using namespace SYNTH;
 
-ModuleDevice::ModuleDevice(void* object, Adapter* adapter) : Device(object, adapter) {
+ModuleDevice::ModuleDevice(Adapter* adapter, void* obj) : Device(adapter, obj) {
 }
 
 void ModuleDevice::initialize(byte** pData) {
-	// set soundbank
-	Soundbank* sb = module()->getDefaultSoundbank();
-	int prgId = 0;
+	var pb = getDefaultPresetBank();
 	if (pData != NULL && *pData != NULL) {
 		datablockId_ = READ(*pData, byte);
 		var db = ((DataBlockItem*)player_->dataBlocks().get(datablockId_));
 		if (db != NULL) {
-			var sb = module()->createSoundbank();
-			sb->data(db->dataBlock);
-			module()->setSoundbank(sb);
+			pb = NEW_(PresetBank, getPresetBankSize(), db->dataBlock);
 		}
-		module()->setSoundbank(sb);
+		setPresetBank(pb);
 	}
 	// set program and further initializations
 	((Module*)object_)->initializeFromStream(pData);
@@ -34,115 +30,48 @@ bool ModuleDevice::isActive() {
 int ModuleDevice::run(int ticks) {
 	return 0;
 }
-void ModuleDevice::setRefreshRate(float fps) {
 
-}
 void ModuleDevice::processCommand(byte cmd, byte*& cursor) {
-	byte ctrlId, b;
+	byte ctrlId, prgId;
+	byte b;
 	float f;
 	switch (cmd) {
 	case ModuleCommands::CmdSetUint8:
 		ctrlId = READ(cursor, byte);
 		b = READ(cursor, byte);
-		setControl(ctrlId, b);
+		setInput(ctrlId, b);
 		break;
-	case CmdSetFloat8:
+	case ModuleCommands::CmdSetFloat8:
 		ctrlId = READ(cursor, byte);
 		b = READ(cursor, byte);
-		setControl(ctrlId, b / 256.0f);
+		setInput(ctrlId, b / 255.0f);
 		break;
 		// case psynth.SynthAdapter.Commands.SETCTRL16:
 		// 	device.setControl(sequence.getUint8(cursor++), sequence.getUint16(cursor));
 		// 	cursor += 2;
 		// 	break;
-	case CmdSetFloat:
+	case ModuleCommands::CmdSetFloat:
 		ctrlId = READ(cursor, byte);
 		f = READ(cursor, float);
-		setControl(ctrlId, f);
+		setInput(ctrlId, f);
+		break;
+	case ModuleCommands::CmdSetProgram:
+		prgId = READ(cursor, byte);
+		setInput(0, prgId);
 		break;
 	}
 }
-
-PotBase* ModuleDevice::getControl(byte ctrlId) {
-	return ((Module*)object_)->getControl(ctrlId);
-}
-void ModuleDevice::setControl(byte ctrlId, S value) {
-	((Module*)object_)->setControl(ctrlId, value);
-}
-void ModuleDevice::setSoundbank(Soundbank* soundbank) {
-	var mdl = (Module*)object_;
-	mdl->setSoundbank(soundbank);
-}
-
-Soundbank* ModuleDevice::soundbank() {
-	return ((Module*)object_)->soundbank();
-}
-
-void ModuleDevice::setProgram(int prgId) {
-	((Module*)object_)->setProgram(prgId);
-}
-byte ModuleDevice::program() {
-	return ((Module*)object_)->program();
-}
-
-#ifdef PLAYER_EDIT_MODE
-void ModuleDevice::makeCommandImpl(int command, Stream* stream, va_list args) {
-	switch (command) {
-	case ModuleCommands::CmdSetUint8:
-	case ModuleCommands::CmdSetFloat8:
-		stream->writeByte((byte)va_arg(args, int));		// ctrlId
-		stream->writeByte((byte)va_arg(args, int));		// value
-		break;
-	case ModuleCommands::CmdSetFloat:
-		stream->writeByte(va_arg(args, int));			// ctrlId
-		stream->writeFloat(va_arg(args, float));		// value
-		break;
-	case CmdSetNote:
-		stream->writeByte((byte)va_arg(args, int));		// note
-		stream->writeByte((byte)va_arg(args, int));		// velocity
-		break;
-	case CmdSetProgram:
-		stream->writeByte((byte)va_arg(args, int));		// program id
-		break;
-	}
-}
-int ModuleDevice::getCommandSize(byte* cmd) {
-	var length = 1;
-	switch (*cmd) {
-	case ModuleCommands::CmdSetUint8:
-	case ModuleCommands::CmdSetFloat8:
-		length += sizeof(byte);
-		break;
-	case ModuleCommands::CmdSetFloat:
-		length += sizeof(float);
-		break;
-	case ModuleCommands::CmdSetNote:
-		length += 2 * sizeof(byte);
-		break;
-	case CmdSetProgram:
-		length += sizeof(byte);
-		break;
-	}
-	return length;
-}
-int ModuleDevice::writeToStream(Stream* stream) {
-	int start = stream->length();
-	stream->writeByte(datablockId_);
-	((Module*)object_)->writeToStream(stream);
-	return stream->length() - start;
-}
-#endif
 
 int ModuleDevice::compareToModule(COLLECTION_ARGUMENTS) {
 	var mdl1 = ((ModuleDevice*)value)->object();
 	return (int)((size_t)mdl1 - (size_t)key.p);
 }
 
-Map* ModuleDevice::loadSoundbanks(const char* soundbankPath, SynthAdapter* synthAdapter) {
-	var soundbanks = NEW_(Map, sizeof(int), MAP_USE_REF, Map::hashingInt, Collection::compareInt); soundbanks->hasRefKey(false);
+Map* ModuleDevice::loadPresetBanks(const char* presetBankPath, SynthAdapter* synthAdapter) {
+	var presetBanks = NEW_(Map, sizeof(int), MAP_USE_REF, Map::hashingInt, Collection::compareInt);
 	byte* bytes = NULL, * end = NULL;
 	// try to read file
-	var bytesRead = File::read(soundbankPath, &bytes);
+	var bytesRead = File::read(presetBankPath, &bytes);
 	if (bytesRead != -1) {
 		var bptr = bytes;
 		end = bytes + bytesRead;
@@ -150,13 +79,67 @@ Map* ModuleDevice::loadSoundbanks(const char* soundbankPath, SynthAdapter* synth
 			// read device type
 			var deviceType = READ(bptr, byte);
 			// create dummy device
-			var dev = (ModuleDevice*)synthAdapter->createDevice(deviceType);
-			var sb = dev->module()->createSoundbank();
-			sb->initializeFromStream(bptr);
-			soundbanks->put(deviceType, sb);
+			var dev = (ModuleDevice*)synthAdapter->createDevice(deviceType, NULL);
+			var pb = NEW_(PresetBank, dev->getPresetBankSize(), NULL);
+			pb->initializeFromStream(bptr);
+			presetBanks->put(deviceType, pb);
 			DEL_(dev);
 		}
 	}
 	FREE(bytes);
-	return soundbanks;
+	return presetBanks;
+}
+
+void ModuleDevice::setupAdsr(AdsrInputs* inputs) {
+	var adsr = (AdsrInputs*)inputs;
+	adsr->amp.setup(0.0f, 1.0f, 0.01f);
+	adsr->atk.setup(0, 255, 1);
+	adsr->dec.setup(0, 255, 1);
+	adsr->sus.setup(0, 255, 1);
+	adsr->rel.setup(0, 255, 1);
+}
+void ModuleDevice::setupDahr(DahrInputs* inputs) {
+	var dahr = (DahrInputs*)inputs;
+	dahr->amp.setup(0.0f, 1.0f, 0.01f);
+	dahr->atk.setup(0, 255, 1);
+	dahr->del.setup(0, 255, 1);
+	dahr->hld.setup(0, 255, 1);
+	dahr->rel.setup(0, 255, 1);
+	}
+void ModuleDevice::setupOsc(OscInputs* inputs) {
+	var osc = (OscInputs*)inputs;
+	osc->amp.setup(0, 255, 1);
+	osc->fre.setup(0.0f, 2000.f, 0.01f);
+	osc->note.setup(0, 255, 1);
+	osc->tune.setup(0, 255, 1);
+	osc->psw.setup(0, 255, 1);
+	osc->wave.setup(0, 255, 1);
+	}
+void ModuleDevice::setupLfo(LfoInputs* inputs) {
+	var lfo = (LfoInputs*)inputs;
+	lfo->amp.setup(0.0f, 100.0f, 0.1f);
+	lfo->fre.setup(0.0f, 10.0f, 0.01f);
+}
+void ModuleDevice::setupFlt(FltInputs* inputs) {
+	var flt = (FltInputs*)inputs;
+	flt->cut.setup(0, 255, 1);
+	flt->res.setup(0, 255, 1);
+	flt->mode.setup(0, 7, 1);
+}
+void ModuleDevice::setupClp(ClpInputs* inputs) {
+	var clp = (ClpInputs*)inputs;
+	clp->amp.setup(0.0f, 10.0f, 0.1f);
+	clp->lvl.setup(0.0f, 10.0f, 0.1f);
+}
+void ModuleDevice::setupDly(DlyInputs* inputs) {
+	var dly = (DlyInputs*)inputs;
+	dly->delay.setup(0.0f, 10.0f, 0.01f);
+	dly->feedback.setup(0, 255, 1);
+}
+
+void ModuleDevice::assignInputs() {
+	var values = module()->getValues();
+	for (var ii = 0; ii < inputCount_; ii++) {
+		inputs_[ii].setValue(&values[ii]);
+	}
 }

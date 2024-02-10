@@ -2,7 +2,7 @@
 #define __SONG_CTRL_H
 
 #include "win/ctrl.h"
-#include "synth/ui/channel-ctrl.h"
+#include "synth/ui/track-ctrl.h"
 #include "collection/array.h"
 
 NS_FW_WIN_USE
@@ -14,8 +14,9 @@ namespace SYNTH_APP {
         static WndClass wndClass_;
 
         PROP_R(Ctrl*, toolbar);
-        PROP_R(Array, channels);
+        PROP_R(Array, trackCtrls);
         PROP_R(Ctrl*, detailView);
+
         PROP_R(Song*, song);
     public:
         SongCtrl();

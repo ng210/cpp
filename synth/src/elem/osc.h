@@ -15,30 +15,26 @@ namespace SYNTH {
         WfNoise = 16
     } OscWaveform;
 
-    typedef struct OscCtrls {
-        PotF8 amp;
-        PotF fre;
-        Pot note;
-        Pot tune;
-        PotF8 psw;
-        Pot wave;
-    } OscCtrls;
-
-    #define OscCtrlCount (sizeof(OscCtrls) / sizeof(PotBase))
+    typedef struct OscValues_ {
+        Value amp;
+        Value fre;
+        Value note;
+        Value tune;
+        Value psw;
+        Value wave;
+    } OscValues;
 
     class Osc : public Elem {
-    private: Pot* note_;
+    private: Value* note_;
     private: double timer;
     public: double smp;
+    protected: PROP(OscValues*, values);
     public:
         Osc();
-        OscCtrls* controls() { return (OscCtrls*)controls_; }
 
         void reset();
-        void assignControls(PotBase* controls);
-        void setFromStream(byte*& stream);
         float run(Arg params = (void*)NULL);
-        void setNoteControl(Pot* note);
+        void setNoteControl(Value* note);
     };
 }
 

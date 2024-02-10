@@ -5,17 +5,17 @@
 #ifndef __ELEM_H
 #define __ELEM_H
 
-#include "basedef.h"
-#include "pot.h"
-
-#include "base/stream.h"
-
-#define _USE_MATH_DEFINES
-
 #define SYNTH_THETA 6.283185307179586476925286766559
 
+#include "basedef.h"
+#include "base/stream.h"
+#include "player/src/value.h"
+
 NS_FW_BASE_USE
+using namespace PLAYER;
 namespace SYNTH {
+
+#define SAMPLE_BUFFER_SIZE 256
 
 	typedef union Arg {
 		float f;
@@ -31,17 +31,10 @@ namespace SYNTH {
 	typedef double DoubleInt2Double(double y, int ix);
 
 	class Elem {
-	protected: PotBase* controls_;
-	protected: PROP(int, controlCount);
 	public:
-		Elem(int controlCount);
-
-		virtual void assignControls(PotBase* controls) = 0;
 		virtual void setFromStream(byte*& stream);
-		virtual void connect(int id, void* input);
 		virtual float run(Arg params = (void*)NULL);
 		//virtual void run(float* buffer, int start, int end);
-		virtual void writeToStream(byte*& stream);
 
 		static float FrequencyTable[128];
 		static void createFrequencyTable();

@@ -7,32 +7,10 @@ NS_FW_BASE_USE
 
 using namespace SYNTH;
 
-Dahr::Dahr() : Env(DahrCtrlCount) {
-    controls_ = NULL;
+Dahr::Dahr() : Env() {
     rate2_ = 0.0;
     smp_ = 0.0;
 }
-
-//void Dahr::assignControls(PotBase* controls) {
-//    controls_ = controls;
-//    var ctrls = (DahrCtrls*)controls_;
-//    ctrls->amp.init(0.0f, 1.0f, 0.01f, 0.0f);
-//    //ctrls->dc.init(0.0f, 1.0f, 0.01f, 0.0f);
-//    ctrls->del.init(0, 255, 1, 16);
-//    ctrls->atk.init(0, 255, 1, 4);
-//    ctrls->hld.init(0, 255, 1, 16);
-//    ctrls->rel.init(0, 255, 1, 80);
-//}
-//
-//void Dahr::setFromStream(byte*& stream) {
-//    var ctrls = (DahrCtrls*)controls_;
-//    ctrls->amp.setFromStream(stream);
-//    //ctrls->dc.setFromStream(stream);
-//    ctrls->del.setFromStream(stream);
-//    ctrls->atk.setFromStream(stream);
-//    ctrls->hld.setFromStream(stream);
-//    ctrls->rel.setFromStream(stream);
-//}
 
 void Dahr::setGate(byte v) {
     if (v > 0) {
@@ -50,17 +28,16 @@ void Dahr::setGate(byte v) {
 }
 
 float Dahr::run(Arg notUsed) {
-    var ctrls = (DahrCtrls*)controls_;
     switch (phase_) {
         case EnvPhase::Up:
             smp_ = 0.0;
             timer_ = 0.0;
-            rate_ = Env::attackRates[ctrls->del.value.b];
+            rate_ = Env::attackRates[values_->del.b];
             phase_ = EnvPhase::Del;
         case EnvPhase::Del:
             timer_ += rate_;
             if (timer_ >= 1.0) {
-                rate_ = Env::attackRates[ctrls->atk.value.b];
+                rate_ = Env::attackRates[values_->atk.b];
                 phase_ = EnvPhase::Atk;
                 timer_ = 0.0;
             }
@@ -68,21 +45,21 @@ float Dahr::run(Arg notUsed) {
         case EnvPhase::Atk:
             timer_ += rate_;
             if (timer_ >= 1.0) {
-                rate_ = Env::attackRates[ctrls->hld.value.b];
+                rate_ = Env::attackRates[values_->hld.b];
                 phase_ = EnvPhase::Hld;
                 timer_ = 1.0;
             }
             smp_ = SMOOTH(timer_);
             break;
         case EnvPhase::Hld:
+            smp_ = 1.0;
             timer_ -= rate_;
             if (timer_ < 0.0) {
-                rate_ = Env::releaseRates[ctrls->rel.value.b];
-                rate2_ = Env::releaseRatesExp[ctrls->rel.value.b];
+                rate_ = Env::releaseRates[values_->rel.b];
+                rate2_ = Env::releaseRatesExp[values_->rel.b];
                 phase_ = EnvPhase::Rel;
                 timer_ = 1.0;
             }
-            smp_ = 1.0;
             break;
         case EnvPhase::Rel:
             timer_ -= rate_;
@@ -91,11 +68,11 @@ float Dahr::run(Arg notUsed) {
                 rate_ = 0.0;
                 timer_ = 0.0;
                 ai_[0] = ai_[1] = 0.0;
-            }
+            } 
             smp_ *= rate2_;
             break;
     }
     ticks_++;
     //applyLPF();
-    return (float)(ctrls->amp.value.f * smp_ * this->velocity_);
+    return (float)(values_->amp.f * smp_ * this->velocity_);
 }

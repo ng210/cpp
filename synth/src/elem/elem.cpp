@@ -1,6 +1,5 @@
 #include "elem.h"
 #include "math.h"
-#include "base/memory.h"
 
 NS_FW_BASE_USE
 using namespace SYNTH;
@@ -27,44 +26,11 @@ void Elem::createFrequencyTable() {
 	}
 }
 
-Elem::Elem(int controlCount) : controlCount_(controlCount) {
-}
-
-//float Mdl::mix(Pot in1, Pot in2) {
-//	MdlCtrls& ctrls = (MdlCtrls&)controls_;
-//	float smp = in1.f * ctrls.amp.f + ctrls.dc.f;
-//	switch (ctrls.mix.i) {
-//	case SSN1K_MM_ADD:
-//		smp = 0.5f * (smp + in2.f);
-//		break;
-//	case SSN1K_MM_MUL:
-//		smp *= in2.f;
-//		break;
-//	case SSN1K_MM_BPS:
-//		smp = in2.f;
-//		break;
-//	case SSN1K_MM_OVR:
-//	default:
-//		break;
-//	}
-//	return smp;
-//}
-
 float Elem::run(Arg params) {
 	return 0.0f;
 }
 
-void Elem::assignControls(PotBase* controls) {}
-
 void Elem::setFromStream(byte*& stream) {}
-
-void Elem::connect(int id, void* input) { }
-
-void Elem::writeToStream(byte*& stream) {
-	for (var i = 0; i < controlCount_; i++) {
-		controls_[i].writeToStream(stream);
-	}
-}
 
 float Elem::p2f(float p) {
 	//if (p > 1.0f) {

@@ -12,46 +12,47 @@ namespace SYNTH {
 
 
     typedef struct Voice {
-        Pot velocity;
-        Pot note;
+        Value velocity;
+        Value note;
         Adsr* envelopes;
         Lfo* lfos;
         Osc* oscillators;
         Flt* filters;
-        PotBase** pots;
+        Value* values;
         Voice() {
             envelopes = NULL;
             lfos = NULL;
             oscillators = NULL;
             filters = NULL;
-            pots = NULL;
+            values = NULL;
         }
     } Voice;
 
     class SynthBase;
-    typedef void(VOICEHANDLER)(Voice& v);
-    typedef void(SynthBase::*PVOICEHANDLER)(Voice& v);
-    typedef void(VOICESETNOTEHANDLER)(Voice& v, byte note, byte velocity);
-    typedef void(SynthBase::*PVOICESETNOTEHANDLER)(Voice& v, byte note, byte velocity);
-    typedef void(VOICERENDERER)(Voice& v, float* buffer, int start, int end);
-    typedef void(SynthBase::*PVOICERENDERER)(Voice& v, float* buffer, int start, int end);
+    typedef void(VoiceHandler)(Voice& v);
+    typedef void(SynthBase::*LpVoiceHandler)(Voice& v);
+    typedef void(VoiceSetNoteHandler)(Voice& v, byte note, byte velocity);
+    typedef void(SynthBase::*LpVoiceSetNoteHandler)(Voice& v, byte note, byte velocity);
+    typedef void(VoiceRenderer)(Voice& v, float* buffer, int start, int end);
+    typedef void(SynthBase::*LpVoiceRenderer)(Voice& v, float* buffer, int start, int end);
 
 	class SynthBase : public Module {
     protected: PROP_R(int, voiceCount);
     protected: Voice voices_[32];
     protected:
         // Voice handling
-        PVOICEHANDLER setupVoice;
-        PVOICEHANDLER freeVoice;
-        PVOICESETNOTEHANDLER setNoteVoice;
-        PVOICERENDERER renderVoice;
+        LpVoiceHandler setupVoice;
+        LpVoiceHandler freeVoice;
+        LpVoiceSetNoteHandler setNoteVoice;
+        LpVoiceRenderer renderVoice;
     public:
-        SynthBase(PotBase* controls, int count);
+        SynthBase();
         ~SynthBase();
 
         void initialize(int voiceCount);
-        void setNote(byte note, byte velocity);
         void voiceCount(int count);
+
+        void setNote(byte note, byte velocity);
 
         // Module
         void connectInput(int id, float* buffer);

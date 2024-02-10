@@ -28,13 +28,13 @@
     <Filter Include="Source Files\Ui">
       <UniqueIdentifier>{83b85cbb-22c8-4b8a-8d95-be9e3955dcf2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Ui\Control">
-      <UniqueIdentifier>{b6cbd120-31c5-4474-89b9-a5c5508399cb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Ui">
       <UniqueIdentifier>{689afe86-fc16-483e-a2b9-5b2241fb4e12}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Ui\Control">
+    <Filter Include="Source Files\Ui\DeviceControls">
+      <UniqueIdentifier>{b6cbd120-31c5-4474-89b9-a5c5508399cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Ui\DeviceControls">
       <UniqueIdentifier>{e16bec4b-3fc2-4218-bb1c-5c19d45b8352}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -46,25 +46,25 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="bass-ctrl.h">
-      <Filter>Header Files\Ui\Control</Filter>
+      <Filter>Header Files\Ui\DeviceControls</Filter>
     </ClInclude>
     <ClInclude Include="distort-ctrl.h">
-      <Filter>Header Files\Ui\Control</Filter>
+      <Filter>Header Files\Ui\DeviceControls</Filter>
     </ClInclude>
     <ClInclude Include="drums-ctrl.h">
-      <Filter>Header Files\Ui\Control</Filter>
+      <Filter>Header Files\Ui\DeviceControls</Filter>
     </ClInclude>
     <ClInclude Include="mixer-ctrl.h">
-      <Filter>Header Files\Ui\Control</Filter>
+      <Filter>Header Files\Ui\DeviceControls</Filter>
     </ClInclude>
     <ClInclude Include="stereo-delay-ctrl.h">
-      <Filter>Header Files\Ui\Control</Filter>
+      <Filter>Header Files\Ui\DeviceControls</Filter>
     </ClInclude>
     <ClInclude Include="synth2-ctrl.h">
-      <Filter>Header Files\Ui\Control</Filter>
+      <Filter>Header Files\Ui\DeviceControls</Filter>
     </ClInclude>
     <ClInclude Include="synth-ctrl.h">
-      <Filter>Header Files\Ui\Control</Filter>
+      <Filter>Header Files\Ui\DeviceControls</Filter>
     </ClInclude>
     <ClInclude Include="sequence-ctrl.h">
       <Filter>Header Files\Ui</Filter>
@@ -90,11 +90,17 @@
     <ClInclude Include="component.h">
       <Filter>Header Files\Model</Filter>
     </ClInclude>
-    <ClInclude Include="song-ctrl.h">
-      <Filter>Header Files\Ui\Control</Filter>
+    <ClInclude Include="device-ctrl.h">
+      <Filter>Header Files\Ui</Filter>
     </ClInclude>
-    <ClInclude Include="channel-ctrl.h">
-      <Filter>Header Files\Ui\Control</Filter>
+    <ClInclude Include="song-ctrl.h">
+      <Filter>Header Files\Ui</Filter>
+    </ClInclude>
+    <ClInclude Include="track-ctrl.h">
+      <Filter>Header Files\Ui</Filter>
+    </ClInclude>
+    <ClInclude Include="track.h">
+      <Filter>Header Files\Model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -102,33 +108,30 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="bass-ctrl.cpp">
-      <Filter>Source Files\Ui\Control</Filter>
+      <Filter>Source Files\Ui\DeviceControls</Filter>
     </ClCompile>
     <ClCompile Include="distort-ctrl.cpp">
-      <Filter>Source Files\Ui\Control</Filter>
+      <Filter>Source Files\Ui\DeviceControls</Filter>
     </ClCompile>
     <ClCompile Include="drums-ctrl.cpp">
-      <Filter>Source Files\Ui\Control</Filter>
+      <Filter>Source Files\Ui\DeviceControls</Filter>
     </ClCompile>
     <ClCompile Include="mixer-ctrl.cpp">
-      <Filter>Source Files\Ui\Control</Filter>
+      <Filter>Source Files\Ui\DeviceControls</Filter>
     </ClCompile>
     <ClCompile Include="stereo-delay-ctrl.cpp">
-      <Filter>Source Files\Ui\Control</Filter>
+      <Filter>Source Files\Ui\DeviceControls</Filter>
     </ClCompile>
     <ClCompile Include="synth2-ctrl.cpp">
-      <Filter>Source Files\Ui\Control</Filter>
+      <Filter>Source Files\Ui\DeviceControls</Filter>
     </ClCompile>
     <ClCompile Include="synth-ctrl.cpp">
-      <Filter>Source Files\Ui\Control</Filter>
+      <Filter>Source Files\Ui\DeviceControls</Filter>
     </ClCompile>
     <ClCompile Include="pot-ctrl.cpp">
       <Filter>Source Files\Ui</Filter>
     </ClCompile>
     <ClCompile Include="sequence-ctrl.cpp">
-      <Filter>Source Files\Ui</Filter>
-    </ClCompile>
-    <ClCompile Include="module-ctrl.cpp">
       <Filter>Source Files\Ui</Filter>
     </ClCompile>
     <ClCompile Include="file-manager.cpp">
@@ -143,11 +146,17 @@
     <ClCompile Include="song.cpp">
       <Filter>Source Files\Model</Filter>
     </ClCompile>
-    <ClCompile Include="song-ctrl.cpp">
-      <Filter>Source Files\Ui\Control</Filter>
+    <ClCompile Include="device-ctrl.cpp">
+      <Filter>Source Files\Ui</Filter>
     </ClCompile>
-    <ClCompile Include="channel-ctrl.cpp">
-      <Filter>Source Files\Ui\Control</Filter>
+    <ClCompile Include="song-ctrl.cpp">
+      <Filter>Source Files\Ui</Filter>
+    </ClCompile>
+    <ClCompile Include="module-ctrl.cpp">
+      <Filter>Source Files\Ui\DeviceControls</Filter>
+    </ClCompile>
+    <ClCompile Include="track-ctrl.cpp">
+      <Filter>Source Files\Ui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

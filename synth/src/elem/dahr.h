@@ -8,22 +8,17 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
-    typedef struct DahrCtrls {
-        PotF amp;
-        Pot del;
-        Pot atk;
-        Pot hld;
-        Pot rel;
-    } DahrCtrls;
+    typedef struct DahrValues_ {
+        Value amp, del, atk, hld, rel;
+    } DahrValues;
 
-    #define DahrCtrlCount (sizeof(DahrCtrls) / sizeof(PotBase))
 
     class Dahr : public Env {
     protected: PROP_R(double, rate2);
+    protected: PROP(DahrValues*, values);
     public:
         Dahr();
 
-        DahrCtrls* controls() { return (DahrCtrls*)controls_; }
         float run(Arg params = (void*)NULL);
 
         void setGate(byte velocity);

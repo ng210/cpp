@@ -2555,6 +2555,8 @@ int _main(NS_FW_BASE::Map* args) {
 
     int totalPassed = 0, totalFailed = 0;
 
+    Test::cons = getConsole();
+
     LOG("Synth tests\n");
     var tests = NEW_(SynthTest);
 

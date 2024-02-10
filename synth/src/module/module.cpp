@@ -1,21 +1,24 @@
 #include "base/memory.h"
-#include "module.h"
+#include "synth/src/elem/elem.h"
+#include "synth/src/module/module.h"
 
 using namespace SYNTH;
 
-Module::Module(PotBase* controls, int count) : controls_(controls), controlCount_(count) {
-	isActive_ = true;
+Module::Module() {
 	memset(inputs_, 0, 8 * sizeof(float*));
 	memset(outputs_, 0, 8 * sizeof(float*));
 	isMono_ = true;
-	setSoundbank.add(this, Module::soundbankSetter);
-	setProgram.add(this, Module::programSetter);
+	isActive_ = true;
 }
 
 Module::~Module() {
 	if (outputs_[0]) {
 		FREE(outputs_[0]);
 	}
+}
+
+void Module::connectInput(int id, float* buffer) {
+	inputs_[id] = buffer;
 }
 
 float* Module::getInput(int id) {
@@ -26,49 +29,6 @@ float* Module::getOutput(int id) {
 	return outputs_[id];
 }
 
-void Module::initializeFromStream(byte** pData) {
-	int prgId = 0;
-	if (pData != NULL && *pData != NULL) {
-		prgId = READ(*pData, byte);
-	}
-	setProgram(prgId);
-}
-
-int Module::writeToStream(Stream* stream) {
-	stream->writeByte(program_);
-	return 1;
-}
-
-int Module::writeProgram(byte* pData) {
-	var start = pData;
-	for (var i = 0; i < controlCount_; i++) {
-		controls_[i].writeToStream(pData);
-	}
-	return (int)(pData - start);
-}
-
-bool Module::isActive() {
-	return isActive_;
-}
-
-PotBase* Module::getControl(int id) {
-	return id < controlCount_ ? &controls_[id] : NULL;
-}
-
-void Module::setControl(int id, S value) {
-	var ctrl = getControl(id);
-	if (ctrl != NULL) {
-		ctrl->set(value);
-	}
-}
-
-void Module::connectInput(int id, float* buffer) {
-	inputs_[id] = buffer;
-}
-
-void Module::run(int start, int end) {
-}
-
 void Module::createOutputBuffers(int count) {
 	var p = MALLOC(float, SAMPLE_BUFFER_SIZE * count);
 	for (var i = 0; i < count; i++) {
@@ -77,35 +37,13 @@ void Module::createOutputBuffers(int count) {
 	}
 }
 
-Soundbank* Module::createSoundbank() {
-	int size = 0;
-	for (var i = 0; i < controlCount_; i++) {
-		size += controls_[i].size();
-	}
-	return NEW_(Soundbank, size, 0, NULL);
+void Module::initializeFromStream(byte** pData) {
 }
 
-int Module::soundbankSetter(void* obj, Soundbank* sb, void* unused) {
-	var mdl = (Module*)obj;
-	mdl->soundbank_ = sb;
-	if (sb != NULL) {
-		if (mdl->program_ > (int)mdl->soundbank_->size()) {
-			mdl->program_ = 0;
-		}
-		mdl->setProgram(mdl->program_);
-	}
-	return 1;
-}
-int Module::programSetter(void* obj, int ix, void* unused) {
-	var mdl = (Module*)obj;
-	mdl->program_ = ix;
-	var prg = mdl->soundbank_->getProgram(ix);
-	for (var i = 0; i < mdl->controlCount_; i++) {
-		mdl->getControl(i)->setFromStream(prg);
-	}
-	return 1;
+bool Module::isActive() {
+	return isActive_;
 }
 
-Soundbank* Module::getDefaultSoundbank() {
-	return NULL;
+void Module::run(int start, int end) {
 }
+

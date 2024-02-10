@@ -7,23 +7,18 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
-    typedef struct LfoCtrls {
-        PotF amp;
-        PotF fre;
-    } LfoCtrls;
-
-    #define LfoCtrlCount (sizeof(LfoCtrls)/sizeof(PotBase))
+    typedef struct LfoValues_ {
+        Value amp, fre;
+    } LfoValues;
 
     class Lfo : public Elem {
     private: float smp;
     private: double timer;
+    protected: PROP(LfoValues*, values);
     public:
         Lfo();
 
-        LfoCtrls* controls() { return (LfoCtrls*)controls_; }
         void reset();
-        void assignControls(PotBase* controls);
-        void setFromStream(byte*& stream);
         float run(Arg params = (void*)NULL);
 
         static float* samplingRate;

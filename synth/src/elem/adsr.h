@@ -3,26 +3,23 @@
 
 // Attack Decay Sustain Release envelope
 
+#include "player/src/value.h"
 #include "synth/src/elem/env.h"
 
 NS_FW_BASE_USE
+using namespace PLAYER;
 namespace SYNTH {
 
-    typedef struct AdsrCtrls {
-        PotF amp;
-        Pot atk;
-        Pot dec;
-        PotF8 sus;
-        Pot rel;
-    } AdsrCtrls;
+    typedef struct AdsrValues_ {
+        Value amp, atk, dec, sus, rel;
+    } AdsrValues;
 
-    #define AdsrCtrlCount (sizeof(AdsrCtrls) / sizeof(PotBase))
 
     class Adsr : public Env {
     protected: byte gate_;
+    protected: PROP(AdsrValues*, values);
     public:
         Adsr();
-        AdsrCtrls* controls() { return (AdsrCtrls*)controls_; }
         void setGate(byte velocity);
         float run(Arg params = (void*)NULL);
     };
