@@ -6,9 +6,7 @@
 using namespace PLAYER;
 
 void InputExt::set(Input* input, Value min, Value max, Value step, Value value) {
-	input->min = min;
-	input->max = max;
-	input->step = step;
+	input->setup(min, max, step);
 	input->set(value);
 }
 
@@ -31,13 +29,13 @@ void InputExt::setFromNormalized(Input* input, float f) {
 void InputExt::getValueAsString(Input* input, char* str, int len) {
 	switch (input->type) {
 	case InputTypeB:
-		str_format_s(str, len, "%d", input->value->b);
+		str_format_s(str, len, "%d", input->value()->b);
 		break;
 	case InputTypeF:
-		str_format_s(str, len, "%.2f", input->value->f);
+		str_format_s(str, len, "%.2f", input->value()->f);
 		break;
 	case InputTypeF8:
-		str_format_s(str, len, "%d", (byte)trunc(input->value->f * 255.0f));
+		str_format_s(str, len, "%d", (byte)trunc(input->value()->f * 255.0f));
 		break;
 	}
 }
@@ -46,11 +44,11 @@ float InputExt::getNormalized(Input* input) {
 	float f = 0.0f;
 	switch (input->type) {
 	case InputTypeB:
-		f = (float)(input->value->b - input->min.b) / (input->max.b - input->min.b);
+		f = (float)(input->value()->b - input->min.b) / (input->max.b - input->min.b);
 		break;
 	case InputTypeF:
 	case InputTypeF8:
-		f = (input->value->b - input->min.b) / (float)(input->max.b - input->min.b);
+		f = (input->value()->b - input->min.b) / (float)(input->max.b - input->min.b);
 		break;
 	}
 	return f;
@@ -63,13 +61,13 @@ int InputExt::writeToStream(Input* input, byte*& stream) {
 		WRITE(stream, input->min.b, byte);
 		WRITE(stream, input->max.b, byte);
 		WRITE(stream, input->step.b, byte);
-		WRITE(stream, input->value->b, byte);
+		WRITE(stream, input->value()->b, byte);
 		break;
 	case InputTypeF:
 		WRITE(stream, input->min.f, float);
 		WRITE(stream, input->max.f, float);
 		WRITE(stream, input->step.f, float);
-		WRITE(stream, input->value->f, float);
+		WRITE(stream, input->value()->f, float);
 		break;
 	case InputTypeF8:
 		WRITE(stream, input->min.f, float);
@@ -85,10 +83,10 @@ int InputExt::writeValueToStream(Input* input, byte*& stream) {
 	var start = stream;
 	switch (input->type) {
 	case InputTypeB:
-		WRITE(stream, input->value->b, byte);
+		WRITE(stream, input->value()->b, byte);
 		break;
 	case InputTypeF:
-		WRITE(stream, input->value->f, float);
+		WRITE(stream, input->value()->f, float);
 		break;
 	case InputTypeF8:
 		WRITE(stream, (byte)trunc(InputExt::getNormalized(input) * 255.0f), byte);

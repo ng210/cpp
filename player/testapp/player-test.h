@@ -40,8 +40,8 @@ public:
 
 class TestApp;
 class PlayerTest : public Test {
-	TestApp* app_;
-	PlayerTestTask* task_;
+	private: PROP_R(TestApp*, app);
+	private: PlayerTestTask* task_;
 public:
 	PlayerTest(TestApp* app);
 	~PlayerTest();

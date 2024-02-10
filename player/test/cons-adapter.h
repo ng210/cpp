@@ -10,7 +10,16 @@ typedef enum ConsDevices {
 	DeviceCons = 1
 } ConsDevices;
 
-typedef IConsole* const (GetConsole)();
+typedef IConsole* const (ConsoleCreatorFunction)(void* context);
+
+typedef struct ConsoleCreator_ {
+	void* context;
+	ConsoleCreatorFunction* create;
+
+	IConsole* operator()() {
+		return create(context);
+	}
+} ConsoleCreator;
 
 class ConsAdapter : public Adapter {
 	static AdapterInfo adapterInfo_;
@@ -21,10 +30,10 @@ public:
 
 	AdapterInfo* const getInfo();
 	void initialize(byte** pData);
-	Device* createDevice(int deviceType);
+	Device* createDevice(int deviceType, Player* player);
 	void writeToStream(Stream* data);
 	
-	static GetConsole* getConsole;
+	static ConsoleCreator createConsole;
 };
 
 #endif

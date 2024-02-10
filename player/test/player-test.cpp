@@ -10,16 +10,16 @@ int PlayerTest::LAST_TICK = 60;
 int PlayerTest::onSetValue(void* obj, Value value, void* args) {
     var input = (Input*)obj;
     var playerTest = (PlayerTest*)args;
-    playerTest->value1_ = *input->value;
+    playerTest->value1_ = *input->value();
     playerTest->value2_ = value;
     switch (input->type) {
     case InputTypeB:
-        input->value->b = 2 * value.b; break;
+        input->value()->b = 2 * value.b; break;
     case InputTypeF8:
-        input->value->b = 2 * value.b;
-        ((InputF8*)input)->pValue->f = input->value->b / 255.0f;  break;
+        input->value()->b = 2 * value.b;
+        ((InputF8*)input)->pValue()->f = input->value()->b / 255.0f;  break;
     case InputTypeF:
-        input->value->f = 2 * value.f; break;
+        input->value()->f = 2 * value.f; break;
     }
     return 1;
 }
@@ -43,25 +43,25 @@ void PlayerTest::testInput() {
     Input input(&value);
     input.Input::setup(10, 110, 6);
     input.set(22);
-    assert("Should set the correct values", input.min.b == 10 && input.max.b == 106 && input.step.b == 6 && input.value->b == 22);
+    assert("Should set the correct values", input.min.b == 10 && input.max.b == 106 && input.step.b == 6 && input.value()->b == 22);
     assert("Should set the assigned value as well", value.b == 22);
     input.set(6);
-    assert("Should set the minimum", input.value->b == 10);
+    assert("Should set the minimum", input.value()->b == 10);
     input.dec(2);
-    assert("Should not decrease below minimum", input.value->b == 10);
+    assert("Should not decrease below minimum", input.value()->b == 10);
     input.inc(4);
-    assert("Should increase by 24", input.value->b == 34);
+    assert("Should increase by 24", input.value()->b == 34);
     input.set(112);
-    assert("Should set the maximum", input.value->b == 106);
+    assert("Should set the maximum", input.value()->b == 106);
     input.inc(2);
-    assert("Should not increase above maximum", input.value->b == 106);
+    assert("Should not increase above maximum", input.value()->b == 106);
     input.dec(5);
-    assert("Should decrease by 30", input.value->b == 76);
+    assert("Should decrease by 30", input.value()->b == 76);
     input.setFromNormalized(0.6f);
-    assert("Should set from normalized value", input.value->b == 64);
+    assert("Should set from normalized value", input.value()->b == 64);
     input.set.add(&input, PlayerTest::onSetValue, this);
     input.set(44);
-    assert("Should set value using custom setter", value1_.b == 40 && value2_.b == 44 && input.value->b == 88);
+    assert("Should set value using custom setter", value1_.b == 40 && value2_.b == 44 && input.value()->b == 88);
     input.set.removeAt(1);
     var f = input.getNormalized();
     assert("Should return normalized value", f == (88.0f - 10) / (106 - 10));
@@ -71,11 +71,11 @@ void PlayerTest::testInput() {
     Stream* stream = NEW_(Stream, 64);
     byte* ps = stream->data();
     input.writeToStream(stream);
-    assert("Should write into the stream", ps[0] == input.min.b && ps[1] == input.max.b && ps[2] == input.step.b && ps[3] == input.value->b);
+    assert("Should write into the stream", ps[0] == input.min.b && ps[1] == input.max.b && ps[2] == input.step.b && ps[3] == input.value()->b);
     assert("Should write exact count of bytes", stream->length() == 4);
     stream->reset();
     input.writeValueToStream(stream);
-    assert("Should write value into the stream", ps[0] == input.value->b);
+    assert("Should write value into the stream", ps[0] == input.value()->b);
     assert("Should write exact count of bytes", stream->length() == 1);
     stream->reset();
     stream->writeByte(20);
@@ -83,7 +83,7 @@ void PlayerTest::testInput() {
     stream->writeByte(10);
     stream->writeByte(32);
     input.readFromStream(ps);
-    assert("Should initialize from stream", input.min.b == 20 && input.max.b == 100 && input.step.b == 10 && input.value->b == 30);
+    assert("Should initialize from stream", input.min.b == 20 && input.max.b == 100 && input.step.b == 10 && input.value()->b == 30);
     DEL_(stream);
 }
 
@@ -92,25 +92,25 @@ void PlayerTest::testInputF() {
     InputF input(&value);
     input.setup(-10.0f, 10.0f, 0.25f);
     input.set(0.7f);
-    assert("Should set the correct values", input.min.f == -10.0f && input.max.f == 10.0f && input.step.f == 0.25f && input.value->f == 0.5f);
+    assert("Should set the correct values", input.min.f == -10.0f && input.max.f == 10.0f && input.step.f == 0.25f && input.value()->f == 0.5f);
     assert("Should set the assigned value as well", value.f == 0.5f);
     input.set(-12.0f);
-    assert("Should set the minimum", input.value->f == -10.0f);
+    assert("Should set the minimum", input.value()->f == -10.0f);
     input.dec(2);
-    assert("Should not decrease below minimum", input.value->f == -10.0f);
+    assert("Should not decrease below minimum", input.value()->f == -10.0f);
     input.inc(4);
-    assert("Should increase by 1.0", input.value->f == -9.0f);
+    assert("Should increase by 1.0", input.value()->f == -9.0f);
     input.set(11.0f);
-    assert("Should set the maximum", input.value->f == 10.0f);
+    assert("Should set the maximum", input.value()->f == 10.0f);
     input.inc(2);
-    assert("Should not increase above maximum", input.value->f == 10.0f);
+    assert("Should not increase above maximum", input.value()->f == 10.0f);
     input.dec(8);
-    assert("Should decrease by 2.0", input.value->f == 8.0f);
+    assert("Should decrease by 2.0", input.value()->f == 8.0f);
     input.setFromNormalized(0.36f);
-    assert("Should set from normalized value", input.value->f == -3.0f);
+    assert("Should set from normalized value", input.value()->f == -3.0f);
     input.set.add(&input, PlayerTest::onSetValue, this);
     input.set(4.3f);
-    assert("Should set value using custom setter", value1_.f == 4.25f && value2_.f == 4.3f && input.value->f == 8.6f);
+    assert("Should set value using custom setter", value1_.f == 4.25f && value2_.f == 4.3f && input.value()->f == 8.6f);
     input.set.removeAt(1);
     var f = input.getNormalized();
     assert("Should return normalized value", f == (8.6f - -10.0f) / (10.0f - -10.0f));
@@ -120,11 +120,11 @@ void PlayerTest::testInputF() {
     Stream* stream = NEW_(Stream, 64);
     byte* ps = stream->data();
     input.writeToStream(stream);
-    assert("Should write into the stream", ((float*)ps)[0] == input.min.f && ((float*)ps)[1] == input.max.f && ((float*)ps)[2] == input.step.f && ((float*)ps)[3] == input.value->f);
+    assert("Should write into the stream", ((float*)ps)[0] == input.min.f && ((float*)ps)[1] == input.max.f && ((float*)ps)[2] == input.step.f && ((float*)ps)[3] == input.value()->f);
     assert("Should write exact count of bytes", stream->length() == 16);
     stream->reset();
     input.writeValueToStream(stream);
-    assert("Should write value into the stream", ((float*)ps)[0] == input.value->f);
+    assert("Should write value into the stream", ((float*)ps)[0] == input.value()->f);
     assert("Should write exact count of bytes", stream->length() == 4);
     stream->reset();
     stream->writeFloat(0.1f);
@@ -132,7 +132,7 @@ void PlayerTest::testInputF() {
     stream->writeFloat(0.001f);
     stream->writeFloat(0.131f);
     input.readFromStream(ps);
-    assert("Should initialize from stream", input.min.f == 0.1f && input.max.f == 0.2f && input.step.f == 0.001f && input.value->f == 0.13f);
+    assert("Should initialize from stream", input.min.f == 0.1f && input.max.f == 0.2f && input.step.f == 0.001f && input.value()->f == 0.13f);
     DEL_(stream);
 }
 
@@ -141,25 +141,25 @@ void PlayerTest::testInputF8() {
     InputF8 input(&value);
     input.setup(2, 104, 5);
     input.set(14);
-    assert("Should set the correct values", input.min.b == 2 && input.max.b == 102 && input.step.b == 5 && input.value->b == 12 && input.pValue->f == 12 / 255.0f);
+    assert("Should set the correct values", input.min.b == 2 && input.max.b == 102 && input.step.b == 5 && input.value()->b == 12 && input.pValue()->f == 12 / 255.0f);
     assert("Should set the assigned value as well", value.f == 12 / 255.0f);
     input.set(1);
-    assert("Should set the minimum", input.value->b == 2 && value.f == 2 / 255.0f);
+    assert("Should set the minimum", input.value()->b == 2 && value.f == 2 / 255.0f);
     input.dec(2);
-    assert("Should set the minimum", input.value->b == 2 && value.f == 2 / 255.0f);
+    assert("Should set the minimum", input.value()->b == 2 && value.f == 2 / 255.0f);
     input.inc(4);
-    assert("Should increase by 20", input.value->b == 22 && value.f == 22 / 255.0f);
+    assert("Should increase by 20", input.value()->b == 22 && value.f == 22 / 255.0f);
     input.set(112);
-    assert("Should set the maximum", input.value->b == 102 && value.f == 102 / 255.0f);
+    assert("Should set the maximum", input.value()->b == 102 && value.f == 102 / 255.0f);
     input.inc(2);
-    assert("Should not increase above maximum", input.value->b == 102 && value.f == 102 / 255.0f);
+    assert("Should not increase above maximum", input.value()->b == 102 && value.f == 102 / 255.0f);
     input.dec(5);
-    assert("Should decrease by 25", input.value->b == 77 && value.f == 77 / 255.0f);
+    assert("Should decrease by 25", input.value()->b == 77 && value.f == 77 / 255.0f);
     input.setFromNormalized(0.6f);
-    assert("Should set from normalized value", input.value->b == 62 && value.f == 62 / 255.0f);
+    assert("Should set from normalized value", input.value()->b == 62 && value.f == 62 / 255.0f);
     input.set.add(&input, PlayerTest::onSetValue, this);
     input.set(44);
-    assert("Should set value using custom setter", value1_.b == 42 && value2_.b == 44 && input.value->b == 88 && value.f == 88 / 255.0f);
+    assert("Should set value using custom setter", value1_.b == 42 && value2_.b == 44 && input.value()->b == 88 && value.f == 88 / 255.0f);
     input.set.removeAt(2);
     var f = input.getNormalized();
     assert("Should return normalized value", f == (88.0f - 2) / (102 - 2));
@@ -169,11 +169,11 @@ void PlayerTest::testInputF8() {
     Stream* stream = NEW_(Stream, 64);
     byte* ps = stream->data();
     input.writeToStream(stream);
-    assert("Should write into the stream", ps[0] == input.min.b && ps[1] == input.max.b && ps[2] == input.step.b && ps[3] == input.value->b);
+    assert("Should write into the stream", ps[0] == input.min.b && ps[1] == input.max.b && ps[2] == input.step.b && ps[3] == input.value()->b);
     assert("Should write exact count of bytes", stream->length() == 4);
     stream->reset();
     input.writeValueToStream(stream);
-    assert("Should write value into the stream", ps[0] == input.value->b);
+    assert("Should write value into the stream", ps[0] == input.value()->b);
     assert("Should write exact count of bytes", stream->length() == 1);
     stream->reset();
     stream->writeByte(20);
@@ -181,7 +181,7 @@ void PlayerTest::testInputF8() {
     stream->writeByte(10);
     stream->writeByte(32);
     input.readFromStream(ps);
-    assert("Should initialize from stream", input.min.b == 20 && input.max.b == 100 && input.step.b == 10 && input.value->b == 30 && input.pValue->f == 30 / 255.0f);
+    assert("Should initialize from stream", input.min.b == 20 && input.max.b == 100 && input.step.b == 10 && input.value()->b == 30 && input.pValue()->f == 30 / 255.0f);
     DEL_(stream);
 }
 
@@ -216,7 +216,7 @@ void PlayerTest::testCreateConsDevice() {
     var pData = &initData[0];
     var consDevice = player->addDevice(consAdapter, ConsDevices::DeviceCons, &pData);
     assert("Should create a ConsDevice", consDevice != NULL);
-    assert("Should be initialized correctly", consDevice->getValue(0)->b == 0 && consDevice->getValue(1)->b == 1 && consDevice->getValue(2)->b == ConsoleColors::green);
+    assert("Should be initialized correctly", consDevice->getInput(0)->value()->b == 0 && consDevice->getInput(1)->value()->b == 1 && consDevice->getInput(2)->value()->b == ConsoleColors::green);
     //DEL_(consDevice);
     DEL_(playerDevice);
     Player::cleanUp();
@@ -712,7 +712,7 @@ void PlayerTest::testRunPlayerOnFrames() {
     var playerDevice = PlayerDevice::create(&data);
     var player = playerDevice->player();
     var playerDeviceExt = NEW_(PlayerDeviceExt, playerDevice);
-    var consDevice = NEW_(ConsDevice, consAdapter);
+    var consDevice = (ConsDevice*)consAdapter->createDevice(ConsDevices::DeviceCons, player);
     var consDeviceExt = NEW_(ConsDeviceExt, consDevice);
     for (var si = 0; si < player->sequences().length(); si++) {
         DeviceExt* deviceExt = consDeviceExt;

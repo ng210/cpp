@@ -18,7 +18,7 @@ namespace PLAYER {
 	protected: PROP(void*, object);
 	protected: PROP(int, type);
 	protected: bool isActive_;
-	protected: PROP_R(Input*, inputs);
+	protected: PROP_R(InputBase*, inputs);
 	protected: PROP(int, inputCount);
 	protected: PROP_R(PresetBank*, presetBank);
 	protected: PROP_R(int, preset);
@@ -26,16 +26,16 @@ namespace PLAYER {
 	//protected: PROP_R(float, refreshRate);
 
 	protected: PROP(Adapter*, adapter);
-	//protected: PROP(Player*, player);
+	protected: PROP(Player*, player);
 	//protected: PROP(byte*, initData);
 	
 	protected:
 		Device();
+		Device(Adapter* adapter, void* object = NULL);
 	public:
 		Handler<int> setPreset;
 		Handler<PresetBank*> setPresetBank;
 
-		Device(Adapter* adapter, void* object = NULL);
 		virtual ~Device() {}
 
 		virtual void initialize(byte** stream = NULL) = 0;
@@ -43,9 +43,8 @@ namespace PLAYER {
 		virtual bool isActive();
 		virtual void isActive(bool b);
 
-		virtual void createInputs();
-		virtual Input* getInput(int id);
-		Value* getValue(int id);
+		virtual InputBase* getInput(int id);
+		virtual void setInput(int id, Value v);
 
 		virtual int run(int ticks) = 0;
 		virtual void processCommand(byte cmd, byte*& cursor) = 0;

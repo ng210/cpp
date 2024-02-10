@@ -56,6 +56,10 @@ Sequence* DeviceExt::createDefaultSequence() {
 	return seq;
 }
 
+PresetBank* DeviceExt::createDefaultPresetBank() {
+	return NEW_(PresetBank);
+}
+
 void DeviceExt::presetAdder(void* obj, Stream* preset, void* args) {
 	var that = (DeviceExt*)obj;
 	var dev = that->device_;

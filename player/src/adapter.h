@@ -25,7 +25,7 @@ namespace PLAYER {
         virtual void initialize(byte** pData);
         virtual void prepare();
         virtual void cleanUp();
-        virtual Device* createDevice(int deviceType) = 0;
+        virtual Device* createDevice(int deviceType, Player* player) = 0;
 #ifdef PLAYER_EDIT_MODE
         virtual void writeToStream(Stream* data);
 #endif

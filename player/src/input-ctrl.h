@@ -38,7 +38,7 @@ namespace PLAYER {
 		COLORREF textColor_;
 
 	protected: PROP_R(InputCtrlType, type);
-	protected: PROP_R(Input*, input);
+	protected: PROP_R(InputBase*, input);
 	protected: PROP(bool, showLabel);
 	protected: PROP(bool, showValue);
 	protected: TCHAR label_[32];
@@ -65,7 +65,7 @@ namespace PLAYER {
 		void label(TCHAR* lbl);
 		void setSize(int size);
 		void type(InputCtrlType t);
-		void input(Input* input);
+		void input(InputBase* input);
 
 		LRESULT onCreated();
 		LRESULT onPaint();

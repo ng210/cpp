@@ -9,7 +9,13 @@ using namespace PLAYER;
 InputBase::InputBase() {}
 
 InputBase::InputBase(Value* pValue) {
-	value = pValue;
+	setValue(pValue);
+}
+
+InputBase::~InputBase() {}
+
+void InputBase::setValue(Value* pValue) {
+	value_ = pValue;
 }
 
 void InputBase::setup(Value inMin, Value inMax, Value inStep) {
@@ -29,8 +35,6 @@ Input::Input(Value* pValue) : InputBase(pValue) {
 	initialize();
 }
 
-InputBase::~InputBase() {}
-
 void Input::initialize() {
 	size = sizeof(Value::b);
 	type = InputTypeB;
@@ -41,23 +45,23 @@ Input::~Input() {
 }
 
 void Input::inc(int count) {
-	var v = value->b + count * step.b;
+	var v = value_->b + count * step.b;
 	if (v > max.b) v = max.b;
 	set(v);
 }
 
 void Input::dec(int count) {
-	var v = value->b - count * step.b;
+	var v = value_->b - count * step.b;
 	if (v < min.b) v = min.b;
 	set(v);
 }
 
-void Input::readValueFromStream(byte* stream) {
+void Input::readValueFromStream(byte*& stream) {
 	var value = READ(stream, byte);
 	set(value);
 }
 
-void Input::readFromStream(byte* stream) {
+void Input::readFromStream(byte*& stream) {
 	if (stream != NULL) {
 		var min = READ(stream, byte);
 		var max = READ(stream, byte);
@@ -80,22 +84,22 @@ void Input::setFromNormalized(float v) {
 }
 
 float Input::getNormalized() {
-	return ((float)(value->b - min.b)) / (max.b - min.b);
+	return ((float)(value_->b - min.b)) / (max.b - min.b);
 }
 
 void Input::getValueAsString(char* str, int len) {
-	str_format_s(str, len, "%d", value->b);
+	str_format_s(str, len, "%d", value_->b);
 }
 
 void Input::writeValueToStream(Stream* stream) {
-	stream->writeByte(value->b);
+	stream->writeByte(value_->b);
 }
 
 void Input::writeToStream(Stream* stream) {
 	stream->writeByte(min.b);
 	stream->writeByte(max.b);
 	stream->writeByte(step.b);
-	stream->writeByte(value->b);
+	stream->writeByte(value_->b);
 }
 
 int Input::setter(void* obj, Value value, void* unused) {
@@ -103,12 +107,12 @@ int Input::setter(void* obj, Value value, void* unused) {
 	var v = (byte)((value.b - input->min.b) / input->step.b) * input->step.b + input->min.b;
 	if (v > input->min.b) {
 		if (v < input->max.b) {
-			input->value->b = v;
+			input->value_->b = v;
 		} else {
-			input->value->b = input->max.b;
+			input->value_->b = input->max.b;
 		}
 	} else {
-		input->value->b = input->min.b;
+		input->value_->b = input->min.b;
 	}
 	return 1;
 }
@@ -129,12 +133,12 @@ void InputF::initialize() {
 	set.add(this, &InputF::setter);
 }
 
-void InputF::readValueFromStream(byte* stream) {
+void InputF::readValueFromStream(byte*& stream) {
 	var value = READ(stream, float);
 	set(value);
 }
 
-void InputF::readFromStream(byte* stream) {
+void InputF::readFromStream(byte*& stream) {
 	if (stream != NULL) {
 		var min = READ(stream, float);
 		var max = READ(stream, float);
@@ -157,34 +161,34 @@ void InputF::setFromNormalized(float v) {
 }
 
 void InputF::inc(int count) {
-	var v = value->f + count * step.f;
+	var v = value_->f + count * step.f;
 	if (v > max.f) v = max.f;
 	set(v);
 }
 
 void InputF::dec(int count) {
-	var v = value->f - count * step.f;
+	var v = value_->f - count * step.f;
 	if (v < min.f) v = min.f;
 	set(v);
 }
 
 float InputF::getNormalized() {
-	return (value->f - min.f) / (max.f - min.f);
+	return (value_->f - min.f) / (max.f - min.f);
 }
 
 void InputF::getValueAsString(char* str, int len) {
-	str_format_s(str, len, "%.4f", value->f);
+	str_format_s(str, len, "%.4f", value_->f);
 }
 
 void InputF::writeToStream(Stream* stream) {
 	stream->writeFloat(min.f);
 	stream->writeFloat(max.f);
 	stream->writeFloat(step.f);
-	stream->writeFloat(value->f);
+	stream->writeFloat(value_->f);
 }
 
 void InputF::writeValueToStream(Stream* stream) {
-	stream->writeFloat(value->f);
+	stream->writeFloat(value_->f);
 }
 
 int InputF::setter(void* obj, Value value, void* unused) {
@@ -192,36 +196,44 @@ int InputF::setter(void* obj, Value value, void* unused) {
 	var v = (float)trunc((value.f - input->min.f) / input->step.f) * input->step.f + input->min.f;
 	if (v > input->min.f) {
 		if (v < input->max.f) {
-			input->value->f = v;
+			input->value_->f = v;
 		}
 		else {
-			input->value->f = input->max.f;
+			input->value_->f = input->max.f;
 		}
 	}
 	else {
-		input->value->f = input->min.f;
+		input->value_->f = input->min.f;
 	}
 	return 1;
 }
 #pragma endregion
 
 #pragma region InputF8
+InputF8::InputF8() {
+	initialize();
+}
+
 InputF8::InputF8(Value* pV) : Input(pV) {
 	initialize();
-	pValue = pV;
+	setValue(pV);
 }
 
 void InputF8::initialize() {
 	type = InputTypeF8;
 	size = sizeof(Value::b);
-	value = &bValue_;
+	value_ = &bValue_;
 	set.add(this, &InputF8::setter);
+}
+
+void InputF8::setValue(Value* v) {
+	pValue_ = v;
 }
 
 int InputF8::setter(void* obj, Value value, void* unused) {
 	var input = (InputF8*)obj;
 	Input::setter(input, value, unused);
-	input->pValue->f = input->bValue_.b / 255.0f;
+	input->pValue()->f = input->bValue_.b / 255.0f;
 	return 1;
 }
 #pragma endregion

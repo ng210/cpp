@@ -29,6 +29,7 @@ namespace PLAYER {
 		virtual int getCommandSize(byte* cmd) = 0;
 
 		virtual Sequence* createDefaultSequence();
+		virtual PresetBank* createDefaultPresetBank();
 
 		static void presetAdder(void*, Stream* stream, void* = NULL);
 		static void presetRemover(void*, int id, void* = NULL);

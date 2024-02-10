@@ -10,7 +10,7 @@ int _main(NS_FW_BASE::Map* args) {
 #endif
 
     Test::cons = getConsole();
-    ConsAdapter::getConsole = &getConsole;
+    ConsAdapter::createConsole = { NULL, &getConsole };
 
     PlayerTest::LAST_TICK = 120;
 

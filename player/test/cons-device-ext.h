@@ -16,7 +16,7 @@ namespace PLAYER {
 		ConsDeviceExt(Device* device);
 		~ConsDeviceExt();
 		void setupInputs();
-		Input* getInput(int id);
+		InputBase* getInput(int id);
 		void makeCommandImpl(int command, Stream* stream, va_list args);
 		int getCommandSize(byte* cmd);
 		Sequence* createDefaultSequence();

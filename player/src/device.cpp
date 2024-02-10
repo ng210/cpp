@@ -29,16 +29,18 @@ void Device::isActive(bool b) {
 	isActive_ = b;
 }
 
-void Device::createInputs() {
-}
-
-Input* Device::getInput(int id) {
+InputBase* Device::getInput(int id) {
 	return &inputs_[id];
 }
 
-Value* Device::getValue(int id) {
-	return getInput(id)->value;
+void Device::setInput(int id, Value v) {
+	inputs_[id].set(v);
 }
+
+
+//Value* Device::getValue(int id) {
+//	return getInput(id)->value();
+//}
 
 int Device::run(int ticks) {
 	return 0;
@@ -52,6 +54,7 @@ int Device::presetBankSetter(void* obj, PresetBank* presetBank, void* unused) {
 	var dev = (Device*)obj;
 	var pb = dev->presetBank_;
 	dev->presetBank_ = presetBank;
+	dev->setPreset(0);
 	return pb == NULL;
 }
 

@@ -38,6 +38,10 @@ char* const TestApp::registerWindowClass() {
 	return windowClassName;
 }
 
+IConsole* const TestApp::getConsole(void* obj) {
+	return &((TestApp*)obj)->logCtrl_;
+}
+
 LRESULT TestApp::onCreated() {
 	LRESULT result = 0;
 	int width = 1280, height = 800;
@@ -76,6 +80,7 @@ LRESULT TestApp::onCreated() {
 	#pragma endregion
 
 	tests_->cons = &logCtrl_;
+	ConsAdapter::createConsole = { &logCtrl_, &getConsole };
 	tests_->runAll(totalPassed, totalFailed);
 
 	return result;

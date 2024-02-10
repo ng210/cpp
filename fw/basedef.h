@@ -38,9 +38,9 @@ typedef union BYTEVALUE {
 } BYTEVALUE;
 
 #define DB(v) (byte)v
-#define DW(v) ((BYTEVALUE)(word)v).bytes[0], ((BYTEVALUE)(word)v).bytes[1]
-#define DD(v) ((BYTEVALUE)(dword)v).bytes[0], ((BYTEVALUE)(dword)v).bytes[1], ((BYTEVALUE)(dword)v).bytes[2], ((BYTEVALUE)(dword)v).bytes[3]
-#define DF(v) ((BYTEVALUE)v).bytes[0], ((BYTEVALUE)v).bytes[1], ((BYTEVALUE)v).bytes[2], ((BYTEVALUE)v).bytes[3]
+#define DW(v) BYTEVALUE((word)v).bytes[0], BYTEVALUE((word)v).bytes[1]
+#define DD(v) BYTEVALUE((dword)v).bytes[0], BYTEVALUE((dword)v).bytes[1], BYTEVALUE((dword)v).bytes[2], BYTEVALUE((dword)v).bytes[3]
+#define DF(v) BYTEVALUE((float)v).bytes[0], BYTEVALUE((float)v).bytes[1], BYTEVALUE((float)v).bytes[2], BYTEVALUE((float)v).bytes[3]
 
 #define STRINGIFY(str) #str
 #define WIDEN2(x) L ## x

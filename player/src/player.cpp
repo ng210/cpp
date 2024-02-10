@@ -174,7 +174,7 @@ namespace PLAYER {
         if (!Player::adapters_->containsKey(adapterId)) {
             Player::adapters_->put(adapterId, adapter);
         }
-        device = adapter->createDevice(deviceType);
+        device = adapter->createDevice(deviceType, this);
         if (device) {
             device->initialize(pData);
             devices_.push(device);
@@ -311,7 +311,7 @@ namespace PLAYER {
                     var deviceCount = READ(p, byte);
                     for (var di = 0; di < deviceCount; di++) {
                         // create and initialize device
-                        var device = adapter->createDevice(*p++);
+                        var device = adapter->createDevice(*p++, this);
                         if (device != NULL) {
                             device->initialize(&p);
                             devices_.push(device);

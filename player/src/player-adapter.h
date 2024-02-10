@@ -23,7 +23,7 @@ namespace PLAYER {
 		//virtual ~PlayerAdapter();
 
 		AdapterInfo* const getInfo();
-		Device* createDevice(int deviceType);
+		Device* createDevice(int deviceType, Player* player);
 		//void prepareContext(byte** pData);
 	};
 }

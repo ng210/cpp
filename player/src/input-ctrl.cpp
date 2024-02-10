@@ -189,7 +189,7 @@ void InputCtrl::type(InputCtrlType t) {
 	setSize(size_);
 }
 
-void InputCtrl::input(Input* p) {
+void InputCtrl::input(InputBase* p) {
 	input_ = p;
 	// calculate angle
 	var v = input_->getNormalized();

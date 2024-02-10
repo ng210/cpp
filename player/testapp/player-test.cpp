@@ -38,9 +38,9 @@ PlayerTestTask::PlayerTestTask(PlayerTest* test) : Task() {
 	#pragma endregion
 
 	#pragma region DeviceCtrl resources
-	var cons = NEW_(LogCtrl);
-	cons->create(test_->area(), "Console");
-	consDevice_ = NEW_(ConsDevice, consAdapter, cons);
+	//var cons = &test_->app()->logCtrl();
+	//cons->create(test_->area(), "Console");
+	consDevice_ = (ConsDevice*)consAdapter->createDevice(ConsDevices::DeviceCons, playerExt_->player());
 	consDeviceExt_ = (ConsDeviceExt*)playerExt_->getDeviceExtension(consDevice_);
 	consDeviceCtrl_ = NEW_(ConsDeviceCtrl, consDeviceExt_);
 	consDeviceCtrl_->create(test_->area(), "ConsDevice");
@@ -54,7 +54,7 @@ PlayerTestTask:: ~PlayerTestTask() {
 	DEL_(input_);
 
 	DEL_(consDeviceCtrl_);
-	DEL_((LogCtrl*)consDevice_->object());
+	//DEL_((LogCtrl*)consDevice_->object());
 	DEL_(consDevice_);
 	DEL_(consDeviceExt_);
 
@@ -69,9 +69,9 @@ DWORD PlayerTestTask::mainAction_(void* context) {
 	var task = (PlayerTestTask*)context;
 	task->test_->totalFailed_ = 0; task->test_->totalPassed_ = 0;
 	
-	//task->testInputCtrl();
+	task->testInputCtrl();
 
-	//task->testDeviceCtrl();
+	task->testDeviceCtrl();
 
 	//task->testDeviceCtrlExportImport();
 	Sleep(3000);
@@ -87,8 +87,8 @@ void PlayerTestTask::testInputCtrl() {
 	test_->failed_ = 0; test_->passed_ = 0;
 	inputCtrl_->show(SW_SHOW);
 	// 1. Check Input control
-	test_->assert("Should create an Input with correct value", input_ != NULL && input_->value == &value_ && input_->value->b == value_.b);
-	var pV = input_->value;
+	test_->assert("Should create an Input with correct value", input_ != NULL && input_->value() == &value_ && input_->value()->b == value_.b);
+	var pV = input_->value();
 
 	// 2. user sets minimum
 	test_->log("Set input control to the minimum value!\r\n");
@@ -123,7 +123,7 @@ void PlayerTestTask::testDeviceCtrl() {
 	var isMatch = true;
 	for (var ii = 0; ii < consDeviceCtrl_->inputCount(); ii++) {
 		var ctrl = consDeviceCtrl_->getInput(ii);
-		isMatch = isMatch && (dev->getValue(ii) == ctrl->input()->value);
+		isMatch = isMatch && (dev->getInput(ii)->value() == ctrl->input()->value());
 		if (!isMatch) break;
 	}
 	test_->assert("Should map inputs correctly", consDeviceCtrl_ != NULL && isMatch);

@@ -6,7 +6,7 @@
 
 using namespace PLAYER;
 
-GetConsole* ConsAdapter::getConsole = NULL;
+ConsoleCreator ConsAdapter::createConsole = { NULL, NULL };
 
 AdapterInfo ConsAdapter::adapterInfo_ = { "Cons", 124 };
 
@@ -25,13 +25,14 @@ void ConsAdapter::initialize(byte** pData) {
 	initData_ = READ(*pData, dword);
 
 }
-Device* ConsAdapter::createDevice(int deviceType) {
+Device* ConsAdapter::createDevice(int deviceType, Player* player) {
 	Device* device = NULL;
 	switch (deviceType) {
 	case ConsDevices::DeviceCons:
-		device = NEW_(ConsDevice, this, ConsAdapter::getConsole());
+		device = NEW_(ConsDevice, this, ConsAdapter::createConsole());
 		break;
 	}
+	device->player(player);
 	return device;
 }
 

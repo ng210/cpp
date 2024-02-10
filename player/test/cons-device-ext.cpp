@@ -27,8 +27,8 @@ void ConsDeviceExt::setupInputs() {
     device_->getInput(ConsInputsId::ConsInputColor)->setup(ConsoleColors::black, ConsoleColors::gray, 1);
 }
 
-Input* ConsDeviceExt::getInput(int id) {
-    Input* input = NULL;
+InputBase* ConsDeviceExt::getInput(int id) {
+    InputBase* input = NULL;
     if (id >= 0 && id < device_->inputCount()) {
         input = device_->getInput(id);
     }

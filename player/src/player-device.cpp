@@ -21,7 +21,7 @@ namespace PLAYER {
 		} else {
 			DEL_(pa);
 		}
-		var device = (PlayerDevice*)adapter->createDevice(PlayerDevices::DevicePlayer);
+		var device = (PlayerDevice*)adapter->createDevice(PlayerDevices::DevicePlayer, NULL);
 		device->initialize(pData);
 		device->type(PlayerDevices::DevicePlayer);
 		return device;
@@ -30,6 +30,7 @@ namespace PLAYER {
 	PlayerDevice::PlayerDevice(Adapter* adapter, void* object) : Device(adapter, object) {
 		mode_ = PlayerModeSequence;
 		type_ = PlayerDevices::DevicePlayer;
+		player_ = (Player*)object;
 	}
 
 	PlayerDevice::~PlayerDevice() {

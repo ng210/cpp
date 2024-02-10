@@ -17,11 +17,14 @@ namespace PLAYER {
     } InputType;
 
     class InputBase {
+    protected:
+        Value bValue_;
+        PROP_R(Value*, pValue);
+        PROP_R(Value*, value);
     public:
         Value min;
         Value max;
         Value step;
-        Value* value;
         InputType type;
         int size;
         Handler<Value> set;
@@ -30,9 +33,10 @@ namespace PLAYER {
         InputBase(Value*);
         virtual ~InputBase();
 
+        virtual void setValue(Value* v);
         virtual void setup(Value inMin, Value inMax, Value inStep);
-        virtual void readValueFromStream(byte* stream) = 0;
-        virtual void readFromStream(byte* stream) = 0;
+        virtual void readValueFromStream(byte*& stream) = 0;
+        virtual void readFromStream(byte*& stream) = 0;
         virtual void check() = 0;
 
         virtual void setFromNormalized(float v) = 0;
@@ -55,8 +59,8 @@ namespace PLAYER {
         Input(Value*);
         ~Input();
 
-        void readValueFromStream(byte* stream);
-        void readFromStream(byte* stream);
+        void readValueFromStream(byte*& stream);
+        void readFromStream(byte*& stream);
         void check();
 
         void setFromNormalized(float v);
@@ -78,13 +82,12 @@ namespace PLAYER {
 
     class InputF : public InputBase {
         void initialize();
-    protected:
-        InputF();
     public:
+        InputF();
         InputF(Value*);
 
-        void readValueFromStream(byte* stream);
-        void readFromStream(byte* stream);
+        void readValueFromStream(byte*& stream);
+        void readFromStream(byte*& stream);
 
         void check();
 
@@ -103,12 +106,12 @@ namespace PLAYER {
     };
 
     class InputF8 : public Input {
-        Value bValue_;
         void initialize();
     public:
+        InputF8();
         InputF8(Value*);
-        Value* pValue;
 
+        void setValue(Value* v);
         static int setter(void*, Value, void* = NULL);
     };
 }

@@ -9,7 +9,7 @@ Console* console_;
 const char*& getWorkingDir() {
 	return workingDir_;
 }
-IConsole* const getConsole() { return console_; }
+IConsole* const getConsole(void* unused) { return console_; }
 int main(int argc, char** argv) {
 	int error = 0;
 #ifdef _DEBUG

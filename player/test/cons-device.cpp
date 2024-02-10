@@ -11,9 +11,9 @@ ConsDevice::ConsDevice(Adapter* adapter, void* cons) : Device(adapter, cons) {
     ink_ = ConsoleColors::gray;
     var inputs = NEW_(ConsInputs);
     inputs_ = (Input*)inputs;
-    inputs->x.value = &x_; inputs->x.setup(0, 20, 1);
-    inputs->y.value = &y_; inputs->y.setup(0, 20, 1);
-    inputs->ink.value = &ink_; inputs->ink.setup(ConsoleColors::black, ConsoleColors::gray, 1);
+    inputs->x.setValue(&x_); inputs->x.setup(0, 20, 1);
+    inputs->y.setValue(&y_); inputs->y.setup(0, 20, 1);
+    inputs->ink.setValue(&ink_); inputs->ink.setup(ConsoleColors::black, ConsoleColors::gray, 1);
 }
 
 ConsDevice::~ConsDevice() {

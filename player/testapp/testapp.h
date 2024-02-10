@@ -44,7 +44,7 @@ protected:
 	//ButtonCtrl nextButton_, restartButton_;
 	protected: StaticCtrl testArea_;
 	protected: PROP_R(LogCtrl, logCtrl);
-	
+	protected: static IConsole* const getConsole(void*);
 	//InputCtrl inputCtrl_;
 	//ConsDeviceCtrl* conDeviceCtrl_;
 	protected: LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

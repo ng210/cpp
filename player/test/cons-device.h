@@ -27,8 +27,10 @@ typedef struct ConsInputs_ {
 } ConsInputs;
 
 class ConsDevice : public Device {
-public:
+	friend class ConsAdapter;
+protected:
 	ConsDevice(Adapter* adapter, void* cons = NULL);
+public:	
 	~ConsDevice();
 
 	void initialize(byte** pData = NULL);

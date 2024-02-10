@@ -38,7 +38,7 @@ public:
 extern int _main(NS_FW_BASE::Map* args);
 
 const char*& getWorkingDir();
-IConsole* const getConsole();
+IConsole* const getConsole(void* unused = NULL);
 
 int main(int, char**);
 
