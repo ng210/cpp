@@ -7,15 +7,15 @@
 using namespace PLAYER;
 
 class ConsDeviceCtrl : public DeviceCtrl {
-	static char* ConsDeviceCtrl::windowClassName_;
-	static ATOM ConsDeviceCtrl::windowClass_;
+	static char* windowClassName_;
+	static ATOM windowClass_;
 public:
 	ConsDeviceCtrl(ConsDeviceExt*);
 	~ConsDeviceCtrl();
 
 	char* const registerWindowClass();
 
-	void create(Window* parent, char* name, LONG style = 0, DWORD exStyle = 0);
+	void create(Window* parent, char* name);
 
 	void loadBackgroundImage();
 

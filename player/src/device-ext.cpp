@@ -12,17 +12,16 @@ DeviceExt::DeviceExt(Device* device) {
 DeviceExt::~DeviceExt() {
 }
 
-
-void DeviceExt::initialize(Stream* stream) {
-	var cursor = stream->cursor();
-	device_->initialize(&cursor);
-	stream->cursor(cursor);
-	int prId = 0;
-	if (stream != NULL && stream->length() > 0) {
-		prId = stream->readByte();
-	}
-	device_->setPreset(prId);
-}
+//void DeviceExt::initialize(Stream* stream) {
+//	var cursor = stream->cursor();
+//	device_->initialize(&cursor);
+//	stream->cursor(cursor);
+//	int prId = 0;
+//	if (stream != NULL && stream->length() > 0) {
+//		prId = stream->readByte();
+//	}
+//	device_->setPreset(prId);
+//}
 
 void DeviceExt::setupInputs() {}
 
@@ -49,15 +48,7 @@ Stream* DeviceExt::makeCommand(byte command, ...) {
 }
 
 Sequence* DeviceExt::createDefaultSequence() {
-	var seq = NEW_(Sequence);
-	seq->writeHeader();
-	seq->writeDelta(0);
-	seq->writeCommand(PlayerCommands::CmdEOS);
-	return seq;
-}
-
-PresetBank* DeviceExt::createDefaultPresetBank() {
-	return NEW_(PresetBank);
+	return NULL;
 }
 
 void DeviceExt::presetAdder(void* obj, Stream* preset, void* args) {

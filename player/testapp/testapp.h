@@ -5,26 +5,10 @@
 #include "win/logctrl.h"
 #include "player/src/player-device-ext.h"
 #include "player/testapp/cons-device-ctrl.h"
-#include "test.h"
 #include "player/testapp/player-test.h"
 
 NS_FW_BASE_USE
 NS_FW_WIN_USE
-
-//class InputCtrlTest : public Test {
-//	TestApp* app_;
-//	Task* task_;
-//
-//	Value value_;
-//	Input* input_;
-//	InputCtrl* inputCtrl_;
-//
-//public:
-//	InputCtrlTest(TestApp* app);
-//	~InputCtrlTest();
-//
-//	void runAll(int& totalPassed, int& totalFailed);
-//};
 
 class TestApp : public WinApp {
 	Buffer log_;

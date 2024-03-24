@@ -94,3 +94,25 @@ int InputExt::writeValueToStream(Input* input, byte*& stream) {
 	}
 	return (int)(stream - start);
 }
+
+bool InputExt::compare(InputBase* input, int fieldId, Value value) {
+	float diff = 0.0f;
+	var result = false;
+	Value* inputValue = NULL;
+	switch (fieldId) {
+		case 0: inputValue = &input->min; break;
+		case 1: inputValue = &input->max; break;
+		case 2: inputValue = &input->step; break;
+		default: inputValue = input->type == InputTypeF8 ? input->pValue(): input->value_; break;
+	}
+
+	switch (input->type) {
+		case InputTypeF:
+			diff = inputValue->f - value.f;
+			result = diff > -0.001 || diff < 0.001;
+			break;
+		default:
+			result = *inputValue == value;
+	}
+	return result;
+}

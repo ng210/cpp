@@ -54,7 +54,7 @@ namespace PLAYER {
         channels_.init(16);
         channels_.compare([](COLLECTION_ARGUMENTS) { return fmw::strncmp(((Channel*)value)->id(), (char*)key.p, 16); });
         devices_.init(16);
-        devices_.compare([](COLLECTION_ARGUMENTS) { return ((Device*)value)->type() - key.i; });
+        devices_.compare(Collection::compareByRef); // [](COLLECTION_ARGUMENTS) { return ((Device*)value)->type() - key.i; });
         sequences_.init(16);
         sequences_.compare(Collection::compareByRef);
         frameLists_.init(16);
@@ -176,6 +176,7 @@ namespace PLAYER {
         }
         device = adapter->createDevice(deviceType, this);
         if (device) {
+            device->player(this);
             device->initialize(pData);
             devices_.push(device);
             //device->dataBlockItem(dataBlock);
@@ -364,6 +365,7 @@ namespace PLAYER {
                 ch->run(ticks);
             }
         }
+
         return masterChannel_->isActive();
     }
 }

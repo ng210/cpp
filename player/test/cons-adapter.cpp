@@ -29,7 +29,7 @@ Device* ConsAdapter::createDevice(int deviceType, Player* player) {
 	Device* device = NULL;
 	switch (deviceType) {
 	case ConsDevices::DeviceCons:
-		device = NEW_(ConsDevice, this, ConsAdapter::createConsole());
+		device = NEW_(ConsDevice, this, player, ConsAdapter::createConsole());
 		break;
 	}
 	device->player(player);

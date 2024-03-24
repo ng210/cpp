@@ -14,11 +14,11 @@ namespace PLAYER {
         return &PlayerAdapter::adapterInfo_;
     }
 
-    Device* PlayerAdapter::createDevice(int deviceType, Player* unused) {
+    Device* PlayerAdapter::createDevice(int deviceType, Player* player) {
         Device* device = NULL;
         switch (deviceType) {
         case PlayerDevices::DevicePlayer:
-            device = NEW_(PlayerDevice, this, NEW_(Player));
+            device = NEW_(PlayerDevice, this, player, NEW_(Player));
             break;
         }
         return device;

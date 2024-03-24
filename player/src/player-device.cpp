@@ -27,10 +27,10 @@ namespace PLAYER {
 		return device;
 	}
 
-	PlayerDevice::PlayerDevice(Adapter* adapter, void* object) : Device(adapter, object) {
+	PlayerDevice::PlayerDevice(Adapter* adapter, Player* player, void* object) : Device(adapter, player, object) {
 		mode_ = PlayerModeSequence;
 		type_ = PlayerDevices::DevicePlayer;
-		player_ = (Player*)object;
+		//player_ = (Player*)object;
 	}
 
 	PlayerDevice::~PlayerDevice() {

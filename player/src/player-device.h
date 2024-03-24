@@ -28,7 +28,7 @@ namespace PLAYER {
 	public:
 		PROP(PlayerMode, mode);
 
-		PlayerDevice(Adapter* adapter, void* object);
+		PlayerDevice(Adapter* adapter, Player* player, void* object);
 		virtual ~PlayerDevice();
 
 		void initialize(byte** pData = NULL);

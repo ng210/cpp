@@ -116,7 +116,7 @@ void PlayerTest::testInputF() {
     assert("Should return normalized value", f == (8.6f - -10.0f) / (10.0f - -10.0f));
     char str[16];
     input.getValueAsString(str, 16);
-    assert("Should return value as string", fmw::strncmp(str, "8.6000", 16) == 0);
+    assert("Should return value as string", fmw::strncmp(str, "8.60", 16) == 0);
     Stream* stream = NEW_(Stream, 64);
     byte* ps = stream->data();
     input.writeToStream(stream);
@@ -212,12 +212,11 @@ void PlayerTest::testCreateConsDevice() {
     var playerDevice = PlayerDevice::create(NULL);
     var player = (Player*)playerDevice->object();
     var consAdapter = (ConsAdapter*)Player::addAdapter(NEW_(ConsAdapter));
-    byte initData[] = { 0xff, 0, 1, ConsoleColors::green };
+    byte initData[] = { 0, 1, ConsoleColors::green };
     var pData = &initData[0];
     var consDevice = player->addDevice(consAdapter, ConsDevices::DeviceCons, &pData);
     assert("Should create a ConsDevice", consDevice != NULL);
     assert("Should be initialized correctly", consDevice->getInput(0)->value()->b == 0 && consDevice->getInput(1)->value()->b == 1 && consDevice->getInput(2)->value()->b == ConsoleColors::green);
-    //DEL_(consDevice);
     DEL_(playerDevice);
     Player::cleanUp();
 }
@@ -267,7 +266,7 @@ void PlayerTest::testCreateConsDeviceExtSetters() {
     consDevice->setPresetBank(pb);
     assert("Should have a preset bank with setter called", consDevice->presetBank() == pb && presetBank_ == pb);
 
-    assert("Should not have a preset", consDevice->preset() == -1);
+    assert("Should have the default (0) preset", consDevice->preset() == 0);
     preset_ = NULL;
     consDevice->setPreset.add(consDevice, PlayerTest::onSetPreset, this);
     consDevice->setPreset(1);
@@ -424,7 +423,7 @@ void PlayerTest::testCreateAndEditFrames() {
     frames->insertCommand(0, commands); // overwrite command
 
     var json = frames->toJSON(consDeviceExt);
-    LOG("Frames as JSON\n%s\n", json);
+    log("Frames as JSON\n%s\n", json);
     FREE(json);
 
     assert("Should have 6 frames", frames->length() == 6);
@@ -477,7 +476,7 @@ void PlayerTest::testCreateFramesFromSequence() {
         *(byte*)frame->commands.get(2) == PlayerCommands::CmdEOS);
 
     var json = frames->toJSON(consDeviceExt);
-    LOG("Frames as JSON\n%s\n", json);
+    log("Frames as JSON\n%s\n", json);
     FREE(json);
     DEL_(frames);
     DEL_(playerExt);
@@ -506,9 +505,9 @@ void PlayerTest::testCreateSequenceFromFrames() {
         seq1->length() == seq2->length() &&
         fmw::memcmp(seq1->data(), seq2->data(), seq1->length(), pos) != false &&
         pos == seq1->length());
-    LOG("Original sequence\n");
+    log("Original sequence\n");
     DUMP(seq1->data(), seq1->length(), 32);
-    LOG("Converted sequence\n");
+    log("Converted sequence\n");
     DUMP(seq2->data(), seq2->length(), 32);
 
     DEL_(seq2);
@@ -591,7 +590,7 @@ void PlayerTest::testCreateBinary() {
     //var stream2 = NEW_(Stream, 1024);
     //playerDeviceExt->writeToStream(stream2);
 
-    var isMatch = true;
+    var isMatch = binaryCompare(stream->data(), stream->length(), data, bin->length());
     //for (var i = 0; i < stream->length(); i++) {
     //    var ca = stream->readByte();
     //    var cb = stream2->readByte();
@@ -604,27 +603,27 @@ void PlayerTest::testCreateBinary() {
     //assert("Should create the same binary", isMatch == true);
     //DEL_(stream2);
 
-    var cons = getConsole();
-    cons->printf("Expected\n");
-    cons->dump(bin->data(), bin->length(), 16);
-    cons->printf("---\nReceived\n");
-    cons->dump(stream->data(), stream->length(), 16);
-    // compare bin and stream;
-    assert("Should be same long", bin->length() == stream->length());
-    
-    isMatch = true;
-    stream->rewind();
-    bin->rewind();
-    cons->printf("Binary comparison\n");
-    for (var i = 0; i < bin->length(); i++) {
-        var ca = bin->readByte();
-        var cb = stream->readByte();
-        if (ca != cb) {
-            cons->printf(" - %04X: %02X %02X\n", i, ca, cb);
-            isMatch = false;
-            break;
-        }
-    }
+    //var cons = getConsole();
+    //cons->printf("Expected\n");
+    //cons->dump(bin->data(), bin->length(), 16);
+    //cons->printf("---\nReceived\n");
+    //cons->dump(stream->data(), stream->length(), 16);
+    //// compare bin and stream;
+    //assert("Should be same long", bin->length() == stream->length());
+    //
+    //isMatch = true;
+    //stream->rewind();
+    //bin->rewind();
+    //cons->printf("Binary comparison\n");
+    //for (var i = 0; i < bin->length(); i++) {
+    //    var ca = bin->readByte();
+    //    var cb = stream->readByte();
+    //    if (ca != cb) {
+    //        cons->printf(" - %04X: %02X %02X\n", i, ca, cb);
+    //        isMatch = false;
+    //        break;
+    //    }
+    //}
     assert("Should be binary identical", isMatch);
     bin->extract();
     DEL_(stream);
@@ -776,10 +775,12 @@ void PlayerTest::runAll(int& totalPassed, int& totalFailed) {
     test("Save to binary", (TestMethod)&PlayerTest::testCreateBinary);
     test("Load from binary", (TestMethod)&PlayerTest::testLoadFromBinary);
 
-    //test("Run channel from sequence", (TestMethod)&PlayerTest::testRunChannelFromSequence);
-    //test("Run channel from frames", (TestMethod)&PlayerTest::testRunChannelFromFrames);
-    //test("Run Player on sequence", (TestMethod)&PlayerTest::testRunPlayerOnSequence);
-    //test("Run Player on frames", (TestMethod)&PlayerTest::testRunPlayerOnFrames);
+    test("Run channel from sequence", (TestMethod)&PlayerTest::testRunChannelFromSequence);
+    test("Run channel from frames", (TestMethod)&PlayerTest::testRunChannelFromFrames);
+    test("Run Player on sequence", (TestMethod)&PlayerTest::testRunPlayerOnSequence);
+    test("Run Player on frames", (TestMethod)&PlayerTest::testRunPlayerOnFrames);
+
+    displayFinalResults();
 
     PlayerExt::cleanUp();
 

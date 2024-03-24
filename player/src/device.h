@@ -31,7 +31,7 @@ namespace PLAYER {
 	
 	protected:
 		Device();
-		Device(Adapter* adapter, void* object = NULL);
+		Device(Adapter* adapter, Player* player, void* object = NULL);
 	public:
 		Handler<int> setPreset;
 		Handler<PresetBank*> setPresetBank;

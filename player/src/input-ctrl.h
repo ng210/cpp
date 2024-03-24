@@ -15,6 +15,11 @@ namespace PLAYER {
 		Number
 	} InputCtrlType;
 
+	typedef enum InputCtrlFlags {
+		InputCtrlNoLabel = 0x10,
+		InputCtrlNoValue = 0x20
+	} InputCtrlFlags;
+
 	class InputCtrl : public Ctrl {
 		static char* windowClassName_;
 		static ATOM windowClass_;
@@ -25,15 +30,15 @@ namespace PLAYER {
 		
 		int size_;
 		int fontSize_;
-		SIZE labelSize_, levelSize_;
+		RECT labelRect_, levelRect_, valueRect_;
 		
 		bool isCapturing_;
 		
-		void updateClientRect(bool resize = true);
+		//void updateClientRect(bool resize = true);
 
 		float angle_;
 		HFONT font_;
-		HBRUSH frameBrush_, backgroundBrush_, foregroundBrush_;
+		HBRUSH /*frameBrush_,*/ backgroundBrush_, foregroundBrush_;
 		HPEN pen_;
 		COLORREF textColor_;
 
@@ -50,9 +55,11 @@ namespace PLAYER {
 	protected:
 		void drawHPotmeter(HDC hdc, float value);
 		void drawVPotmeter(HDC hdc, float value);
-		void drawKnob(HDC hdc, int& x, int& y, float value);
-		void drawNumber(HDC hdc, int& x, int& y, float value);
+		void drawKnob(HDC hdc, float value);
+		void drawNumber(HDC hdc, float value);
 	public:
+		int gap;
+
 		InputCtrl();
 		~InputCtrl();
 		
@@ -63,13 +70,14 @@ namespace PLAYER {
 
 		void setColors(DWORD* colors);
 		void label(TCHAR* lbl);
-		void setSize(int size);
+		char* label() { return label_; }
+		void setScale(int size);
 		void type(InputCtrlType t);
 		void input(InputBase* input);
 
 		LRESULT onCreated();
 		LRESULT onPaint();
-		LRESULT onEraseBkgnd(HDC hDC);
+		//LRESULT onEraseBkgnd(HDC hDC);
 
 		static int setter(void*, Value, void* = NULL);
 

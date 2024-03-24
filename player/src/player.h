@@ -35,12 +35,11 @@ namespace PLAYER {
 	#pragma endregion
 
 	#pragma region Threading
-	private:
-		DWORD threadId_;
-		HANDLE hThread_;
-		bool isTerminating_;
-		bool isPlaying_;
-		static DWORD threadProc(void* lpParameter);
+	private: DWORD threadId_;
+	private: HANDLE hThread_;
+	private: bool isTerminating_;
+	private: PROP_R(bool, isPlaying);
+	private: static DWORD threadProc(void* lpParameter);
 	public:
 		void useThread();
 		void start();

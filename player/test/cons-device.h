@@ -29,7 +29,7 @@ typedef struct ConsInputs_ {
 class ConsDevice : public Device {
 	friend class ConsAdapter;
 protected:
-	ConsDevice(Adapter* adapter, void* cons = NULL);
+	ConsDevice(Adapter* adapter, Player* player, void* cons = NULL);
 public:	
 	~ConsDevice();
 

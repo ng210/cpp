@@ -3,7 +3,7 @@
 
 using namespace PLAYER;
 
-ConsDevice::ConsDevice(Adapter* adapter, void* cons) : Device(adapter, cons) {
+ConsDevice::ConsDevice(Adapter* adapter, Player* player, void* cons) : Device(adapter, player, cons) {
     type(ConsDevices::DeviceCons);
     inputCount_ = 3;
     x_ = 0;

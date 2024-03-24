@@ -14,9 +14,11 @@ using namespace PLAYER;
 
 class PlayerTest;
 class PlayerTestTask : public Task {
-	PROP_R(Value, value);
-	PROP_R(Input*, input);
-	PROP_R(InputCtrl*, inputCtrl);
+	int step_;
+
+	Value values_[10];
+	Input inputs_[10];
+	InputCtrl ctrls_[10];
 
 	PROP_R(ConsDevice*, consDevice);
 	PROP_R(ConsDeviceExt*, consDeviceExt);
@@ -31,6 +33,7 @@ class PlayerTestTask : public Task {
 	void testDeviceCtrl();
 	void testDeviceCtrlExportImport();
 	void testDeviceCtrlImportLayout();
+	void testInputCtrlSizing();
 	
 	static ACTION mainAction_;
 public:

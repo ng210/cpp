@@ -18,9 +18,10 @@ namespace PLAYER {
 
     class InputBase {
     protected:
-        Value bValue_;
         PROP_R(Value*, pValue);
         PROP_R(Value*, value);
+    protected:
+        Value bValue_;
     public:
         Value min;
         Value max;

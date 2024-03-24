@@ -17,6 +17,7 @@ namespace PLAYER {
         static float getNormalized(Input* input);
         static int writeToStream(Input* input, byte*& stream);
         static int writeValueToStream(Input* input, byte*& stream);
+        static bool compare(InputBase* input, int fieldId, Value value);
 	};
 }
 

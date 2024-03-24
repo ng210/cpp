@@ -12,53 +12,73 @@ NS_FW_WIN_USE
 
 namespace PLAYER {
 
+	class DeviceCtrl;
+	typedef DeviceCtrl* (DEVICECONTROLCREATOR)(DeviceExt*);
+
 	typedef struct LayoutItem {
 		byte ctrlId;
-		POINT position;
 		char label[16];
+		word x, y;
 		InputCtrlType type;
+		byte scale;
 	} LayoutItem;
 
 	class DeviceCtrl : public Ctrl {
-	private:
 			static char* windowClassName_;
 			static ATOM windowClass_;
-			StaticCtrl toolbarCtrl_;
-			StaticCtrl background_;
-
 	protected: PROP_R(DeviceExt*, deviceExt);
+	protected: StaticCtrl toolbarCtrl_;
+	protected: StaticCtrl background_;
+	protected: RECT toolbarRect_;
+	protected: RECT inputRect_;
+	protected: PROP_R(LayoutItem*, layout);
 
-	protected: PROP_R(int, borderWidth);
+	protected: PROP(int, borderWidth);
 	protected: PROP(HANDLE, hBackgroundImage);
 	protected: PROP_R(InputCtrl*, inputControls);
+	protected: PROP_R(int, inputCount);
 	protected: PROP_R(ComboboxCtrl, presetCtrl);
 	protected: PROP_R(ButtonCtrl, addPresetButton);
 	protected: PROP_R(ButtonCtrl, removePresetButton);
+	protected: PROP_R(int, inputSpacing);
 
 	public:
+		DWORD colors[4];
+
 		DeviceCtrl(DeviceExt* deviceExt);
 		virtual ~DeviceCtrl();
 
-		char* const registerWindowClass();
-		void create(Window* parent, char* name, LONG style = 0, DWORD exStyle = 0);
+		//char* const registerWindowClass();
+		virtual void create(Window* parent, char* name);
+		void create(Window* parent, char* name, Stream* stream);
+		//LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-		virtual void createControls();
+		Stream* createDefaultLayout();
 
-		virtual void initFromStream(Stream* data);
+		virtual void initLayoutFromStream(Stream* stream);
 		virtual void loadBackgroundImage() = 0;
 
-		int inputCount();
 		InputCtrl* getInput(int id);
 
-		LRESULT onSize(RECT& rect, WPARAM state);
+		void setSize(int width, int height);
+		void resize();
+
+		void updatePresetBankCtrl();
 
 		static CBSELECTITEMPROC onSelectPreset;
 		static MOUSEEVENTPROC onAddPreset, onRemovePreset;
 
 		static int presetBankSetter(void*, PresetBank*, void* = NULL);
-		static int presetAdder(void*, Stream*, void* = NULL);
-		static int presetRemover(void*, int, void* = NULL);
+		//static int presetAdder(void*, Stream*, void* = NULL);
+		//static int presetRemover(void*, int, void* = NULL);
 		static int presetSetter(void*, int, void* = NULL);
+
+		private: static Map* deviceControls_;
+		public:
+			static void addDeviceControl(int type, DEVICECONTROLCREATOR* deviceCtrlCreator);
+			static DeviceCtrl* getDeviceControl(DeviceExt* deviceExt);
+
+			static void cleanUp();
 	};
 
 }

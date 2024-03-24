@@ -39,7 +39,7 @@ char* const TestApp::registerWindowClass() {
 }
 
 IConsole* const TestApp::getConsole(void* obj) {
-	return &((TestApp*)obj)->logCtrl_;
+	return (LogCtrl*)obj;
 }
 
 LRESULT TestApp::onCreated() {

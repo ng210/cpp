@@ -105,8 +105,8 @@ void Input::writeToStream(Stream* stream) {
 int Input::setter(void* obj, Value value, void* unused) {
 	var input = (Input*)obj;
 	var v = (byte)((value.b - input->min.b) / input->step.b) * input->step.b + input->min.b;
-	if (v > input->min.b) {
-		if (v < input->max.b) {
+	if (v >= input->min.b) {
+		if (v <= input->max.b) {
 			input->value_->b = v;
 		} else {
 			input->value_->b = input->max.b;
@@ -177,7 +177,7 @@ float InputF::getNormalized() {
 }
 
 void InputF::getValueAsString(char* str, int len) {
-	str_format_s(str, len, "%.4f", value_->f);
+	str_format_s(str, len, "%.2f", value_->f);
 }
 
 void InputF::writeToStream(Stream* stream) {
@@ -194,8 +194,8 @@ void InputF::writeValueToStream(Stream* stream) {
 int InputF::setter(void* obj, Value value, void* unused) {
 	var input = (InputF*)obj;
 	var v = (float)trunc((value.f - input->min.f) / input->step.f) * input->step.f + input->min.f;
-	if (v > input->min.f) {
-		if (v < input->max.f) {
+	if (v >= input->min.f) {
+		if (v <= input->max.f) {
 			input->value_->f = v;
 		}
 		else {
@@ -223,6 +223,7 @@ void InputF8::initialize() {
 	type = InputTypeF8;
 	size = sizeof(Value::b);
 	value_ = &bValue_;
+	set.clear();
 	set.add(this, &InputF8::setter);
 }
 
