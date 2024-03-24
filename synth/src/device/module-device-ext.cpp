@@ -14,8 +14,8 @@ void ModuleDeviceExt::makeCommandImpl(int command, Stream* stream, va_list args)
 		stream->writeByte((byte)va_arg(args, int));		// value
 		break;
 	case ModuleCommands::CmdSetFloat:
-		stream->writeByte(va_arg(args, int));			// ctrlId
-		stream->writeFloat(va_arg(args, float));		// value
+		stream->writeByte((byte)va_arg(args, int));			// ctrlId
+		stream->writeFloat((float)va_arg(args, double));		// value
 		break;
 	case CmdSetNote:
 		stream->writeByte((byte)va_arg(args, int));		// note
@@ -48,7 +48,8 @@ int ModuleDeviceExt::getCommandSize(byte* cmd) {
 }
 
 void ModuleDeviceExt::writeToStream(Stream* stream) {
+	DeviceExt::writeToStream(stream);
 	var dev = (ModuleDevice*)device_;
 	stream->writeByte(dev->datablockId());
-	/// ((Module*)dev->object())->writeToStream(stream);
+	stream->writeByte(dev->preset());
 }

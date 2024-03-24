@@ -90,6 +90,36 @@
     <ClCompile Include="device\bass-device-ext.cpp">
       <Filter>Source Files\device</Filter>
     </ClCompile>
+    <ClCompile Include="device\synth-device-ext.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="device\synth-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="module\synth.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="device\mixer-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="device\mixer-device-ext.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="module\mixer.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="module\generic-drum.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="device\generic-drum-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="device\generic-drum-device-ext.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="module\voice.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="elem\elem.h">
@@ -151,6 +181,36 @@
     </ClInclude>
     <ClInclude Include="device\bass-device-ext.h">
       <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\synth-device-ext.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="module\synth.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="device\synth-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\mixer-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\mixer-device-ext.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="module\mixer.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="module\generic-drum.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="device\generic-drum-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\generic-drum-device-ext.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="module\voice.h">
+      <Filter>Header Files\module</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -16,7 +16,7 @@ void Lfo::reset() {
 float Lfo::run(Arg params) {
     var smp = sin(SYNTH_THETA * timer);
     var delta = values_->fre.f / *Elem::samplingRate;
-    if (delta >= 1.0) {
+    if (delta >= 1.0f) {
         delta = 0.99999999f;
     }
     timer += delta;

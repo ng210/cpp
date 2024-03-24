@@ -14,23 +14,17 @@ namespace SYNTH {
 		//protected: PROP(int, voiceCount);
 	protected:
 	public:
-		SynthBaseDevice(SynthAdapter* adapter, void* object);
+		SynthBaseDevice(SynthAdapter* adapter, Player* player, void* object);
 		~SynthBaseDevice();
-#pragma region Device
-		void initialize(byte** pData = NULL);
 
+		void initialize(byte** pData = NULL);
 		bool isActive();
 		//void isActive(bool b);
-
 		void processCommand(byte cmd, byte*& cursor);
-#pragma endregion
 
 		inline SynthBase* synthBase() { return (SynthBase*)object_; };
 
-#pragma region Synth
 		void setNote(byte note, byte velocity);
-		//void run(short* buffer, int start, int end);
-#pragma endregion
 	};
 }
 #endif

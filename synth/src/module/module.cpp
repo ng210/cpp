@@ -37,8 +37,8 @@ void Module::createOutputBuffers(int count) {
 	}
 }
 
-void Module::initializeFromStream(byte** pData) {
-}
+//void Module::initializeFromStream(byte** pData) {
+//}
 
 bool Module::isActive() {
 	return isActive_;

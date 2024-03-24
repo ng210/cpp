@@ -24,6 +24,7 @@
     <ProjectGuid>{7503f5f1-b529-4a7f-b1be-4a5f792f7b91}</ProjectGuid>
     <RootNamespace>Synth</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>synth</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -43,7 +44,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -117,9 +118,10 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>PLAYER_EDIT_MODE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)..\fw;$(SolutionDir)..</AdditionalIncludeDirectories>
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -161,10 +163,16 @@
   <ItemGroup>
     <ClCompile Include="device\bass-device-ext.cpp" />
     <ClCompile Include="device\bass-device.cpp" />
+    <ClCompile Include="device\generic-drum-device-ext.cpp" />
+    <ClCompile Include="device\generic-drum-device.cpp" />
+    <ClCompile Include="device\mixer-device-ext.cpp" />
+    <ClCompile Include="device\mixer-device.cpp" />
     <ClCompile Include="device\module-device-ext.cpp" />
     <ClCompile Include="device\synth-adapter.cpp" />
     <ClCompile Include="device\synth-base-device-ext.cpp" />
     <ClCompile Include="device\synth-base-device.cpp" />
+    <ClCompile Include="device\synth-device-ext.cpp" />
+    <ClCompile Include="device\synth-device.cpp" />
     <ClCompile Include="elem\clp.cpp" />
     <ClCompile Include="elem\dly.cpp" />
     <ClCompile Include="elem\elem.cpp" />
@@ -176,16 +184,26 @@
     <ClCompile Include="elem\osc.cpp" />
     <ClCompile Include="device\module-device.cpp" />
     <ClCompile Include="module\bass.cpp" />
+    <ClCompile Include="module\generic-drum.cpp" />
+    <ClCompile Include="module\mixer.cpp" />
     <ClCompile Include="module\module.cpp" />
     <ClCompile Include="module\synth-base.cpp" />
+    <ClCompile Include="module\synth.cpp" />
+    <ClCompile Include="module\voice.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="device\bass-device-ext.h" />
     <ClInclude Include="device\bass-device.h" />
+    <ClInclude Include="device\generic-drum-device-ext.h" />
+    <ClInclude Include="device\generic-drum-device.h" />
+    <ClInclude Include="device\mixer-device-ext.h" />
+    <ClInclude Include="device\mixer-device.h" />
     <ClInclude Include="device\module-device-ext.h" />
     <ClInclude Include="device\synth-adapter.h" />
     <ClInclude Include="device\synth-base-device-ext.h" />
     <ClInclude Include="device\synth-base-device.h" />
+    <ClInclude Include="device\synth-device-ext.h" />
+    <ClInclude Include="device\synth-device.h" />
     <ClInclude Include="elem\clp.h" />
     <ClInclude Include="elem\dly.h" />
     <ClInclude Include="elem\elem.h" />
@@ -197,9 +215,13 @@
     <ClInclude Include="elem\osc.h" />
     <ClInclude Include="device\module-device.h" />
     <ClInclude Include="module\bass.h" />
+    <ClInclude Include="module\generic-drum.h" />
+    <ClInclude Include="module\mixer.h" />
     <ClInclude Include="module\module.h" />
     <ClInclude Include="module\synth-base.h" />
     <ClInclude Include="module\synth-def.h" />
+    <ClInclude Include="module\synth.h" />
+    <ClInclude Include="module\voice.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

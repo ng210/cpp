@@ -9,6 +9,7 @@ NS_FW_BASE_USE
 using namespace PLAYER;
 namespace SYNTH {
 
+	#pragma region Defines
 	typedef struct AdsrInputs_ {
 		InputF amp;
 		Input atk;
@@ -16,7 +17,7 @@ namespace SYNTH {
 		InputF8 sus;
 		Input rel;
 	} AdsrInputs;
-#define AdsrInputsSize 8	// 4 + 4*1 
+	#define AdsrInputsSize 8	// 4 + 4*1 
 
 	typedef struct DahrInputs_ {
 		InputF amp;
@@ -25,7 +26,7 @@ namespace SYNTH {
 		Input hld;
 		Input rel;
 	} DahrInputs;
-#define DahrInputsSize 8	// 4 + 4*1 
+	#define DahrInputsSize 8	// 4 + 4*1 
 
 	typedef struct OscInputs_ {
 		InputF8 amp;
@@ -35,32 +36,32 @@ namespace SYNTH {
 		InputF8 psw;
 		Input wave;
 	} OscInputs;
-#define OscInputsSize 9	// 4 + 5*1 
+	#define OscInputsSize 9	// 4 + 5*1 
 
 	typedef struct LfoInputs_ {
 		InputF amp;
 		InputF fre;
 	} LfoInputs;
-#define LfoInputsSize 8	// 2*4
+	#define LfoInputsSize 8	// 2*4
 
 	typedef struct FltInputs_ {
 		Input cut;
 		InputF8 res;
 		Input mode;
 	} FltInputs;
-#define FltInputsSize 3
+	#define FltInputsSize 3
 
 	typedef struct DlyInputs_ {
 		InputF8 feedback;
 		InputF delay;
 	} DlyInputs;
-#define DlyInputsSize 5	// 4 + 1 
+	#define DlyInputsSize 5	// 4 + 1 
 
 	typedef struct ClpInputs_ {
 		InputF amp;
 		InputF8 lvl;
 	} ClpInputs;
-#define ClpInputsSize 5	// 4 + 1 
+	#define ClpInputsSize 5	// 4 + 1 
 
 	typedef enum ModuleCommands {
 		CmdSetUint8		= 2,	// ctrlId, value
@@ -70,11 +71,12 @@ namespace SYNTH {
 		CmdSetVelocity	= 11,	// velocity
 		CmdSetProgram	= 12	// programId
 	} ModuleCommands;
+	#pragma endregion
 
 	class ModuleDevice : public Device {
 	protected: PROP(int, datablockId);
 	public:
-		ModuleDevice(Adapter* adapter, void* object);
+		ModuleDevice(Adapter* adapter, Player* player, void* object);
 
 		inline Module* module() { return (Module*)object_; }
 
@@ -92,7 +94,7 @@ namespace SYNTH {
 		virtual int getPresetBankSize() = 0;
 		virtual PresetBank* getDefaultPresetBank() = 0;
 
-		void assignInputs();
+		virtual void assignInputs();
 		
 		//static byte* loadSoundbanks(const char* soundbankPath);
 
@@ -106,7 +108,6 @@ namespace SYNTH {
 		static void setupFlt(FltInputs*);
 		static void setupClp(ClpInputs*);
 		static void setupDly(DlyInputs*);
-
 	};
 }
 #endif

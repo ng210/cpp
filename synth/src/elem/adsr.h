@@ -16,8 +16,8 @@ namespace SYNTH {
 
 
     class Adsr : public Env {
-    protected: byte gate_;
-    protected: PROP(AdsrValues*, values);
+    protected:
+        AdsrValues* values();
     public:
         Adsr();
         void setGate(byte velocity);

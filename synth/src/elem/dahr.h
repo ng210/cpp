@@ -14,8 +14,9 @@ namespace SYNTH {
 
 
     class Dahr : public Env {
-    protected: PROP_R(double, rate2);
-    protected: PROP(DahrValues*, values);
+    protected:
+    protected:
+        DahrValues* values();
     public:
         Dahr();
 

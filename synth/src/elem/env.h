@@ -8,7 +8,7 @@ namespace SYNTH {
 
 	#define SMOOTH(x) x*(3.0*x - 2.0*x*x)
 
-	typedef enum class EnvPhase {
+	typedef enum EnvPhase {
 		Up,
 		Del,
 		Atk,
@@ -17,17 +17,21 @@ namespace SYNTH {
 		Sus,
 		Down,
 		Rel,
-		Idle
+		Idle,
+		Kill
 	} EnvPhase;
 
 	class Env : public Elem {
 	protected: float velocity_;
 	protected: PROP_R(int, ticks);
-	public: double timer_;
+	protected: byte gate_;
+	protected: double overlaySmp_;
+	protected: double timer_;
+	protected: Value* values_;
 	protected:
 		double rate_;
-		double ai_[2], fc_;
-		void applyLPF();
+		//double ai_[2], fc_;
+		//void applyLPF();
 	public: PROP_R(EnvPhase, phase);
 	public: PROP_R(double, smp);
 	public:
@@ -35,10 +39,14 @@ namespace SYNTH {
 
 		virtual void setGate(byte velocity) = 0;
 		inline bool isActive() { return phase_ != EnvPhase::Idle; }
+		void kill();
+
+		void setValues(void*);
 
 		static double attackRates[256];
 		static double releaseRates[256];
 		static double releaseRatesExp[256];
+		static double fadoutFactor;
 		static void initialize();
 	};
 

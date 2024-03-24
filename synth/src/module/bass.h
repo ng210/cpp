@@ -1,5 +1,6 @@
 #ifndef __BASS_H
 #define __BASS_H
+
 #include "collection/array.h"
 #include "synth/src/module/synth-base.h"
 #include "synth/src/module/synth-def.h"
@@ -13,13 +14,9 @@ namespace SYNTH {
         FltValues flt1;
     } BassValues;
 
-#define BassCtrlCount (sizeof(BassCtrls)/sizeof(PotBase))
-
     class Bass : public SynthBase {
-        VoiceHandler setupVoiceHandler;
-        VoiceRenderer renderVoiceHandler;
-        VoiceHandler freeVoiceHandler;
-        VoiceSetNoteHandler setNoteVoiceHandler;
+        static SetupVoiceHandler setupVoiceHandler_;
+        static VoiceRenderer renderVoiceHandler_;
 
     protected: BassValues values_;
     public:

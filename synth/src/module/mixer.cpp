@@ -1,36 +1,33 @@
-#include "mixer.h"
+﻿#include "synth/src/module/mixer.h"
 #include "base/memory.h"
-
 
 using namespace SYNTH;
 
 int Mixer8x4::frame_ = 0;
 float Mixer8x4::buffer_[SAMPLE_BUFFER_SIZE];
 
-Soundbank* Mixer8x4::defaultSoundbank_;
-
-Mixer8x4::Mixer8x4() : Module((PotBase*)&controls, MixerCtrlsCount) {
+Mixer8x4::Mixer8x4() : Module() {
     //combinedBuffer_ = MALLOC(float, 8 * 4 * 1024);
     //var buffer = combinedBuffer_;
-    for (var i = 0; i < 8; i++) {
-        var channel = &channels_[i];
-        channel->controls = &controls.channels[i];
-        channel->controls->amp.init(0, 255, 1, 80);
-        channel->controls->pan.init(0, 255, 1, 127);
-        channel->controls->gain.init(0, 255, 1, 100);
-        //channel->buffer = buffer;
-        //buffer += 1024;
+    for (var ci = 0; ci < 8; ci++) {
+        var chn = &channels_[ci];
+        chn->input = NULL;
+        chn->stageCount = 0;
+        //chn->controls = &controls.channels[i];
+        //chn->values->controls->amp.init(0, 255, 1, 80);
+        //chn->values->controls->pan.init(0, 255, 1, 127);
+        //chn->values->controls->gain.init(0, 255, 1, 100);
+        ////channel->buffer = buffer;
+        ////buffer += 1024;
         for (var si = 0; si < 4; si++) {
-            var stage = &channel->stages[si];
-            stage->controls = &channel->controls->stages[si];
-            //stage->controls->blend.init(0.0f, 1.0f, 0.01f, 0.0f);
-            stage->controls->gain.init(0, 255, 1, 100);
-            stage->effect = NULL;
+            var st = &chn->stages[si];
+            st->effect = NULL;
+            //stage->controls = &channel->controls->stages[si];
+            ////stage->controls->blend.init(0.0f, 1.0f, 0.01f, 0.0f);
+            //stage->controls->gain.init(0, 255, 1, 100);
             //stage->buffer = buffer;
             //buffer += 1024;
         }
-        channel->input = NULL;
-        channel->stageCount = 0;
     }
     channelCount_ = 0;
     isMono_ = false;
@@ -40,23 +37,27 @@ Mixer8x4::~Mixer8x4() {
     //FREE(combinedBuffer_);
 }
 
-void Mixer8x4::initializeFromStream(byte** pData) {
-    channelCount_ = READ(*pData, byte);
-    if (channelCount_ >= 8) channelCount_ = 8;
-    for (var ci = 0; ci < channelCount_; ci++) {
-        var channel = &channels_[ci];
-        channel->controls->amp.setFromStream(*pData);
-        channel->controls->pan.setFromStream(*pData);
-        channel->controls->gain.setFromStream(*pData);
-        channel->stageCount = READ(*pData, byte);
-        if (channel->stageCount >= 4) channel->stageCount = 4;
-        for (var si = 0; si < channel->stageCount; si++) {
-            var stage = &channel->stages[si];
-            //stage->controls->blend.setFromStream(*pData);
-            stage->controls->gain.setFromStream(*pData);
-        }
-    }
+Value* Mixer8x4::getValues() {
+    return (Value*)&values_;
 }
+
+//void Mixer8x4::initializeFromStream(byte** pData) {
+//    channelCount_ = READ(*pData, byte);
+//    if (channelCount_ >= 8) channelCount_ = 8;
+//    for (var ci = 0; ci < channelCount_; ci++) {
+//        var channel = &channels_[ci];
+//        channel->controls->amp.setFromStream(*pData);
+//        channel->controls->pan.setFromStream(*pData);
+//        channel->controls->gain.setFromStream(*pData);
+//        channel->stageCount = READ(*pData, byte);
+//        if (channel->stageCount >= 4) channel->stageCount = 4;
+//        for (var si = 0; si < channel->stageCount; si++) {
+//            var stage = &channel->stages[si];
+//            //stage->controls->blend.setFromStream(*pData);
+//            stage->controls->gain.setFromStream(*pData);
+//        }
+//    }
+//}
 
 MixerChannel* Mixer8x4::connectInput(MixerChannel* channel, Module* input) {
     if (channel != NULL) {
@@ -65,19 +66,10 @@ MixerChannel* Mixer8x4::connectInput(MixerChannel* channel, Module* input) {
     return channel;
 }
 
-MixerChannel* Mixer8x4::connectInput(int channelId, Module* input, float gain, float amp, float pan) {
-    var channel = getChannel(channelId);
-    if (channel != NULL) {
-        channel->input = input;
-        channel->controls->gain.value.f = gain;
-        channel->controls->amp.value.f = amp;
-        channel->controls->pan.value.f = pan;
-    }
-    return channel;
-}
-
-void Mixer8x4::run(float* buffer, int start, int end) {
-    // currently unused   
+MixerChannel* Mixer8x4::connectInput(int chnId, Module* input, float amp, byte pan, byte gain) {
+    var chn = setupChannel(chnId, amp, pan, gain);
+    if (chn != NULL) chn->input = input;
+    return chn;
 }
 
 MixerChannel* Mixer8x4::connectEffect(MixerChannel* channel, Module* effect, int stageId) {
@@ -103,105 +95,80 @@ MixerChannel* Mixer8x4::getChannel(int id) {
     return id < channelCount_ ? &channels_[id] : NULL;
 }
 
+MixerChannel* Mixer8x4::setupChannel(int chnId, float amp, byte pan, byte gain) {
+    var chn = getChannel(chnId);
+    if (chn != NULL) {
+        values_.channels[chnId].amp = amp;
+        values_.channels[chnId].pan = pan / 255.0f;
+        values_.channels[chnId].gain = gain / 255.0f;
+    }
+    return chn;
+}
+
+//void Mixer8x4::run(float* buffer, int start, int end) {
+//    // currently unused   
+//}
+
 void Mixer8x4::fillSoundBuffer(short* buffer, int sampleCount, void* args) {
+    // [input] ─┬→*gain────────────────────────────→(++++)─→(pan,*amp)─→ [output]
+    //          │                                    ↑↑↑↑
+    //          └→stage1┬→*gain──────────────────────┘│││
+    //                  └→stage2┬→*gain───────────────┘││
+    //                          └→stage3┬→*gain────────┘│
+    //                                  └→stage4─→*gain─┘
+    // output = amp * pan(input * gain
+    //                  + stage1.effect * gain
+    //                  + stage2.effect * gain
+    //                  + stage3.effect * gain
+    //                  + stage4.effect * gain)
     var mixer = (Mixer8x4*)args;
-    //memset(mixer->combinedBuffer_, 0, 8 * 4 * 1024 * sizeof(float));
 
     // run inputs and stages
-    for (var ci = 0; ci < mixer->channelCount(); ci++) {
-        var ch = &mixer->channels_[ci];
-        ch->input->run(0, sampleCount);
-        for (var i = 0; i < ch->stageCount; i++) {
-            if (ch->stages[i].effect != NULL) {
-                ch->stages[i].effect->run(0, sampleCount);
+    for (var ci = 0; ci < mixer->channelCount_; ci++) {
+        var chn = &mixer->channels_[ci];
+        chn->input->run(0, sampleCount);
+        for (var i = 0; i < chn->stageCount; i++) {
+            if (chn->stages[i].effect != NULL) {
+                chn->stages[i].effect->run(0, sampleCount);
             }
         }
     }
 
     int j = 0;
     for (var i = 0; i < sampleCount; i++) {
-        float left = 0.0f, right = 0.0f;
-        for (var ci = 0; ci < mixer->channelCount(); ci++) {
+        int left = 0, right = 0;
+        for (var ci = 0; ci < mixer->channelCount_; ci++) {
             float chLeft, chRight;
-            var ch = &mixer->channels_[ci];
-            if (ch->input->isMono()) {
-                chLeft = chRight = ch->controls->gain.value.f * ch->input->getOutput(0)[i];
-            }
-            else {
-                chLeft = ch->controls->gain.value.f * ch->input->getOutput(0)[i];
-                chRight = ch->controls->gain.value.f * ch->input->getOutput(1)[i];
-            }
+            MixerChannel& ch = mixer->channels_[ci];
+            var gain = mixer->values_.channels[ci].gain.f;
+            // output = input * gain
+            chLeft = gain * ch.input->getOutput(0)[i];
+            chRight = ch.input->isMono() ? chLeft : gain * ch.input->getOutput(1)[i];
 
-            for (var si = 0; si < ch->stageCount; si++) {
-                var st = ch->stages[si];
+            for (var si = 0; si < ch.stageCount; si++) {
+                MixerStage& st = ch.stages[si];
                 if (st.effect != NULL) {
-                    if (st.effect->isMono()) {
-                        var stOut = st.effect->getOutput(0)[i] * st.controls->gain.value.f;
-                        chLeft += stOut;
-                        chRight += stOut;
-                    }
-                    else {
-                        chLeft += st.effect->getOutput(0)[i] * st.controls->gain.value.f;
-                        chRight += st.effect->getOutput(1)[i] * st.controls->gain.value.f;
-                    }
+                    gain = mixer->values_.channels[ci].stages[si].gain.f;
+                    var v = gain * st.effect->getOutput(0)[i];
+                    chLeft += v;
+                    chRight += st.effect->isMono() ? v : gain * st.effect->getOutput(1)[i];
                 }
             }
 
             // panning clipping and final amplification
-            var amp = 32768.0f * ch->controls->amp.value.f;
-            var pan = 2.0f * ch->controls->pan.value.f;
-            chLeft *= amp * (2.0f - pan);
-            chRight *= amp * pan;
-            left += chLeft;
-            right += chRight;
+            var amp = 32768.0f * mixer->values_.channels[ci].amp.f;
+            var pan = 2.0f * mixer->values_.channels[ci].pan.f;
+            //chLeft *= amp * (2.0f - pan);
+            //chRight *= amp * pan;
+            //left += chLeft;
+            //right += chRight;
+
+            left += (int)(amp * (2.0f - pan) * chLeft);
+            right += (int)(amp * pan * chRight);
         }
-        if (left > 32767.0f) left = 32767.0f; else if (left < -32767.0f) left = -32767.0f;
-        if (right > 32767.0f) right = 32767.0f; else if (right < -32767.0f) right = -32767.0f;
+        if (left > 32767) left = 32767; else if (left < -32767) left = -32767;
+        if (right > 32767) right = 32767; else if (right < -32767) right = -32767;
         buffer[j++] += (short)left;
         buffer[j++] += (short)right;
     }
-
-    //for (var ci = 0; ci < mixer->channelCount(); ci++) {
-    //    var ch = &mixer->channels_[ci];
-    //    var j = 0;
-    //    for (var i = 0; i < sampleCount; i++) {
-    //        // smp = gain * input
-    //        float left = 0.0f;
-    //        float right = 0.0f;
-    //        if (ch->input->isMono()) {
-    //            left = right = ch->controls->gain.value.f * ch->input->getOutput(0)[i];
-    //        }
-    //        else {
-    //            left = ch->controls->gain.value.f * ch->input->getOutput(0)[i];
-    //            right = ch->controls->gain.value.f * ch->input->getOutput(1)[i];
-    //        }
-
-    //        for (var si = 0; si < ch->stageCount; si++) {
-    //            var st = ch->stages[si];
-    //            if (st.effect != NULL) {
-    //                // smp += gain * stage
-    //                if (ch->input->isMono()) {
-    //                    var smp = st.controls->gain.value.f * st.effect->getOutput(0)[i];
-    //                    left += smp;
-    //                    right += smp;
-    //                }
-    //                else {
-    //                    left += st.controls->gain.value.f * st.effect->getOutput(0)[i];
-    //                    right += st.controls->gain.value.f * st.effect->getOutput(1)[i];
-    //                }
-    //            }
-    //        }
-
-    //        // amp * smp
-    //        var amp = 32768.0f * ch->controls->amp.value.f;
-    //        left *= 32768.0f * amp * (1.0f - ch->controls->pan.value.f);
-    //        right *= 32768.0f * amp * ch->controls->pan.value.f;
-    //        buffer[j++] += (short)left;
-    //        buffer[j++] += (short)right;
-    //    }
-    //}
-}
-
-Soundbank* Mixer8x4::getDefaultSoundbank() {
-    return Mixer8x4::defaultSoundbank_;
 }

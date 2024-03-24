@@ -54,6 +54,7 @@ namespace SYNTH {
 		VOICEHANDLER setupVoiceHandler;
 		VOICERENDERER renderVoiceHandler;
 		VOICEHANDLER freeVoiceHandler;
+		VOICEHANDLER killVoiceHandler;
 		VOICESETNOTEHANDLER setNoteVoiceHandler;
 
 		//float applyFilter(Flt* st, float smp, float cut);

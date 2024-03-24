@@ -1,26 +1,23 @@
 #ifndef SYNTH_TEST_H
 #define SYNTH_TEST_H
 
-#include "test.h"
 #include "soundlib/src/soundplayer.h"
-#include "soundlib/src/wavfmt.h"
-
-//#include "player/src/player.h"
+#include "test.h"
 #include "player/src/player-ext.h"
 #include "player/src/player-device.h"
 #include "player/src/player-device-ext.h"
-#include "synth/src/device/bass-device.h"
-
-//#include "synth/src/device/synth-device.h"
-//#include "synth/src/device/drums-device.h"
-//#include "synth/src/device/mixer-device.h"
+#include "synth/src/module/module.h"
+#include "synth/src/device/bass-device-ext.h"
+#include "synth/src/device/synth-device-ext.h"
+#include "synth/src/device/generic-drum-device-ext.h"
+#include "synth/src/device/mixer-device-ext.h"
 
 
 NS_FW_BASE_USE
 using namespace SYNTH;
 using namespace PLAYER;
 
-typedef int (*PlayCallback)(Module*, int);
+typedef int (*PlayCallback)(Module*, int, void*);
 
 class SynthTest : public Test {
     Player* player_;
@@ -30,8 +27,10 @@ class SynthTest : public Test {
     SynthAdapter* synthAdapter_;
 
     static void simpleSynthCallback(short* buffer, int sampleCount, void* context);
-    void playback(Module* mdl, PlayCallback callback, float fps, char* filePath = NULL);
-    int testEnvelope(Env& env, short* buffer, int delay, char* path = NULL);
+    void playback(Module* mdl, PlayCallback callback, float fps, int chn, char* filePath = NULL, FeedSample feedSample = NULL, void* args = NULL);
+    bool testInput(InputBase& input, Value min, Value max, Value Step, Value* value);
+    int testEnvelope(Env& env, short* buffer, void(callback)(int, Env&, float), char* path);
+    void playDefaultSequence(SynthBaseDevice* dev, SynthBaseDeviceExt* ext);
 public:
     float samplingRate;
     bool saveToFile;
@@ -40,19 +39,21 @@ public:
     ~SynthTest();
 
     void testEnvelopes();
+    void testLfo();
     //void testFilterSound();
 
     void testBass();
     void testBassDeviceExt();
-    //BassDevice* setupBass();
-    //void testSynth1();
-    //void testSynth1Device();
+    void testSynth1();
+    void testSynth1DeviceExt();
     //void testSynth2();
     //void testSynth2Device();
-    //void testDrums();
     //DrumsDevice* setupDrums();
+    void testGenericDrum();
+    //void testDrums();
     //void testDrumsDevice();
-    //void testMixer();
+    void testMixer();
+    void testMixerDeviceExt();
 
     void runAll(int& totalPassed, int& totalFailed);    
 };

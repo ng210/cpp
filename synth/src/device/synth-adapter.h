@@ -10,6 +10,7 @@ namespace SYNTH {
 	typedef enum SynthDevices {
 		DeviceSynth,
 		DeviceBass,
+		DeviceGenericDrum,
 		DeviceDrums,
 		DeviceMixer,
 		DeviceStereoDelay,

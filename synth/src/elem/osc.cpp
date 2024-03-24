@@ -22,7 +22,7 @@ float Osc::run(Arg params) {
     var pitch = note_->b + values_->tune.b;
     var fre = (1.0f + fm) * (values_->fre.f + Elem::p2f((float)pitch));
     var delta = fre / *Elem::samplingRate;
-    if (delta >= 1.0) {
+    if (delta >= 1.0f) {
         delta = 0.99999999f;
     }
     var psw = pm + values_->psw.f + 0.0000001f;

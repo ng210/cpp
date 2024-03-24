@@ -6,10 +6,23 @@
 
 using namespace SYNTH;
 
-MixerDevice::MixerDevice(SynthAdapter* adapter) : ModuleDevice(NEW_(Mixer8x4), (Adapter*)adapter) {
+MixerDevice::MixerDevice(SynthAdapter* adapter, Player* player) : ModuleDevice(adapter, player, NEW_(Mixer8x4)) {
+	type(SynthDevices::DeviceMixer);
+	inputs_ = (InputBase*)&mixerInputs;
+	inputCount_ = sizeof(MixerInputs) / sizeof(InputBase);
+	for (var ci = 0; ci < 8; ci++) {
+		MixerChannelInputs& ch = mixerInputs.channels[ci];
+		ch.amp.setup(0, 255, 1);
+		ch.pan.setup(0, 255, 1);
+		ch.gain.setup(0, 255, 1);
+		for (var si = 0; si < 4; si++) {
+			MixerStageInputs& st = ch.stages[si];
+			st.gain.setup(0, 255, 1);
+		}
+	}
+	assignInputs();
 	frame_ = 0;
 	samplePerFrame_ = 48000.f;
-	type(SynthDevices::DeviceMixer);
 }
 MixerDevice::~MixerDevice() {
 	DEL_((Mixer8x4*)object_);
@@ -19,17 +32,33 @@ Mixer8x4* MixerDevice::mixer() {
 	return (Mixer8x4*)object_;
 }
 
-#pragma region Device
 void MixerDevice::initialize(byte** pData) {
-	var mixer = (Mixer8x4*)object_;
 	if (pData != NULL && *pData != NULL) {
-		mixer->initializeFromStream(pData);
-		for (var ci = 0; ci < mixer->channelCount_; ci++) {
+		// 00 01 preset id
+		// 01 01 channel count
+		// 02 01 channel#1 input device id
+		// 03 01 channel#1 stage count
+		// 04 01 channel#1.stage#1 effect device id
+		// ...
+		// 07 01 channel#1.stage#4 effect device id
+		// 08 01 channel#2 input device id
+		// ...
+		ModuleDevice::initialize(pData);
+		var mixer = (Mixer8x4*)object_;
+		var chnCount = READ(*pData, byte);
+		if (mixer->channelCount() != chnCount) {
+			mixer->channelCount(chnCount);
+		}
+		for (var ci = 0; ci < chnCount; ci++) {
 			var ch = mixer->getChannel(ci);
+			// read input device index
 			var di = READ(*pData, byte);
 			var device = (Device*)player_->devices().get(di);
 			mixer->connectInput(ch, (Module*)device->object());
-			for (var si = 0; si < ch->stageCount; si++) {
+			
+			var stCount = READ(*pData, byte);
+			for (var si = 0; si < stCount; si++) {
+				// read stage effect device index
 				di = READ(*pData, byte);
 				device = (Device*)player_->devices().get(di);
 				mixer->connectEffect(ch, (Module*)device->object(), si);
@@ -41,37 +70,10 @@ void MixerDevice::initialize(byte** pData) {
 	frame_ = 0;
 }
 
-#pragma endregion
-
-#ifdef PLAYER_EDIT_MODE
-int MixerDevice::writeToStream(Stream* stream) {
-	var start = stream->cursor();
-	Device::writeToStream(stream);
-	var mx = (Mixer8x4*)object_;
-	stream->writeByte(mx->channelCount_);
-	// write channel/stage controls
-	for (var i = 0; i < mx->channelCount_; i++) {
-		var chn = mx->getChannel(i);
-		stream->writeByte((byte)(chn->controls->gain.value.f * 255.f));
-		stream->writeByte((byte)(chn->controls->pan.value.f * 100.0));
-		stream->writeByte((byte)(chn->controls->amp.value.f * 255.f));
-		stream->writeByte(chn->stageCount);
-		for (var j = 0; j < chn->stageCount; j++) {
-			//stream->writeByte(chn->stages[j].controls->blend.value.b);
-			stream->writeByte((byte)(chn->stages[j].controls->gain.value.f * 255.f));
-		}
-	}
-	// write connections
-	for (var i = 0; i < mx->channelCount_; i++) {
-		var chn = mx->getChannel(i);
-		var devId = player_->devices().findIndex(chn->input, ModuleDevice::compareToModule);
-		stream->writeByte(devId.i);
-		for (var j = 0; j < chn->stageCount; j++) {
-			var fxId = player_->devices().findIndex(chn->stages[j].effect, ModuleDevice::compareToModule);
-			stream->writeByte(fxId.i);
-		}
-	}
-
-	return (int)(stream->cursor() - start);
+int MixerDevice::getPresetBankSize() {
+	return MixerInputSize;
 }
-#endif
+
+PresetBank* MixerDevice::getDefaultPresetBank() {
+	return NULL;
+}

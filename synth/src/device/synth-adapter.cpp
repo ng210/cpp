@@ -6,11 +6,12 @@
 
 #include "synth/src/device/synth-base-device.h"
 
-//#include "synth/src/device/synth-device.h"
 //#include "synth/src/device/synth2-device.h"
 #include "synth/src/device/bass-device.h"
+#include "synth/src/device/synth-device.h"
+#include "synth/src/device/generic-drum-device.h"
 //#include "synth/src/device/drums-device.h"
-//#include "synth/src/device/mixer-device.h"
+#include "synth/src/device/mixer-device.h"
 //#include "synth/src/device/distort-device.h"
 //#include "synth/src/device/stereo-delay-device.h"
 
@@ -66,26 +67,29 @@ PArray* SynthAdapter::getDevices() {
 Device* SynthAdapter::createDevice(int deviceType, Player* player) {
 	Device* device = NULL;
 	switch (deviceType) {
-	//case SynthDevices::DeviceSynth:
-	//	device = NEW_(SynthDevice, this);
-	//	break;
+	case SynthDevices::DeviceSynth:
+		device = NEW_(SynthDevice, this, player);
+		break;
 	//case SynthDevices::DeviceSynth2:
 	//	device = NEW_(Synth2Device, this);
 	//	break;
 	case SynthDevices::DeviceBass:
-		device = NEW_(BassDevice, this);
+		device = NEW_(BassDevice, this, player);
+		break;
+	case SynthDevices::DeviceGenericDrum:
+		device = NEW_(GenericDrumDevice, this, player);
 		break;
 	//case SynthDevices::DeviceDrums:
-	//	device = NEW_(DrumsDevice, this);
+	//	device = NEW_(DrumsDevice, this, player);
 	//	break;
-	//case SynthDevices::DeviceMixer:
-	//	device = NEW_(MixerDevice, this);
-	//	break;
+	case SynthDevices::DeviceMixer:
+		device = NEW_(MixerDevice, this, player);
+		break;
 	//case SynthDevices::DeviceDistort:
-	//	device = NEW_(DistortDevice, this);
+	//	device = NEW_(DistortDevice, this, player);
 	//	break;
 	//case SynthDevices::DeviceStereoDelay:
-	//	device = NEW_(StereoDelayDevice, this);
+	//	device = NEW_(StereoDelayDevice, this, player);
 	//	break;
 	}
 	return device;

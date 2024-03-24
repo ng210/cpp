@@ -8,56 +8,24 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
-	typedef struct SynthCtrlsPots {
-	} SynthCtrlsPots;
-
-
-    typedef struct SynthCtrls_ {
-        AdsrCtrls amAdsr, fmAdsr, pmAdsr, ftAdsr;
-        LfoCtrls lfo1, lfo2;
-        OscCtrls osc1, osc2;
-        FltCtrls flt1;
-		SynthCtrlsPots pots;
-    } SynthCtrls;
-	
-	enum class SynthCtrlId {
-		// envelopes
-		amAdsrAmp, amAdsrAtk, amAdsrDec, amAdsrSus, amAdsrRel,
-		fmAdsrAmp, fmAdsrAtk, fmAdsrDec, fmAdsrSus, fmAdsrRel,
-		pmAdsrAmp, pmAdsrAtk, pmAdsrDec, pmAdsrSus, pmAdsrRel,
-		cmAdsrAmp, cmAdsrAtk, cmAdsrDec, cmAdsrSus, cmAdsrRel,
-		// LFOs
-		amLfoAmp, amLfoFre,
-		fmLfoAmp, fmLfoFre,
-		// oscillators
-		osc1Amp, osc1Fre, osc1Note, osc1Tune, osc1Psw, osc1Wave,
-		osc2Amp, osc2Fre, osc2Note, osc2Tune, osc2Psw, osc2Wave,
-		// filter
-		flt1Cut, flt1Res, flt1Mode,
-	};
-
-    #define SynthCtrlCount (sizeof(SynthCtrls)/sizeof(PotBase))
+	typedef struct SynthValues_ {
+		AdsrValues amAdsr, fmAdsr, pmAdsr, ftAdsr;
+		LfoValues lfo1, lfo2;
+		OscValues osc1, osc2;
+		FltValues flt1;
+	} SynthValues;
 
     class Synth : public SynthBase {
-		static Soundbank* defaultSoundbank_;
-		// Voice handling
-		VOICEHANDLER setupVoiceHandler;
-		VOICERENDERER renderVoiceHandler;
-		VOICEHANDLER freeVoiceHandler;
-		VOICESETNOTEHANDLER setNoteVoiceHandler;
+		static SetupVoiceHandler setupVoiceHandler_;
+		static VoiceRenderer renderVoiceHandler_;
+		//VoiceHandler freeVoiceHandler;
+		//VoiceSetNoteHandler setNoteVoiceHandler;
+	protected: SynthValues values_;
     public:
-        Synth(int voiceCount = 1);
-        virtual ~Synth();
+        Synth(int voiceCount = 3);
+        ~Synth();
 
-		SynthCtrls controls;
-
-        // Module
-		Soundbank* getDefaultSoundbank();
-
-		Stream* writeProgramToStream();
-
-		static void prepare();
-		static void cleanUp();
+		Value* getValues();
     };
 }
 

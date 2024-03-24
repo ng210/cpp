@@ -4,10 +4,34 @@
 #include "synth/src/device/synth-adapter.h"
 #include "synth/src/device/synth-base-device.h"
 #include "synth/src/module/synth.h"
-#include "synth/src/module/synth2.h"
 
 using namespace PLAYER;
 namespace SYNTH {
+
+	typedef struct SynthInputs {
+		AdsrInputs amAdsr, fmAdsr, pmAdsr, ftAdsr;
+		LfoInputs lfo1, lfo2;
+		OscInputs osc1, osc2;
+		FltInputs flt1;
+	} SynthInputs;
+
+	typedef enum SynthInputIds {
+		// envelopes
+		SynthInputAmEnvAmp, SynthInputAmEnvAtk, SynthInputAmEnvDec, SynthInputAmEnvSus, SynthInputAmEnvRel,
+		SynthInputFmEnvAmp, SynthInputFmEnvAtk, SynthInputFmEnvDec, SynthInputFmEnvSus, SynthInputFmEnvRel,
+		SynthInputPmEnvAmp, SynthInputPmEnvAtk, SynthInputPmEnvDec, SynthInputPmEnvSus, SynthInputPmEnvRel,
+		SynthInputFtEnvAmp, SynthInputFtEnvAtk, SynthInputFtEnvDec, SynthInputFtEnvSus, SynthInputFtEnvRel,
+		// LFOs
+		SynthInputAmLfoAmp, SynthInputAmLfoFre,
+		SynthInputFmLfoAmp, SynthInputFmLfoFre,
+		// oscillators
+		SynthInputOsc1Amp, SynthInputOsc1Fre, SynthInputOsc1Note, SynthInputOsc1Tune, SynthInputOsc1Psw, SynthInputOsc1Wave,
+		SynthInputOsc2Amp, SynthInputOsc2Fre, SynthInputOsc2Note, SynthInputOsc2Tune, SynthInputOsc2Psw, SynthInputOsc2Wave,
+		// filter
+		SynthInputFlt1Cut, SynthInputFlt1Res, SynthInputFlt1Mode,
+	} SynthInputIds;
+
+#define SynthInputSize (4*AdsrInputsSize + 2*LfoInputsSize + 2*OscInputsSize + FltInputsSize)
 
 	class SynthDevice : public SynthBaseDevice
 	{
@@ -15,36 +39,15 @@ namespace SYNTH {
 	//protected: PROP(int, voiceCount);
 	protected:
 	public:
-		SynthDevice(SynthAdapter* adapter);
-		~SynthDevice();
-		void initialize(int voiceCount);
-#pragma region Device
-		//void initialize(byte** pData = NULL);
+		SynthInputs synthInputs;
 
-		//bool isActive();
-		//void isActive(bool b);
-		//int run(int ticks);
-		//void setRefreshRate(float fps);
-		//void processCommand(byte cmd, byte*& cursor);
+		SynthDevice(SynthAdapter* adapter, Player* player);
+		~SynthDevice();
+
+		int getPresetBankSize();
+		PresetBank* getDefaultPresetBank();
 
 		SynthBase* synth();
-
-		Sequence* createDefaultSequence();
-#pragma endregion
-
-//#ifdef PLAYER_EDIT_MODE
-//		void makeCommandImpl(int command, byte*& stream, va_list args);
-//		int getCommandSize(byte cmd, byte* args);
-//		int writeToStream(Stream* stream);
-//#endif
-//
-//#pragma region Synth
-//		void setNote(byte note, byte velocity);
-//		void setProgram(byte prgId);
-//		byte* soundBank();
-//		void soundBank(byte* data);
-//		//void run(short* buffer, int start, int end);
-//#pragma endregion
 	};
 }
 #endif

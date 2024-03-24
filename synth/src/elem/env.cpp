@@ -8,6 +8,7 @@ using namespace SYNTH;
 double Env::attackRates[256];
 double Env::releaseRates[256];
 double Env::releaseRatesExp[256];
+double Env::fadoutFactor;
 
 Env::Env() {
     velocity_ = 0.0;
@@ -16,17 +17,28 @@ Env::Env() {
     rate_ = 0.0;
     phase_ = EnvPhase::Idle;
     smp_ = 0.0;
-    // LPF
-    fc_ = M_PI * 0.001;
-    ai_[0] = ai_[1] = 0.0;
+    //// LPF
+    //fc_ = M_PI * 0.1;
+    //ai_[0] = ai_[1] = 0.0;
+    overlaySmp_ = 0.0;
 }
 
-void Env::applyLPF() {
-    ai_[0] = ai_[0] + fc_ * (smp_ - ai_[0]);
-    ai_[1] = ai_[1] + fc_ * (ai_[0] - ai_[1]);
-    smp_ = (float)ai_[1];
+void Env::kill() {
+    if (phase_ != EnvPhase::Idle) {
+        phase_ = EnvPhase::Kill;
+        rate_ = -Env::attackRates[10];
+    }
 }
 
+void Env::setValues(void* v) {
+    values_ = (Value*)v;
+}
+
+//void Env::applyLPF() {
+//    ai_[0] = ai_[0] + fc_ * (smp_ - ai_[0]);
+//    ai_[1] = ai_[1] + fc_ * (ai_[0] - ai_[1]);
+//    smp_ = (float)ai_[1];
+//}
 
 void Env::initialize() {
     // calculate rates
@@ -46,4 +58,8 @@ void Env::initialize() {
         var n = t2 * *Elem::samplingRate;
         Env::releaseRatesExp[i] = pow(32767.0, -1.0 / n);
     }
+
+    // dur = 1/100*samplingRate - 10ms
+    // pow(factor, dur) = 1/32767
+    Env::fadoutFactor = pow(2.0, -15.0 / (*Elem::samplingRate / 100.0));
 }

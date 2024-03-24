@@ -9,28 +9,34 @@ using namespace PLAYER;
 namespace SYNTH {
 
 	typedef struct BassInputs {
-	public:
 		AdsrInputs amAdsr, pmAdsr, ftAdsr;
 		OscInputs osc1, osc2;
 		FltInputs flt1;
 	} BassInputs;
-
-#define BassInputSize (3*AdsrInputsSize + 2*OscInputsSize + FltInputsSize)
+	#define BassInputSize (3*AdsrInputsSize + 2*OscInputsSize + FltInputsSize)
+	typedef enum BassInputIds {
+		BassInputAmAmp, BassInputAmAtk, BassInputAmDec, BassInputAmSus, BassInputAmRel,
+		BassInputPmAmp, BassInputPmAtk, BassInputPmDec, BassInputPmSus, BassInputPmRel,
+		BassInputFtAmp, BassInputFtAtk, BassInputFtDec, BassInputFtSus, BassInputFtRel,
+		BassInputOsc1Amp, BassInputOsc1Fre, BassInputOsc1Note, BassInputOsc1Tune, BassInputOsc1Psw, BassInputOsc1Wave,
+		BassInputOsc2Amp, BassInputOsc2Fre, BassInputOsc2Note, BassInputOsc2Tune, BassInputOsc2Psw, BassInputOsc2Wave,
+		BassInputFlt1Cut, BassInputFlt1Res, BassInputFlt1Mode
+	} BassInputIds;
 
 	class BassDevice : public SynthBaseDevice
 	{
-	//protected: PROP(int, samplingRate);
-	//protected: PROP(int, voiceCount);
+		//protected: PROP(int, samplingRate);
+		//protected: PROP(int, voiceCount);
 		//PROP_R(BassInputs, bassInputs);
 	protected:
 	public:
 		BassInputs bassInputs;
 
-		BassDevice(SynthAdapter* adapter);
-		virtual ~BassDevice();
+		BassDevice(SynthAdapter* adapter, Player* player);
+		~BassDevice();
 
 		int getPresetBankSize();
-		PresetBank* BassDevice::getDefaultPresetBank();
+		PresetBank* getDefaultPresetBank();
 	};
 }
 #endif

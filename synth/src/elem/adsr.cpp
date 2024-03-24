@@ -12,84 +12,75 @@ Adsr::Adsr() : Env() {
     values_ = NULL;
 }
 
+AdsrValues* Adsr::values() {
+    return (AdsrValues*)values_;
+}
+
 void Adsr::setGate(byte v) {
     if (gate_ <= 0) {
         if (v > 0) {
             // slope up: retrigger envelope
             phase_ = EnvPhase::Up;
-            timer_ = 0;
             ticks_ = 0;
             gate_ = 1;
-            velocity_ = v/255.0f;
-        }            
-    } else {
+            velocity_ = v / 255.0f;
+            overlaySmp_ = smp_;
+            timer_ = 0.0;
+        }
+    }
+    else {
         if (v <= 0) {
             // slope down: start release phase
             phase_ = EnvPhase::Down;
-            timer_ = 1.0f;
             gate_ = 0;
         }
     }
 }
 
 float Adsr::run(Arg notUsed) {
-    //var am = *((float*)params);
-    //var ctrls = (AdsrCtrls*)controls_;
-    var sus = values_->sus.f + 0.0000;
-    switch (phase_) {
+    if (phase_ != EnvPhase::Idle) {
+        var sus = values()->sus.f + 0.0000;
+        switch (phase_) {
         case EnvPhase::Up: // atk precalc
-            // 0.0 : 0.005s -> 1/(0*3.995 + 0.005)/smpRate = 200/smpRate
-            // 1.0 : 4.0s -> 1/(1*3.995 + 0.005)/smpRate = 4/smpRate
-            //   X : Xs -> 1/(3.995*X + 0.005)/smpRate
-            rate_ = Env::attackRates[values_->atk.b];
+            rate_ = Env::attackRates[values()->atk.b];
             phase_ = EnvPhase::Atk;
-            //smp_ = timer_;
-            //break;
         case EnvPhase::Atk: // atk
-            //smp_ = SMOOTH(timer_);
             timer_ += rate_;
             if (timer_ >= 1.0) {
-                phase_ = EnvPhase::Dec;
                 timer_ = 1.0;
+                rate_ = -Env::attackRates[values()->dec.b] * (1.0f - sus);
+                phase_ = EnvPhase::Sus;
             }
-            smp_ = timer_;
             break;
-        case EnvPhase::Dec: // dec precalc
-            // 0.0 : 0.005s -> 1/(0*3.995 + 0.005)/smpRate = 200/smpRate
-            // 1.0 : 4.0s -> 1/(1*3.995 + 0.005)/smpRate
-            //   X : Xs -> 1/(3.995*X + 0.005)/smpRate
-            rate_ = Env::attackRates[values_->dec.b] * (1.0f - sus);
-            phase_ = EnvPhase::Sus;
         case EnvPhase::Sus: // dec/sustain
-            timer_ -= rate_;
+            timer_ += rate_;
             if (timer_ <= sus) {
-                smp_ = timer_ = sus;
-            } else {
-                //timer_ -= rate_;
-                ////var susm1 = 1.0 - sus;
-                ////smp_ = susm1 * SMOOTH((timer_ - sus)/susm1) + sus;
-                smp_ = timer_;
+                timer_ = sus;
             }
             break;
         case EnvPhase::Down: // rel precalc
-            // 0.0 :  0.005s -> 1/(0*9.995 + 0.005)/smpRate = 200/smpRate
-            // 1.0 : 10.0s -> 1/(1*9.995 + 0.005)/smpRate
-            //   X :  Xs -> 1/(9.995*X + 0.005)/smpRate
-            rate_ = Env::releaseRates[values_->rel.b];
+            rate_ = -Env::releaseRates[values()->rel.b] * timer_;
             phase_ = EnvPhase::Rel;
-            //break;
         case EnvPhase::Rel: // rel
-            //smp_ = values_->sus.f * SMOOTH(timer_ / sus);
-            timer_ -= rate_;
+            timer_ += rate_;
             if (timer_ <= 0.0) {
                 timer_ = 0.0;
                 phase_ = EnvPhase::Idle; // set to idle
-                ai_[0] = ai_[1] = 0.0;
+                rate_ = 0.0;
             }
-            smp_ = timer_ * sus;
             break;
+        case EnvPhase::Kill:
+            timer_ += rate_;
+            if (timer_ <= 0.0) {
+                phase_ = EnvPhase::Idle;
+                timer_ = 0.0;
+            }
+            break;
+        }
+
+        smp_ = SMOOTH(timer_);
+        //applyLPF();
     }
     ticks_++;
-    applyLPF();
-    return (float)(values_->amp.f * smp_ * this->velocity_);
+    return (float)(values()->amp.f * smp_ * this->velocity_);
 }

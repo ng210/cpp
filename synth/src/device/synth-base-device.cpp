@@ -6,14 +6,14 @@
 using namespace SYNTH;
 
 #pragma region Creation
-SynthBaseDevice::SynthBaseDevice(SynthAdapter* adapter, void* object) : ModuleDevice(adapter, object) {
+SynthBaseDevice::SynthBaseDevice(SynthAdapter* adapter, Player* player, void* object) : ModuleDevice(adapter, player, object) {
 }
 
 void SynthBaseDevice::initialize(byte** pData) {
 	if (pData != NULL && *pData != NULL) {
+		ModuleDevice::initialize(pData);
 		var voiceCount = READ(*pData, byte);
 		synthBase()->voiceCount(voiceCount);
-		ModuleDevice::initialize(pData);
 	}
 }
 
@@ -41,8 +41,6 @@ void SynthBaseDevice::processCommand(byte cmd, byte*& cursor) {
 
 #pragma endregion
 
-#pragma region Synth
 void SynthBaseDevice::setNote(byte note, byte velocity) {
 	synthBase()->setNote(note, velocity);
 }
-#pragma endregion

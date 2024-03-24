@@ -15,58 +15,46 @@ DeviceExt* BassDeviceExt::bassDeviceExtCreator_(Device* device) {
 	return deviceExt;
 }
 
-BassDeviceExt::BassDeviceExt(Device* device) : ModuleDeviceExt(device) {
+BassDeviceExt::BassDeviceExt(Device* device) : SynthBaseDeviceExt(device) {
 }
-
-void BassDeviceExt::setupInputs() {
-	var dev = (BassDevice*)device_;
-	ModuleDevice::setupAdsr(&dev->bassInputs.amAdsr);
-	ModuleDevice::setupAdsr(&dev->bassInputs.pmAdsr);
-	ModuleDevice::setupAdsr(&dev->bassInputs.ftAdsr);
-	ModuleDevice::setupOsc(&dev->bassInputs.osc1);
-	ModuleDevice::setupOsc(&dev->bassInputs.osc2);
-	ModuleDevice::setupFlt(&dev->bassInputs.flt1);
-}
-
 
 Sequence* BassDeviceExt::createDefaultSequence() {
 	var seq = NEW_(Sequence);
 	seq->writeHeader();
-
 	seq->writeDelta(0);
-	seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(0x80);
-	seq->writeEOF();
+	seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(0x80)->writeEOF();
+	seq->writeDelta(16);
+	seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(0x00)->writeEOF();
 
 	seq->writeDelta(16);
-	seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(0x00);
-	seq->writeEOF();
+	seq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(0x80)->writeEOF();
+	seq->writeDelta(16);
+	seq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(0x00)->writeEOF();
 
 	seq->writeDelta(16);
-	seq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(160);
-	seq->writeEOF();
+	seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(0x80)->writeEOF();
+	seq->writeDelta(8);
+	seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(0x00)->writeEOF();
 
 	seq->writeDelta(8);
-	seq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(0x00);
-	seq->writeEOF();
+	seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(0x80)->writeEOF();
+	seq->writeDelta(8);
+	seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(0x00)->writeEOF();
 
 	seq->writeDelta(8);
-	seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(0x80);
-	seq->writeEOF();
-
+	seq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(0x80)->writeEOF();
 	seq->writeDelta(16);
-	seq->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(0x00);
-	seq->writeEOF();
-
-	seq->writeDelta(32);
-	seq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(0x80);
-	seq->writeEOF();
-
-	seq->writeDelta(16);
-	seq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(0x00);
-	seq->writeEOF();
-
+	seq->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(0x00)->writeEOF();
 	seq->writeDelta(16);
 	seq->writeEOS();
+
+
+	//for (var i = 0; i < 8; i++) {
+	//	seq->writeCommand(CmdSetNote)->writeByte((i>>1) % 2 ? pC2 : pC1)->writeByte(0x80 * (1 - i % 2));
+	//	seq->writeEOF();
+	//	seq->writeDelta(16);
+	//}
+	//seq->writeEOS();
 	return seq;
 }
 

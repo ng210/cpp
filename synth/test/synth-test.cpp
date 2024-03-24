@@ -1,11 +1,26 @@
-#include <math.h>
-#include "synth/test/synth-test.h"
+#include "soundlib/src/soundplayer.h"
+#include "math.h"
 #include "base/memory.h"
 #include "base/debug.h"
-#include "synth/src/device/bass-device-ext.h"
+#include "soundlib/src/wavfmt.h"
+#include "player/src/player-lib.h"
+#include "player/src/input-ext.h"
+#include "synth/test/synth-test.h"
 
-// remove when drums is included
-#include "synth/src/elem/dahr.h"
+class TestModule : public Module {
+public:
+    TestModule() {
+        RUN = NULL;
+        args = NULL;
+        values = NULL;
+        createOutputBuffers(1);
+    };
+    void(*RUN)(int start, int end, TestModule* mdl);
+    void* args;
+    Value* values;
+    Value* getValues() { return values; }
+    void run(int start, int end) { RUN(start, end, this); }
+};
 
 void SynthTest::simpleSynthCallback(short* buffer, int sampleCount, void* context) {
     //((Synth*)context)->run(buffer, 0, sampleCount);
@@ -19,15 +34,19 @@ void SynthTest::simpleSynthCallback(short* buffer, int sampleCount, void* contex
     }
 }
 
-void SynthTest::playback(Module* mdl, PlayCallback callback, float fps, char* path) {
+void SynthTest::playback(Module* mdl, PlayCallback callback, float fps, int chn, char* path, FeedSample feedSample, void* args) {
     int msPerFrame = (int)(1000.0f / fps);
     int frame = 0;
     bool hasError = false;
     double frameSize = samplingRate / fps;
+    if (feedSample == NULL) {
+        feedSample = SynthTest::simpleSynthCallback;
+    }
+    if (args == NULL) args = mdl;
 
     if (path != NULL && saveToFile) {
         // prepare wave file and buffer
-        var wave = NEW_(WaveFmt, path, (int)samplingRate, 1, 16);
+        var wave = NEW_(WaveFmt, path, (int)samplingRate, chn, 16);
         int length = (int)frameSize * sizeof(short);
         var buffer = MALLOC(short, length);
         memset(buffer, 0, length);
@@ -36,21 +55,24 @@ void SynthTest::playback(Module* mdl, PlayCallback callback, float fps, char* pa
 
         // render sound into buffer
         int fi = 0;
-        while (callback(mdl, fi++)) {
+        while (callback(mdl, fi++, args)) {
             LOG(".");
             // render 1 frame into the buffer
-            var output = mdl->getOutput(0);
+            //var output = mdl->getOutput(0);
             var p = buffer;
             var len = length>>1;
+            if (chn > 1) len >>= 1;
             while (len > 0) {
                 var toWrite = len > SAMPLE_BUFFER_SIZE ? SAMPLE_BUFFER_SIZE : len;
-                mdl->run(0, toWrite);
-                for (var j = 0; j < toWrite; j++) {
-                    *p++ = (short)(32767.0f * output[j]);
-                }
+                feedSample(p, toWrite, args);
+                //mdl->run(0, toWrite);
+                //for (var j = 0; j < toWrite; j++) {
+                //    *p++ = (short)(32767.0f * output[j]);
+                //}
                 len -= toWrite;
             }
             var byteCount = 2 * (int)(p - buffer);
+            if (chn > 1) byteCount *= 2;
             wave->write((byte*)buffer, byteCount);
             fileLength += byteCount;
         }
@@ -60,13 +82,13 @@ void SynthTest::playback(Module* mdl, PlayCallback callback, float fps, char* pa
         LOG("\nSaved %d bytes into '%s'.\n", fileLength, path);
     }
     else {
-        if (SoundPlayer::start((int)samplingRate, 1, SynthTest::simpleSynthCallback, mdl) == 0) {
+        if (SoundPlayer::start((int)samplingRate, chn, feedSample, args) == 0) {
             int fi = 0;
-            while (callback(mdl, fi++)) {
+            while (callback(mdl, fi++, args)) {
                 LOG(".");
                 Sleep(msPerFrame);
             }
-            Sleep(1000);
+            Sleep(400);
             SoundPlayer::stop();
             LOG("\nPlayback stopped.\n");
         }
@@ -76,21 +98,38 @@ void SynthTest::playback(Module* mdl, PlayCallback callback, float fps, char* pa
     }
 }
 
-int SynthTest::testEnvelope(Env& env, short* buffer, int delay, char* path) {
-    var si = 0;
-    env.setGate(255);
-    while (env.isActive() && si < 20*samplingRate) {
-        //LOG("%d - %lf\n", env->phase(), env->timer_);
-        if (si == delay) {
-            env.setGate(0);
-        }
+bool SynthTest::testInput(InputBase& input, Value min, Value max, Value step, Value* value) {
+    var check = false;
+    while (true) {
+        check = InputExt::compare(&input, 0, min); if (!check) { log("input.min mismatch "); break; }
+        check = InputExt::compare(&input, 1, max); if (!check) { log("input.max mismatch "); break; }
+        check = InputExt::compare(&input, 2, step); if (!check) { log("input.step mismatch "); break; }
+        check = InputExt::compare(&input, 3, *value); if (!check) { log("input.value mismatch "); break; }
+        break;
+    }
+    return check;
+}
+
+int SynthTest::testEnvelope(Env& env, short* buffer, void(callback)(int, Env&, float), char* path) {
+    int si = 0, offs = (int)(30 * samplingRate);
+    var ti = 0;
+    while (si < 30*samplingRate) {
+        callback(si, env, samplingRate);
         var smp = env.run();
         buffer[si] = (short)(smp * 32767.0f);
+        buffer[offs + si] = (short)(smp * sin(ti * 211.3f * SYNTH_THETA / samplingRate) * 32767.0f);
         si++;
+        ti++;
+        if (!env.isActive()) break;
     }
     // save to file
     if (path != NULL) {
-        WaveFmt::write(path, (int)samplingRate, 1, 16, (byte*)buffer, si << 1);
+        var path1 = str_concat(path, ".wav");
+        var path2 = str_concat("sin-", path1);
+        WaveFmt::write(path1, (int)samplingRate, 1, 16, (byte*)buffer, si << 1);
+        WaveFmt::write(path2, (int)samplingRate, 1, 16, (byte*)&buffer[offs], si << 1);
+        FREE(path1);
+        FREE(path2);
     }
     return si;
 }
@@ -102,6 +141,11 @@ SynthTest::SynthTest() {
     player_ = masterDevice_->player();
     synthAdapter_ = NEW_(SynthAdapter);
     player_->addAdapter(synthAdapter_);
+    player_->initialize();
+    player_->addChannel("chn1");
+    player_->addChannel("chn2");
+    player_->addChannel("chn3");
+    player_->addChannel("chn4");
     player_->useThread();
     PlayerDeviceExt::registerExtensionCreator();
     playerExt_ = NEW_(PlayerExt, player_);
@@ -117,10 +161,14 @@ SynthTest::~SynthTest() {
     PlayerExt::cleanUp();
 }
 
+void dahrCallback(int d, Env& env, float smpRate) {
+    if (d == 0) env.setGate(255);
+}
+
 void SynthTest::testEnvelopes() {
     Env::initialize();
-    // 20 secs buffer
-    var size = (int)(20.0f * samplingRate);
+    // 2x30 secs buffer
+    var size = (int)(2*30.0f * samplingRate);
     var buffer = MALLOC(short, size);
     //WaveFmt* wave = NULL;
     byte* stream = NULL;
@@ -128,76 +176,175 @@ void SynthTest::testEnvelopes() {
 
     #pragma region ADSR
     Adsr adsr;
-    AdsrValues adsrValues = { 1.0f, 0, 0, 128, 0 };
-    adsr.values(&adsrValues);
+    AdsrValues adsrValues = { 1.0f, 0, 0, 0.5f, 0 };
+    adsr.setValues(&adsrValues);
 
-    sampleCount = testEnvelope(adsr, buffer, 0, "adsr-null.wav");
-    assert("Should create null ADSR", sampleCount == 5);   // [48000*0.1ms] = 5
+    sampleCount = testEnvelope(adsr, buffer, [](int d, Env& env, float smpRate) { }, "adsr-null");
+    assert("Should create null ADSR", sampleCount == 1);
 
-    sampleCount = testEnvelope(adsr, buffer, (int)ceil(2/Adsr::attackRates[0] + 0.1f * samplingRate), "adsr-min.wav");
-    assert("Should create minimal ADSR", sampleCount == 4815);   // [48000 * (0.1ms + 0.1ms + 100ms + 0.1ms)] = 4815
+    sampleCount = testEnvelope(adsr, buffer, [](int d, Env& env, float smpRate) {
+        if (d == 0) env.setGate(255);
+        else if (d == (int)(0.0102 * smpRate)) env.setGate(0);
+        }, "adsr-min");
+    assert("Should create minimal ADSR", sampleCount == 494);   // [0.1ms + 0.1ms + 10ms + 0.1ms] = 10.3ms -> 494,4
 
     adsrValues.atk = 255;
-    sampleCount = testEnvelope(adsr, buffer, (int)ceil(1 / Adsr::attackRates[255] + 1 / Adsr::attackRates[0] + 0.1f * samplingRate), "adsr-atk.wav");
-    assert("Should create ADSR with max atk", sampleCount == 196810);   // [48000 * (4s + 0.1ms + 100ms + 0.1ms)] = 196810
+    sampleCount = testEnvelope(adsr, buffer, [](int d, Env& env, float smpRate) {
+        if (d == 0) env.setGate(255);
+        else if (d == (int)(4.0101 * smpRate)) env.setGate(0);
+        }, "adsr-atk");
+    assert("Should create ADSR with max atk", sampleCount == 192489);   // [4s + 0.1ms + 10ms + 0.1ms] = 4010.2ms -> 192489,6
 
     adsrValues.dec = 255;
-    sampleCount = testEnvelope(adsr, buffer, (int)ceil(1 / Adsr::attackRates[255] + 1 / Adsr::attackRates[255] + 0.1f * samplingRate), "adsr-atk-dec.wav");
-    assert("Should create ADSR with max atk and dec", sampleCount == 388805);   // [48000 * (4s + 4s + 100ms + 0.1ms)] = 388805
+    sampleCount = testEnvelope(adsr, buffer, [](int d, Env& env, float smpRate) {
+        if (d == 0) env.setGate(255);
+        else if (d == (int)(8.01 * smpRate)) env.setGate(0);
+        }, "adsr-atk-dec");
+    assert("Should create ADSR with max atk and dec", sampleCount == 384485);   // [4s + 4s + 10ms + 0.1ms] = 8010.1 -> 384484,8
 
     adsrValues.rel = 255;
-    sampleCount = testEnvelope(adsr, buffer, (int)ceil(1 / Adsr::attackRates[255] + 1 / Adsr::attackRates[255] + 0.1f * samplingRate), "adsr-atk-dec.wav");
-    assert("Should create ADSR with max atk, dec and rel", sampleCount == 772801);   // [48000 * (4s + 4s + 100ms + 8ms)] = 772801
+    sampleCount = testEnvelope(adsr, buffer, [](int d, Env& env, float smpRate) {
+        if (d == 0) env.setGate(255);
+        else if (d == (int)(8.01 * smpRate)) env.setGate(0);
+        }, "adsr-atk-dec-rel");
+    assert("Should create ADSR with max atk, dec and rel", sampleCount == 768481);   // [4s + 4s + 10ms + 8s] = 16010ms -> 768480
 
-    adsrValues.rel = 0;
-    sampleCount = testEnvelope(adsr, buffer, (int)ceil(samplingRate + 0.1f * samplingRate), "adsr-atk-brk.wav");
-    assert("Should create ADSR with broken atk", sampleCount == 52805);   // [48000 * (1s + 100ms + 0.1ms)] = 52805
+    sampleCount = testEnvelope(adsr, buffer, [](int d, Env& env, float smpRate) {
+        if (d == 0) env.setGate(255);
+        else if (d == (int)(2.0 * smpRate)) env.setGate(0);
+        }, "adsr-atk-brk");
+    assert("Should create ADSR with broken atk", sampleCount == 480001);   // [48000 * (2s + 8s)] = 480001
 
-    sampleCount = testEnvelope(adsr, buffer, (int)ceil(samplingRate + 1 / Adsr::attackRates[255] + 0.1f * samplingRate), "adsr-dec-brk.wav");
-    assert("Should create ADSR with broken dec", sampleCount == 244805);   // [48000 * (1s + 4s + 100ms + 0.1ms)] = 244805
-
-
-#pragma endregion
+    sampleCount = testEnvelope(adsr, buffer, [](int d, Env& env, float smpRate) {
+        if (d == 0) env.setGate(255);
+        else if (d == (int)(6.0 * smpRate)) env.setGate(0);
+        }, "adsr-dec-brk");
+    assert("Should create ADSR with broken dec", sampleCount == 672001);   // [48000 * (6s + 8s)] = 672001
+    #pragma endregion
 
     #pragma region DAHR
     Dahr dahr;
     DahrValues dahrValues = { 1.0f, 0, 0, 0, 0 };
-    dahr.values(&dahrValues);
+    dahr.setValues(&dahrValues);
 
-    sampleCount = testEnvelope(dahr, buffer, 0, "dahr-null.wav");
-    assert("Should create null DAHR", sampleCount == 6);   // [1 + 48000*0.1ms] = 6
-
-    sampleCount = testEnvelope(dahr, buffer, 48000, "dahr-min.wav");
-    assert("Should create minimal DAHR", sampleCount == 20);   // [48000 * (0.1ms + 0.1ms + 0.1ms + 0.1ms)] = 20
+    sampleCount = testEnvelope(dahr, buffer, dahrCallback, "dahr-min");
+    assert("Should create minimal DAHR", sampleCount == 21);   // [0.1ms + 0.1ms + 0.1ms + 0.1ms] = 0.4ms -> 19
 
     dahrValues.del = 255;
-    sampleCount = testEnvelope(dahr, buffer, 960000, "dahr-del.wav");
-    assert("Should create DAHR with max del", sampleCount == 192016);   // [48000 * (4s + 0.1s + 0.1ms + 0.1ms)] = 192015
+    sampleCount = testEnvelope(dahr, buffer, dahrCallback, "dahr-del");
+    assert("Should create DAHR with max del", sampleCount == 192017);   // [4s + 0.1ms + 0.1ms + 0.1ms] = 4000.3ms -> 192014,4
 
     dahrValues.atk = 255;
-    sampleCount = testEnvelope(dahr, buffer, 960000, "dahr-del-atk.wav");
-    assert("Should create DAHR with max del and atk", sampleCount == 384012);   // [48000 * (4s + 4ms + 0.1ms + 0.1ms)] = 384010
+    sampleCount = testEnvelope(dahr, buffer, dahrCallback, "dahr-del-atk");
+    assert("Should create DAHR with max del and atk", sampleCount == 384013);   // [4s + 4s + 0.1ms + 0.1ms] = 8000.2ms -> 384009,6
 
     dahrValues.hld = 255;
-    sampleCount = testEnvelope(dahr, buffer, 960000, "dahr-atk-dec.wav");
-    assert("Should create DAHR with max del, atk and hld", sampleCount == 576008);   // [48000 * (4s + 4s + 4s + 0.1ms)] = 576005
+    sampleCount = testEnvelope(dahr, buffer, dahrCallback, "dahr-del-atk-hld");
+    assert("Should create DAHR with max del, atk and hld", sampleCount == 576009);   // [4s + 4s + 4s + 0.1ms] = 12000.1ms -> 576004,8
+
+    dahrValues.rel = 255;
+    sampleCount = testEnvelope(dahr, buffer, dahrCallback, "dahr-del-atk-hld-rel");
+    assert("Should create DAHR with max del, atk and hld", sampleCount == 960005);   // [4s + 4s + 4s + 8ms] = 20000ms -> 960000
     #pragma endregion
 
     FREE(buffer);
 }
 
+void SynthTest::testLfo() {
+    Lfo lfo;
+    LfoValues lfoValues = { 0.009f, 100.0f };
+    lfo.values(&lfoValues);
+    TestModule mdl;
+    mdl.args = &lfo;
+    mdl.RUN = [](int start, int end, TestModule* mdl) {
+        var lfo = (Lfo*)mdl->args;
+        for (var i = start; i < end; i++) {
+            mdl->getOutput(0)[i] = 10.0f * lfo->run();
+        }        
+    };
+
+    playback(&mdl,
+        [](Module* mdl, int frame, void* args) {
+            var lfo = (Lfo*)((TestModule*)mdl)->args;
+            if (frame % 10 == 0) {
+                lfo->values()->fre.f += 10.0f;
+            }
+            return 30 - frame;
+        }, 10.f, 1, "lfo.wav");
+}
+
 void SynthTest::testBass() {
     var bass = (BassDevice*)synthAdapter_->createDevice(SynthDevices::DeviceBass, player_);
+    assert("Should assign inputs", (BassInputs*)bass->inputs() == &bass->bassInputs);
+    #pragma region check all inputs
+    var check = true, checkAll = true;
+    log("   Check AM::AMP input "); check = testInput(bass->bassInputs.amAdsr.amp, 0, 1.0f, 0.01f, &bass->module()->getValues()[BassInputAmAmp]); checkAll = checkAll && check; log("\n");
+    log("   Check AM::ATK input "); check = testInput(bass->bassInputs.amAdsr.atk, 0, 255, 1, &bass->module()->getValues()[BassInputAmAtk]); checkAll = checkAll && check; log("\n");
+    log("   Check AM::DEC input "); check = testInput(bass->bassInputs.amAdsr.dec, 0, 255, 1, &bass->module()->getValues()[BassInputAmDec]); checkAll = checkAll && check; log("\n");
+    log("   Check AM::SUS input "); check = testInput(bass->bassInputs.amAdsr.sus, 0, 255, 1, &bass->module()->getValues()[BassInputAmSus]); checkAll = checkAll && check; log("\n");
+    log("   Check AM::REL input "); check = testInput(bass->bassInputs.amAdsr.rel, 0, 255, 1, &bass->module()->getValues()[BassInputAmRel]); checkAll = checkAll && check; log("\n");
+
+    log("   Check PM::AMP input "); check = testInput(bass->bassInputs.pmAdsr.amp, 0, 1.0f, 0.01f, &bass->module()->getValues()[BassInputPmAmp]); checkAll = checkAll && check; log("\n");
+    log("   Check PM::ATK input "); check = testInput(bass->bassInputs.pmAdsr.atk, 0, 255, 1, &bass->module()->getValues()[BassInputPmAtk]); checkAll = checkAll && check; log("\n");
+    log("   Check PM::DEC input "); check = testInput(bass->bassInputs.pmAdsr.dec, 0, 255, 1, &bass->module()->getValues()[BassInputPmDec]); checkAll = checkAll && check; log("\n");
+    log("   Check PM::SUS input "); check = testInput(bass->bassInputs.pmAdsr.sus, 0, 255, 1, &bass->module()->getValues()[BassInputPmSus]); checkAll = checkAll && check; log("\n");
+    log("   Check PM::REL input "); check = testInput(bass->bassInputs.pmAdsr.rel, 0, 255, 1, &bass->module()->getValues()[BassInputPmRel]); checkAll = checkAll && check; log("\n");
+
+    log("   Check FT::AMP input "); check = testInput(bass->bassInputs.ftAdsr.amp, 0, 1.0f, 0.01f, &bass->module()->getValues()[BassInputFtAmp]); checkAll = checkAll && check; log("\n");
+    log("   Check FT::ATK input "); check = testInput(bass->bassInputs.ftAdsr.atk, 0, 255, 1, &bass->module()->getValues()[BassInputFtAtk]); checkAll = checkAll && check; log("\n");
+    log("   Check FT::DEC input "); check = testInput(bass->bassInputs.ftAdsr.dec, 0, 255, 1, &bass->module()->getValues()[BassInputFtDec]); checkAll = checkAll && check; log("\n");
+    log("   Check FT::SUS input "); check = testInput(bass->bassInputs.ftAdsr.sus, 0, 255, 1, &bass->module()->getValues()[BassInputFtSus]); checkAll = checkAll && check; log("\n");
+    log("   Check FT::REL input "); check = testInput(bass->bassInputs.ftAdsr.rel, 0, 255, 1, &bass->module()->getValues()[BassInputFtRel]); checkAll = checkAll && check; log("\n");
+
+    log("   Check OSC1::AMP input "); check = testInput(bass->bassInputs.osc1.amp, 0, 255, 1, &bass->module()->getValues()[BassInputOsc1Amp]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC1::FRE input "); check = testInput(bass->bassInputs.osc1.fre, 0, 2000.0f, 0.01f, &bass->module()->getValues()[BassInputOsc1Fre]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC1::NOTE input "); check = testInput(bass->bassInputs.osc1.note, 0, 255, 1, &bass->module()->getValues()[BassInputOsc1Note]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC1::PSW input "); check = testInput(bass->bassInputs.osc1.psw, 0, 255, 1, &bass->module()->getValues()[BassInputOsc1Psw]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC1::TUNE input "); check = testInput(bass->bassInputs.osc1.tune, 0, 255, 1, &bass->module()->getValues()[BassInputOsc1Tune]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC1::WAVE input "); check = testInput(bass->bassInputs.osc1.wave, 0, 255, 1, &bass->module()->getValues()[BassInputOsc1Wave]); checkAll = checkAll && check; log("\n");
+
+    log("   Check OSC2::AMP input "); check = testInput(bass->bassInputs.osc2.amp, 0, 255, 1, &bass->module()->getValues()[BassInputOsc2Amp]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC2::FRE input "); check = testInput(bass->bassInputs.osc2.fre, 0, 2000.0f, 0.01f, &bass->module()->getValues()[BassInputOsc2Fre]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC2::NOTE input "); check = testInput(bass->bassInputs.osc2.note, 0, 255, 1, &bass->module()->getValues()[BassInputOsc2Note]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC2::PSW input "); check = testInput(bass->bassInputs.osc2.psw, 0, 255, 1, &bass->module()->getValues()[BassInputOsc2Psw]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC2::TUNE input "); check = testInput(bass->bassInputs.osc2.tune, 0, 255, 1, &bass->module()->getValues()[BassInputOsc2Tune]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC2::WAVE input "); check = testInput(bass->bassInputs.osc2.wave, 0, 255, 1, &bass->module()->getValues()[BassInputOsc2Wave]); checkAll = checkAll && check; log("\n");
+
+    log("   Check Flt1::CUT input "); check = testInput(bass->bassInputs.flt1.cut, 0, 255, 1, &bass->module()->getValues()[BassInputFlt1Cut]); checkAll = checkAll && check; log("\n");
+    log("   Check Flt1::RES input "); check = testInput(bass->bassInputs.flt1.res, 0, 255, 1, &bass->module()->getValues()[BassInputFlt1Res]); checkAll = checkAll && check; log("\n");
+    log("   Check Flt1::MODE input "); check = testInput(bass->bassInputs.flt1.mode, 0, 7, 1, &bass->module()->getValues()[BassInputFlt1Mode]); checkAll = checkAll && check; log("\n");
+
+    assert("Should set up inputs correctly", checkAll);
+    #pragma endregion
+
     var pb = bass->getDefaultPresetBank();
     bass->setPresetBank(pb);
+    bass->setPreset(0);
+    var preset0 = (byte*)pb->values()->get(0);
+    cons->dump(preset0, bass->getPresetBankSize(), 16);
 
     playback(bass->module(),
-        [](Module* mdl, int frame) {
-            int isActive = frame < 32;
+        [](Module* mdl, int frame, void* args) {
+            int isActive = frame < 64;
             var synth = (SynthBase*)mdl;
             if (isActive) {
-                frame %= 8;
                 switch (frame) {
+                    case 0:
+                        synth->getValues()[BassInputOsc1Tune].b = 2;
+                        synth->getValues()[BassInputOsc2Tune].b = 14;
+                        break;
+                    case 32:
+                        synth->getValues()[BassInputOsc1Tune].b = 5;
+                        synth->getValues()[BassInputOsc2Tune].b = 17;
+                        break;
+                    case 48:
+                        synth->getValues()[BassInputOsc1Tune].b = 0;
+                        synth->getValues()[BassInputOsc2Tune].b = 12;
+                        break;
+
+                }
+                var step = frame % 8;
+                switch (step) {
                 case 0:
                     synth->setNote(pD1, 80);
                     break;
@@ -225,175 +372,270 @@ void SynthTest::testBass() {
                 }
             }
             return isActive;
-        }, 12.0f, "bass1.wav");
+        }, 16.0f, 1, "bass1.wav");
 
     assert("Should create sound", bass->isActive());
     DEL_(bass);
     DEL_(pb);
 }
 
-void SynthTest::testBassDeviceExt() {
-    BassDeviceExt::registerExtensionCreator();
-    var dev = synthAdapter_->createDevice(SynthDevices::DeviceBass, player_);
-    var ext = playerExt_->getDeviceExtension(dev);
+void SynthTest::playDefaultSequence(SynthBaseDevice* dev, SynthBaseDeviceExt* ext) {
+    player_->initialize();
+    player_->addChannel("chn1");
+    player_->addChannel("chn1a");
+    player_->devices().push(dev);
+    player_->refreshRate(140.0f);
+    var seq = ext->createDefaultSequence();
+    var frames = FrameList::fromSequence(seq, ext);
+    var time = ((Frame*)frames->get(frames->length() - 1))->time;
+    DEL_(frames);
 
+    var ctrlId = dev->type() == SynthDevices::DeviceBass ? BassInputFlt1Cut : SynthInputFlt1Cut;
 
-//    player_->initialize();
-//
-//    // create master sequence
-//    var masterSequence = NEW_(Sequence, masterDevice_);
-//    {
-//        masterSequence->writeHeader();
-//        // #01 frame
-//        masterSequence->writeDelta(0);
-//        masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(1)->writeByte(1)->writeByte(1)->writeByte(16);
-//        masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(2)->writeByte(2)->writeByte(1)->writeByte(4);
-//        masterSequence->writeEOF();
-//        // #01 frame
-//        masterSequence->writeDelta(4 * 4 * 8);
-//        masterSequence->writeEOS();
-//    }
-//    player_->addSequence(masterSequence);
-//
-//    var bassDevice = setupBass();
-//
-//    player_->refreshRate(16.0f);
-//
-//    SoundPlayer::start((int)samplingRate, 1, SynthTest::simpleSynthCallback, bassDevice->module());
-//    player_->start();
-//    while (masterDevice_->isActive()) {
-//        Sleep(6);
-//    }
-//    player_->stop();
-//    SoundPlayer::stop();
-//
-//    assert("Should create sound", bassDevice->isActive());
-//    player_->clear();
-    DEL_(dev);
-    DEL_(ext);
+    var masterSequence = NEW_(Sequence);
+    {
+        masterSequence->writeHeader();
+        // #01 frame
+        masterSequence->writeDelta(0);
+        masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(1)->writeByte(1)->writeByte(1)->writeByte(4);
+        masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(2)->writeByte(2)->writeByte(1)->writeByte(4);
+        masterSequence->writeEOF();
+        // #01 frame
+        masterSequence->writeDelta(time * 4);
+        masterSequence->writeEOS();
+    }
+    var modSeq = NEW_(Sequence);
+    {
+        int step = 4;
+        int delta = time * 4 / 256;
+        modSeq->writeHeader();
+        for (var i = 0; i < 256; i += step) {
+            modSeq->writeDelta(delta);
+            modSeq->writeCommand(ModuleCommands::CmdSetUint8)->writeByte(ctrlId)->writeByte(i);
+            modSeq->writeEOF();
+
+        }
+        for (var i = 255; i >= 0; i -= step) {
+            modSeq->writeDelta(delta);
+            modSeq->writeCommand(ModuleCommands::CmdSetUint8)->writeByte(ctrlId)->writeByte(i);
+            modSeq->writeEOF();
+
+        }
+        modSeq->writeDelta(delta);
+        modSeq->writeEOS();
+    }
+    player_->addSequence(masterSequence);
+    player_->addSequence(seq);
+    player_->addSequence(modSeq);
+
+    SoundPlayer::start((int)samplingRate, 1, SynthTest::simpleSynthCallback, dev->module());
+    player_->useThread();
+    player_->start();
+    while (masterDevice_->isActive()) {
+        Sleep(10);
+    }
+    player_->stop();
+    SoundPlayer::stop();
+    player_->sequences().clear();
+    DEL_(masterSequence);
+    DEL_(seq);
+    DEL_(modSeq);
+    player_->devices().pop();
 }
 
-//BassDevice* SynthTest::setupBass() {
-//    // create device
-//    var bassDevice = (BassDevice*)player_->addDevice(synthAdapter_, DeviceBass, NULL);
-//    assert("Should create a device", bassDevice != NULL);
-//    bassDevice->setProgram(0);
-//
-//    var bassSequence = NEW_(Sequence, bassDevice);
-//    {
-//        bassSequence->writeHeader();
-//        // #01 frame
-//        bassSequence->writeDelta(0)->writeCommand(CmdSetNote)->writeByte(pD0)->writeByte(80)->writeEOF();
-//        // #02 frame
-//        bassSequence->writeDelta(1)->writeCommand(CmdSetNote)->writeByte(pD0)->writeByte(0)->writeEOF();
-//        // #03 frame
-//        bassSequence->writeDelta(1)->writeCommand(CmdSetNote)->writeByte(pD1)->writeByte(120)->writeEOF();
-//        // #04 frame
-//        bassSequence->writeDelta(1)->writeCommand(CmdSetNote)->writeByte(pD1)->writeByte(0)->writeEOF();
-//        // #05 frame
-//        bassSequence->writeDelta(1)->writeCommand(CmdSetNote)->writeByte(pD1)->writeByte(160)->writeEOF();
-//        // #06 frame
-//        bassSequence->writeDelta(1)->writeCommand(CmdSetNote)->writeByte(pD1)->writeByte(0)->writeEOF();
-//        // #07 frame
-//        bassSequence->writeDelta(1)->writeCommand(CmdSetNote)->writeByte(pF1)->writeByte(60)->writeEOF();
-//        // #08 frame
-//        bassSequence->writeDelta(1)->writeCommand(CmdSetNote)->writeByte(pF1)->writeByte(0)->writeEOF();
-//        // #09 frame
-//        bassSequence->writeDelta(1)->writeEOS();
-//    }
-//    player_->addSequence(bassSequence);
-//
-//    var tuneSequence = NEW_(Sequence, bassDevice);
-//    {
-//        tuneSequence->writeHeader();
-//        // #01 frame
-//        tuneSequence->writeDelta(0);
-//        tuneSequence->writeCommand(CmdSetUint8)->writeByte((int)BassCtrlId::osc1Tune)->writeByte(12);
-//        tuneSequence->writeCommand(CmdSetUint8)->writeByte((int)BassCtrlId::osc2Tune)->writeByte(24);
-//        tuneSequence->writeEOF();
-//        // #02 frame
-//        tuneSequence->writeDelta(32);
-//        tuneSequence->writeCommand(CmdSetUint8)->writeByte((int)BassCtrlId::osc1Tune)->writeByte(8);
-//        tuneSequence->writeCommand(CmdSetUint8)->writeByte((int)BassCtrlId::osc2Tune)->writeByte(20);
-//        tuneSequence->writeEOF();
-//        // #03 frame
-//        tuneSequence->writeDelta(16);
-//        tuneSequence->writeCommand(CmdSetUint8)->writeByte((int)BassCtrlId::osc1Tune)->writeByte(10);
-//        tuneSequence->writeCommand(CmdSetUint8)->writeByte((int)BassCtrlId::osc2Tune)->writeByte(22);
-//        tuneSequence->writeEOF();
-//        // #04 frame
-//        tuneSequence->writeDelta(16)->writeEOS();
-//    }
-//    player_->addSequence(tuneSequence);
-//
-//    var bassChannel = player_->addChannel("bass");
-//    var tuneChannel = player_->addChannel("tune");
-//
-//    return bassDevice;
-//}
-//
-//void SynthTest::testSynth1() {
-//    LOG("Test synth1\n");
-//    var synth1 = NEW_(Synth, 6);
-//    synth1->setProgram(0);
-//
-//    playback(synth1,
-//        [](Module* mdl, int frame) {
-//            int isActive = frame < 32;
-//            var synth = (Synth*)mdl;
-//            if (isActive) {
-//                frame %= 8;
-//                switch (frame) {
-//                case 0:
-//                    synth->setNote(pD2, 80);
-//                    synth->setNote(pF2, 40);
-//                    synth->setNote(pA2, 60);
-//                    break;
-//                case 1:
-//                    synth->setNote(pD2, 0);
-//                    synth->setNote(pF2, 0);
-//                    synth->setNote(pA2, 0);
-//                    break;
-//                case 2:
-//                    synth->setNote(pD4, 80);
-//                    synth->setNote(pF2, 40);
-//                    synth->setNote(pA2, 60);
-//                    break;
-//                case 3:
-//                    synth->setNote(pD4, 0);
-//                    synth->setNote(pF2, 0);
-//                    synth->setNote(pA2, 0);
-//                    break;
-//                case 4:
-//                    synth->setNote(pD2, 80);
-//                    synth->setNote(pF2, 40);
-//                    synth->setNote(pA2, 60);
-//                    break;
-//                case 5:
-//                    synth->setNote(pD2, 0);
-//                    synth->setNote(pF2, 0);
-//                    synth->setNote(pA2, 0);
-//                    break;
-//                case 6:
-//                    synth->setNote(pC2, 80);
-//                    synth->setNote(pE2, 40);
-//                    synth->setNote(pG2, 60);
-//                    break;
-//                case 7:
-//                    synth->setNote(pC2, 0);
-//                    synth->setNote(pE2, 0);
-//                    synth->setNote(pG2, 0);
-//                    break;
-//                }
-//            }
-//            return isActive;
-//        }, 4.0f, "synth1.wav");
-//
-//    assert("Should create sound", synth1->isActive());
-//    DEL_(synth1);
-//}
-//
-//void SynthTest::testSynth1Device() {
+void SynthTest::testBassDeviceExt() {
+    BassDeviceExt::registerExtensionCreator();
+    var bass = (BassDevice*)synthAdapter_->createDevice(SynthDevices::DeviceBass, player_);
+    var ext = (BassDeviceExt*)playerExt_->getDeviceExtension(bass);
+    var pb = bass->getDefaultPresetBank();
+    bass->setPresetBank(pb);
+
+    byte expected[] = { SynthDevices::DeviceBass, 255, 0, 1 };    //type, db-id of preset bank, preset id, voice-count
+    Stream received(1024);
+    ext->writeToStream(&received);
+    var isMatch = binaryCompare(received.data(), received.length(), expected, arraysize(expected));
+    assert("Should export device as bytes stream", isMatch);
+
+    received.reset();
+    ext->writePresetToStream(&received);
+    received.rewind();
+    for (var ii = 0; ii < bass->inputCount(); ii++) {
+        var input = bass->getInput(ii);
+        Value v1, v2;
+        switch (input->type) {
+            case InputTypeB: v1 = input->value()->b; v2 = received.readByte(); isMatch = v1 == v2;  break;
+            case InputTypeF: v1 = input->value()->f; v2 = received.readFloat(); isMatch = fabs(v1.f - v2.f) < FLT_MIN;  break;
+            case InputTypeF8: v1 = input->value()->b; v2 = received.readByte(); isMatch = v1 == v2;  break;
+        }
+        if (!isMatch) {
+            log("Input value mismatch at %02x: %04x %04x\n", ii, v1.i, v2.i);
+            break;
+        }
+    }
+    
+    assert("Should export the preset as byte stream", isMatch);
+
+    #pragma region Check commands
+    byte command1[] = { ModuleCommands::CmdSetFloat, BassInputAmAmp, DF(0.5f) };
+    byte command2[] = { ModuleCommands::CmdSetUint8, BassInputAmAtk, 0x20 };
+    byte command3[] = { ModuleCommands::CmdSetFloat8, BassInputAmSus, 0x40 };
+    byte command4[] = { ModuleCommands::CmdSetNote, pA0, 0x80 };
+    byte command5[] = { ModuleCommands::CmdSetProgram, 0x00 };
+
+    var cmdStream = ext->makeCommand(ModuleCommands::CmdSetFloat, BassInputAmAmp, 0.5f);
+    isMatch = binaryCompare(cmdStream->data(), cmdStream->length(), command1, arraysize(command1));
+    assert("Should create the SetFloat command", isMatch);
+    DEL_(cmdStream);
+    
+    cmdStream = ext->makeCommand(ModuleCommands::CmdSetUint8, BassInputAmAtk, 0x20);
+    isMatch = binaryCompare(cmdStream->data(), cmdStream->length(), command2, arraysize(command2));
+    assert("Should create the SetUint8 command", isMatch);
+    DEL_(cmdStream);
+    
+    cmdStream = ext->makeCommand(ModuleCommands::CmdSetFloat8, BassInputAmSus, 0x40);
+    isMatch = binaryCompare(cmdStream->data(), cmdStream->length(), command3, arraysize(command3));
+    assert("Should create the SetFloat8 command", isMatch);
+    DEL_(cmdStream);
+    
+    cmdStream = ext->makeCommand(ModuleCommands::CmdSetNote, pA0, 0x80);
+    isMatch = binaryCompare(cmdStream->data(), cmdStream->length(), command4, arraysize(command4));
+    assert("Should create the SetNote command", isMatch);
+    DEL_(cmdStream);
+
+    cmdStream = ext->makeCommand(ModuleCommands::CmdSetProgram, 0x00);
+    isMatch = binaryCompare(cmdStream->data(), cmdStream->length(), command5, arraysize(command5));
+    assert("Should create the SetProgram command", isMatch);
+    DEL_(cmdStream);
+    #pragma endregion
+
+    playDefaultSequence(bass, ext);
+
+    DEL_(bass);
+    DEL_(ext);
+    DEL_(pb);
+}
+
+void SynthTest::testSynth1() {
+    var synth = (SynthDevice*)synthAdapter_->createDevice(SynthDevices::DeviceSynth, player_);
+    assert("Should assign inputs", (SynthInputs*)synth->inputs() == &synth->synthInputs);
+
+    #pragma region check all inputs
+    var check = true, checkAll = true;
+    log("   Check AM::AMP input "); check = testInput(synth->synthInputs.amAdsr.amp, 0, 1.0f, 0.01f, &synth->module()->getValues()[SynthInputAmEnvAmp]); checkAll = checkAll && check; log("\n");
+    log("   Check AM::ATK input "); check = testInput(synth->synthInputs.amAdsr.atk, 0, 255, 1, &synth->module()->getValues()[SynthInputAmEnvAtk]); checkAll = checkAll && check; log("\n");
+    log("   Check AM::DEC input "); check = testInput(synth->synthInputs.amAdsr.dec, 0, 255, 1, &synth->module()->getValues()[SynthInputAmEnvDec]); checkAll = checkAll && check; log("\n");
+    log("   Check AM::SUS input "); check = testInput(synth->synthInputs.amAdsr.sus, 0, 255, 1, &synth->module()->getValues()[SynthInputAmEnvSus]); checkAll = checkAll && check; log("\n");
+    log("   Check AM::REL input "); check = testInput(synth->synthInputs.amAdsr.rel, 0, 255, 1, &synth->module()->getValues()[SynthInputAmEnvRel]); checkAll = checkAll && check; log("\n");
+
+    log("   Check FM::AMP input "); check = testInput(synth->synthInputs.fmAdsr.amp, 0, 1.0f, 0.01f, &synth->module()->getValues()[SynthInputFmEnvAmp]); checkAll = checkAll && check; log("\n");
+    log("   Check FM::ATK input "); check = testInput(synth->synthInputs.fmAdsr.atk, 0, 255, 1, &synth->module()->getValues()[SynthInputFmEnvAtk]); checkAll = checkAll && check; log("\n");
+    log("   Check FM::DEC input "); check = testInput(synth->synthInputs.fmAdsr.dec, 0, 255, 1, &synth->module()->getValues()[SynthInputFmEnvDec]); checkAll = checkAll && check; log("\n");
+    log("   Check FM::SUS input "); check = testInput(synth->synthInputs.fmAdsr.sus, 0, 255, 1, &synth->module()->getValues()[SynthInputFmEnvSus]); checkAll = checkAll && check; log("\n");
+    log("   Check FM::REL input "); check = testInput(synth->synthInputs.fmAdsr.rel, 0, 255, 1, &synth->module()->getValues()[SynthInputFmEnvRel]); checkAll = checkAll && check; log("\n");
+
+    log("   Check PM::AMP input "); check = testInput(synth->synthInputs.pmAdsr.amp, 0, 1.0f, 0.01f, &synth->module()->getValues()[SynthInputPmEnvAmp]); checkAll = checkAll && check; log("\n");
+    log("   Check PM::ATK input "); check = testInput(synth->synthInputs.pmAdsr.atk, 0, 255, 1, &synth->module()->getValues()[SynthInputPmEnvAtk]); checkAll = checkAll && check; log("\n");
+    log("   Check PM::DEC input "); check = testInput(synth->synthInputs.pmAdsr.dec, 0, 255, 1, &synth->module()->getValues()[SynthInputPmEnvDec]); checkAll = checkAll && check; log("\n");
+    log("   Check PM::SUS input "); check = testInput(synth->synthInputs.pmAdsr.sus, 0, 255, 1, &synth->module()->getValues()[SynthInputPmEnvSus]); checkAll = checkAll && check; log("\n");
+    log("   Check PM::REL input "); check = testInput(synth->synthInputs.pmAdsr.rel, 0, 255, 1, &synth->module()->getValues()[SynthInputPmEnvRel]); checkAll = checkAll && check; log("\n");
+
+    log("   Check FT::AMP input "); check = testInput(synth->synthInputs.ftAdsr.amp, 0, 1.0f, 0.01f, &synth->module()->getValues()[SynthInputFtEnvAmp]); checkAll = checkAll && check; log("\n");
+    log("   Check FT::ATK input "); check = testInput(synth->synthInputs.ftAdsr.atk, 0, 255, 1, &synth->module()->getValues()[SynthInputFtEnvAtk]); checkAll = checkAll && check; log("\n");
+    log("   Check FT::DEC input "); check = testInput(synth->synthInputs.ftAdsr.dec, 0, 255, 1, &synth->module()->getValues()[SynthInputFtEnvDec]); checkAll = checkAll && check; log("\n");
+    log("   Check FT::SUS input "); check = testInput(synth->synthInputs.ftAdsr.sus, 0, 255, 1, &synth->module()->getValues()[SynthInputFtEnvSus]); checkAll = checkAll && check; log("\n");
+    log("   Check FT::REL input "); check = testInput(synth->synthInputs.ftAdsr.rel, 0, 255, 1, &synth->module()->getValues()[SynthInputFtEnvRel]); checkAll = checkAll && check; log("\n");
+
+    log("   Check LFO1::AMP input "); check = testInput(synth->synthInputs.lfo1.amp, 0, 100.0f, 0.001f, &synth->module()->getValues()[SynthInputAmLfoAmp]); checkAll = checkAll && check; log("\n");
+    log("   Check LFO1::FRE input "); check = testInput(synth->synthInputs.lfo1.fre, 0, 10.0f, 0.01f, &synth->module()->getValues()[SynthInputAmLfoFre]); checkAll = checkAll && check; log("\n");
+    log("   Check LFO2::AMP input "); check = testInput(synth->synthInputs.lfo2.amp, 0, 100.0f, 0.001f, &synth->module()->getValues()[SynthInputFmLfoAmp]); checkAll = checkAll && check; log("\n");
+    log("   Check LFO2::FRE input "); check = testInput(synth->synthInputs.lfo2.fre, 0, 10.0f, 0.01f, &synth->module()->getValues()[SynthInputFmLfoFre]); checkAll = checkAll && check; log("\n");
+
+    log("   Check OSC1::AMP input "); check = testInput(synth->synthInputs.osc1.amp, 0, 255, 1, &synth->module()->getValues()[SynthInputOsc1Amp]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC1::FRE input "); check = testInput(synth->synthInputs.osc1.fre, 0, 2000.0f, 0.01f, &synth->module()->getValues()[SynthInputOsc1Fre]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC1::NOTE input "); check = testInput(synth->synthInputs.osc1.note, 0, 255, 1, &synth->module()->getValues()[SynthInputOsc1Note]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC1::PSW input "); check = testInput(synth->synthInputs.osc1.psw, 0, 255, 1, &synth->module()->getValues()[SynthInputOsc1Psw]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC1::TUNE input "); check = testInput(synth->synthInputs.osc1.tune, 0, 255, 1, &synth->module()->getValues()[SynthInputOsc1Tune]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC1::WAVE input "); check = testInput(synth->synthInputs.osc1.wave, 0, 255, 1, &synth->module()->getValues()[SynthInputOsc1Wave]); checkAll = checkAll && check; log("\n");
+
+    log("   Check OSC2::AMP input "); check = testInput(synth->synthInputs.osc2.amp, 0, 255, 1, &synth->module()->getValues()[SynthInputOsc2Amp]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC2::FRE input "); check = testInput(synth->synthInputs.osc2.fre, 0, 2000.0f, 0.01f, &synth->module()->getValues()[SynthInputOsc2Fre]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC2::NOTE input "); check = testInput(synth->synthInputs.osc2.note, 0, 255, 1, &synth->module()->getValues()[SynthInputOsc2Note]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC2::PSW input "); check = testInput(synth->synthInputs.osc2.psw, 0, 255, 1, &synth->module()->getValues()[SynthInputOsc2Psw]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC2::TUNE input "); check = testInput(synth->synthInputs.osc2.tune, 0, 255, 1, &synth->module()->getValues()[SynthInputOsc2Tune]); checkAll = checkAll && check; log("\n");
+    log("   Check OSC2::WAVE input "); check = testInput(synth->synthInputs.osc2.wave, 0, 255, 1, &synth->module()->getValues()[SynthInputOsc2Wave]); checkAll = checkAll && check; log("\n");
+
+    log("   Check Flt1::CUT input "); check = testInput(synth->synthInputs.flt1.cut, 0, 255, 1, &synth->module()->getValues()[SynthInputFlt1Cut]); checkAll = checkAll && check; log("\n");
+    log("   Check Flt1::RES input "); check = testInput(synth->synthInputs.flt1.res, 0, 255, 1, &synth->module()->getValues()[SynthInputFlt1Res]); checkAll = checkAll && check; log("\n");
+    log("   Check Flt1::MODE input "); check = testInput(synth->synthInputs.flt1.mode, 0, 7, 1, &synth->module()->getValues()[SynthInputFlt1Mode]); checkAll = checkAll && check; log("\n");
+
+    assert("Should set up inputs correctly", checkAll);
+    #pragma endregion
+
+    var pb = synth->getDefaultPresetBank();
+    synth->setPresetBank(pb);
+    //synth->setPreset(1);
+
+    playback(synth->module(),
+        [](Module* mdl, int frame, void* args) {
+            int isActive = frame < 5;
+            var synth = (Synth*)mdl;
+            if (isActive) {
+                frame %= 8;
+                switch (frame) {
+                case 0:
+                    synth->setNote(pD3, 80);
+                    synth->setNote(pF3, 40);
+                    synth->setNote(pA3, 60);
+                    break;
+                case 1:
+                    synth->setNote(pD3, 0);
+                    synth->setNote(pF3, 0);
+                    synth->setNote(pA3, 0);
+                    break;
+                case 3:
+                    synth->setNote(pD3, 80);
+                    synth->setNote(pF3, 40);
+                    synth->setNote(pA3, 60);
+                    break;
+                case 4:
+                    synth->setNote(pD3, 0);
+                    synth->setNote(pF3, 0);
+                    synth->setNote(pA3, 0);
+                    break;
+                case 5:
+                    synth->setNote(pC3, 80);
+                    synth->setNote(pE3, 40);
+                    synth->setNote(pG3, 60);
+                    break;
+                case 7:
+                    synth->setNote(pC3, 0);
+                    synth->setNote(pE3, 0);
+                    synth->setNote(pG3, 0);
+                    break;
+                }
+            }
+            return isActive;
+        }, 4.0f, 1, "synth1.wav");
+
+    assert("Should create sound", synth->isActive());
+    DEL_(synth);
+    DEL_(pb);
+}
+
+void SynthTest::testSynth1DeviceExt() {
+    SynthDeviceExt::registerExtensionCreator();
+    var synth = (SynthDevice*)synthAdapter_->createDevice(SynthDevices::DeviceSynth, player_);
+    var ext = (SynthDeviceExt*)playerExt_->getDeviceExtension(synth);
+    var pb = synth->getDefaultPresetBank();
+    synth->setPresetBank(pb);
+    synth->setPreset(1);
+
+    playDefaultSequence(synth, ext);
+    
+    DEL_(synth);
+    DEL_(ext);
+    DEL_(pb);
+
 //    LOG("Test synth1 device\n");
 //    // create device
 //    player_->initialize();
@@ -484,8 +726,8 @@ void SynthTest::testBassDeviceExt() {
 //
 //    assert("Should create sound", synth1Device->isActive());
 //    player_->clear();
-//}
-//
+}
+
 //void SynthTest::testSynth2() {
 //    LOG("Test synth2\n");
 //    var synth2 = NEW_(Synth2, 6);
@@ -541,7 +783,7 @@ void SynthTest::testBassDeviceExt() {
 //                }
 //            }
 //            return isActive;
-//        }, 4.0f, "synth2.wav");
+//        }, 4.0f, "synth2");
 //
 //    assert("Should create sound", synth2->isActive());
 //    DEL_(synth2);
@@ -675,7 +917,7 @@ void SynthTest::testBassDeviceExt() {
 //    assert("Should create sound", synth2Device->isActive());
 //    player_->clear();
 //}
-//
+
 //DrumsDevice* SynthTest::setupDrums() {
 //    var drumsDevice = (DrumsDevice*)player_->addDevice(synthAdapter_, DeviceDrums);
 //    assert("Should create a device", drumsDevice != NULL);
@@ -754,7 +996,105 @@ void SynthTest::testBassDeviceExt() {
 //
 //    return drumsDevice;
 //}
-//
+
+void SynthTest::testGenericDrum() {
+    Device* devices[4];
+    GenericDrumValues drumValues[3];
+    memset(&drumValues, 0, 3 * sizeof(GenericDrumValues));
+    GenericDrumDevice drum(synthAdapter_, player_);
+    var pb = drum.getDefaultPresetBank();
+    var mx = (MixerDevice*)synthAdapter_->createDevice(SynthDevices::DeviceMixer, player_);
+    devices[3] = mx;
+    mx->mixer()->channelCount(3);
+    for (var di = 0; di < 3; di++) {
+        devices[di] = (GenericDrumDevice*)synthAdapter_->createDevice(SynthDevices::DeviceGenericDrum, player_);
+        ((GenericDrumDevice*)devices[di])->drum()->values((Value*)&drumValues[di]);
+        ((GenericDrumDevice*)devices[di])->assignInputs();
+        ((GenericDrumDevice*)devices[di])->drum()->createOutputBuffers(1);
+        devices[di]->setPresetBank(pb);
+        devices[di]->setPreset(di);
+        mx->mixer()->connectInput(di, (Module*)devices[di]->object(), 0.6f, 128, 200);
+    }
+
+    var drdev = (GenericDrumDevice*)devices[0];
+    //assert("Should assign inputs", drdev->inputs() == &drdev->drumInputs);
+
+    #pragma region check all inputs
+    var check = true, checkAll = true;
+    int ix = GenDrumType;
+    log("   Check TYPE input "); check = testInput(drdev->drumInputs.type, 0, DrumTypes::ClapType, 1, &drdev->drum()->getValues()[ix++]); checkAll = checkAll && check; log("\n");
+    for (var i = 0; i < 4; i++) {
+        log("   Check DAHR::AMP input "); check = testInput(drdev->drumInputs.dahr[i].amp, 0, 1.0f, 0.01f, &drdev->drum()->getValues()[ix++]); checkAll = checkAll && check; log("\n");
+        log("   Check DAHR::DEL input "); check = testInput(drdev->drumInputs.dahr[i].amp, 0, 1.0f, 0.01f, &drdev->drum()->getValues()[ix++]); checkAll = checkAll && check; log("\n");
+        log("   Check DAHR::ATK input "); check = testInput(drdev->drumInputs.dahr[i].amp, 0, 1.0f, 0.01f, &drdev->drum()->getValues()[ix++]); checkAll = checkAll && check; log("\n");
+        log("   Check DAHR::HLD input "); check = testInput(drdev->drumInputs.dahr[i].amp, 0, 1.0f, 0.01f, &drdev->drum()->getValues()[ix++]); checkAll = checkAll && check; log("\n");
+        log("   Check DAHR::REL input "); check = testInput(drdev->drumInputs.dahr[i].amp, 0, 1.0f, 0.01f, &drdev->drum()->getValues()[ix++]); checkAll = checkAll && check; log("\n");
+    }
+    for (var i = 0; i < 2; i++) {
+        log("   Check Flt::CUT input "); check = testInput(drdev->drumInputs.flt[i].cut, 0, 255, 1, &drdev->drum()->getValues()[ix++]); checkAll = checkAll && check; log("\n");
+        log("   Check Flt::RES input "); check = testInput(drdev->drumInputs.flt[i].res, 0, 255, 1, &drdev->drum()->getValues()[ix++]); checkAll = checkAll && check; log("\n");
+        log("   Check Flt::MODE input "); check = testInput(drdev->drumInputs.flt[i].mode, 0, 7, 1, &drdev->drum()->getValues()[ix++]); checkAll = checkAll && check; log("\n");
+    }
+
+    assert("Should set up inputs correctly", checkAll);
+    #pragma endregion
+
+
+    playback(mx->module(),
+        [](Module* mdl, int frame, void* args) {
+            var dr = (GenericDrumDevice**)args;
+            int isActive = frame < 63;
+            var step = frame % 16;
+            switch (step) {
+            case 0:
+                dr[0]->drum()->setNote(pC1, 180);
+                dr[2]->drum()->setNote(pC3, 100);
+                break;
+            case 2:
+                dr[2]->drum()->setNote(pC3, 60);
+                break;
+            case 4:
+                dr[1]->drum()->setNote(pC2, 170);
+                dr[2]->drum()->setNote(pC3, 140);
+                break;
+            case 6:
+                dr[2]->drum()->setNote(pC3, 60);
+                break;
+            case 8:
+                dr[0]->drum()->setNote(pC1, 180);
+                dr[2]->drum()->setNote(pC3, 180);
+                break;
+            case 10:
+                dr[0]->drum()->setNote(pC1, 180);
+                dr[2]->drum()->setNote(pC3,  60);
+                break;
+            case 12:
+                dr[1]->drum()->setNote(pC2, 170);
+                dr[2]->drum()->setNote(pC3, 140);
+                break;
+            case 14:
+                dr[2]->drum()->setNote(pC3, 60);
+                break;
+            //case 8:
+            //    dr[0]->drum()->setNote(pC1, 80);
+            //    break;
+            //case 10:
+            //    dr[0]->drum()->setNote(pC1, 00);
+            //    break;
+            }
+            return isActive;
+        }, 8.0f, 2, "drums1.wav",
+        [](short* buffer, int count, void* args) {
+            var devs = (ModuleDevice**)args;
+            //for (var di=0; di<3; di++) devs[di]->module()->run(0, count);
+            Mixer8x4::fillSoundBuffer(buffer, count, devs[3]->module());
+        },
+        devices);
+
+    for (var di = 0; di < 4; di++) DEL_(devices[di]);
+    DEL_(pb);
+}
+
 //void SynthTest::testDrums() {
 //    LOG("Test drums\n");
 //    var drums = NEW_(Drums);
@@ -823,12 +1163,12 @@ void SynthTest::testBassDeviceExt() {
 //                }
 //            }
 //            return isActive;
-//        }, 6.0f, "drums.wav");
+//        }, 6.0f, "drums");
 //
 //    assert("Should create sound", drums->isActive());
 //    DEL_(drums);
 //}
-//
+
 //void SynthTest::testDrumsDevice() {
 //    LOG("Test drums device\n");
 //    player_->initialize();
@@ -862,8 +1202,89 @@ void SynthTest::testBassDeviceExt() {
 //    assert("Should create sound", drums->isActive());
 //    player_->clear();
 //}
-//
-//void SynthTest::testMixer() {
+
+void SynthTest::testMixer() {
+    BassDeviceExt::registerExtensionCreator();
+    SynthDeviceExt::registerExtensionCreator();
+    MixerDeviceExt::registerExtensionCreator();
+    player_->initialize();
+    player_->useThread();
+    var bass = (BassDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceBass);
+    var pb1 = bass->getDefaultPresetBank();
+    bass->setPresetBank(pb1);
+    var synth = (SynthDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceSynth);
+    synth->synth()->voiceCount(6);
+    var pb2 = synth->getDefaultPresetBank();
+    synth->setPresetBank(pb2);
+    synth->setPreset(1);
+    var drum = (GenericDrumDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceGenericDrum);
+    GenericDrumValues drumValues;
+    drum->drum()->values((Value*)&drumValues);
+    drum->assignInputs();
+    drum->drum()->createOutputBuffers(1);
+    var pb3 = drum->getDefaultPresetBank();
+    drum->setPresetBank(pb3);
+    var mx = (MixerDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceMixer);
+    assert("Should assign inputs", (MixerInputs*)mx->inputs() == &mx->mixerInputs);
+
+    mx->mixer()->channelCount(3);
+    mx->mixer()->connectInput(0, bass->module(), 0.1f, 130, 250);
+    mx->mixer()->connectInput(1, synth->module(), 0.0f, 180, 250);
+    mx->mixer()->connectInput(2, drum->module(), 0.8f, 128, 250);
+
+    player_->addChannel("Chn1");
+    player_->addChannel("Chn2");
+    player_->addChannel("Chn3");
+    player_->addChannel("Chn4");
+
+    var masterSequence = NEW_(Sequence);
+    {
+        masterSequence->writeHeader();
+        // #01 frame
+        masterSequence->writeDelta(0);
+        masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(1)->writeByte(1)->writeByte(1)->writeByte(16);   // bass
+        masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(2)->writeByte(2)->writeByte(2)->writeByte(16);   // tune
+        masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(3)->writeByte(3)->writeByte(3)->writeByte(8);    // drums
+
+        masterSequence->writeEOF();
+        // #01 frame
+        masterSequence->writeDelta(8 * 16 * 16);
+        masterSequence->writeEOS();
+    }
+    player_->addSequence(masterSequence);
+
+    DeviceExt* ext = (BassDeviceExt*)playerExt_->getDeviceExtension(bass);
+    var seqBass = ext->createDefaultSequence();
+    player_->addSequence(seqBass);
+    DEL_(ext);
+
+    ext = (SynthDeviceExt*)playerExt_->getDeviceExtension(synth);
+    var seqSynth = ext->createDefaultSequence();
+    player_->addSequence(seqSynth);
+    DEL_(ext);
+
+    var seqDrum = NEW_(Sequence);
+    seqDrum->writeHeader();
+    seqDrum->writeDelta(0)->writeCommand(CmdSetProgram)->writeByte(0)->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(160)->writeEOF();
+    seqDrum->writeDelta(64)->writeCommand(CmdSetProgram)->writeByte(1)->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(180)->writeEOF();
+    seqDrum->writeDelta(64)->writeCommand(CmdSetProgram)->writeByte(0)->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(160)->writeEOF();
+    seqDrum->writeDelta(64)->writeCommand(CmdSetProgram)->writeByte(1)->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(180)->writeEOF();
+    seqDrum->writeDelta(64)->writeEOS();
+    player_->addSequence(seqDrum);
+
+    player_->refreshRate(132.0f);
+    player_->start();
+    SoundPlayer::start((int)samplingRate, 2, Mixer8x4::fillSoundBuffer, mx->mixer());
+    while (masterDevice_->isActive()) {
+        Sleep(6);
+    }
+    player_->stop();
+    SoundPlayer::stop();
+    DEL_(pb1);
+    DEL_(pb2);
+    DEL_(pb3);
+    player_->clear();
+
 //    LOG("Test mixer device\n");
 //    player_->initialize();
 //
@@ -914,22 +1335,35 @@ void SynthTest::testBassDeviceExt() {
 //
 //    //assert("Should create sound", mixer->isActive());
 //    player_->clear();
-//}
+}
+
+void SynthTest::testMixerDeviceExt() {
+
+}
 
 void SynthTest::runAll(int& totalPassed, int& totalFailed) {
     totalPassed_ = 0;
     totalFailed_ = 0;
     
-    test("Test Envelopes", (TestMethod)&SynthTest::testEnvelopes);
+    //test("Test Envelopes", (TestMethod)&SynthTest::testEnvelopes);
+    //test("Test LFO", (TestMethod)&SynthTest::testLfo);
+
     test("Test Bass", (TestMethod)&SynthTest::testBass);
-    test("Test Bass export", (TestMethod)&SynthTest::testBassDeviceExt);
-    //testSynth1();
-    //testSynth1Device();
+    //test("Test Bass ext", (TestMethod)&SynthTest::testBassDeviceExt);
+
+    test("Test Synth1", (TestMethod)&SynthTest::testSynth1);
+    //test("Test Synth1 ext", (TestMethod)&SynthTest::testSynth1DeviceExt);
+
     //testSynth2();
     //testSynth2Device();
+    
+    test("Test Generic Drum", (TestMethod)&SynthTest::testGenericDrum);
+
     //testDrums();
     //testDrumsDevice();
-    //testMixer();
+    
+    test("Test Mixer", (TestMethod)&SynthTest::testMixer);
+    //test("Test Mixer ext", (TestMethod)&SynthTest::testMixerDeviceExt);
 
     totalPassed = totalPassed_;
     totalFailed = totalFailed_;

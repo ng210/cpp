@@ -15,8 +15,6 @@ namespace SYNTH {
 	public:
 		Module();
 		virtual ~Module();
-
-		virtual void initializeFromStream(byte** pData);
 		
 		virtual Value* getValues() = 0;
 

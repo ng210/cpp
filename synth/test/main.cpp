@@ -3,18 +3,6 @@
 #include "test.h"
 #include "console/consoleapp.h"
 #include "synth-test.h"
-//#include "soundlib/src/soundplayer.h"
-//#include "soundlib/src/wavfmt.h"
-//#include "player/src/player-lib.h"
-//#include "player/src/player-adapter.h"
-//#include "synth/src/device/synth-adapter.h"
-//#include "synth/src/device/bass-device.h"
-//#include "synth/src/device/synth-device.h"
-//#include "synth/src/device/drums-device.h"
-//#include "synth/src/device/mixer-device.h"
-//#include "synth/src/device/distort-device.h"
-//#include "synth/src/device/stereo-delay-device.h"
-//#include "synth/src/xmloader.h"
 
 NS_FW_BASE_USE
 using namespace SYNTH;
@@ -323,7 +311,7 @@ using namespace PLAYER;
 //    // assign master sequence
 //    player->assignChannel(0, (Sequence*)player->sequences().get(0), 0, 0);
 //}
-//
+
 //void SynthTest::testFilterSound() {
 //    const float freq = 0.01f * samplingRate - 1.0f;
 //    const float cut = freq / samplingRate;
@@ -468,7 +456,7 @@ using namespace PLAYER;
 //    //FREE(buffer);
 //    //DEL_(wave);
 //}
-//
+
 //Stream* SynthTest::createBinaryData() {
 //    var data = NEW_(Stream);
 //    PlayerDevice playerDevice(NULL, &playerAdapter_);

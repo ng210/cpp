@@ -6,7 +6,8 @@
 
 using namespace SYNTH;
 
-ModuleDevice::ModuleDevice(Adapter* adapter, void* obj) : Device(adapter, obj) {
+ModuleDevice::ModuleDevice(Adapter* adapter, Player* player, void* obj) : Device(adapter, player, obj) {
+	datablockId_ = -1;
 }
 
 void ModuleDevice::initialize(byte** pData) {
@@ -18,9 +19,9 @@ void ModuleDevice::initialize(byte** pData) {
 			pb = NEW_(PresetBank, getPresetBankSize(), db->dataBlock);
 		}
 		setPresetBank(pb);
+		var preset = READ(*pData, byte);
+		setPreset(preset);
 	}
-	// set program and further initializations
-	((Module*)object_)->initializeFromStream(pData);
 }
 
 bool ModuleDevice::isActive() {
@@ -58,6 +59,7 @@ void ModuleDevice::processCommand(byte cmd, byte*& cursor) {
 	case ModuleCommands::CmdSetProgram:
 		prgId = READ(cursor, byte);
 		setInput(0, prgId);
+		setPreset(prgId);
 		break;
 	}
 }
@@ -105,7 +107,7 @@ void ModuleDevice::setupDahr(DahrInputs* inputs) {
 	dahr->del.setup(0, 255, 1);
 	dahr->hld.setup(0, 255, 1);
 	dahr->rel.setup(0, 255, 1);
-	}
+}
 void ModuleDevice::setupOsc(OscInputs* inputs) {
 	var osc = (OscInputs*)inputs;
 	osc->amp.setup(0, 255, 1);
@@ -117,7 +119,7 @@ void ModuleDevice::setupOsc(OscInputs* inputs) {
 	}
 void ModuleDevice::setupLfo(LfoInputs* inputs) {
 	var lfo = (LfoInputs*)inputs;
-	lfo->amp.setup(0.0f, 100.0f, 0.1f);
+	lfo->amp.setup(0.0f, 100.0f, 0.001f);
 	lfo->fre.setup(0.0f, 10.0f, 0.01f);
 }
 void ModuleDevice::setupFlt(FltInputs* inputs) {
