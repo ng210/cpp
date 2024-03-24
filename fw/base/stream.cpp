@@ -11,9 +11,17 @@ Stream::Stream(long size) {
 	init(size);
 }
 
+Stream::Stream(byte* source) {
+	init();
+	FREE(data_);
+	data_ = source;
+	cursor_ = source;
+}
+
 Stream::Stream(byte* source, long length) {
 	init(length);
 	writeBytes(source, length);
+	rewind();
 }
 
 void Stream::init(long size) {

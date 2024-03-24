@@ -29,6 +29,8 @@ public:
     void test(const char* label, TestMethod testMethod);
     void displayFinalResults(const char* label = NULL);
     void assert(const char* label, bool condition);
+    bool binaryCompare(byte* received, int length1, byte* expected, int length2);
+    void log(const char* format, ...);
     virtual void runAll(int& totalPassed, int& totalFailed) = 0;
 
     static void setColor(float ratio);

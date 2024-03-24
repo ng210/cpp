@@ -43,6 +43,14 @@ void Test::assert(const char* label, bool condition) {
     }
 }
 
+void Test::log(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    Test::cons->setcolor(ConsoleColors::gray);
+    Test::cons->vprintf(format, args);
+    va_end(args);
+}
+
 void Test::test(const char* label, TestMethod testMethod) {
     Test::cons->setcolor(ConsoleColors::gray);
     Test::cons->printf("\r\n *** %s\r\n", label);
@@ -59,7 +67,7 @@ void Test::test(const char* label, TestMethod testMethod) {
 void Test::displayFinalResults(const char* label) {
     if (label == NULL) label = "Final results:";
     Test::cons->setcolor(ConsoleColors::gray);
-    Test::cons->printf(" ### %s ", label);
+    Test::cons->printf("\n ### %s ", label);
     var sum = totalPassed_ + totalFailed_;
     var ratio = (100.0f * totalPassed_) / sum;
     Test::setColor(ratio);
@@ -71,4 +79,24 @@ void Test::setColor(float ratio) {
     if (ratio < 60.f) Test::cons->setcolor(ConsoleColors::red);
     else if (ratio < 90.f) Test::cons->setcolor(ConsoleColors::yellow);
     else Test::cons->setcolor(ConsoleColors::green);
+}
+
+bool Test::binaryCompare(byte* received, int length1, byte* expected, int length2) {
+    log("Expected:\n");
+    cons->dump(expected, length2, 16);
+    log("Received:\n");
+    cons->dump(received, length1, 16);
+
+    var isMatch = true;
+    log("Binary comparison\r\n");
+    for (var i = 0; i < length2; i++) {
+        var ca = expected[i];
+        var cb = received[i];
+        if (ca != cb) {
+            log(" - %04X: %02X %02X\r\n", i, ca, cb);
+            isMatch = false;
+            break;
+        }
+    }
+    return isMatch;
 }

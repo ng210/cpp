@@ -56,6 +56,7 @@ void ComboboxCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle)
 	SYSPR(EnumChildWindows(hWnd_, enumChildren, (LPARAM)&children));
 	
 	// get listbox item
+	var hFont = (HFONT)GetStockObject(SYSTEM_FIXED_FONT);
 	char className[20];
 	for (var i = 0; i < children.length(); i++) {
 		var hWnd = *(HWND*)children.get(i);
@@ -65,11 +66,13 @@ void ComboboxCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle)
 			SYSPR(SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)this));
 			var SYSFN(long_ptr, SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)ComboboxCtrl::editWndProc_));
 			defEditWndProc_ = (WNDPROC)long_ptr;
+			SYSPR(SendMessage(edit_, WM_SETFONT, (WPARAM)hFont, true));
 		}
 		else {
 			list_ = hWnd;
+			SYSPR(SendMessage(list_, WM_SETFONT, (WPARAM)hFont, true));
 		}
-	}
+	}	
 }
 
 LRESULT CALLBACK ComboboxCtrl::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {

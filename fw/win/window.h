@@ -51,6 +51,7 @@ class Window {
 	protected: WNDPROC defWindowProc_;
 	protected: PROP_R(HINSTANCE, hInstance);
 	protected: PROP_R(HWND, hWnd);
+	protected: char name_[32];
 	protected: PROP_R(RECT, rect);
 	protected: PROP_R(RECT, virtualRect);
 	protected: PROP_R(POINT, mousePos);
@@ -60,6 +61,7 @@ class Window {
 	protected: PROP_R(ScrollInfo, scrollInfoX);
 	protected: PROP_R(ScrollInfo, scrollInfoY);
 
+	protected: void setName(char* name);
 	protected: virtual char* const registerWindowClass();
 	protected: virtual int scrollWindow(ScrollInfo& scrollInfo, int mode, int pos, int nBar, bool update = true);
 	protected: void updateScrolling();
@@ -72,6 +74,7 @@ class Window {
 		LONG setWindowStyle(LONG style, DWORD exStyle = 0);
 		virtual LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		Map* Window::createChildWindowMap();
+		const char* getName();
 		
 		LRESULT show(int cmdShow);
 		LRESULT set(int x, int y, int width, int height, Window* insertAfter = NULL);

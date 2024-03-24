@@ -146,11 +146,11 @@ void* Map::add(Key key, void* value) {
 	if (keyValue == NULL) {
 		var ix = values_->length();
 		KeyValuePair kvp(NULL, values_->push(value));
-		if (hasRefKey_) {
+		if (hasRefKey_ || keys_->itemSize() > sizeof(void*)) {
 			kvp.key_ = keys_->push(key.p);
 		}
 		else {
-			kvp.key_ = keys_->push(&key.i);
+			kvp.key_ = keys_->push(&key.p);
 		}
 
 		kvp.index_ = ix;
@@ -183,33 +183,30 @@ void Map::remove(Key key) {
 			bucket->remove(removeIx);
 			size_--;
 			// move the last key and value
-			if (size_ > 0) {
+			var pLastKey = keys_->pop();
+			var pLastValue = values_->pop();
+			if (size_ > 0 && ix < size_) {
 				// if map still has items and
-				var pLastKey = keys_->pop();
-				var pLastValue = values_->pop();
-				// the removed item was not the last one
-				if (ix < size_) {
-					// not the last item was removed
-					if (pLastKey != pKey) {
-						Key lastKey = NULL;
-						if (hasRefKey_) {
-							keys_->set(ix, pLastKey);
-							lastKey.p = pLastKey;
-						}
-						else {
-							keys_->set(ix, pLastKey);
-							memcpy(&lastKey.bytes, pLastKey, keys_->itemSize());
-						};
-						values_->set(ix, pLastValue);
-
-						// update the members of linked KeyValuePair
-						bucket = getBucket(lastKey);
-						Key pos = -1;
-						kvp = (KeyValuePair*)bucket->binSearch(lastKey, pos, Map::compareWrapper_);
-						kvp->key_ = keys_->get(ix);
-						kvp->value_ = values_->get(ix);
-						kvp->index_ = ix;
+				// and the removed item was not the last one
+				if (pLastKey != pKey) {
+					Key lastKey = NULL;
+					if (hasRefKey_ || keys_->itemSize() > sizeof(void*)) {
+						keys_->set(ix, pLastKey);
+						lastKey.p = pLastKey;
 					}
+					else {
+						keys_->set(ix, pLastKey);
+						memcpy(&lastKey.bytes, pLastKey, keys_->itemSize());
+					};
+					values_->set(ix, pLastValue);
+
+					// update the members of linked KeyValuePair
+					bucket = getBucket(lastKey);
+					Key pos = -1;
+					kvp = (KeyValuePair*)bucket->binSearch(lastKey, pos, Map::compareWrapper_);
+					kvp->key_ = keys_->get(ix);
+					kvp->value_ = values_->get(ix);
+					kvp->index_ = ix;
 				}
 			}
 		}

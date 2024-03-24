@@ -63,6 +63,7 @@ void Window::create(Window* parent, char* name, LONG style, DWORD exStyle) {
 	if (hWnd_ == NULL) {
 		SYSFN(hWnd_, CreateWindowEx(exStyle, className, name, style, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hWndParent, NULL, hInstance_, this));
 	}
+	setName(name);
 	if (hWnd_ != NULL) {
 		// check wrapper function
 		WNDCLASSEX wndClassEx;
@@ -213,6 +214,14 @@ Map* Window::createChildWindowMap() {
 	var map = NEW_(Map, sizeof(int), sizeof(HWND), Map::hashingInt, Collection::compareInt);
 	SYSPR(EnumChildWindows(hWnd_, enumChildWindowsCallback, (LPARAM)map));
 	return map;
+}
+
+void Window::setName(char* name) {
+	strncpy(name_, 32, name);
+}
+
+const char* Window::getName() {
+	return (const char*)&name_;
 }
 
 LRESULT Window::show(int cmdShow) {
@@ -444,6 +453,7 @@ LRESULT CALLBACK Window::wndProcWrapper(HWND hWnd, UINT message, WPARAM wParam, 
 		window = (Window*)cs->lpCreateParams;
 		ret = 1;
 	} else {
+		var err = GetLastError();
 		LONG_PTR SYSFN(lptr, GetWindowLongPtr(hWnd, GWLP_USERDATA));
 		window = (Window*)lptr;
 	}

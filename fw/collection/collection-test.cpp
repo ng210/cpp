@@ -552,7 +552,7 @@ void CollectionTest::testMap() {
 	WORD dw = 0;
 	TEST_DATA testData;
 
-	Map* map1 = NEW_(Map, sizeof(WORD), sizeof(WORD), Map::hashingInt, compareInt); map1->hasRefKey(false);
+	Map* map1 = NEW_(Map, sizeof(WORD), sizeof(WORD), Map::hashingInt, compareInt);
 	Map* map2 = NEW_(Map, MAP_USE_REF, MAP_USE_REF, Map::hashingStr, compareStr);
 	Map* map3 = NEW_(Map, sizeof(TEST_DATA), sizeof(TEST_DATA), Map::hashingItem, compareObj);
 
@@ -610,7 +610,7 @@ void CollectionTest::testMap() {
 
 		}
 	}
-/*
+
 	INFO(" map2 map<char*, char*>\n");
 	{
 		assert("length should be 16", map2->size() == 16);
@@ -649,13 +649,13 @@ void CollectionTest::testMap() {
 		count = 0;
 		for (var i = 1; i <= 13; i++) {
 			if (i == 8) continue;
-			sprintf_s(testData.name, 12, "a%02d", i);
+			str_format_s(testData.name, 12, "a%02d", i);
 			testData.id = i;
 			if (map3->compare()(map3->get(&testData), &testData, map3, NULL) == 0) count++;
 		}
 		assert("should contain all remaining items", map3->size() == 12 && count == 12);
 	}
-*/
+
 
 	DEL_(map1);
 	DEL_(map2);

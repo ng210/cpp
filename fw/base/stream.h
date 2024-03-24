@@ -19,6 +19,7 @@ protected:byte* ensureSize(long delta);
 public:
 	Stream();
 	Stream(long size);
+	Stream(byte* source);
 	Stream(byte* source, long size);
 	virtual ~Stream();
 	void init(long size = STREAM_DEFAULT_SIZE);
