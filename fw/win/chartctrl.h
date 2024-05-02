@@ -90,6 +90,7 @@ protected:
 	HBITMAP hSelectionBitmap_;
 	HBRUSH backgroundBrush_;
 	HBRUSH foregroundBrush_;
+	HBRUSH selectionBrush_;
 	HPEN grid1Pen_;
 	HPEN grid2Pen_;
 
@@ -104,6 +105,7 @@ protected:
 	LRESULT startSelection(POINT& pos);
 	LRESULT doSelection(POINT& clientPos, POINT& delta, int keys);
 	LRESULT stopSelection();
+	void updateSelection(int deltaX, int deltaY);
 
 	LRESULT scale(float f, POINT& pos, int keys);
 	void focusOn(POINT& clientPos);
@@ -113,10 +115,10 @@ protected:
 	void updateOffsetY();
 	
 	bool fromClientPoint(POINT* clientPos, POINT* pos = NULL);
+	void getGridFromPoint(POINT* p, POINT* grid = NULL);
 	void updateHighlight(POINT& pos, bool invalidate);
 
 public:
-
 	ChartCtrl();
 	ChartCtrl(ChartSettings* settings);
 	virtual ~ChartCtrl();
@@ -137,6 +139,9 @@ public:
 	LRESULT onPaint();
 	LRESULT onHScroll(WPARAM wParam, LPARAM lParam);
 	LRESULT onVScroll(WPARAM wParam, LPARAM lParam);
+
+	void copyRegion(int x1, int x2, int y1, int y2);
+
 
 private:
 	static LRESULT onLeftUpProc(Window* wnd, POINT& pos, WPARAM wParam);

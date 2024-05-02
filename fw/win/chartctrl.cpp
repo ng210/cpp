@@ -24,7 +24,7 @@ ChartSettings ChartCtrl::defaultSettings_ = {
 	0x005c3329,				// backgroundColor
 	0x0029335c,				// foregroundColor
 	0x00b86652,				// grid1Color
-	//0x00dc7a62,				// grid2Color
+	//0x00dc7a62,			// grid2Color
 	0x004799ad,				// lineColor
 	0x00a3ccd6,				// textColor
 	ChartInsertModeFree,	// insertMode
@@ -120,8 +120,8 @@ void ChartCtrl::initialize(ChartSettings* settings) {
 	highLightPos_ = { 0, 0 };
 
 	hasSelection_ = false;
-	selectionPos1_ = { 0, 0 };
-	selectionPos2_ = { 0, 0 };
+	//selectionPos1_ = { 0, 0 };
+	//selectionPos2_ = { 0, 0 };
 }
 
 void ChartCtrl::create(Window* parent, char* name, LONG style, DWORD exStyle) {
@@ -159,11 +159,13 @@ void ChartCtrl::setColors() {
 	if (backgroundBrush_) {
 		SYSPR(DeleteObject(backgroundBrush_));
 		SYSPR(DeleteObject(foregroundBrush_));
+		SYSPR(DeleteObject(selectionBrush_));
 		SYSPR(DeleteObject(grid1Pen_));
 		SYSPR(DeleteObject(grid2Pen_));
 	}
 	SYSFN(backgroundBrush_, CreateSolidBrush(settings_.backgroundColor));
 	SYSFN(foregroundBrush_, CreateSolidBrush(settings_.foregroundColor));
+	SYSFN(selectionBrush_, CreateSolidBrush(settings_.foregroundColor>>8));
 	SYSFN(grid1Pen_, CreatePen(PS_SOLID, 1, settings_.gridColor));
 	SYSFN(grid2Pen_, CreatePen(PS_SOLID, 3, settings_.gridColor));
 }
@@ -233,10 +235,12 @@ LRESULT ChartCtrl::stopDragging() {
 LRESULT ChartCtrl::startSelection(POINT& pos) {
 	SYSPR(SetCapture(hWnd_));
 	SYSPR(SetTimer(hWnd_, SelectionTimerEvent, 10, &selectionTimerProc));
-	selectionPos1_.x = pos.x;
-	selectionPos1_.y = pos.y;
-	selectionPos2_.x = pos.x;
-	selectionPos2_.y = pos.y;
+	//fromClientPoint(&pos, &selectionPos1_);
+	//getGridFromPoint(&pos, &selectionPos1_);
+	selectionPos1_.x = (pos.x + scrollInfoX_.pos) / stepX_;
+	selectionPos1_.y = (pos.y + scrollInfoY_.pos) / stepY_;
+	selectionPos2_.x = selectionPos1_.x + 1;
+	selectionPos2_.y = selectionPos1_.y + 1;
 	selectionState_ = DRAGGING_STARTS;
 	hasSelection_ = false;
 	isHighLightVisible_ = false;
@@ -249,8 +253,10 @@ LRESULT ChartCtrl::doSelection(POINT& clientPos, POINT& delta, int keys) {
 	}
 	if (selectionState_ == DRAGGING_ACTIVE) {
 		hasSelection_ = true;
-		selectionPos2_.x = clientPos.x;
-		selectionPos2_.y = clientPos.y;
+		selectionPos2_.x = (clientPos.x + scrollInfoX_.pos) / stepX_ + 1;
+		selectionPos2_.y = (clientPos.y + scrollInfoY_.pos) / stepY_ + 1;
+		//selectionPos2_.x = clientPos.x;
+		//selectionPos2_.y = clientPos.y;
 
 		if (clientPos.x < 0) {
 			scrollWindow(scrollInfoX_, SB_DELTA, clientPos.x / stepX_, SB_HORZ, false);
@@ -268,23 +274,7 @@ LRESULT ChartCtrl::doSelection(POINT& clientPos, POINT& delta, int keys) {
 			scrollWindow(scrollInfoY_, SB_DELTA, (clientPos.y - rect_.bottom) / stepY_, SB_VERT, false);
 		}
 
-		if (selectionPos1_.x < selectionPos2_.x) {
-			selectionRect_.left = selectionPos1_.x;
-			selectionRect_.right = selectionPos2_.x - selectionPos1_.x;
-		}
-		else {
-			selectionRect_.left = selectionPos2_.x;
-			selectionRect_.right = selectionPos1_.x - selectionPos2_.x;
-		}
-
-		if (selectionPos1_.y < selectionPos2_.y) {
-			selectionRect_.top = selectionPos1_.y;
-			selectionRect_.bottom = selectionPos2_.y - selectionPos1_.y;
-		}
-		else {
-			selectionRect_.top = selectionPos2_.y;
-			selectionRect_.bottom = selectionPos1_.y - selectionPos2_.y;
-		}
+		updateSelection(0, 0);
 
 		// checkSelection()
 
@@ -303,12 +293,38 @@ LRESULT ChartCtrl::stopSelection() {
 	}
 	isHighLightVisible_ = true;
 	return 1;
+}
 
+void ChartCtrl::updateSelection(int deltaX, int deltaY) {
+	if (selectionPos1_.x < selectionPos2_.x) {
+		selectionRect_.left = selectionPos1_.x * stepX_ - scrollInfoX_.pos;
+		selectionRect_.right = (selectionPos2_.x - selectionPos1_.x) * stepX_;
+	}
+	else {
+		selectionRect_.left = (selectionPos2_.x - 1)* stepX_ - scrollInfoX_.pos;
+		selectionRect_.right = (selectionPos1_.x - selectionPos2_.x + 1) * stepX_;
+	}
+
+	if (selectionPos1_.y < selectionPos2_.y) {
+		selectionRect_.top = selectionPos1_.y * stepY_ - scrollInfoY_.pos;
+		selectionRect_.bottom = (selectionPos2_.y - selectionPos1_.y) * stepY_;
+	}
+	else {
+		selectionRect_.top = (selectionPos2_.y - 1) * stepY_ - scrollInfoY_.pos;
+		selectionRect_.bottom = (selectionPos1_.y - selectionPos2_.y + 1) * stepY_;
+	}
 }
 
 int ChartCtrl::scrollWindow(ScrollInfo& scrollInfo, int mode, int pos, int nBar, bool update) {
 	var ret = Window::scrollWindow(scrollInfo, mode, pos, nBar, update);
-	nBar == SB_HORZ ? updateOffsetX() : updateOffsetY();
+	if (nBar == SB_HORZ) {
+		updateOffsetX();
+		updateSelection(ret, 0);
+	}
+	else {
+		updateOffsetY();
+		updateSelection(0, ret);
+	}
 	return ret;
 }
 
@@ -336,9 +352,18 @@ bool ChartCtrl::fromClientPoint(POINT* clientPos, POINT* pos) {
 	}
 	return isChanged;
 }
+void ChartCtrl::getGridFromPoint(POINT* p, POINT* grid) {
+	if (grid == NULL) grid = p;
+	//grid->x = ((p->x - offsetX_) / stepX_) * stepX_ + offsetX_;
+	//grid->y = ((p->y - offsetY_) / stepY_) * stepY_ + offsetY_;
+	grid->x = (p->x - offsetX_) / stepX_;
+	grid->y = (p->y - offsetY_) / stepY_;
+}
+
 void ChartCtrl::updateHighlight(POINT& pos, bool invalidate) {
-	highLightPos_.x = ((pos.x - offsetX_) / stepX_) * stepX_ + offsetX_;
-	highLightPos_.y = ((pos.y - offsetY_) / stepY_) * stepY_ + offsetY_;
+	getGridFromPoint(&pos, &highLightPos_);
+	highLightPos_.x = highLightPos_.x * stepX_ + offsetX_;
+	highLightPos_.y = highLightPos_.y * stepY_ + offsetY_;
 	if (invalidate) {
 		InvalidateRect(hWnd_, NULL, false);
 	}
@@ -364,6 +389,8 @@ LRESULT ChartCtrl::scale(float f, POINT& screenPos, int keys) {
 		scrollWindow(scrollInfoX_, SB_THUMBTRACK, sx, SB_HORZ, false);
 		scrollWindow(scrollInfoY_, SB_THUMBTRACK, sy, SB_VERT, false);
 		updateHighlight(clientPos, false);
+
+		updateSelection(0, 0);
 	}
 	return 1;
 }
@@ -395,9 +422,9 @@ LRESULT ChartCtrl::onCreated() {
 LRESULT ChartCtrl::onHScroll(WPARAM wParam, LPARAM lParam) {
 	var ret = Window::onHScroll(wParam, lParam);
 	updateOffsetX();
+	//updateSelection();
 	return ret;
 }
-
 LRESULT ChartCtrl::onVScroll(WPARAM wParam, LPARAM lParam) {
 	var ret = Window::onVScroll(wParam, lParam);
 	updateOffsetY();
@@ -438,7 +465,14 @@ LRESULT ChartCtrl::onPaint() {
 				rect.top = p.y;
 				rect.right = p.x + stepX_;
 				rect.bottom = p.y + stepY_;
-				FillRect(hDC_, &rect, foregroundBrush_);
+				var brush = foregroundBrush_;
+				var dx = rect.left - selectionRect_.left;
+				var dy = rect.top - selectionRect_.top;
+				if (dx >= 0 && dx < selectionRect_.right &&
+					dy >= 0 && dy < selectionRect_.bottom) {
+					brush = selectionBrush_;
+				}
+				FillRect(hDC_, &rect, brush);
 			}
 		}
 	}
@@ -528,7 +562,18 @@ LRESULT ChartCtrl::onLeftUpProc(Window* wnd, POINT& pos, WPARAM wParam) {
 }
 LRESULT ChartCtrl::onLeftDownProc(Window* wnd, POINT& pos, WPARAM wParam) {
 	var ctrl = (ChartCtrl*)wnd;
-	var ret = ctrl->startSelection(pos);
+	ctrl->keys_ = GET_KEYSTATE_WPARAM(wParam);
+	ctrl->clientPos_ = pos;
+	LRESULT ret = 0;
+	if (ctrl->keys_ & MK_SHIFT) {
+		POINT delta;
+		ctrl->selectionState_ = DRAGGING_ACTIVE;
+		var ret = ctrl->doSelection(pos, delta, ctrl->keys_);
+	}
+	else {
+		var ret = ctrl->startSelection(pos);
+	}
+	
 	return ret;
 }
 LRESULT ChartCtrl::onRightUpProc(Window* wnd, POINT& pos, WPARAM wParam) {
