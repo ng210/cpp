@@ -3,7 +3,7 @@
 
 #include "dsound.h"
 
-typedef void (*FeedSample)(short*, int, void*);
+typedef short* (*FeedSample)(short*, int, void*);
 
 class SoundPlayer {
 private:

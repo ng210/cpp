@@ -7,7 +7,7 @@
 
 NS_FW_BASE_USE
 
-void soundCallback(short* pBuffer, int iSamples, void* context);
+short* soundCallback(short* pBuffer, int iSamples, void* context);
 
 int _main(NS_FW_BASE::Map* args) {
 	printf("SoundPlayer test\n");
@@ -35,15 +35,15 @@ int _main(NS_FW_BASE::Map* args) {
 float theta = 2 * 3.1415926535898f/48000;
 int timer = 0;
 float f = 1.0f;
-void soundCallback(short* pBuffer, int iSamples, void* context) {
-	var j = 0;
+short* soundCallback(short* pBuffer, int iSamples, void* context) {
 	for (int i = 0; i < iSamples; i++) {
-		float amp = (float)(8.0f * sin(0.07f * theta * timer));
+		float amp = (float)(12.0f * sin(0.07f * theta * timer));
 		float fm1 = (float)(amp * sin(110.7f * theta * timer));
 		float fm2 = (float)(amp * sin(55.0f * theta * timer));
-		pBuffer[j++] = (short)(12000 * sin(fm1 + f*110.0f * theta * timer));
-		pBuffer[j++] = (short)floor(12000 * sin(fm2 + f*113.0f * theta * timer));
+		*pBuffer++ = (short)(12000 * sin(fm1 + f*110.0f * theta * timer));
+		*pBuffer++ = (short)floor(12000 * sin(fm2 + f*113.0f * theta * timer));
 		timer++;
 		f *= 1.00000f;
 	}
+	return pBuffer;
 }
