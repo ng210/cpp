@@ -9,44 +9,25 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
-	typedef struct DistortCtrls_ {
-		PotF amp;
-		PotF8 lvl;
-		Pot cut;	// tone
-		PotF8 res;	// contour
-		Pot mode;	// mode
-	} DistortCtrls;
+	typedef struct DistortValues_ {
+		ClpValues clp;
+		FltValues flt;
+	} DistortValues;
 
-	typedef enum DistortCtrlId {
-		distAmp,
-		distLvl,
-		distCut,
-		distRes,
-		distMode
-	} DistortCtrlId;
-
-#define DistortCtrlsCount (sizeof(DistortCtrls) / sizeof(Pot))
 
 
 	class Distort : public Module {
-		static Soundbank* defaultSoundbank_;
-	
 	private: Clp clp_;
 	private: Flt flt_;
+	protected: DistortValues values_;
 	public:
-		DistortCtrls controls;
-
 		Distort();
 		virtual ~Distort();
-		//void initializeFromStream(byte** pData);
-		inline float* getOutput(int id);
-		void run(int start, int end);
-		void updateFilter();
 
-		Soundbank* getDefaultSoundbank();
+		float* getOutput(int id);
+		Value* getValues();
 
-		static void prepare();
-		static void cleanUp();
+		void run(int start, int end, BufferWriteModes mode = BufferWriteModes::Add);
 	};
 }
 

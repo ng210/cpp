@@ -50,18 +50,17 @@ void MixerDevice::initialize(byte** pData) {
 			mixer->channelCount(chnCount);
 		}
 		for (var ci = 0; ci < chnCount; ci++) {
-			var ch = mixer->getChannel(ci);
 			// read input device index
 			var di = READ(*pData, byte);
 			var device = (Device*)player_->devices().get(di);
-			mixer->connectInput(ch, (Module*)device->object());
+			mixer->connectInput(ci, (Module*)device->object());
 			
 			var stCount = READ(*pData, byte);
 			for (var si = 0; si < stCount; si++) {
 				// read stage effect device index
 				di = READ(*pData, byte);
 				device = (Device*)player_->devices().get(di);
-				mixer->connectEffect(ch, (Module*)device->object(), si);
+				mixer->connectEffect(ci, (Module*)device->object(), si);
 			}
 		}
 	}

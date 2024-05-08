@@ -59,24 +59,18 @@ Value* Mixer8x4::getValues() {
 //    }
 //}
 
-MixerChannel* Mixer8x4::connectInput(MixerChannel* channel, Module* input) {
-    if (channel != NULL) {
-        channel->input = input;
-    }
-    return channel;
-}
-
 MixerChannel* Mixer8x4::connectInput(int chnId, Module* input, float amp, byte pan, byte gain) {
     var chn = setupChannel(chnId, amp, pan, gain);
     if (chn != NULL) chn->input = input;
     return chn;
 }
 
-MixerChannel* Mixer8x4::connectEffect(MixerChannel* channel, Module* effect, int stageId) {
-    if (channel != NULL) {
-        if (stageId == -1) {
+MixerChannel* Mixer8x4::connectEffect(int chnId, Module* effect, int gain, int stageId) {
+    MixerChannel* channel = NULL;
+    if (chnId < 8) {
+        channel = &channels_[chnId];
+        if (stageId == -1 || stageId >= channel->stageCount) {
             stageId = channel->stageCount;
-            channel->stageCount++;
         }
         if (stageId < 4) {
             var input = stageId == 0 ? channel->input : channel->stages[stageId - 1].effect;
@@ -86,6 +80,10 @@ MixerChannel* Mixer8x4::connectEffect(MixerChannel* channel, Module* effect, int
                 effect->connectInput(i, input->getOutput(i));
             }
             channel->stages[stageId].effect = effect;
+            values_.channels[chnId].stages[stageId].gain = gain / 255.0f;
+            if (stageId >= channel->stageCount) {
+                channel->stageCount = stageId + 1;
+            }
         }
     }
     return channel;
@@ -108,8 +106,7 @@ MixerChannel* Mixer8x4::setupChannel(int chnId, float amp, byte pan, byte gain) 
 //void Mixer8x4::run(float* buffer, int start, int end) {
 //    // currently unused   
 //}
-
-void Mixer8x4::fillSoundBuffer(short* buffer, int sampleCount, void* args) {
+short* Mixer8x4::fillSoundBuffer(short* buffer, int sampleCount, void* args) {
     // [input] ─┬→*gain────────────────────────────→(++++)─→(pan,*amp)─→ [output]
     //          │                                    ↑↑↑↑
     //          └→stage1┬→*gain──────────────────────┘│││
@@ -134,7 +131,6 @@ void Mixer8x4::fillSoundBuffer(short* buffer, int sampleCount, void* args) {
         }
     }
 
-    int j = 0;
     for (var i = 0; i < sampleCount; i++) {
         int left = 0, right = 0;
         for (var ci = 0; ci < mixer->channelCount_; ci++) {
@@ -168,7 +164,8 @@ void Mixer8x4::fillSoundBuffer(short* buffer, int sampleCount, void* args) {
         }
         if (left > 32767) left = 32767; else if (left < -32767) left = -32767;
         if (right > 32767) right = 32767; else if (right < -32767) right = -32767;
-        buffer[j++] += (short)left;
-        buffer[j++] += (short)right;
+        *buffer++ += (short)left;
+        *buffer++ += (short)right;
     }
+    return buffer;
 }

@@ -17,7 +17,7 @@ namespace SYNTH {
 		InputF8 sus;
 		Input rel;
 	} AdsrInputs;
-	#define AdsrInputsSize 8	// 4 + 4*1 
+	#define AdsrInputSize 8	// 4 + 4*1 
 
 	typedef struct DahrInputs_ {
 		InputF amp;
@@ -26,7 +26,7 @@ namespace SYNTH {
 		Input hld;
 		Input rel;
 	} DahrInputs;
-	#define DahrInputsSize 8	// 4 + 4*1 
+	#define DahrInputSize 8	// 4 + 4*1 
 
 	typedef struct OscInputs_ {
 		InputF8 amp;
@@ -36,32 +36,38 @@ namespace SYNTH {
 		InputF8 psw;
 		Input wave;
 	} OscInputs;
-	#define OscInputsSize 9	// 4 + 5*1 
+	#define OscInputSize 9	// 4 + 5*1 
 
 	typedef struct LfoInputs_ {
 		InputF amp;
 		InputF fre;
 	} LfoInputs;
-	#define LfoInputsSize 8	// 2*4
+	#define LfoInputSize 8	// 2*4
 
 	typedef struct FltInputs_ {
 		Input cut;
 		InputF8 res;
 		Input mode;
+
+		void setup() {
+			cut.setup(0, 255, 1);
+			res.setup(0, 255, 1);
+			mode.setup(0, 7, 1);
+		}
 	} FltInputs;
-	#define FltInputsSize 3
+	#define FltInputSize 3
 
 	typedef struct DlyInputs_ {
 		InputF8 feedback;
 		InputF delay;
 	} DlyInputs;
-	#define DlyInputsSize 5	// 4 + 1 
+	#define DlyInputSize 5	// 4 + 1 
 
 	typedef struct ClpInputs_ {
 		InputF amp;
 		InputF8 lvl;
 	} ClpInputs;
-	#define ClpInputsSize 5	// 4 + 1 
+	#define ClpInputSize 5	// 4 + 1 
 
 	typedef enum ModuleCommands {
 		CmdSetUint8		= 2,	// ctrlId, value

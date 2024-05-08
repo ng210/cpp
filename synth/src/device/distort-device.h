@@ -1,5 +1,5 @@
-#ifndef __CLIP_DEVICE_H
-#define __CLIP_DEVICE_H
+#ifndef __DISTORT_DEVICE_H
+#define __DISTORT_DEVICE_H
 
 #include "synth/src/device/synth-adapter.h"
 #include "synth/src/device/module-device.h"
@@ -8,15 +8,28 @@
 using namespace PLAYER;
 namespace SYNTH {
 
+	typedef struct DistortInputs {
+		ClpInputs clp;
+		FltInputs flt;
+	} DistortInputs;
+	#define DistortInputSize (ClpInputSize + FltInputSize)
+
+	typedef enum DistortInputIds {
+		distAmp,
+		distLvl,
+		distCut,
+		distRes,
+		distMode
+	} DistortInputIds;
+
 	class DistortDevice: public ModuleDevice {
-		static Stream defaultSoundBank_;
+	protected: DistortInputs distortInputs;
 	public:
-		DistortDevice(SynthAdapter* adapter);
+		DistortDevice(SynthAdapter* adapter, Player* player);
 		~DistortDevice();
 
-#ifdef PLAYER_EDIT_MODE
-		int writeToStream(Stream* stream);
-#endif
+		int getPresetBankSize();
+		PresetBank* getDefaultPresetBank();
 	};
 }
 #endif

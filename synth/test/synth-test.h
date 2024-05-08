@@ -10,14 +10,17 @@
 #include "synth/src/device/bass-device-ext.h"
 #include "synth/src/device/synth-device-ext.h"
 #include "synth/src/device/generic-drum-device-ext.h"
+#include "synth/src/device/drums-device-ext.h"
 #include "synth/src/device/mixer-device-ext.h"
+#include "synth/src/device/distort-device-ext.h"
+#include "synth/src/device/stereo-delay-device-ext.h"
 
 
 NS_FW_BASE_USE
 using namespace SYNTH;
 using namespace PLAYER;
 
-typedef int (*PlayCallback)(Module*, int, void*);
+typedef int (*PlayCallback)(ModuleDevice*, Module*, int, void*);
 
 class SynthTest : public Test {
     Player* player_;
@@ -26,8 +29,9 @@ class SynthTest : public Test {
     PlayerDeviceExt* masterDeviceExt_;
     SynthAdapter* synthAdapter_;
 
-    static void simpleSynthCallback(short* buffer, int sampleCount, void* context);
-    void playback(Module* mdl, PlayCallback callback, float fps, int chn, char* filePath = NULL, FeedSample feedSample = NULL, void* args = NULL);
+    static short* simpleSynthCallback(short* buffer, int sampleCount, void* context);
+    static short* simpleStereoSynthCallback(short* buffer, int sampleCount, void* context);
+    void playback(ModuleDevice* dev, PlayCallback callback, float fps, int chn, char* filePath = NULL, FeedSample feedSample = NULL, void* context = NULL, void* args = NULL);
     bool testInput(InputBase& input, Value min, Value max, Value Step, Value* value);
     int testEnvelope(Env& env, short* buffer, void(callback)(int, Env&, float), char* path);
     void playDefaultSequence(SynthBaseDevice* dev, SynthBaseDeviceExt* ext);
@@ -50,7 +54,7 @@ public:
     //void testSynth2Device();
     //DrumsDevice* setupDrums();
     void testGenericDrum();
-    //void testDrums();
+    void testDrums();
     //void testDrumsDevice();
     void testMixer();
     void testMixerDeviceExt();

@@ -33,7 +33,7 @@ int BassDevice::getPresetBankSize() {
 }
 
 byte _defaultBassPresetBank[] = {
-	DB(3),											// 1 preset in the bank
+	DB(3),											// 3 presets in the bank
 
 	DB('B'), DB('a'), DB('s'), DB('s'), DB('0'), DB('1'), DB(0), DB('.'),
 	DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB(0),	// 1st name

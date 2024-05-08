@@ -19,22 +19,39 @@ public:
     void* args;
     Value* values;
     Value* getValues() { return values; }
-    void run(int start, int end) { RUN(start, end, this); }
+    void run(int start, int end, BufferWriteModes mode) { RUN(start, end, this); }
 };
 
-void SynthTest::simpleSynthCallback(short* buffer, int sampleCount, void* context) {
-    //((Synth*)context)->run(buffer, 0, sampleCount);
-    //for (var i = 0; i < sampleCount; i++) {
-    //    SynthTest::buffer_[i] = 0.0f;
-    //}
+class TestModuleDevice : public ModuleDevice {
+public:
+    TestModuleDevice(Adapter* adapter, Player* player, void* obj) : ModuleDevice(adapter, player, obj) {}
+    int getPresetBankSize() { return 0; }
+    PresetBank* getDefaultPresetBank() { return NULL; }
+
+};
+
+short* SynthTest::simpleSynthCallback(short* buffer, int sampleCount, void* context) {
     var mdl = (Module*)context;
     mdl->run(0, sampleCount);
     for (var i = 0; i < sampleCount; i++) {
-        buffer[i] = (short)(32768.0f * mdl->getOutput(0)[i]);
+        *buffer++ = (short)(32767.0f * mdl->getOutput(0)[i]);
     }
+    return buffer;
 }
 
-void SynthTest::playback(Module* mdl, PlayCallback callback, float fps, int chn, char* path, FeedSample feedSample, void* args) {
+short* SynthTest::simpleStereoSynthCallback(short* buffer, int sampleCount, void* context) {
+    var mdl = (Module*)context;
+    mdl->run(0, sampleCount);
+    for (var i = 0; i < sampleCount; i++) {
+        *buffer++ = (short)(32767.0f * mdl->getOutput(0)[i]);
+        *buffer++ = (short)(32767.0f * mdl->getOutput(1)[i]);
+    }
+    return buffer;
+}
+
+
+void SynthTest::playback(ModuleDevice* dev, PlayCallback callback, float fps, int chn, char* path, FeedSample feedSample, void* context, void* args) {
+    var mdl = dev->module();
     int msPerFrame = (int)(1000.0f / fps);
     int frame = 0;
     bool hasError = false;
@@ -42,37 +59,38 @@ void SynthTest::playback(Module* mdl, PlayCallback callback, float fps, int chn,
     if (feedSample == NULL) {
         feedSample = SynthTest::simpleSynthCallback;
     }
-    if (args == NULL) args = mdl;
+    if (context == NULL) context = mdl;
+    if (args == NULL) args = context;
 
     if (path != NULL && saveToFile) {
         // prepare wave file and buffer
         var wave = NEW_(WaveFmt, path, (int)samplingRate, chn, 16);
-        int length = (int)frameSize * sizeof(short);
-        var buffer = MALLOC(short, length);
-        memset(buffer, 0, length);
-        wave->write((byte*)buffer, SAMPLE_BUFFER_SIZE);
+        int sampleCount = (int)frameSize;
+        int lengthInBytes = sampleCount * sizeof(short);
+        if (chn > 1) lengthInBytes <<= 1;
+        var buffer = (short*)MALLOC(byte, lengthInBytes);
+        memset(buffer, 0, lengthInBytes);
+        //wave->write((byte*)buffer, SAMPLE_BUFFER_SIZE);
         var fileLength = 0;
 
         // render sound into buffer
         int fi = 0;
-        while (callback(mdl, fi++, args)) {
+        while (callback(dev, mdl, fi++, args)) {
             LOG(".");
             // render 1 frame into the buffer
             //var output = mdl->getOutput(0);
             var p = buffer;
-            var len = length>>1;
-            if (chn > 1) len >>= 1;
+            var len = sampleCount;
             while (len > 0) {
                 var toWrite = len > SAMPLE_BUFFER_SIZE ? SAMPLE_BUFFER_SIZE : len;
-                feedSample(p, toWrite, args);
+                p = feedSample((short*)p, toWrite, context);
                 //mdl->run(0, toWrite);
                 //for (var j = 0; j < toWrite; j++) {
                 //    *p++ = (short)(32767.0f * output[j]);
                 //}
                 len -= toWrite;
             }
-            var byteCount = 2 * (int)(p - buffer);
-            if (chn > 1) byteCount *= 2;
+            var byteCount = (int)((size_t)p - (size_t)buffer);
             wave->write((byte*)buffer, byteCount);
             fileLength += byteCount;
         }
@@ -82,9 +100,9 @@ void SynthTest::playback(Module* mdl, PlayCallback callback, float fps, int chn,
         LOG("\nSaved %d bytes into '%s'.\n", fileLength, path);
     }
     else {
-        if (SoundPlayer::start((int)samplingRate, chn, feedSample, args) == 0) {
+        if (SoundPlayer::start((int)samplingRate, chn, feedSample, context) == 0) {
             int fi = 0;
-            while (callback(mdl, fi++, args)) {
+            while (callback(dev, mdl, fi++, args)) {
                 LOG(".");
                 Sleep(msPerFrame);
             }
@@ -252,25 +270,28 @@ void SynthTest::testEnvelopes() {
 
 void SynthTest::testLfo() {
     Lfo lfo;
-    LfoValues lfoValues = { 0.009f, 100.0f };
+    LfoValues lfoValues = { 0.1f, 55.0f };
     lfo.values(&lfoValues);
     TestModule mdl;
     mdl.args = &lfo;
     mdl.RUN = [](int start, int end, TestModule* mdl) {
         var lfo = (Lfo*)mdl->args;
         for (var i = start; i < end; i++) {
-            mdl->getOutput(0)[i] = 10.0f * lfo->run();
+            mdl->getOutput(0)[i] = 4.0f * lfo->run();
         }        
     };
+    var dev = NEW_(TestModuleDevice, synthAdapter_, player_, &mdl);
 
-    playback(&mdl,
-        [](Module* mdl, int frame, void* args) {
+    playback(dev,
+        [](ModuleDevice* dev, Module* mdl, int frame, void* args) {
             var lfo = (Lfo*)((TestModule*)mdl)->args;
             if (frame % 10 == 0) {
-                lfo->values()->fre.f += 10.0f;
+                lfo->values()->fre.f *= 1.189207115f;
             }
-            return 30 - frame;
+            return 40 - frame;
         }, 10.f, 1, "lfo.wav");
+
+    DEL_(dev);
 }
 
 void SynthTest::testBass() {
@@ -323,8 +344,8 @@ void SynthTest::testBass() {
     var preset0 = (byte*)pb->values()->get(0);
     cons->dump(preset0, bass->getPresetBankSize(), 16);
 
-    playback(bass->module(),
-        [](Module* mdl, int frame, void* args) {
+    playback(bass,
+        [](ModuleDevice* dev, Module* mdl, int frame, void* args) {
             int isActive = frame < 64;
             var synth = (SynthBase*)mdl;
             if (isActive) {
@@ -575,8 +596,8 @@ void SynthTest::testSynth1() {
     synth->setPresetBank(pb);
     //synth->setPreset(1);
 
-    playback(synth->module(),
-        [](Module* mdl, int frame, void* args) {
+    playback(synth,
+        [](ModuleDevice* dev, Module* mdl, int frame, void* args) {
             int isActive = frame < 5;
             var synth = (Synth*)mdl;
             if (isActive) {
@@ -999,8 +1020,8 @@ void SynthTest::testSynth1DeviceExt() {
 
 void SynthTest::testGenericDrum() {
     Device* devices[4];
-    GenericDrumValues drumValues[3];
-    memset(&drumValues, 0, 3 * sizeof(GenericDrumValues));
+    //GenericDrumValues drumValues[3];
+    //memset(&drumValues, 0, 3 * sizeof(GenericDrumValues));
     GenericDrumDevice drum(synthAdapter_, player_);
     var pb = drum.getDefaultPresetBank();
     var mx = (MixerDevice*)synthAdapter_->createDevice(SynthDevices::DeviceMixer, player_);
@@ -1008,9 +1029,9 @@ void SynthTest::testGenericDrum() {
     mx->mixer()->channelCount(3);
     for (var di = 0; di < 3; di++) {
         devices[di] = (GenericDrumDevice*)synthAdapter_->createDevice(SynthDevices::DeviceGenericDrum, player_);
-        ((GenericDrumDevice*)devices[di])->drum()->values((Value*)&drumValues[di]);
-        ((GenericDrumDevice*)devices[di])->assignInputs();
-        ((GenericDrumDevice*)devices[di])->drum()->createOutputBuffers(1);
+        //((GenericDrumDevice*)devices[di])->drum()->values((Value*)&drumValues[di]);
+        //((GenericDrumDevice*)devices[di])->assignInputs();
+        //((GenericDrumDevice*)devices[di])->drum()->createOutputBuffers(1);
         devices[di]->setPresetBank(pb);
         devices[di]->setPreset(di);
         mx->mixer()->connectInput(di, (Module*)devices[di]->object(), 0.6f, 128, 200);
@@ -1040,8 +1061,8 @@ void SynthTest::testGenericDrum() {
     #pragma endregion
 
 
-    playback(mx->module(),
-        [](Module* mdl, int frame, void* args) {
+    playback(mx,
+        [](ModuleDevice* dev, Module* mdl, int frame, void* args) {
             var dr = (GenericDrumDevice**)args;
             int isActive = frame < 63;
             var step = frame % 16;
@@ -1087,7 +1108,7 @@ void SynthTest::testGenericDrum() {
         [](short* buffer, int count, void* args) {
             var devs = (ModuleDevice**)args;
             //for (var di=0; di<3; di++) devs[di]->module()->run(0, count);
-            Mixer8x4::fillSoundBuffer(buffer, count, devs[3]->module());
+            return Mixer8x4::fillSoundBuffer(buffer, count, devs[3]->module());
         },
         devices);
 
@@ -1095,79 +1116,76 @@ void SynthTest::testGenericDrum() {
     DEL_(pb);
 }
 
-//void SynthTest::testDrums() {
-//    LOG("Test drums\n");
-//    var drums = NEW_(Drums);
-//    // kick
-//    drums->setProgram(0x0000);
-//    // snare
-//    drums->setProgram(0x0101);
-//    //drums->drums[1].setControl(gdDahr1Amp, 0.0f);
-//    // hihats
-//    drums->setProgram(0x0202);
-//    //drums->drums[2].setControl(gdDahr1Amp, 0.5f);
-//    drums->setProgram(0x0303);
-//    //drums->drums[3].setControl(gdDahr1Amp, 0.5f);
-//    // toms
-//    drums->setProgram(0x0404);
-//    drums->setProgram(0x0505);
-//    drums->setProgram(0x0606);
-//    // clap
-//    drums->setProgram(0x0707);
-//
-//    playback(drums,
-//        [](Module* mdl, int frame) {
-//            int isActive = frame < 64;
-//            var drums = (Drums*)mdl;
-//            if (isActive) {
-//                frame %= 16;
-//                switch (frame) {
-//                case 0:
-//                    drums->setNote(drBD, 100);
-//                    drums->setNote(drCH, 100);
-//                    break;
-//                case 2:
-//                    drums->setNote(drCH, 160);
-//                    break;
-//                case 4:
-//                    drums->setNote(drSD,  80);
-//                    //drums->setNote(drCP, 140);
-//                    drums->setNote(drCH, 100);
-//                    break;
-//                case 6:
-//                    drums->setNote(drCH, 160);
-//                    break;
-//                case 8:
-//                    drums->setNote(drBD, 100);
-//                    drums->setNote(drCH, 100);
-//                    break;
-//                case 9:
-//                    drums->setNote(drOH, 160);
-//                    drums->setNote(drSD, 40);
-//                    break;
-//                case 10:
-//                    drums->setNote(drCH, 160);
-//                    break;
-//                case 12:
-//                    drums->setNote(drSD,  80);
-//                    //drums->setNote(drCP, 140);
-//                    drums->setNote(drCH, 100);
-//                    break;
-//                case 14:
-//                    drums->setNote(drCH, 160);
-//                    break;
-//                case 15:
-//                    drums->setNote(drSD, 40);
-//                    drums->setNote(drCH, 100);
-//                    break;
-//                }
-//            }
-//            return isActive;
-//        }, 6.0f, "drums");
-//
-//    assert("Should create sound", drums->isActive());
-//    DEL_(drums);
-//}
+void SynthTest::testDrums() {
+    LOG("Test drums\n");
+    DrumsDeviceExt::registerExtensionCreator();
+    var drums = (DrumsDevice*)synthAdapter_->createDevice(SynthDevices::DeviceDrums, player_);
+    var ext = (DrumsDeviceExt*)playerExt_->getDeviceExtension(drums);
+    assert("Should assign inputs", (DrumsInputs*)drums->inputs() == &drums->drumsInputs);
+
+    var gdpb = drums->drum()[0]->getDefaultPresetBank();
+
+    drums->drumPresetBanks().push(gdpb);
+    var pb = drums->getDefaultPresetBank();
+    drums->setPresetBank(pb);
+    drums->setPreset(0);
+    var preset0 = (byte*)pb->values()->get(0);
+    cons->dump(preset0, drums->getPresetBankSize(), 16);
+
+    var seq = ext->createDefaultSequence();
+    var chn = NEW_(Channel);
+    chn->assign(drums, seq, 4);
+
+    playback(drums,
+        [](ModuleDevice* dev, Module* mdl, int frame, void* args) {
+            var ch = (Channel*)args;
+            ch->run(1);
+            //switch (step) {
+                //case 0:
+                //    dr->setNote(drBD, 0xE0);
+                //    dr->setNote(drCH, 0x60);
+                //    break;
+                //case 2:
+                //    dr->setNote(drCH, 0x80);
+                //    break;
+                //case 4:
+                //    dr->setNote(drSD, 0x80);
+                //    dr->setNote(drCH, 0x60);
+                //    break;
+                //case 6:
+                //    dr->setNote(drCH, 0x80);
+                //    break;
+                //case 8:
+                //    dr->setNote(drBD, 0xC0);
+                //    dr->setNote(drCH, 0x60);
+                //    break;
+                //case 10:
+                //    dr->setNote(drCH, 0x60);
+                //    break;
+                //case 11:
+                //    dr->setNote(drCH, 0x80);
+                //    break;
+                //case 12:
+                //    dr->setNote(drSD, 0x80);
+                //    dr->setNote(drCH, 0x60);
+                //    break;
+                //case 14:
+                //    dr->setNote(drCH, 0x80);
+                //    break;
+                //}
+            return (int)ch->isActive();
+        }, 80.0f, 2, "drums2.wav",
+        SynthTest::simpleStereoSynthCallback,
+        NULL, chn);
+
+    assert("Should create sound", drums->isActive());
+    DEL_(chn);
+    DEL_(seq);
+    DEL_(drums);
+    DEL_(pb);
+    DEL_(ext);
+    DEL_(gdpb);
+}
 
 //void SynthTest::testDrumsDevice() {
 //    LOG("Test drums device\n");
@@ -1206,73 +1224,98 @@ void SynthTest::testGenericDrum() {
 void SynthTest::testMixer() {
     BassDeviceExt::registerExtensionCreator();
     SynthDeviceExt::registerExtensionCreator();
+    DrumsDeviceExt::registerExtensionCreator();
     MixerDeviceExt::registerExtensionCreator();
     player_->initialize();
     player_->useThread();
+
+    #pragma region devices
+    // bass
     var bass = (BassDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceBass);
     var pb1 = bass->getDefaultPresetBank();
     bass->setPresetBank(pb1);
+    bass->setPreset(2);
+    // synth
     var synth = (SynthDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceSynth);
     synth->synth()->voiceCount(6);
     var pb2 = synth->getDefaultPresetBank();
     synth->setPresetBank(pb2);
-    synth->setPreset(1);
-    var drum = (GenericDrumDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceGenericDrum);
-    GenericDrumValues drumValues;
-    drum->drum()->values((Value*)&drumValues);
-    drum->assignInputs();
-    drum->drum()->createOutputBuffers(1);
-    var pb3 = drum->getDefaultPresetBank();
-    drum->setPresetBank(pb3);
+    synth->setPreset(0);
+    // drums
+    var drums = (DrumsDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceDrums);
+    var gdpb = drums->drum()[0]->getDefaultPresetBank();
+    drums->drumPresetBanks().push(gdpb);
+    var pb3 = drums->getDefaultPresetBank();
+    drums->setPresetBank(pb3);
+    // mixer
     var mx = (MixerDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceMixer);
     assert("Should assign inputs", (MixerInputs*)mx->inputs() == &mx->mixerInputs);
+    // fx1: distortion
+    var fx1 = (DistortDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceDistort);
+    var pb4 = fx1->getDefaultPresetBank();
+    fx1->setPresetBank(pb4);
+    fx1->setPreset(0);
+    // fx2: stereo delay
+    var fx2 = (StereoDelayDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceStereoDelay);
+    var pb5 = fx2->getDefaultPresetBank();
+    fx2->setPresetBank(pb5);
+    fx2->setPreset(1);
+    // fx3: stereo delay
+    var fx3 = (StereoDelayDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceStereoDelay);
+    fx3->setPresetBank(pb5);
+    fx3->setPreset(2);
+    // fx4: distortion
+    var fx4 = (DistortDevice*)player_->addDevice(synthAdapter_, SynthDevices::DeviceDistort);
+    fx4->setPresetBank(pb4);
+    fx4->setPreset(1);
 
     mx->mixer()->channelCount(3);
-    mx->mixer()->connectInput(0, bass->module(), 0.1f, 130, 250);
-    mx->mixer()->connectInput(1, synth->module(), 0.0f, 180, 250);
-    mx->mixer()->connectInput(2, drum->module(), 0.8f, 128, 250);
+    mx->mixer()->connectInput(0, bass->module(), 0.3f, 110, 10);
+    mx->mixer()->connectEffect(0, fx1->module(), 20);
+    mx->mixer()->connectEffect(0, fx2->module(), 120);
+
+    mx->mixer()->connectInput(1, synth->module(), 0.4f, 108, 120);
+    mx->mixer()->connectEffect(1, fx3->module(), 100);
+
+    mx->mixer()->connectInput(2, drums->module(), 0.8f, 100, 180);
+    mx->mixer()->connectEffect(2, fx4->module(), 60);
 
     player_->addChannel("Chn1");
     player_->addChannel("Chn2");
     player_->addChannel("Chn3");
     player_->addChannel("Chn4");
+    #pragma endregion
 
+    #pragma region sequences
     var masterSequence = NEW_(Sequence);
     {
         masterSequence->writeHeader();
         // #01 frame
         masterSequence->writeDelta(0);
         masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(1)->writeByte(1)->writeByte(1)->writeByte(16);   // bass
-        masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(2)->writeByte(2)->writeByte(2)->writeByte(16);   // tune
-        masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(3)->writeByte(3)->writeByte(3)->writeByte(8);    // drums
+        masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(2)->writeByte(2)->writeByte(2)->writeByte(8);   // tune
+        masterSequence->writeEOF();
 
+        masterSequence->writeDelta(2 * 16 * 16);
+        masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(3)->writeByte(3)->writeByte(3)->writeByte(12);    // drums
         masterSequence->writeEOF();
         // #01 frame
-        masterSequence->writeDelta(8 * 16 * 16);
+        masterSequence->writeDelta(7 * 16 * 16);
         masterSequence->writeEOS();
     }
     player_->addSequence(masterSequence);
 
-    DeviceExt* ext = (BassDeviceExt*)playerExt_->getDeviceExtension(bass);
-    var seqBass = ext->createDefaultSequence();
-    player_->addSequence(seqBass);
-    DEL_(ext);
+    for (var di = 1; di < player_->devices().length(); di++) {
+        var ext = playerExt_->getDeviceExtension((Device*)player_->devices().get(di));
+        if (ext) {
+            var seq = ext->createDefaultSequence();
+            player_->addSequence(seq);
+            DEL_(ext);
+        }
+    }
+    #pragma endregion
 
-    ext = (SynthDeviceExt*)playerExt_->getDeviceExtension(synth);
-    var seqSynth = ext->createDefaultSequence();
-    player_->addSequence(seqSynth);
-    DEL_(ext);
-
-    var seqDrum = NEW_(Sequence);
-    seqDrum->writeHeader();
-    seqDrum->writeDelta(0)->writeCommand(CmdSetProgram)->writeByte(0)->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(160)->writeEOF();
-    seqDrum->writeDelta(64)->writeCommand(CmdSetProgram)->writeByte(1)->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(180)->writeEOF();
-    seqDrum->writeDelta(64)->writeCommand(CmdSetProgram)->writeByte(0)->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(160)->writeEOF();
-    seqDrum->writeDelta(64)->writeCommand(CmdSetProgram)->writeByte(1)->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(180)->writeEOF();
-    seqDrum->writeDelta(64)->writeEOS();
-    player_->addSequence(seqDrum);
-
-    player_->refreshRate(132.0f);
+    player_->refreshRate(82.0f);
     player_->start();
     SoundPlayer::start((int)samplingRate, 2, Mixer8x4::fillSoundBuffer, mx->mixer());
     while (masterDevice_->isActive()) {
@@ -1283,6 +1326,9 @@ void SynthTest::testMixer() {
     DEL_(pb1);
     DEL_(pb2);
     DEL_(pb3);
+    DEL_(gdpb);
+    DEL_(pb4);
+    DEL_(pb5);
     player_->clear();
 
 //    LOG("Test mixer device\n");
@@ -1348,18 +1394,18 @@ void SynthTest::runAll(int& totalPassed, int& totalFailed) {
     //test("Test Envelopes", (TestMethod)&SynthTest::testEnvelopes);
     //test("Test LFO", (TestMethod)&SynthTest::testLfo);
 
-    test("Test Bass", (TestMethod)&SynthTest::testBass);
+    //test("Test Bass", (TestMethod)&SynthTest::testBass);
     //test("Test Bass ext", (TestMethod)&SynthTest::testBassDeviceExt);
 
-    test("Test Synth1", (TestMethod)&SynthTest::testSynth1);
+    //test("Test Synth1", (TestMethod)&SynthTest::testSynth1);
     //test("Test Synth1 ext", (TestMethod)&SynthTest::testSynth1DeviceExt);
 
     //testSynth2();
     //testSynth2Device();
     
-    test("Test Generic Drum", (TestMethod)&SynthTest::testGenericDrum);
+    //test("Test Generic Drum", (TestMethod)&SynthTest::testGenericDrum);
 
-    //testDrums();
+    test("Test Drums", (TestMethod)&SynthTest::testDrums);
     //testDrumsDevice();
     
     test("Test Mixer", (TestMethod)&SynthTest::testMixer);

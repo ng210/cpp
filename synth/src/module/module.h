@@ -7,6 +7,12 @@
 using namespace PLAYER;
 namespace SYNTH {
 
+	typedef enum BufferWriteModes {
+		None = 0,
+		Overwrite = 1,
+		Add = 2
+	} BufferWriteModes;
+
 	class Module {
 	protected: float* inputs_[8];
 	protected: float* outputs_[8];
@@ -20,12 +26,14 @@ namespace SYNTH {
 
 		// routing
 		virtual void connectInput(int id, float* buffer);
-		virtual inline float* getInput(int id);
-		virtual inline float* getOutput(int id);
+		virtual float* getInput(int id);
+		virtual float* getOutput(int id);
+		virtual void setOutput(int id, float* buffer);
+		float* createOutputBuffer(bool isStereo = false);
 		void createOutputBuffers(int count);
 		
 		virtual bool isActive();
-		virtual void run(int start, int end);
+		virtual void run(int start, int end, BufferWriteModes mode = BufferWriteModes::Overwrite);
 	};
 }
 #endif

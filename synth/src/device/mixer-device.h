@@ -26,7 +26,7 @@ namespace SYNTH {
 	} MixerInputs;
 	#define MixerInputSize (8*MixerChannelInputSize)
 
-	typedef enum MixerCtrlId {
+	typedef enum MixerInputIds {
 		MxCh1amp, MxCh1pan, MxCh1gain, MxCh1st1gain, MxCh1st2gain, MxCh1st3gain, MxCh1st4gain,
 		MxCh2amp, MxCh2pan, MxCh2gain, MxCh2st1gain, MxCh2st2gain, MxCh2st3gain, MxCh2st4gain,
 		MxCh3amp, MxCh3pan, MxCh3gain, MxCh3st1gain, MxCh3st2gain, MxCh3st3gain, MxCh3st4gain,
@@ -35,7 +35,7 @@ namespace SYNTH {
 		MxCh6amp, MxCh6pan, MxCh6gain, MxCh6st1gain, MxCh6st2gain, MxCh6st3gain, MxCh6st4gain,
 		MxCh7amp, MxCh7pan, MxCh7gain, MxCh7st1gain, MxCh7st2gain, MxCh7st3gain, MxCh7st4gain,
 		MxCh8amp, MxCh8pan, MxCh8gain, MxCh8st1gain, MxCh8st2gain, MxCh8st3gain, MxCh8st4gain
-	} MixerCtrlId;
+	} MixerInputIds;
 
 	class MixerDevice : public ModuleDevice {
 	protected: PROP(int, frame);

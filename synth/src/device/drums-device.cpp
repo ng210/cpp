@@ -6,8 +6,23 @@
 using namespace SYNTH;
 
 #pragma region Creation
-DrumsDevice::DrumsDevice(SynthAdapter* adapter) : ModuleDevice(NEW_(Drums), adapter) {
+DrumsDevice::DrumsDevice(SynthAdapter* adapter, Player* player) : ModuleDevice(adapter, player, NEW_(Drums)) {
 	type(SynthDevices::DeviceDrums);
+	inputs_ = (InputBase*)&drumsInputs;
+	inputCount_ = sizeof(DrumsInputs) / sizeof(InputBase);
+	for (var di = 0; di < DRUMS_COUNT; di++) {
+		drumsInputs.drums[di].bankId.setup(0, 8, 1);
+		drumsInputs.drums[di].prgId.setup(0, 8, 1);
+		drumsInputs.drums[di].pan.setup(0, 255, 1);
+		drumsInputs.drums[di].send[0].setup(0, 255, 1);
+		drumsInputs.drums[di].send[1].setup(0, 255, 1);
+		drumsInputs.drums[di].send[2].setup(0, 255, 1);
+		drumsInputs.drums[di].send[3].setup(0, 255, 1);
+		drumDevices_[di] = NEW_(GenericDrumDevice, (SynthAdapter*)adapter_, player_, &drums()->drum()[di]);
+	}
+	assignInputs();
+	drumPresetBanks_.init(16);
+	setPreset.add(this, DrumsDevice::presetSetter);
 }
 
 DrumsDevice::~DrumsDevice() {
@@ -15,21 +30,12 @@ DrumsDevice::~DrumsDevice() {
 		DEL_((Drums*)object_);
 		object_ = NULL;
 	}
-}
 
-//void DrumsDevice::initialize(byte** pData) {
-//	if (pData != NULL && *pData != NULL) {
-//		ModuleDevice::initialize(pData);
-//		//drums()->setSoundbank(drums()->getDefaultSoundbank());
-//		//var dbId = READ(*pData, byte);
-//		//var db = ((DataBlockItem*)player_->dataBlocks().get(dbId));
-//		//if (db != NULL) {
-//		//	var sb = drums()->createSoundbank();
-//		//	sb->data(db->dataBlock);
-//		//	drums()->setSoundbank(sb);
-//		//}
-//	}
-//}
+	for (var di = 0; di < DRUMS_COUNT; di++) {
+		drumDevices_[di]->object(NULL);
+		DEL_(drumDevices_[di]);
+	}
+}
 
 void DrumsDevice::processCommand(byte cmd, byte*& cursor) {
 	switch (cmd) {
@@ -41,49 +47,36 @@ void DrumsDevice::processCommand(byte cmd, byte*& cursor) {
 		break;
 	default:
 		ModuleDevice::processCommand(cmd, cursor);
-		break;
 	}
 }
 
-Sequence* DrumsDevice::createDefaultSequence() {
-	var seq = NEW_(Sequence, this);
-	seq->writeHeader();
+int DrumsDevice::getPresetBankSize() {
+	return DrumsInputSize;
+}
 
-	seq->writeDelta(0);
-	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
-	seq->writeCommand(CmdSetNote)->writeByte(drBD)->writeByte(200);
-	seq->writeEOF();
+byte _defaultDrumsPresetBank[] = {
+	1,		// 1 preset
 
-	seq->writeDelta(16);
-	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
-	seq->writeEOF();
+	DB('D'), DB('e'), DB('f'), DB('a'), DB('u'), DB('l'), DB('t'), DB('.'),
+	DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB(0),	// 1st name
 
-	seq->writeDelta(16);
-	seq->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte(208);
-	seq->writeEOF();
+	// bank id, prg id, pan, send1, send2, send3, send4
+	0,0, 128, 0, 0, 0, 0,  0,1, 100, 0, 0, 0, 0,  0,2, 140, 0, 0, 0, 0,  0,3, 128, 0, 0, 0, 0,
+	0,4, 128, 0, 0, 0, 0,  0,5, 128, 0, 0, 0, 0,  0,6, 128, 0, 0, 0, 0,  0,7, 128, 0, 0, 0, 0
+};
 
-	seq->writeDelta(16);
-	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
-	seq->writeEOF();
+PresetBank* DrumsDevice::getDefaultPresetBank() {
+	return NEW_(PresetBank, getPresetBankSize(), _defaultDrumsPresetBank);
+}
 
-	seq->writeDelta(16);
-	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
-	seq->writeCommand(CmdSetNote)->writeByte(drSD)->writeByte(120);
-	seq->writeEOF();
-
-	seq->writeDelta(16);
-	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
-	seq->writeEOF();
-
-	seq->writeDelta(16);
-	seq->writeCommand(CmdSetNote)->writeByte(drOH)->writeByte(208);
-	seq->writeEOF();
-
-	seq->writeDelta(16);
-	seq->writeCommand(CmdSetNote)->writeByte(drCH)->writeByte(208);
-	seq->writeEOF();
-
-	seq->writeDelta(16);
-	seq->writeEOS();
-	return seq;
+int DrumsDevice::presetSetter(void* obj, int presetId, void* args) {
+	//var ret = Device::presetSetter(obj, presetId, args);
+	var drums = (DrumsDevice*)obj;
+	for (var di = 0; di < DRUMS_COUNT; di++) {
+		var bankId = drums->drumsInputs.drums[di].bankId.value_->b;
+		drums->drum()[di]->setPresetBank((PresetBank*)drums->drumPresetBanks_.get(bankId));
+		var prgId = drums->drumsInputs.drums[di].prgId.value_->b;
+		drums->drum()[di]->setPreset(prgId);
+	}
+	return 1;
 }

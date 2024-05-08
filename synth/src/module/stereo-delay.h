@@ -8,60 +8,35 @@
 NS_FW_BASE_USE
 namespace SYNTH {
 
-	typedef struct StereoDelayCtrls_ {
-		PotF8 feedbackLeft;
-		PotF delayLeft;
-		PotF8 feedbackRight;
-		PotF delayRight;
-		PotF8 mixLeft;
-		PotF8 mixRight;
-		Pot cut;
-		PotF8 res;
-		Pot mode;
-	} StereoDelayCtrls;
+	typedef struct StereoDelayValues_ {
+		DlyValues left;
+		Value mixLeft;
+		DlyValues right;
+		Value mixRight;
+		FltValues flt;
+	} StereoDelayValues;
 
-	typedef enum StereoDelayCtrlId {
-		stdlFeedbackLeft,
-		stdlDelayLeft,
-		stdlFeedbackRight,
-		stdlDelayRight,
-		stdlMixLeft,
-		stdlMixRight,
-		stdlCut,
-		stdlRes,
-		stdlMode
-	} StereoDelayCtrlId;
+	typedef struct Delayer_ {
+		Dly delay;
+		Flt filter;
 
-	#define StereoDelayCtrlCount sizeof(StereoDelayCtrls_) / sizeof(PotBase)
+		void initialize(DlyValues*, FltValues*);
+	} Delayer;
 
 	class StereoDelay : public Module {
-		static Soundbank* defaultSoundbank_;
-		//static SETCONTROLPROC setControlProc;
-	private: Dly left_, right_;
-	private: Flt fltL_, fltR_;
-
+	private: PROP_R(Delayer, left);
+	private: PROP_R(Delayer, right);
+	protected: StereoDelayValues_ values_;
+		void updateFilter();
 	public:
 		StereoDelay();
 		virtual ~StereoDelay();
 
-		StereoDelayCtrls controls;
-
-		//void initializeFromStream(byte** pData);
+		float* getOutput(int id);
 		void connectInput(int id, float* buffer);
-		void run(int start, int end);
+		Value* getValues();
 
-		void setDelayLeft();
-		void setDelayRight();
-
-		Soundbank* getDefaultSoundbank();
-
-		void updateFilter();
-
-		static void prepare();
-		static void cleanUp();
-
-		static int delayLeftSetter(void*, S, void* = NULL);
-		static int delayRightSetter(void*, S, void* = NULL);
+		void run(int start, int end, BufferWriteModes mode = BufferWriteModes::Add);
 	};
 }
 

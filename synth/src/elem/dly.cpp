@@ -46,9 +46,9 @@ void Dly::setSamplingRate() {
 	memset(buffer_, 0, sizeof(float) * count);
 }
 
-void Dly::setDelay(float delay) {
+void Dly::updateDelay() {
+	var delay = values_->delay.f;
 	if (delay < 1.0f) delay = 1.0f;
 	length_ = delay * *Elem::samplingRate / 1000.0f;
-	values_->delay.f = delay;
 	cursor_ = length_ - 1;
 }

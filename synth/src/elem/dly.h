@@ -26,7 +26,7 @@ namespace SYNTH {
 		float run(Arg params = (void*)NULL);
 		//void run(float* buffer, int start, int end);
 
-		void setDelay(float delay);
+		void updateDelay();
 		void Dly::setSamplingRate();
 	};
 

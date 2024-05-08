@@ -29,6 +29,14 @@ float* Module::getOutput(int id) {
 	return outputs_[id];
 }
 
+void Module::setOutput(int id, float* buffer) {
+	outputs_[id] = buffer;
+}
+
+float* Module::createOutputBuffer(bool isStereo) {
+	return MALLOC(float, SAMPLE_BUFFER_SIZE * isStereo ? 2 : 1);
+}
+
 void Module::createOutputBuffers(int count) {
 	var p = MALLOC(float, SAMPLE_BUFFER_SIZE * count);
 	for (var i = 0; i < count; i++) {
@@ -44,6 +52,6 @@ bool Module::isActive() {
 	return isActive_;
 }
 
-void Module::run(int start, int end) {
+void Module::run(int start, int end, BufferWriteModes mode) {
 }
 

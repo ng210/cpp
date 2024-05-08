@@ -31,8 +31,8 @@ namespace SYNTH {
         // Module
         void connectInput(int id, float* buffer);
         bool isActive();
-        inline float* getOutput(int id);
-        void run(int start, int end);
+        float* getOutput(int id);
+        void run(int start, int end, BufferWriteModes mode = BufferWriteModes::Overwrite);
 	};
 }
 #endif

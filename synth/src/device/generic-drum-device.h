@@ -17,7 +17,7 @@ namespace SYNTH {
 		InputF fre[6];
 	} GenericDrumInputs;
 
-	#define GenericDrumInputSize (sizeof(byte) + 4*DahrInputsSize + 2*FltInputsSize + 6*(sizeof(byte) + sizeof(float)))
+	#define GenericDrumInputSize (sizeof(byte) + 4*DahrInputSize + 2*FltInputSize + 6*(sizeof(byte) + sizeof(float)))
 
 	typedef enum GenericDrumInputIds {
 		GenDrumType,
@@ -37,6 +37,7 @@ namespace SYNTH {
 		GenericDrumInputs drumInputs;
 
 		GenericDrumDevice(SynthAdapter* adapter, Player* player);
+		GenericDrumDevice(SynthAdapter* adapter, Player* player, GenericDrum* drum);
 		~GenericDrumDevice();
 
 		void initialize(byte** stream = NULL);
@@ -54,7 +55,7 @@ namespace SYNTH {
 
 		void assignInputs();
 
-		static int presetSetter(void*, int, void*);
+		//static int presetSetter(void*, int, void*);
 	};
 }
 #endif

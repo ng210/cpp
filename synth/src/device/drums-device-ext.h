@@ -1,16 +1,16 @@
-#ifndef _BASS_DEVICE_EXT_H
-#define _BASS_DEVICE_EXT_H
+#ifndef _DRUMS_DEVICE_EXT_H
+#define _DRUMS_DEVICE_EXT_H
 
-#include "synth/src/device/synth-base-device-ext.h"
-#include "synth/src/device/bass-device.h"
+#include "synth/src/device/module-device-ext.h"
+#include "synth/src/device/drums-device.h"
 
 using namespace PLAYER;
 namespace SYNTH {
 
-	class BassDeviceExt : public SynthBaseDeviceExt {
-		static DeviceExt* bassDeviceExtCreator_(Device* device);
+	class DrumsDeviceExt : public ModuleDeviceExt {
+		static DeviceExt* drumsDeviceExtCreator_(Device* device);
 	public:
-		BassDeviceExt(Device* device);
+		DrumsDeviceExt(Device* device);
 
 		Sequence* createDefaultSequence();
 

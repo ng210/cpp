@@ -18,34 +18,7 @@ namespace SYNTH {
         DahrValues dahr[4];
         FltValues flt[2];
         OscValues osc[6];
-        //Value amp[6];
-        //Value fre[6];
     } GenericDrumValues;
-
-    //typedef struct GenericDrumCtrlsPots {
-    //    PotF gdFre[6];
-    //    PotF8 gdAmp[6];
-    //} GenericDrumCtrlsPots;
-
-    //typedef struct GenericDrumCtrls {
-    //    Value type;
-    //    DahrCtrls dahr[4];
-    //    FltCtrls flt[2];
-    //    GenericDrumCtrlsPots pots;
-    //} GenericDrumCtrls;
-
-    //typedef enum GenericDrumCtrlIds {
-    //    gdType,
-    //    gdDahr1Amp, gdDahr1Del, gdDahr1Atk, gdDahr1Hld, gdDahr1Rel,
-    //    gdDahr2Amp, gdDahr2Del, gdDahr2Atk, gdDahr2Hld, gdDahr2Rel,
-    //    gdDahr3Amp, gdDahr3Del, gdDahr3Atk, gdDahr3Hld, gdDahr3Rel,
-    //    gdDahr4Amp, gdDahr4Del, gdDahr4Atk, gdDahr4Hld, gdDahr4Rel,
-    //    gdFlt1Cut, gdFlt1Res, gdFlt1Mode,
-    //    gdFlt2Cut, gdFlt2Res, gdFlt2Mode,
-    //    gdFreq1, gdFreq2, gdFreq3, gdFreq4, gdFreq5, gdFreq6,
-    //    gdAmp1, gdAmp2, gdAmp3, gdAmp4, gdAmp5, gdAmp6
-    //} GenericDrumCtrlIds;
-    //#define GenericDrumCtrlCount sizeof(GenericDrumCtrls) / sizeof(PotBase)
 
     typedef enum DrumTypes {
         BassDrumType = 0,
@@ -65,16 +38,13 @@ namespace SYNTH {
 
         static RenderDrum renderDefault;
         static RenderDrum renderHihat;
-        //static RenderDrum renderClap;
+        static RenderDrum renderClap;
     protected: float runFilter(Flt* flt, float cut, float input);
-    protected: GenericDrumValues* values_;
+    protected: GenericDrumValues values_;
     public: PROP_R(LpRenderDrum, render);
     public:
         GenericDrum();
         ~GenericDrum();
-
-        void values(Value* values);
-        //Handler<DrumTypes> setType;
 
         Value* getValues();
 

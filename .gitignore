@@ -267,3 +267,4 @@ tmp/
 # Media files
 **/*.xm
 **/*.wav
+/ogl-master

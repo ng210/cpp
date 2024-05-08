@@ -11,8 +11,8 @@ ModuleDevice::ModuleDevice(Adapter* adapter, Player* player, void* obj) : Device
 }
 
 void ModuleDevice::initialize(byte** pData) {
-	var pb = getDefaultPresetBank();
 	if (pData != NULL && *pData != NULL) {
+		var pb = getDefaultPresetBank();
 		datablockId_ = READ(*pData, byte);
 		var db = ((DataBlockItem*)player_->dataBlocks().get(datablockId_));
 		if (db != NULL) {
@@ -131,11 +131,11 @@ void ModuleDevice::setupFlt(FltInputs* inputs) {
 void ModuleDevice::setupClp(ClpInputs* inputs) {
 	var clp = (ClpInputs*)inputs;
 	clp->amp.setup(0.0f, 10.0f, 0.1f);
-	clp->lvl.setup(0.0f, 10.0f, 0.1f);
+	clp->lvl.setup(0, 255, 1);
 }
 void ModuleDevice::setupDly(DlyInputs* inputs) {
 	var dly = (DlyInputs*)inputs;
-	dly->delay.setup(0.0f, 10.0f, 0.01f);
+	dly->delay.setup(0.0f, 5000.0f, 0.01f);
 	dly->feedback.setup(0, 255, 1);
 }
 

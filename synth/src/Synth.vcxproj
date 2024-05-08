@@ -163,11 +163,17 @@
   <ItemGroup>
     <ClCompile Include="device\bass-device-ext.cpp" />
     <ClCompile Include="device\bass-device.cpp" />
+    <ClCompile Include="device\distort-device-ext.cpp" />
+    <ClCompile Include="device\distort-device.cpp" />
+    <ClCompile Include="device\drums-device-ext.cpp" />
+    <ClCompile Include="device\drums-device.cpp" />
     <ClCompile Include="device\generic-drum-device-ext.cpp" />
     <ClCompile Include="device\generic-drum-device.cpp" />
     <ClCompile Include="device\mixer-device-ext.cpp" />
     <ClCompile Include="device\mixer-device.cpp" />
     <ClCompile Include="device\module-device-ext.cpp" />
+    <ClCompile Include="device\stereo-delay-device-ext.cpp" />
+    <ClCompile Include="device\stereo-delay-device.cpp" />
     <ClCompile Include="device\synth-adapter.cpp" />
     <ClCompile Include="device\synth-base-device-ext.cpp" />
     <ClCompile Include="device\synth-base-device.cpp" />
@@ -184,9 +190,12 @@
     <ClCompile Include="elem\osc.cpp" />
     <ClCompile Include="device\module-device.cpp" />
     <ClCompile Include="module\bass.cpp" />
+    <ClCompile Include="module\distort.cpp" />
+    <ClCompile Include="module\drums.cpp" />
     <ClCompile Include="module\generic-drum.cpp" />
     <ClCompile Include="module\mixer.cpp" />
     <ClCompile Include="module\module.cpp" />
+    <ClCompile Include="module\stereo-delay.cpp" />
     <ClCompile Include="module\synth-base.cpp" />
     <ClCompile Include="module\synth.cpp" />
     <ClCompile Include="module\voice.cpp" />
@@ -194,11 +203,17 @@
   <ItemGroup>
     <ClInclude Include="device\bass-device-ext.h" />
     <ClInclude Include="device\bass-device.h" />
+    <ClInclude Include="device\distort-device-ext.h" />
+    <ClInclude Include="device\distort-device.h" />
+    <ClInclude Include="device\drums-device-ext.h" />
+    <ClInclude Include="device\drums-device.h" />
     <ClInclude Include="device\generic-drum-device-ext.h" />
     <ClInclude Include="device\generic-drum-device.h" />
     <ClInclude Include="device\mixer-device-ext.h" />
     <ClInclude Include="device\mixer-device.h" />
     <ClInclude Include="device\module-device-ext.h" />
+    <ClInclude Include="device\stereo-delay-device-ext.h" />
+    <ClInclude Include="device\stereo-delay-device.h" />
     <ClInclude Include="device\synth-adapter.h" />
     <ClInclude Include="device\synth-base-device-ext.h" />
     <ClInclude Include="device\synth-base-device.h" />
@@ -215,9 +230,12 @@
     <ClInclude Include="elem\osc.h" />
     <ClInclude Include="device\module-device.h" />
     <ClInclude Include="module\bass.h" />
+    <ClInclude Include="module\distort.h" />
+    <ClInclude Include="module\drums.h" />
     <ClInclude Include="module\generic-drum.h" />
     <ClInclude Include="module\mixer.h" />
     <ClInclude Include="module\module.h" />
+    <ClInclude Include="module\stereo-delay.h" />
     <ClInclude Include="module\synth-base.h" />
     <ClInclude Include="module\synth-def.h" />
     <ClInclude Include="module\synth.h" />

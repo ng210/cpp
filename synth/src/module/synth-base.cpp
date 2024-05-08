@@ -117,9 +117,11 @@ bool SynthBase::isActive() {
     //}
     return isActive_;
 }
-void SynthBase::run(int start, int end) {
-    if (isActive()) {
-        memset(outputs_[0], 0, sizeof(float) * (size_t)(end - start));
+void SynthBase::run(int start, int end, BufferWriteModes mode) {
+    if (isActive() && mode != BufferWriteModes::None) {
+        if (mode == BufferWriteModes::Overwrite) {
+            memset(outputs_[0], 0, sizeof(float) * (size_t)(end - start));
+        }
         //var isActive = false;
         for (int j = 0; j < 2 * voiceCount_; j++) {
             Voice* voice = &voices_[j];

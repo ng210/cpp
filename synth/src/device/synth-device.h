@@ -31,7 +31,7 @@ namespace SYNTH {
 		SynthInputFlt1Cut, SynthInputFlt1Res, SynthInputFlt1Mode,
 	} SynthInputIds;
 
-#define SynthInputSize (4*AdsrInputsSize + 2*LfoInputsSize + 2*OscInputsSize + FltInputsSize)
+#define SynthInputSize (4*AdsrInputSize + 2*LfoInputSize + 2*OscInputSize + FltInputSize)
 
 	class SynthDevice : public SynthBaseDevice
 	{

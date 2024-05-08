@@ -1,7 +1,5 @@
 #include "base/memory.h"
 #include "player/src/player-ext.h"
-#include "synth/src/module/synth-def.h"
-#include "synth/src/device/bass-device.h"
 #include "synth/src/device/bass-device-ext.h"
 
 using namespace PLAYER;

@@ -13,7 +13,7 @@ namespace SYNTH {
 		OscInputs osc1, osc2;
 		FltInputs flt1;
 	} BassInputs;
-	#define BassInputSize (3*AdsrInputsSize + 2*OscInputsSize + FltInputsSize)
+	#define BassInputSize (3*AdsrInputSize + 2*OscInputSize + FltInputSize)
 	typedef enum BassInputIds {
 		BassInputAmAmp, BassInputAmAtk, BassInputAmDec, BassInputAmSus, BassInputAmRel,
 		BassInputPmAmp, BassInputPmAtk, BassInputPmDec, BassInputPmSus, BassInputPmRel,

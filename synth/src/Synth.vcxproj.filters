@@ -120,6 +120,33 @@
     <ClCompile Include="module\voice.cpp">
       <Filter>Source Files\module</Filter>
     </ClCompile>
+    <ClCompile Include="module\drums.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="device\drums-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="device\drums-device-ext.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="module\distort.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="device\distort-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="device\distort-device-ext.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="module\stereo-delay.cpp">
+      <Filter>Source Files\module</Filter>
+    </ClCompile>
+    <ClCompile Include="device\stereo-delay-device.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
+    <ClCompile Include="device\stereo-delay-device-ext.cpp">
+      <Filter>Source Files\device</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="elem\elem.h">
@@ -211,6 +238,33 @@
     </ClInclude>
     <ClInclude Include="module\voice.h">
       <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="module\drums.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="device\drums-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\drums-device-ext.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="module\distort.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="device\distort-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\distort-device-ext.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="module\stereo-delay.h">
+      <Filter>Header Files\module</Filter>
+    </ClInclude>
+    <ClInclude Include="device\stereo-delay-device.h">
+      <Filter>Header Files\device</Filter>
+    </ClInclude>
+    <ClInclude Include="device\stereo-delay-device-ext.h">
+      <Filter>Header Files\device</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -10,10 +10,10 @@
 #include "synth/src/device/bass-device.h"
 #include "synth/src/device/synth-device.h"
 #include "synth/src/device/generic-drum-device.h"
-//#include "synth/src/device/drums-device.h"
+#include "synth/src/device/drums-device.h"
 #include "synth/src/device/mixer-device.h"
-//#include "synth/src/device/distort-device.h"
-//#include "synth/src/device/stereo-delay-device.h"
+#include "synth/src/device/distort-device.h"
+#include "synth/src/device/stereo-delay-device.h"
 
 NS_FW_BASE_USE
 using namespace SYNTH;
@@ -79,18 +79,18 @@ Device* SynthAdapter::createDevice(int deviceType, Player* player) {
 	case SynthDevices::DeviceGenericDrum:
 		device = NEW_(GenericDrumDevice, this, player);
 		break;
-	//case SynthDevices::DeviceDrums:
-	//	device = NEW_(DrumsDevice, this, player);
-	//	break;
+	case SynthDevices::DeviceDrums:
+		device = NEW_(DrumsDevice, this, player);
+		break;
 	case SynthDevices::DeviceMixer:
 		device = NEW_(MixerDevice, this, player);
 		break;
-	//case SynthDevices::DeviceDistort:
-	//	device = NEW_(DistortDevice, this, player);
-	//	break;
-	//case SynthDevices::DeviceStereoDelay:
-	//	device = NEW_(StereoDelayDevice, this, player);
-	//	break;
+	case SynthDevices::DeviceDistort:
+		device = NEW_(DistortDevice, this, player);
+		break;
+	case SynthDevices::DeviceStereoDelay:
+		device = NEW_(StereoDelayDevice, this, player);
+		break;
 	}
 	return device;
 }

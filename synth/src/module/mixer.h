@@ -51,15 +51,14 @@ namespace SYNTH {
 
         // routing
         //void connectInput(int id, float* buffer);
-        MixerChannel* connectInput(MixerChannel* channel, Module* input);
-        MixerChannel* connectInput(int chnId, Module* input, float amp, byte pan, byte gain);
-        MixerChannel* connectEffect(MixerChannel* channel, Module* effect, int stageId = -1);
+        MixerChannel* connectInput(int chnId, Module* input, float amp = 1.0f, byte pan = 128, byte gain = 200);
+        MixerChannel* connectEffect(int chnId, Module* effect, int gain = 80, int stageId = -1);
         MixerChannel* getChannel(int id);
         MixerChannel* setupChannel(int chnId, float amp, byte pan, byte gain);
 
         //void run(float* buffer, int start, int end);
 
-        static void fillSoundBuffer(short* buffer, int bufferSize, void* args);
+        static short* fillSoundBuffer(short* buffer, int bufferSize, void* args);
     };
 }
 #endif
