@@ -16,16 +16,31 @@ PlayerTestTask::PlayerTestTask(PlayerTest* test) : Task() {
 	char lbl[16];
 	var x = 0;
 	for (var ii = 0; ii < 10; ii++) {
-		values_[ii] = ii;
-		inputs_[ii].setValue(&values_[ii]);
-		inputs_[ii].setup(0, 10, 1);
+		InputBase* input;
+		if (ii < 3) {
+			values_[ii] = ii;
+			input = NEW_(Input);
+			input->setup(0, 9, 1);
+		}
+		else if (ii < 6) {
+			values_[ii] = ii/9;
+			input = NEW_(InputF);
+			input->setup(0.0f, 1.0f, 0.01f);
+		}
+		else {
+			values_[ii] = ii;
+			input = NEW_(InputF8);
+			input->setup(0, 9, 1);
+		}
+		input->setValue(&values_[ii]);
+		inputs_[ii] = input;
 		sprintf_s(lbl, 16, "In%2d", ii+1);
 		ctrls_[ii].create(test_->area(), lbl);
 		ctrls_[ii].gap = 2;
 		DWORD colors[] = { 0x00802000, 0x00804010, 0x00e0c0c0, 0x00f0e0e0 };
 		ctrls_[ii].setColors(colors);
 		ctrls_[ii].ctrlId(ii+1);
-		ctrls_[ii].input(&inputs_[ii]);
+		ctrls_[ii].input(inputs_[ii]);
 		ctrls_[ii].type(InputCtrlType::Knob);
 		ctrls_[ii].setScale((int)(200.0f * ii / 9.0f));
 		ctrls_[ii].move(x, 10);
@@ -33,7 +48,7 @@ PlayerTestTask::PlayerTestTask(PlayerTest* test) : Task() {
 	}
 
 	values_[0] = START_VALUE;
-	inputs_[0].setup(10, 100, 1);
+	inputs_[0]->setup(10, 100, 1);
 	DWORD colors[] = { 0x00802000, 0x00804010, 0x00e0c0c0, 0x00f0e0e0 };
 	ctrls_[0].setColors(colors);
 	#pragma endregion
@@ -124,20 +139,20 @@ void PlayerTestTask::testInputCtrl() {
 	test_->failed_ = 0; test_->passed_ = 0;
 	ctrls_[0].show(SW_SHOW);
 	// 1. Check Input control
-	test_->assert("Should create an Input with correct value", inputs_[9].value() == &values_[9] && inputs_[9].value()->b == values_[9].b);
-	var pV = inputs_[9].value();
+	test_->assert("Should create an Input with correct value", inputs_[9]->value() == &values_[9] && inputs_[9]->value()->b == values_[9].b);
+	var pV = inputs_[9]->value();
 
 	// 2. user sets minimum
 	test_->log("Set input control #10 to the minimum value!\r\n");
-	while (state_ == TASK_STATE::TaskRunning && pV->b != inputs_[9].min.b) Sleep(10);
+	while (state_ == TASK_STATE::TaskRunning && pV->b != inputs_[9]->min.b) Sleep(10);
 
 	// 3. user sets maximum
 	test_->log("Set input control to the maximum value!\r\n");
-	while (state_ == TASK_STATE::TaskRunning && pV->b != inputs_[9].max.b) Sleep(10);
+	while (state_ == TASK_STATE::TaskRunning && pV->b != inputs_[9]->max.b) Sleep(10);
 
 	// 4. user sets middle value
 	test_->log("Set input control to middle value!\r\n");
-	var mid = (inputs_[9].max.b + inputs_[9].min.b) / 2;
+	var mid = (inputs_[9]->max.b + inputs_[9]->min.b) / 2;
 	while (state_ == TASK_STATE::TaskRunning && (pV->b > mid)) Sleep(10);
 	EnableWindow(ctrls_[0].hWnd(), false);
 
@@ -233,7 +248,7 @@ void PlayerTestTask::testDeviceCtrlImportLayout() {
 }
 
 void PlayerTestTask::testInputCtrlSizing() {
-	while (state_ == TASK_STATE::TaskRunning && values_[0].b != inputs_[0].min.b) Sleep(10);
+	while (state_ == TASK_STATE::TaskRunning && values_[0].b != inputs_[0]->min.b) Sleep(10);
 
 	test_->assert("Tests completed!", true);
 	test_->log("\r\n");

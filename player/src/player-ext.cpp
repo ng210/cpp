@@ -106,8 +106,10 @@ DeviceExt* PlayerExt::getDeviceExtension(Device* device) {
     if (PlayerExt::deviceExtensions_ != NULL) {
         var key = (device->adapter()->getInfo()->id << 8) + device->type();
         var creator = (DEVICEEXTENSIONCREATOR*)PlayerExt::deviceExtensions_->get(key);
-        deviceExt = (*creator)(device);
-        deviceExt->setupInputs();
+        if (creator) {
+            deviceExt = (*creator)(device);
+            deviceExt->setupInputs();
+        }
     }
     return deviceExt;
 }

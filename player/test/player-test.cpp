@@ -92,8 +92,8 @@ void PlayerTest::testInputF() {
     InputF input(&value);
     input.setup(-10.0f, 10.0f, 0.25f);
     input.set(0.7f);
-    assert("Should set the correct values", input.min.f == -10.0f && input.max.f == 10.0f && input.step.f == 0.25f && input.value()->f == 0.5f);
-    assert("Should set the assigned value as well", value.f == 0.5f);
+    assert("Should set the correct values", input.min.f == -10.0f && input.max.f == 10.0f && input.step.f == 0.25f && input.value()->f == 0.75f);
+    assert("Should set the assigned value as well", value.f == 0.75f);
     input.set(-12.0f);
     assert("Should set the minimum", input.value()->f == -10.0f);
     input.dec(2);
@@ -107,7 +107,7 @@ void PlayerTest::testInputF() {
     input.dec(8);
     assert("Should decrease by 2.0", input.value()->f == 8.0f);
     input.setFromNormalized(0.36f);
-    assert("Should set from normalized value", input.value()->f == -3.0f);
+    assert("Should set from normalized value", input.value()->f == -2.75f);
     input.set.add(&input, PlayerTest::onSetValue, this);
     input.set(4.3f);
     assert("Should set value using custom setter", value1_.f == 4.25f && value2_.f == 4.3f && input.value()->f == 8.6f);
@@ -129,10 +129,10 @@ void PlayerTest::testInputF() {
     stream->reset();
     stream->writeFloat(0.1f);
     stream->writeFloat(0.2f);
-    stream->writeFloat(0.001f);
+    stream->writeFloat(0.01f);
     stream->writeFloat(0.131f);
     input.readFromStream(ps);
-    assert("Should initialize from stream", input.min.f == 0.1f && input.max.f == 0.2f && input.step.f == 0.001f && input.value()->f == 0.13f);
+    assert("Should initialize from stream", input.min.f == 0.1f && input.max.f == (0.1f + 10.0f*0.01f) && input.step.f == 0.01f && input.value()->f == 0.13f);
     DEL_(stream);
 }
 
@@ -160,7 +160,7 @@ void PlayerTest::testInputF8() {
     input.set.add(&input, PlayerTest::onSetValue, this);
     input.set(44);
     assert("Should set value using custom setter", value1_.b == 42 && value2_.b == 44 && input.value()->b == 88 && value.f == 88 / 255.0f);
-    input.set.removeAt(2);
+    input.set.removeAt(1);
     var f = input.getNormalized();
     assert("Should return normalized value", f == (88.0f - 2) / (102 - 2));
     char str[16];

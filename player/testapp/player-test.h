@@ -17,7 +17,7 @@ class PlayerTestTask : public Task {
 	int step_;
 
 	Value values_[10];
-	Input inputs_[10];
+	InputBase* inputs_[10];
 	InputCtrl ctrls_[10];
 
 	PROP_R(ConsDevice*, consDevice);

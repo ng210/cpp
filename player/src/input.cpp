@@ -152,7 +152,7 @@ void InputF::readFromStream(byte*& stream) {
 void InputF::check() {
 	// min and step are considered correct
 	// max = min + n*step
-	max.f = (float)trunc((max.f - min.f) / step.f) * step.f + min.f;
+	max.f = roundf((max.f - min.f) / step.f) * step.f + min.f;
 }
 
 void InputF::setFromNormalized(float v) {
@@ -193,7 +193,7 @@ void InputF::writeValueToStream(Stream* stream) {
 
 int InputF::setter(void* obj, Value value, void* unused) {
 	var input = (InputF*)obj;
-	var v = (float)trunc((value.f - input->min.f) / input->step.f) * input->step.f + input->min.f;
+	var v = roundf((value.f - input->min.f) / input->step.f) * input->step.f + input->min.f;
 	if (v >= input->min.f) {
 		if (v <= input->max.f) {
 			input->value_->f = v;
