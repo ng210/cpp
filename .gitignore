@@ -268,3 +268,6 @@ tmp/
 **/*.xm
 **/*.wav
 /ogl-master
+/syn.old
+
+/synapp
