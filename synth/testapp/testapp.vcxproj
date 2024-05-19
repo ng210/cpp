@@ -165,6 +165,9 @@
     <Image Include="..\src\ui\res\bass-ctrl.bmp">
       <DeploymentContent>true</DeploymentContent>
     </Image>
+    <Image Include="..\src\ui\res\generic-drum-ctrl.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
     <Image Include="..\src\ui\res\mixer-ctrl.bmp">
       <DeploymentContent>true</DeploymentContent>
     </Image>

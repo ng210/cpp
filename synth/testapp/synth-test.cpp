@@ -41,6 +41,7 @@ SynthTest::SynthTest(TestApp* app) {
 	PlayerDeviceExt::registerExtensionCreator();
 	BassDeviceExt::registerExtensionCreator();
 	SynthDeviceExt::registerExtensionCreator();
+	GenericDrumDeviceExt::registerExtensionCreator();
 	MixerDeviceExt::registerExtensionCreator();
 
 	SynthUI::registerControlCreators();
@@ -103,54 +104,80 @@ Ctrl* SynthTest::area() {
 
 byte* SynthTest::createBinary() {
 	Stream data;
-	var channelCount = 0;
 	
 	#pragma region Sequences
 	PArray sequences;
 	var masterSequence = NEW_(Sequence);
+	sequences.push(masterSequence);
+	// bass
+	BassDevice bass(synthAdapter_, player_);
+	var ext = playerExt_->getDeviceExtension(&bass);
+	sequences.push(ext->createDefaultSequence());
+	// synth
+	SynthDevice synth(synthAdapter_, player_);
+	ext = playerExt_->getDeviceExtension(&synth);
+	sequences.push(ext->createDefaultSequence());
+	// drum #1
+	var seq = NEW_(Sequence);
+	seq->writeHeader();
+	seq->writeDelta(0)->writeCommand(CmdSetNote)->writeByte(pC1)->writeByte(120)->writeCommand(CmdEOF);
+	seq->writeDelta(64)->writeCommand(CmdEOS);
+	sequences.push(seq);
+	// drum #2
+	seq = NEW_(Sequence);
+	seq->writeHeader();
+	seq->writeDelta(32)->writeCommand(CmdSetNote)->writeByte(pC2)->writeByte(80)->writeCommand(CmdEOF);
+	seq->writeDelta(32)->writeCommand(CmdEOS);
+	sequences.push(seq);
+
 	masterSequence->writeHeader();
-	var time = 0;
-	// create first frame
-	{
-		masterSequence->writeDelta(0);
-		sequences.push(masterSequence);
-		var si = 1;
-		PArray modules;
-		modules.push(NEW_(BassDevice, synthAdapter_, player_));
-		modules.push(NEW_(SynthDevice, synthAdapter_, player_));
-
-		for (var mi = 0; mi < modules.length(); mi++) {
-			var dev = (Device*)modules.get(mi);
-			var ext = playerExt_->getDeviceExtension(dev);
-			var seq = ext->createDefaultSequence();
-			if (seq) {
-				sequences.push(seq);
-				masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(si)->writeByte(si)->writeByte(si)->writeByte(2);
-				var frameList = FrameList::fromSequence(seq, ext);
-				var ti = ((Frame*)frameList->get(frameList->length() - 1))->time;
-				if (ti > time) time = ti;
-				si++;
-				channelCount++;
-				DEL_(frameList);
-			}
-			DEL_(ext);
-			DEL_(dev);
-		}
-		//...
-		masterSequence->writeCommand(PlayerCommands::CmdEOF);
-	}
-	//create last frame
-	{
-		masterSequence->writeDelta(2 * time);
-		masterSequence->writeCommand(PlayerCommands::CmdEOS);
-
-	}
+	masterSequence->writeDelta(0);
+	masterSequence->writeCommand(CmdAssign)->writeByte(1)->writeByte(1)->writeByte(1)->writeByte(4);
+	masterSequence->writeCommand(CmdAssign)->writeByte(2)->writeByte(2)->writeByte(2)->writeByte(4);
+	masterSequence->writeCommand(CmdAssign)->writeByte(3)->writeByte(3)->writeByte(3)->writeByte(4);
+	masterSequence->writeCommand(CmdAssign)->writeByte(4)->writeByte(4)->writeByte(4)->writeByte(4);
+	masterSequence->writeCommand(CmdEOF);
+	masterSequence->writeDelta(4*64)->writeCommand(CmdEOS);
+	//var time = 0;
+	//// create first frame
+	//{
+	//	masterSequence->writeDelta(0);
+	//	sequences.push(masterSequence);
+	//	var si = 1;
+	//	PArray modules;
+	//	modules.push(NEW_(BassDevice, synthAdapter_, player_));
+	//	modules.push(NEW_(SynthDevice, synthAdapter_, player_));
+	//	for (var mi = 0; mi < modules.length(); mi++) {
+	//		var dev = (Device*)modules.get(mi);
+	//		var ext = playerExt_->getDeviceExtension(dev);
+	//		var seq = ext->createDefaultSequence();
+	//		if (seq) {
+	//			sequences.push(seq);
+	//			masterSequence->writeCommand(PlayerCommands::CmdAssign)->writeByte(si)->writeByte(si)->writeByte(si)->writeByte(2);
+	//			var frameList = FrameList::fromSequence(seq, ext);
+	//			var ti = ((Frame*)frameList->get(frameList->length() - 1))->time;
+	//			if (ti > time) time = ti;
+	//			si++;
+	//			channelCount++;
+	//			DEL_(frameList);
+	//		}
+	//		DEL_(ext);
+	//		DEL_(dev);
+	//	}
+	//	//...
+	//	masterSequence->writeCommand(PlayerCommands::CmdEOF);
+	//}
+	////create last frame
+	//{
+	//	masterSequence->writeDelta(2 * time);
+	//	masterSequence->writeCommand(PlayerCommands::CmdEOS);
+	//}
 	#pragma endregion
 
 	var initData = NEW_(Stream);
 	initData->writeFloat(80.0f);
 	// number of channels
-	initData->writeByte(channelCount);
+	initData->writeByte(4);
 	
 	#pragma region Adapters
 	var adapterList = NEW_(Stream);
@@ -167,17 +194,25 @@ byte* SynthTest::createBinary() {
 	// adapter init data: sampling rate
 	adapterList->writeWord(48000);
 	// devices
-	adapterList->writeByte(3);
+	adapterList->writeByte(5);
 	// bass: type, datablock id of preset bank, preset id, voice count
 	adapterList->writeByte(SynthDevices::DeviceBass)->writeByte(0xff)->writeByte(2)->writeByte(1);
 	// synth: type, datablock id of preset bank, preset id, voice count
 	adapterList->writeByte(SynthDevices::DeviceSynth)->writeByte(0xff)->writeByte(0)->writeByte(6);
+	// drum1: type, datablock id of preset bank, preset id
+	adapterList->writeByte(SynthDevices::DeviceGenericDrum)->writeByte(0xff)->writeByte(0);
+	// drum2: type, datablock id of preset bank, preset id
+	adapterList->writeByte(SynthDevices::DeviceGenericDrum)->writeByte(0xff)->writeByte(1);
 	// mixer: type, datablock id of preset bank, preset id, channel count
-	adapterList->writeByte(SynthDevices::DeviceMixer)->writeByte(0xff)->writeByte(0)->writeByte(2);
+	adapterList->writeByte(SynthDevices::DeviceMixer)->writeByte(0xff)->writeByte(0)->writeByte(4);
 	// channel1: input id, stage count(, stage1.input, ...)
 	adapterList->writeByte(1)->writeByte(0);
 	// channel2: input id, stage count(, stage2.input, ...)
 	adapterList->writeByte(2)->writeByte(0);
+	// channel3: input id, stage count(, stage1.input, ...)
+	adapterList->writeByte(3)->writeByte(0);
+	// channel4: input id, stage count(, stage2.input, ...)
+	adapterList->writeByte(4)->writeByte(0);
 	#pragma endregion
 	
 	#pragma region Create Stream
@@ -246,6 +281,14 @@ void SynthTest::runAll(int& totalPassed, int& totalFailed) {
 	mixerDev->setInput(MxCh2amp, 0.4f);
 	mixerDev->setInput(MxCh2pan, 148);
 	mixerDev->setInput(MxCh2gain, 180);
+
+	mixerDev->setInput(MxCh3amp, 0.8f);
+	mixerDev->setInput(MxCh3pan, 108);
+	mixerDev->setInput(MxCh3gain, 180);
+
+	mixerDev->setInput(MxCh4amp, 0.8f);
+	mixerDev->setInput(MxCh4pan, 172);
+	mixerDev->setInput(MxCh4gain, 180);
 
 	player_->useThread();
 	player_->masterChannel()->isEndless(true);

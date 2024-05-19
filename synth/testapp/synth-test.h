@@ -4,10 +4,7 @@
 #include "test.h"
 #include "utils/task.h"
 #include "collection/parray.h"
-//#include "player/src/device-ctrl.h"
 #include "synth/src/ui/synth-ui.h"
-//#include "synth/src/ui/synth-ctrl.h"
-//#include "synth/src/ui/mixer-ctrl.h"
 
 NS_FW_BASE_USE
 using namespace PLAYER;

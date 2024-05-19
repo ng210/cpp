@@ -1064,44 +1064,34 @@ void SynthTest::testGenericDrum() {
     playback(mx,
         [](ModuleDevice* dev, Module* mdl, int frame, void* args) {
             var dr = (GenericDrumDevice**)args;
-            int isActive = frame < 63;
+            int isActive = frame < 64;
             var step = frame % 16;
             switch (step) {
             case 0:
                 dr[0]->drum()->setNote(pC1, 180);
-                dr[2]->drum()->setNote(pC3, 100);
                 break;
             case 2:
-                dr[2]->drum()->setNote(pC3, 60);
+                dr[2]->drum()->setNote(pC3, 100);
                 break;
             case 4:
                 dr[1]->drum()->setNote(pC2, 170);
-                dr[2]->drum()->setNote(pC3, 140);
                 break;
             case 6:
-                dr[2]->drum()->setNote(pC3, 60);
+                dr[2]->drum()->setNote(pC3, 100);
                 break;
             case 8:
                 dr[0]->drum()->setNote(pC1, 180);
-                dr[2]->drum()->setNote(pC3, 180);
                 break;
             case 10:
                 dr[0]->drum()->setNote(pC1, 180);
-                dr[2]->drum()->setNote(pC3,  60);
+                dr[2]->drum()->setNote(pC3, 100);
                 break;
             case 12:
                 dr[1]->drum()->setNote(pC2, 170);
-                dr[2]->drum()->setNote(pC3, 140);
                 break;
             case 14:
-                dr[2]->drum()->setNote(pC3, 60);
+                dr[2]->drum()->setNote(pC3, 100);
                 break;
-            //case 8:
-            //    dr[0]->drum()->setNote(pC1, 80);
-            //    break;
-            //case 10:
-            //    dr[0]->drum()->setNote(pC1, 00);
-            //    break;
             }
             return isActive;
         }, 8.0f, 2, "drums1.wav",
@@ -1391,19 +1381,19 @@ void SynthTest::runAll(int& totalPassed, int& totalFailed) {
     totalPassed_ = 0;
     totalFailed_ = 0;
     
-    //test("Test Envelopes", (TestMethod)&SynthTest::testEnvelopes);
-    //test("Test LFO", (TestMethod)&SynthTest::testLfo);
+    test("Test Envelopes", (TestMethod)&SynthTest::testEnvelopes);
+    test("Test LFO", (TestMethod)&SynthTest::testLfo);
 
-    //test("Test Bass", (TestMethod)&SynthTest::testBass);
-    //test("Test Bass ext", (TestMethod)&SynthTest::testBassDeviceExt);
+    test("Test Bass", (TestMethod)&SynthTest::testBass);
+    test("Test Bass ext", (TestMethod)&SynthTest::testBassDeviceExt);
 
-    //test("Test Synth1", (TestMethod)&SynthTest::testSynth1);
-    //test("Test Synth1 ext", (TestMethod)&SynthTest::testSynth1DeviceExt);
+    test("Test Synth1", (TestMethod)&SynthTest::testSynth1);
+    test("Test Synth1 ext", (TestMethod)&SynthTest::testSynth1DeviceExt);
 
     //testSynth2();
     //testSynth2Device();
     
-    //test("Test Generic Drum", (TestMethod)&SynthTest::testGenericDrum);
+    test("Test Generic Drum", (TestMethod)&SynthTest::testGenericDrum);
 
     test("Test Drums", (TestMethod)&SynthTest::testDrums);
     //testDrumsDevice();

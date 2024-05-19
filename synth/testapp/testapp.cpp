@@ -41,7 +41,7 @@ IConsole* const TestApp::getConsole(void* obj) {
 
 LRESULT TestApp::onCreated() {
 	LRESULT result = 0;
-	int width = 1280, height = 800;
+	int width = 1340, height = 960;
 	int margin = 4;
 	HFONT SYSFN(hFont, (HFONT)GetStockObject(SYSTEM_FIXED_FONT));
 	SYSFN(result, SetWindowPos(hWnd_, NULL, 0, 0, width, height, SWP_NOMOVE));
