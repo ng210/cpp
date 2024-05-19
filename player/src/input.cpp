@@ -56,6 +56,10 @@ void Input::dec(int count) {
 	set(v);
 }
 
+float Input::getRange() {
+	return (max.i - min.i) / (float)step.i;
+}
+
 void Input::readValueFromStream(byte*& stream) {
 	var value = READ(stream, byte);
 	set(value);
@@ -172,6 +176,11 @@ void InputF::dec(int count) {
 	set(v);
 }
 
+float InputF::getRange() {
+	return (max.f - min.f) / step.f;
+}
+
+
 float InputF::getNormalized() {
 	return (value_->f - min.f) / (max.f - min.f);
 }
@@ -223,6 +232,7 @@ void InputF8::initialize() {
 	type = InputTypeF8;
 	size = sizeof(Value::b);
 	value_ = &bValue_;
+	setup(0, 255, 1);
 	set.clear();
 	set.add(this, &InputF8::setter);
 }

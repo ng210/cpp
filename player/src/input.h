@@ -44,6 +44,7 @@ namespace PLAYER {
 
         virtual void inc(int count) = 0;
         virtual void dec(int count) = 0;
+        virtual float getRange() = 0;
 
         virtual float getNormalized() = 0;
         virtual void getValueAsString(char* str, int len) = 0;
@@ -68,6 +69,7 @@ namespace PLAYER {
 
         void inc(int count);
         void dec(int count);
+        float getRange();
 
         float getNormalized();
         void getValueAsString(char* str, int len);
@@ -96,6 +98,7 @@ namespace PLAYER {
 
         void inc(int count);
         void dec(int count);
+        float getRange();
 
         float getNormalized();
         void getValueAsString(char* str, int len);

@@ -25,12 +25,12 @@ PlayerTestTask::PlayerTestTask(PlayerTest* test) : Task() {
 		else if (ii < 6) {
 			values_[ii] = ii/9;
 			input = NEW_(InputF);
-			input->setup(0.0f, 1.0f, 0.01f);
+			input->setup(0.0f, 40.0f, 0.01f);
 		}
 		else {
 			values_[ii] = ii;
 			input = NEW_(InputF8);
-			input->setup(0, 9, 1);
+			input->setup(0, 255, 1);
 		}
 		input->setValue(&values_[ii]);
 		inputs_[ii] = input;
@@ -98,6 +98,9 @@ PlayerTestTask:: ~PlayerTestTask() {
 	DEL_(masterDeviceExt_);
 	Player::cleanUp();
 	PlayerExt::cleanUp();
+	for (var ii = 0; ii < 10; ii++) {
+		DEL_(inputs_[ii]);
+	}
 }
 
 DWORD PlayerTestTask::mainAction_(void* context) {

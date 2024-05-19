@@ -34,8 +34,8 @@ InputCtrl::InputCtrl() {
 
 	mouseCounter_ = 0;
 	mouseSpeed1_ = 1;
-	mouseSpeed2_ = 5;
-	mouseSpeed3_ = 10;
+	mouseSpeed2_ = 10;
+	mouseSpeed3_ = 100;
 }
 
 InputCtrl::~InputCtrl() {
@@ -180,6 +180,21 @@ void InputCtrl::input(InputBase* p) {
 	angle_ = (1.0f - v) * 300.0f - 60.0f;
 	//oldSet_.obj = input_->set.obj;
 	input_->set.add(this, &InputCtrl::setter);
+	// set up mouse speeds depending on range
+	var range = input_->getRange();
+	if (range < 20.0f) {
+		mouseSpeed1_ = mouseSpeed2_ = mouseSpeed3_ = 1;
+	}
+	else {
+		mouseSpeed1_ = 10;
+		if (range < 200.0f) {
+			mouseSpeed2_ = mouseSpeed3_ = 10;
+		}
+		else {
+			mouseSpeed2_ = 100;
+			mouseSpeed3_ = range < 2000.0f ? 100 : 1000;
+		}
+	}
 }
 
 LRESULT InputCtrl::onLeftDownProc(Window* wnd, POINT& pos, WPARAM state) {
@@ -204,9 +219,14 @@ LRESULT InputCtrl::onRightUpProc(Window* wnd, POINT& pos, WPARAM state) {
 LRESULT InputCtrl::onMouseMoveProc(Window* wnd, POINT& pos, POINT& delta, WPARAM state) {
 	var potCtrl = (InputCtrl*)wnd;
 	if (potCtrl->isCapturing_ && (state & MK_LBUTTON)) {
-		int count = potCtrl->mouseSpeed1_;
-		if (state & MK_CONTROL) count *= potCtrl->mouseSpeed2_;
-		if (state & MK_SHIFT) count *= potCtrl->mouseSpeed3_;
+		bool ctrlState = state & MK_CONTROL;
+		bool shiftState = state & MK_SHIFT;
+		int count = 
+			(ctrlState && !shiftState) +
+			(!ctrlState && !shiftState) * potCtrl->mouseSpeed1_ +
+			(!ctrlState && shiftState) * potCtrl->mouseSpeed2_ +
+			(ctrlState && shiftState) * potCtrl->mouseSpeed3_;
+
 		switch (potCtrl->type_) {
 		case InputCtrlType::Knob:
 			//var cx = potCtrl->rect().right / 2.0f, cy = potCtrl->rect().bottom / 2.0f;
