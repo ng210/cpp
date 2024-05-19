@@ -4,6 +4,8 @@
 #include "synth/src/module/generic-drum.h"
 #include "synth/src/module/synth-def.h"
 
+#include "base/debug.h"
+
 NS_FW_BASE_USE
 using namespace SYNTH;
 
@@ -101,7 +103,6 @@ void GenericDrum::renderHihat(float* buffer, Voice* v, int start, int end) {
         for (var oi = 0; oi < 6; oi++) {
             smp += v->oscillators[oi].run(args);
         }
-
         // run filters
         v->filters[0].update(cm);
         v->filters[1].update(0.5f * (cm + cl));
@@ -145,9 +146,12 @@ int GenericDrum::typeSetter(void* obj, Value value, void* unused) {
                 drum->values_.osc[oi].psw.f = 0.5f;
             }
 
-            for (var vi = 0; vi < 2; vi++) {
-                drum->voices_[vi].filters[0].createStages(6);
-                drum->voices_[vi].filters[1].createStages(4);
+            for (var vi = 0; vi < drum->voiceCount_; vi++) {
+                var vu = &drum->voiceUnits_[vi];
+                for (var vj = 0; vj < 2; vj++) {
+                    vu->voices()[vj]->filters[0].createStages(6);
+                    vu->voices()[vj]->filters[1].createStages(8);
+                }
             }
             break;
         //case ClapType:
@@ -161,10 +165,12 @@ int GenericDrum::typeSetter(void* obj, Value value, void* unused) {
             drum->values_.osc[2].wave = OscWaveform::WfTriangle;
             drum->values_.osc[2].psw.f = 0.4f;
             drum->values_.osc[3].wave = OscWaveform::WfNoise;
-            for (var vi = 0; vi < 2; vi++) {
-                Voice& v = drum->voices_[vi];
-                v.filters[0].createStages(2);
-                v.filters[1].createStages(2);
+            for (var vi = 0; vi < drum->voiceCount_; vi++) {
+                var vu = &drum->voiceUnits_[vi];
+                for (var vj = 0; vj < 2; vj++) {
+                    vu->voices()[vj]->filters[0].createStages(2);
+                    vu->voices()[vj]->filters[1].createStages(2);
+                }
             }
             break;
     }

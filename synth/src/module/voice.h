@@ -60,6 +60,7 @@ namespace SYNTH {
         bool matchVoiceForNoteOff(byte note);
         bool isActive();
         int ticks();
+        Voice** voices() { return &voices_[0]; }
     };
 }
 

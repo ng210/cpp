@@ -132,6 +132,7 @@ void Flt::createStages(int poleCount) {
         DEL_(stages[i]);
     }
     stageCount_ = si;
+    poleCount_ = poleCount;
 }
 
 float Flt::run(Arg params) {
