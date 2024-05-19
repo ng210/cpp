@@ -67,61 +67,141 @@ int GenericDrumDevice::getPresetBankSize() {
 }
 
 byte _defaultGenericDrumPresetBank[] = {
-	DB(3),											// 2 presets in the bank
+	3,											// 2 presets in the bank
 
-	DB('B'), DB('D'), DB('8'), DB('0'), DB('8'), DB('.'), DB('.'), DB('.'),
-	DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB(0),	// 1st name
-	DB('S'), DB('D'), DB('8'), DB('0'), DB('8'), DB('.'), DB('.'), DB('.'),
-	DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB(0),	// 2nd name
-	DB('H'), DB('H'), DB('8'), DB('0'), DB('8'), DB('.'), DB('.'), DB('.'),
-	DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB('.'), DB(0),	// 3rd name
+	'B', 'D', '8', '0', '8', '.', '.', '.',
+	'.', '.', '.', '.', '.', '.', '.', 0,	// 1st name
+	'S', 'D', '8', '0', '8', '.', '.', '.',
+	'.', '.', '.', '.', '.', '.', '.', 0,	// 2nd name
+	'H', 'H', '8', '0', '8', '.', '.', '.',
+	'.', '.', '.', '.', '.', '.', '.', 0,	// 3rd name
 
 	DB(DrumTypes::BassDrumType),											// type
-	DF(0.9f), DB(1), DB(2), DB(4), DB(20),									// dahr1-am: amp, del, atk, hld, rel
-	DF(1.6f), DB(1), DB(1), DB(2), DB(4),									// dahr2-fm: amp, del, atk, hld, rel
-	DF(0.4f), DB(0), DB(0), DB(1), DB(1),									// dahr3-cl: amp, del, atk, hld, rel
-	DF(0.4f), DB(0), DB(0), DB(0), DB(2),									// dahr4-cm: amp, del, atk, hld, rel
-	DB(60), DB(0), DB(FltMode::FmHighPass),									// flt1: cut, res, mode
-	DB(20), DB(80), DB(FltMode::FmLowPass),									// flt2: cut, res, mode
-	DB(160), DB(120), DB(240), DB(140), DB(0), DB(0),						// amp[6]
+	DF(0.9f), 1, 2, 4, 80,													// dahr1-am: amp, del, atk, hld, rel
+	DF(0.1f), 1, 1, 1, 4,													// dahr2-fm: amp, del, atk, hld, rel
+	DF(0.2f), 0, 0, 1, 1,													// dahr3-cl: amp, del, atk, hld, rel
+	DF(0.4f), 0, 0, 0, 2,													// dahr4-cm: amp, del, atk, hld, rel
+	60, 0, DB(FltMode::FmHighPass),											// flt1: cut, res, mode
+	10, 80, DB(FltMode::FmLowPass),											// flt2: cut, res, mode
+	160, 120, 240, 140, 0, 0,												// amp[6]
 	DF(31.1f), DF(31.7f), DF(57.0f), DF(4371.12f),	DF(0.0f), DF(0.0f),		// fre[6]
+	20, 0, 0, 0, 0,															// length, tune, tone, click, snap
 
 	DB(DrumTypes::BassDrumType),											// type
-	DF(0.9f), DB(2), DB(1), DB(3), DB(28),									// dahr1-am: amp, del, atk, hld, rel
-	DF(0.4f), DB(1), DB(1), DB(1), DB(8),									// dahr2-fm: amp, del, atk, hld, rel
-	DF(0.6f), DB(0), DB(1), DB(0), DB(4),									// dahr3-cl: amp, del, atk, hld, rel
-	DF(0.4f), DB(1), DB(1), DB(2), DB(8),									// dahr4-cm: amp, del, atk, hld, rel
-	DB(120), DB(140), DB(FltMode::FmBandPass | FltMode::FmHighPass),		// flt1: cut, res, mode
-	DB(50), DB(80), DB(FltMode::FmLowPass),									// flt2: cut, res, mode
-	DB(140), DB(120), DB(100), DB(180), DB(0), DB(0),						// amp[6]
+	DF(0.9f), 2, 1, 3, 28,													// dahr1-am: amp, del, atk, hld, rel
+	DF(0.4f), 1, 1, 1, 8,													// dahr2-fm: amp, del, atk, hld, rel
+	DF(0.8f), 0, 1, 0, 4,													// dahr3-cl: amp, del, atk, hld, rel
+	DF(0.4f), 1, 1, 2, 8,													// dahr4-cm: amp, del, atk, hld, rel
+	120, 140, DB(FltMode::FmBandPass | FltMode::FmHighPass),				// flt1: cut, res, mode
+	50, 80, DB(FltMode::FmLowPass),											// flt2: cut, res, mode
+	140, 120, 100, 180, 0, 0,												// amp[6]
 	DF(116.7f), DF(176.2f), DF(63.5f), DF(6371.12f), DF(0.0f), DF(0.0f),	// fre[6]
+	30, 0, 0, 0, 0,															// length, tune, tone, click, snap
 
 	DB(DrumTypes::HihatType),												// type
-	DF(0.8f), DB(0), DB(1), DB(6), DB(16),									// dahr1-am: amp, del, atk, hld, rel
-	DF(2.0f), DB(1), DB(1), DB(3), DB(4),									// dahr2-fm: amp, del, atk, hld, rel
-	DF(0.9f), DB(0), DB(0), DB(1), DB(2),									// dahr3-cl: amp, del, atk, hld, rel
-	DF(0.2f), DB(1), DB(1), DB(2), DB(4),									// dahr4-cm: amp, del, atk, hld, rel
-	DB(160), DB(60), DB(FltMode::FmHighPass),								// flt1: cut, res, mode
-	DB(110), DB(0), DB(FltMode::FmBandPass | FltMode::FmLowPass),			// flt2: cut, res, mode
-	DB(33), DB(35), DB(40), DB(42), DB(42), DB(37),							// amp[6]
-	DF(205.2f), DF(284.0f), DF(303.0f), DF(369.2f), DF(426.0f), DF(521.0f)	// fre[6]
+	DF(0.8f), 0, 1, 2, 22,													// dahr1-am: amp, del, atk, hld, rel
+	DF(1.0f), 1, 1, 1, 1,													// dahr2-fm: amp, del, atk, hld, rel
+	DF(0.9f), 0, 0, 1, 2,													// dahr3-cl: amp, del, atk, hld, rel
+	DF(0.6f), 1, 1, 2, 8,													// dahr4-cm: amp, del, atk, hld, rel
+	160, 0, DB(FltMode::FmHighPass),										// flt1: cut, res, mode
+	140, 0, DB(FltMode::FmBandPass | FltMode::FmLowPass),					// flt2: cut, res, mode
+	33, 35, 40, 42, 42, 37,													// amp[6]
+	DF(205.2f), DF(284.0f), DF(303.0f), DF(369.2f), DF(426.0f), DF(521.0f),	// fre[6]
+	120, 0, 0, 0, 0															// length, tune, tone, click, snap
 };
 
 PresetBank* GenericDrumDevice::getDefaultPresetBank() {
 	return NEW_(PresetBank, getPresetBankSize(), _defaultGenericDrumPresetBank);
 }
 
+int GenericDrumDevice::setLength(void* context, Value value, void* args) {
+	var dev = (GenericDrumDevice*)context;
+	var values = (GenericDrumValues*)dev->drum()->getValues();
+	var len = dev->length_.f * 3.9f + 0.1f;
+	values->dahr[0].rel = (int)(dev->dahrRel_[0].i * len);
+	values->dahr[1].rel = (int)(dev->dahrRel_[1].i * len);
+	values->dahr[3].rel = (int)(dev->dahrRel_[3].i * len);
+	return 1;
+}
+
+int GenericDrumDevice::setTune(void* context, Value value, void* args) {
+	var dev = (GenericDrumDevice*)context;
+	var values = (GenericDrumValues*)dev->drum()->getValues();
+	for (var oi = 0; oi < 6; oi++) {
+		values->osc[oi].fre = dev->fre_[oi];
+	}
+	return 1;
+}
+
+int GenericDrumDevice::setTone(void* context, Value value, void* args) {
+	var dev = (GenericDrumDevice*)context;
+
+	return 1;
+}
+
+int GenericDrumDevice::setClick(void* context, Value value, void* args) {
+	var dev = (GenericDrumDevice*)context;
+
+	return 1;
+}
+
+int GenericDrumDevice::setSnap(void* context, Value value, void* args) {
+	var dev = (GenericDrumDevice*)context;
+
+	return 1;
+}
+
 void GenericDrumDevice::assignInputs() {
 	var values = (GenericDrumValues*)module()->getValues();
 	var inputs = (GenericDrumInputs*)inputs_;
-	var count = offsetof(GenericDrumValues, osc) / sizeof(Value);
-	for (var ii = 0; ii < count; ii++) {
-		inputs_[ii].setValue(&((Value*)values)[ii]);
+
+	//var count = offsetof(GenericDrumValues, osc) / sizeof(Value);
+	//for (var ii = 0; ii < count; ii++) {
+	//	inputs_[ii].setValue(&((Value*)values)[ii]);
+	//}
+	//for (var oi = 0; oi < 6; oi++) {
+	//	inputs->fre[oi].setValue(&values->osc[oi].fre);
+	//	inputs->amp[oi].setValue(&values->osc[oi].amp);
+	//}
+
+	for (var ii = 0; ii < inputCount_; ii++) {
+		var input = &inputs_[ii];
+		Value* pValue = NULL;
+		switch (ii) {
+			case GenDrumDahrRel1: pValue = &dahrRel_[0]; inputs->dahr[0].rel.set.add(this, &GenericDrumDevice::setLength); break;
+			case GenDrumDahrRel2: pValue = &dahrRel_[1]; inputs->dahr[1].rel.set.add(this, &GenericDrumDevice::setLength); break;
+			//case GenDrumDahrRel3: pValue = &dahrRel_[2]; inputs->dahr[0].rel.set.add(this, &GenericDrumDevice::setLength); break;
+			case GenDrumDahrRel4: pValue = &dahrRel_[3]; inputs->dahr[3].rel.set.add(this, &GenericDrumDevice::setLength); break;
+
+			case GenDrumFre1: pValue = &fre_[0]; inputs->fre[0].set.add(this, &GenericDrumDevice::setTune); break;
+			case GenDrumFre2: pValue = &fre_[1]; inputs->fre[1].set.add(this, &GenericDrumDevice::setTune); break;
+			case GenDrumFre3: pValue = &fre_[2]; inputs->fre[2].set.add(this, &GenericDrumDevice::setTune); break;
+			case GenDrumFre4: pValue = &fre_[3]; inputs->fre[3].set.add(this, &GenericDrumDevice::setTune); break;
+			case GenDrumFre5: pValue = &fre_[4]; inputs->fre[4].set.add(this, &GenericDrumDevice::setTune); break;
+			case GenDrumFre6: pValue = &fre_[5]; inputs->fre[5].set.add(this, &GenericDrumDevice::setTune); break;
+
+			case GenDrumAmp1: pValue = &values->osc[0].amp; break;
+			case GenDrumAmp2: pValue = &values->osc[1].amp; break;
+			case GenDrumAmp3: pValue = &values->osc[2].amp; break;
+			case GenDrumAmp4: pValue = &values->osc[3].amp; break;
+			case GenDrumAmp5: pValue = &values->osc[4].amp; break;
+			case GenDrumAmp6: pValue = &values->osc[5].amp; break;
+
+			default: pValue = &((Value*)values)[ii];
+		}
+		input->setValue(pValue);
 	}
-	for (var oi = 0; oi < 6; oi++) {
-		inputs->fre[oi].setValue(&values->osc[oi].fre);
-		inputs->amp[oi].setValue(&values->osc[oi].amp);
-	}
+
+	inputs->length.setValue(&length_);
+	inputs->length.set.add(this, &GenericDrumDevice::setLength);
+	inputs->tune.setValue(&length_);
+	inputs->tune.set.add(this, &GenericDrumDevice::setTune);
+	inputs->tone.setValue(&length_);
+	//inputs->tone.set.add(this, &GenericDrumDevice::setTone);
+	inputs->click.setValue(&length_);
+	//inputs->click.set.add(this, &GenericDrumDevice::setClick);
+	inputs->snap.setValue(&length_);
+	//inputs->snap.set.add(this, &GenericDrumDevice::setSnap);
 }
 
 //int GenericDrumDevice::presetSetter(void* obj, int presetId, void* args) {

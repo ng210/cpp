@@ -15,9 +15,12 @@ namespace SYNTH {
 		FltInputs flt[2];
 		InputF8 amp[6];
 		InputF fre[6];
+
+		// indirect inputs
+		InputF8 length, tune, tone, click, snap;
 	} GenericDrumInputs;
 
-	#define GenericDrumInputSize (sizeof(byte) + 4*DahrInputSize + 2*FltInputSize + 6*(sizeof(byte) + sizeof(float)))
+	#define GenericDrumInputSize (sizeof(byte) + 4*DahrInputSize + 2*FltInputSize + 6*(sizeof(byte) + sizeof(float)) + 5*sizeof(byte))
 
 	typedef enum GenericDrumInputIds {
 		GenDrumType,
@@ -28,11 +31,23 @@ namespace SYNTH {
 		GenDrumFlt1Cut, GenDrumFlt1Res, GenDrumFlt1Mode,
 		GenDrumFlt2Cut, GenDrumFlt2Res, GenDrumFlt2Mode,
 		GenDrumAmp1, GenDrumAmp2, GenDrumAmp3, GenDrumAmp4, GenDrumAmp5, GenDrumAmp6,
-		GenDrumFre1, GenDrumFre2, GenDrumFre3, GenDrumFre4, GenDrumFre5, GenDrumFre6
+		GenDrumFre1, GenDrumFre2, GenDrumFre3, GenDrumFre4, GenDrumFre5, GenDrumFre6,
+		// indirect inputs
+		GenDrumLength, GenDrumTune, GenDrumTone, GenDrumClick, GenDrumSnap
 	} GenericDrumInputIds;
 
 
 	class GenericDrumDevice : public ModuleDevice {
+		Value dahrRel_[4];
+		Value fre_[6];
+		Value fmAmp_;
+		Value length_, tune_, tone_, click_, snap_;
+
+		static int setLength(void* context, Value value, void* args);
+		static int setTune(void* context, Value value, void* args);
+		static int setTone(void* context, Value value, void* args);
+		static int setClick(void* context, Value value, void* args);
+		static int setSnap(void* context, Value value, void* args);
 	public:
 		GenericDrumInputs drumInputs;
 
