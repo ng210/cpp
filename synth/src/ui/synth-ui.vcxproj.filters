@@ -30,6 +30,9 @@
     <ClInclude Include="mixer-ctrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="generic-drum-ctrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bass-ctrl.cpp">
@@ -47,6 +50,9 @@
     <ClCompile Include="mixer-ctrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="generic-drum-ctrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\synth-ctrl.bmp">
@@ -56,6 +62,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\mixer-ctrl.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\generic-drum-ctrl.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

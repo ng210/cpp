@@ -1,5 +1,4 @@
 #include "synth/src/ui/bass-ctrl.h"
-#include "synth/src/ui/synth-ui.h"
 
 using namespace SYNTH;
 

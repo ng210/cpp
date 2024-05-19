@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bass-ctrl.h" />
+    <ClInclude Include="generic-drum-ctrl.h" />
     <ClInclude Include="mixer-ctrl.h" />
     <ClInclude Include="module-ctrl.h" />
     <ClInclude Include="synth-ctrl.h" />
@@ -27,6 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bass-ctrl.cpp" />
+    <ClCompile Include="generic-drum-ctrl.cpp" />
     <ClCompile Include="mixer-ctrl.cpp" />
     <ClCompile Include="module-ctrl.cpp" />
     <ClCompile Include="synth-ctrl.cpp" />
@@ -34,6 +36,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\bass-ctrl.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="res\generic-drum-ctrl.bmp">
       <DeploymentContent>true</DeploymentContent>
     </Image>
     <Image Include="res\mixer-ctrl.bmp">

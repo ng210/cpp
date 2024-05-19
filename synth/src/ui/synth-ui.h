@@ -3,6 +3,7 @@
 
 #include "synth/src/ui/bass-ctrl.h"
 #include "synth/src/ui/synth-ctrl.h"
+#include "synth/src/ui/generic-drum-ctrl.h"
 #include "synth/src/ui/mixer-ctrl.h"
 
 	namespace SYNTH {
